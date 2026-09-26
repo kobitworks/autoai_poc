@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>タブレットナビ PoC</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+html,body{height:100%;margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#111;color:#111}
+#app{height:100%;display:grid;grid-template-rows:auto 1fr}
+header{background:#fff;padding:10px;box-shadow:0 2px 10px #0002;z-index:1000}
+h1{font-size:18px;margin:0 0 8px}
+.row{display:grid;grid-template-columns:1fr auto auto;gap:8px}
+input,button{font:inherit;border-radius:10px;border:1px solid #cfd5dc;min-height:48px}
+input{padding:0 12px;font-size:18px}
+button{padding:0 14px;background:#fff;font-weight:700}
+button.primary{background:#1769e0;color:#fff;border-color:#1769e0}
+#status{font-size:13px;color:#667085;margin-top:6px;min-height:18px}
+#map{width:100%;height:100%}
+#panel{position:absolute;left:12px;right:12px;bottom:16px;z-index:900;background:#fff;border-radius:14px;padding:10px 12px;box-shadow:0 3px 16px #0004;display:none}
+#panel strong{font-size:20px}
+#panel span{color:#667085;margin-left:8px}
+.leaflet-control-zoom a{width:44px!important;height:44px!important;line-height:44px!important;font-size:26px!important}
+@media (orientation:landscape){header{padding:8px 12px}.row{grid-template-columns:minmax(320px,1fr) auto auto auto}#locate{display:block}}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <h1>🚚 タブレットナビ PoC</h1>
+  <div class="row">
+    <input id="q" type="search" inputmode="search" placeholder="目的地を入力（例：渋川駅）" autocomplete="off">
+    <button id="voice" title="音声入力">🎤</button>
+    <button id="search" class="primary">検索</button>
+    <button id="locate">現在地</button>
+  </div>
+  <div id="status">現在地を取得しています…</div>
+</header>
+<div id="map"></div>
+</div>
+<div id="panel"><strong id="distance"></strong><span id="duration"></span><br><small id="dest"></small></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const statusEl=document.getElementById('status'), q=document.getElementById('q');
+const panel=document.getElementById('panel'), distEl=document.getElementById('distance'), durEl=document.getElementById('duration'), destEl=document.getElementById('dest');
+const map=L.map('map',{zoomControl:true}).setView([36.2,138.2],6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+let current=null,currentMarker=null,destMarker=null,routeLine=null;
+
+function setStatus(s){statusEl.textContent=s}
+function locate(){
+  if(!navigator.geolocation){setStatus('この端末では現在地を取得できません');return}
+  setStatus('現在地を取得しています…');
+  navigator.geolocation.getCurrentPosition(p=>{
+    current=[p.coords.latitude,p.coords.longitude];
+    if(currentMarker) currentMarker.setLatLng(current); else currentMarker=L.marker(current).addTo(map).bindPopup('現在地');
+    map.setView(current,15);
+    setStatus('現在地を取得しました。目的地を検索してください。');
+  },e=>setStatus('現在地を取得できません。位置情報を許可してください。'),{enableHighAccuracy:true,timeout:12000,maximumAge:5000});
+}
+
+async function searchDest(){
+  const text=q.value.trim(); if(!text){setStatus('目的地を入力してください');return}
+  setStatus('目的地を検索しています…');
+  try{
+    const u='https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&accept-language=ja&q='+encodeURIComponent(text);
+    const r=await fetch(u); const data=await r.json();
+    if(!data.length){setStatus('目的地が見つかりませんでした');return}
+    const d=[+data[0].lat,+data[0].lon];
+    if(destMarker) destMarker.setLatLng(d).setPopupContent(data[0].display_name); else destMarker=L.marker(d).addTo(map).bindPopup(data[0].display_name);
+    destMarker.openPopup();
+    destEl.textContent=data[0].display_name;
+    if(current) await drawRoute(current,d); else {map.setView(d,15);setStatus('目的地を表示しました。現在地取得後に経路表示できます。')}
+  }catch(e){setStatus('検索に失敗しました。通信状態を確認してください。')}
+}
+
+async function drawRoute(a,b){
+  setStatus('ルートを計算しています…');
+  try{
+    const u='https://router.project-osrm.org/route/v1/driving/'+a[1]+','+a[0]+';'+b[1]+','+b[0]+'?overview=full&geometries=geojson';
+    const r=await fetch(u); const data=await r.json();
+    if(!data.routes||!data.routes.length) throw new Error();
+    const route=data.routes[0], pts=route.geometry.coordinates.map(x=>[x[1],x[0]]);
+    if(routeLine) map.removeLayer(routeLine);
+    routeLine=L.polyline(pts,{weight:7,opacity:.8}).addTo(map);
+    map.fitBounds(routeLine.getBounds(),{padding:[30,30]});
+    distEl.textContent=(route.distance/1000).toFixed(1)+' km';
+    durEl.textContent='約'+Math.max(1,Math.round(route.duration/60))+'分';
+    panel.style.display='block';
+    setStatus('ルートを表示しました。青線は参考経路です。');
+  }catch(e){setStatus('ルート計算に失敗しました。目的地は地図上に表示しています。')}
+}
+
+document.getElementById('search').onclick=searchDest;
+document.getElementById('locate').onclick=locate;
+q.addEventListener('keydown',e=>{if(e.key==='Enter')searchDest()});
+map.on('click',async e=>{
+  if(destMarker) destMarker.setLatLng(e.latlng); else destMarker=L.marker(e.latlng).addTo(map);
+  destEl.textContent='地図で指定した地点';
+  if(current) await drawRoute(current,[e.latlng.lat,e.latlng.lng]);
+});
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+document.getElementById('voice').onclick=()=>{
+  if(!SR){setStatus('このブラウザは音声入力に対応していません。キーボード入力を使ってください。');return}
+  const r=new SR(); r.lang='ja-JP'; r.interimResults=false; r.maxAlternatives=1;
+  setStatus('目的地を話してください…');
+  r.onresult=e=>{q.value=e.results[0][0].transcript;searchDest()};
+  r.onerror=()=>setStatus('音声入力に失敗しました。');
+  r.start();
+};
+locate();
+</script>
+</body>
+</html>
