@@ -1,0 +1,5 @@
+name = "autoai-web-poc"
+compatibility_date = "2026-09-27"
+
+# WEB-003 で Workers / D1 / R2 / Preview の実リソースと binding を追加する。
+# 秘密情報はここに書かず、Cloudflare / GitHub Secrets で管理する。
