@@ -1,1 +1,84 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>オートAI PoC一覧</title><style>body{font-family:system-ui,sans-serif;margin:0;background:#f4f6f8;color:#17202a}main{max-width:760px;margin:auto;padding:24px 16px}h1{margin:0 0 6px}.portal-version{font-size:14px;color:#667085;margin-bottom:6px}.sub{color:#667085;margin-bottom:24px}.card{display:block;background:#fff;color:inherit;text-decoration:none;padding:18px;margin:12px 0;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.08)}.card h2{margin:0 0 8px;font-size:20px}.card p{margin:0;color:#667085;line-height:1.5}.badge{display:inline-block;margin-top:10px;font-size:13px;background:#eef2f6;padding:4px 8px;border-radius:999px}</style></head><body><main><h1>オートAI PoC一覧</h1><div class="portal-version">Portal Version 0.3</div><div class="sub">テスト中のPoCを選択してください。</div><a class="card" href="./qr-search/"><h2>QR・バーコード探索PoC</h2><p>カメラでQRコード／バーコードを連続検出し、指定したコードと一致した位置を強調表示します。</p><span class="badge">Version 0.3</span></a><a class="card" href="./tablet-nav/"><h2>タブレットナビ PoC</h2><p>現在地・目的地検索・参考ルート表示・音声入力を、タブレット向けの大きな操作UIで試せます。</p><span class="badge">Version 0.2</span></a></main></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>オートAI PoC一覧</title>
+<style>
+body{font-family:system-ui,sans-serif;margin:0;background:#f4f6f8;color:#17202a}
+main{max-width:760px;margin:auto;padding:24px 16px}
+.title-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+h1{margin:0}
+.qr-button{width:40px;height:40px;border:0;border-radius:10px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.08);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#17202a}
+.qr-button:active{transform:scale(.97)}
+.qr-button svg{width:22px;height:22px}
+.portal-version{font-size:14px;color:#667085;margin-bottom:6px}
+.sub{color:#667085;margin-bottom:24px}
+.card{display:block;background:#fff;color:inherit;text-decoration:none;padding:18px;margin:12px 0;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
+.card h2{margin:0 0 8px;font-size:20px}
+.card p{margin:0;color:#667085;line-height:1.5}
+.badge{display:inline-block;margin-top:10px;font-size:13px;background:#eef2f6;padding:4px 8px;border-radius:999px}
+.qr-modal{position:fixed;inset:0;background:rgba(0,0,0,.48);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000}
+.qr-modal.open{display:flex}
+.qr-dialog{width:min(360px,100%);background:#fff;border-radius:18px;padding:22px;box-shadow:0 18px 50px rgba(0,0,0,.25);text-align:center}
+.qr-dialog h2{margin:0 0 8px;font-size:22px}
+.qr-dialog p{margin:0 0 18px;color:#667085;font-size:14px;line-height:1.5}
+#qrcode{display:flex;justify-content:center;margin:0 auto 16px}
+#qrcode img,#qrcode canvas{max-width:100%;height:auto}
+.qr-url{font-size:12px;color:#667085;word-break:break-all;background:#f4f6f8;border-radius:8px;padding:8px;margin-bottom:14px}
+.close-button{width:100%;border:0;border-radius:10px;padding:11px 16px;background:#17202a;color:#fff;font-size:15px;cursor:pointer}
+</style>
+</head>
+<body>
+<main>
+  <div class="title-row">
+    <h1>オートAI PoC一覧</h1>
+    <button class="qr-button" id="qrButton" type="button" aria-label="このページのQRコードを表示" title="このページをQRコードで共有">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path fill="currentColor" d="M3 3h8v8H3V3Zm2 2v4h4V5H5Zm8-2h8v8h-8V3Zm2 2v4h4V5h-4ZM3 13h8v8H3v-8Zm2 2v4h4v-4H5Zm8-2h3v3h-3v-3Zm5 0h3v5h-2v3h-3v-3h2v-2h-2v-3h2Zm-5 5h3v3h-3v-3Z"/>
+      </svg>
+    </button>
+  </div>
+  <div class="portal-version">Portal Version 0.4</div>
+  <div class="sub">テスト中のPoCを選択してください。</div>
+  <a class="card" href="./qr-search/"><h2>QR・バーコード探索PoC</h2><p>カメラでQRコード／バーコードを連続検出し、指定したコードと一致した位置を強調表示します。</p><span class="badge">Version 0.3</span></a>
+  <a class="card" href="./tablet-nav/"><h2>タブレットナビ PoC</h2><p>現在地・目的地検索・参考ルート表示・音声入力を、タブレット向けの大きな操作UIで試せます。</p><span class="badge">Version 0.2</span></a>
+</main>
+
+<div class="qr-modal" id="qrModal" role="dialog" aria-modal="true" aria-labelledby="qrTitle">
+  <div class="qr-dialog">
+    <h2 id="qrTitle">このページを紹介</h2>
+    <p>スマートフォンなどでQRコードを読み取ると、このページを開けます。</p>
+    <div id="qrcode"></div>
+    <div class="qr-url" id="qrUrl"></div>
+    <button class="close-button" id="closeQr" type="button">閉じる</button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const qrButton=document.getElementById('qrButton');
+const qrModal=document.getElementById('qrModal');
+const qrCode=document.getElementById('qrcode');
+const qrUrl=document.getElementById('qrUrl');
+const closeQr=document.getElementById('closeQr');
+
+function openQr(){
+  const url=window.location.href;
+  qrUrl.textContent=url;
+  qrCode.innerHTML='';
+  if(window.QRCode){
+    new QRCode(qrCode,{text:url,width:220,height:220,correctLevel:QRCode.CorrectLevel.M});
+  }else{
+    qrCode.textContent='QRコードの読み込みに失敗しました。';
+  }
+  qrModal.classList.add('open');
+}
+function closeQrModal(){qrModal.classList.remove('open');}
+qrButton.addEventListener('click',openQr);
+closeQr.addEventListener('click',closeQrModal);
+qrModal.addEventListener('click',e=>{if(e.target===qrModal)closeQrModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeQrModal();});
+</script>
+</body>
+</html>
