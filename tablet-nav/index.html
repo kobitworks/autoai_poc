@@ -8,33 +8,37 @@
 <style>
 html,body{height:100%;margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#111;color:#111}
 #app{height:100%;display:grid;grid-template-rows:auto 1fr}
-header{background:#fff;padding:10px;box-shadow:0 2px 10px #0002;z-index:1000}
+header{background:#fff;padding:10px 12px;box-shadow:0 2px 10px #0002;z-index:1000}
+.topline{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.back{color:#1769e0;text-decoration:none;font-size:15px;font-weight:700;white-space:nowrap}
+.version{font-size:13px;color:#667085}
 h1{font-size:18px;margin:0 0 8px}
 .row{display:grid;grid-template-columns:1fr auto auto;gap:8px}
 input,button{font:inherit;border-radius:10px;border:1px solid #cfd5dc;min-height:48px}
 input{padding:0 12px;font-size:18px}
 button{padding:0 14px;background:#fff;font-weight:700}
 button.primary{background:#1769e0;color:#fff;border-color:#1769e0}
-#status{font-size:13px;color:#667085;margin-top:6px;min-height:18px}
+#status{font-size:13px;color:#667085;margin-top:6px;min-height:18px;line-height:1.35}
 #map{width:100%;height:100%}
 #panel{position:absolute;left:12px;right:12px;bottom:16px;z-index:900;background:#fff;border-radius:14px;padding:10px 12px;box-shadow:0 3px 16px #0004;display:none}
 #panel strong{font-size:20px}
 #panel span{color:#667085;margin-left:8px}
 .leaflet-control-zoom a{width:44px!important;height:44px!important;line-height:44px!important;font-size:26px!important}
-@media (orientation:landscape){header{padding:8px 12px}.row{grid-template-columns:minmax(320px,1fr) auto auto auto}#locate{display:block}}
+@media (orientation:landscape){header{padding:8px 12px}.row{grid-template-columns:minmax(320px,1fr) auto auto auto}}
 </style>
 </head>
 <body>
 <div id="app">
 <header>
+  <div class="topline"><a class="back" href="../">← PoC一覧へ戻る</a><span class="version">Version 0.2</span></div>
   <h1>🚚 タブレットナビ PoC</h1>
   <div class="row">
     <input id="q" type="search" inputmode="search" placeholder="目的地を入力（例：渋川駅）" autocomplete="off">
     <button id="voice" title="音声入力">🎤</button>
     <button id="search" class="primary">検索</button>
-    <button id="locate">現在地</button>
+    <button id="locate">GPS再取得</button>
   </div>
-  <div id="status">現在地を取得しています…</div>
+  <div id="status">GPSを開始しています…</div>
 </header>
 <div id="map"></div>
 </div>
@@ -46,18 +50,41 @@ const statusEl=document.getElementById('status'), q=document.getElementById('q')
 const panel=document.getElementById('panel'), distEl=document.getElementById('distance'), durEl=document.getElementById('duration'), destEl=document.getElementById('dest');
 const map=L.map('map',{zoomControl:true}).setView([36.2,138.2],6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
-let current=null,currentMarker=null,destMarker=null,routeLine=null;
 
+let current=null,currentMarker=null,accuracyCircle=null,destMarker=null,routeLine=null,watchId=null,firstFix=true;
 function setStatus(s){statusEl.textContent=s}
-function locate(){
-  if(!navigator.geolocation){setStatus('この端末では現在地を取得できません');return}
-  setStatus('現在地を取得しています…');
-  navigator.geolocation.getCurrentPosition(p=>{
-    current=[p.coords.latitude,p.coords.longitude];
-    if(currentMarker) currentMarker.setLatLng(current); else currentMarker=L.marker(current).addTo(map).bindPopup('現在地');
-    map.setView(current,15);
-    setStatus('現在地を取得しました。目的地を検索してください。');
-  },e=>setStatus('現在地を取得できません。位置情報を許可してください。'),{enableHighAccuracy:true,timeout:12000,maximumAge:5000});
+function gpsError(e){
+  const msg=e&&e.code===1?'位置情報が拒否されています。ブラウザ設定でこのサイトの位置情報を「許可」にしてください。':
+            e&&e.code===2?'現在地を取得できません。GPS/Wi-Fi/モバイル通信を確認してください。':
+            e&&e.code===3?'GPS取得がタイムアウトしました。屋外で「GPS再取得」を押してください。':
+            '現在地を取得できません。';
+  setStatus(msg);
+}
+function onPosition(p){
+  const c=p.coords;
+  current=[c.latitude,c.longitude];
+  const acc=Math.round(c.accuracy||0);
+  if(currentMarker) currentMarker.setLatLng(current);
+  else currentMarker=L.marker(current).addTo(map).bindPopup('現在地');
+  if(accuracyCircle) accuracyCircle.setLatLng(current).setRadius(c.accuracy||0);
+  else accuracyCircle=L.circle(current,{radius:c.accuracy||0,weight:1,fillOpacity:.08}).addTo(map);
+  if(firstFix){map.setView(current,16);firstFix=false}
+  setStatus('GPS受信中：精度 約'+acc+'m'+(acc>100?'（精度が低めです）':''));
+}
+function startGps(){
+  if(!navigator.geolocation){setStatus('このブラウザでは位置情報を利用できません。');return}
+  if(watchId!==null) navigator.geolocation.clearWatch(watchId);
+  firstFix=true;
+  setStatus('GPSを取得しています…');
+  watchId=navigator.geolocation.watchPosition(onPosition,gpsError,{
+    enableHighAccuracy:true,
+    timeout:20000,
+    maximumAge:1000
+  });
+}
+function recenter(){
+  if(current){map.setView(current,16);setStatus('現在地を中心に戻しました。GPSは継続測位中です。')}
+  else startGps();
 }
 
 async function searchDest(){
@@ -68,13 +95,14 @@ async function searchDest(){
     const r=await fetch(u); const data=await r.json();
     if(!data.length){setStatus('目的地が見つかりませんでした');return}
     const d=[+data[0].lat,+data[0].lon];
-    if(destMarker) destMarker.setLatLng(d).setPopupContent(data[0].display_name); else destMarker=L.marker(d).addTo(map).bindPopup(data[0].display_name);
+    if(destMarker) destMarker.setLatLng(d).setPopupContent(data[0].display_name);
+    else destMarker=L.marker(d).addTo(map).bindPopup(data[0].display_name);
     destMarker.openPopup();
     destEl.textContent=data[0].display_name;
-    if(current) await drawRoute(current,d); else {map.setView(d,15);setStatus('目的地を表示しました。現在地取得後に経路表示できます。')}
+    if(current) await drawRoute(current,d);
+    else {map.setView(d,15);setStatus('目的地を表示しました。GPS取得後に経路表示できます。')}
   }catch(e){setStatus('検索に失敗しました。通信状態を確認してください。')}
 }
-
 async function drawRoute(a,b){
   setStatus('ルートを計算しています…');
   try{
@@ -88,12 +116,12 @@ async function drawRoute(a,b){
     distEl.textContent=(route.distance/1000).toFixed(1)+' km';
     durEl.textContent='約'+Math.max(1,Math.round(route.duration/60))+'分';
     panel.style.display='block';
-    setStatus('ルートを表示しました。青線は参考経路です。');
+    setStatus('ルート表示中。GPSは継続測位しています。');
   }catch(e){setStatus('ルート計算に失敗しました。目的地は地図上に表示しています。')}
 }
 
 document.getElementById('search').onclick=searchDest;
-document.getElementById('locate').onclick=locate;
+document.getElementById('locate').onclick=recenter;
 q.addEventListener('keydown',e=>{if(e.key==='Enter')searchDest()});
 map.on('click',async e=>{
   if(destMarker) destMarker.setLatLng(e.latlng); else destMarker=L.marker(e.latlng).addTo(map);
@@ -109,7 +137,9 @@ document.getElementById('voice').onclick=()=>{
   r.onerror=()=>setStatus('音声入力に失敗しました。');
   r.start();
 };
-locate();
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&watchId===null)startGps()});
+window.addEventListener('beforeunload',()=>{if(watchId!==null)navigator.geolocation.clearWatch(watchId)});
+startGps();
 </script>
 </body>
 </html>
