@@ -34,13 +34,12 @@ h1{margin:0}
   <div class="title-row">
     <h1>オートAI PoC一覧</h1>
     <button class="qr-button" id="qrButton" type="button" aria-label="このページのQRコードを表示" title="このページをQRコードで共有">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path fill="currentColor" d="M3 3h8v8H3V3Zm2 2v4h4V5H5Zm8-2h8v8h-8V3Zm2 2v4h4V5h-4ZM3 13h8v8H3v-8Zm2 2v4h4v-4H5Zm8-2h3v3h-3v-3Zm5 0h3v5h-2v3h-3v-3h2v-2h-2v-3h2Zm-5 5h3v3h-3v-3Z"/>
-      </svg>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 3h8v8H3V3Zm2 2v4h4V5H5Zm8-2h8v8h-8V3Zm2 2v4h4V5h-4ZM3 13h8v8H3v-8Zm2 2v4h4v-4H5Zm8-2h3v3h-3v-3Zm5 0h3v5h-2v3h-3v-3h2v-2h-2v-3h2Zm-5 5h3v3h-3v-3Z"/></svg>
     </button>
   </div>
-  <div class="portal-version">Portal Version 0.4</div>
+  <div class="portal-version">Portal Version 0.5</div>
   <div class="sub">テスト中のPoCを選択してください。</div>
+  <a class="card" href="./qr-listing/"><h2>QR商品出品支援 PoC</h2><p>QR付きの商品写真を商品単位で整理し、AI解析から出品データ作成までを支援するPoCです。</p><span class="badge">Version 0.1</span></a>
   <a class="card" href="./qr-search/"><h2>QR・バーコード探索PoC</h2><p>カメラでQRコード／バーコードを連続検出し、指定したコードと一致した位置を強調表示します。</p><span class="badge">Version 0.3</span></a>
   <a class="card" href="./tablet-nav/"><h2>タブレットナビ PoC</h2><p>現在地・目的地検索・参考ルート表示・音声入力を、タブレット向けの大きな操作UIで試せます。</p><span class="badge">Version 0.2</span></a>
 </main>
@@ -62,23 +61,9 @@ const qrModal=document.getElementById('qrModal');
 const qrCode=document.getElementById('qrcode');
 const qrUrl=document.getElementById('qrUrl');
 const closeQr=document.getElementById('closeQr');
-
-function openQr(){
-  const url=window.location.href;
-  qrUrl.textContent=url;
-  qrCode.innerHTML='';
-  if(window.QRCode){
-    new QRCode(qrCode,{text:url,width:220,height:220,correctLevel:QRCode.CorrectLevel.M});
-  }else{
-    qrCode.textContent='QRコードの読み込みに失敗しました。';
-  }
-  qrModal.classList.add('open');
-}
+function openQr(){const url=window.location.href;qrUrl.textContent=url;qrCode.innerHTML='';if(window.QRCode){new QRCode(qrCode,{text:url,width:220,height:220,correctLevel:QRCode.CorrectLevel.M});}else{qrCode.textContent='QRコードの読み込みに失敗しました。';}qrModal.classList.add('open');}
 function closeQrModal(){qrModal.classList.remove('open');}
-qrButton.addEventListener('click',openQr);
-closeQr.addEventListener('click',closeQrModal);
-qrModal.addEventListener('click',e=>{if(e.target===qrModal)closeQrModal();});
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeQrModal();});
+qrButton.addEventListener('click',openQr);closeQr.addEventListener('click',closeQrModal);qrModal.addEventListener('click',e=>{if(e.target===qrModal)closeQrModal();});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeQrModal();});
 </script>
 </body>
 </html>
