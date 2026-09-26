@@ -9,9 +9,9 @@ body{font-family:system-ui,sans-serif;margin:0;background:#f4f6f8;color:#17202a}
 main{max-width:760px;margin:auto;padding:24px 16px}
 .title-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
 h1{margin:0}
-.qr-button{width:40px;height:40px;border:0;border-radius:10px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.08);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#17202a}
-.qr-button:active{transform:scale(.97)}
-.qr-button svg{width:22px;height:22px}
+.icon-button{width:40px;height:40px;border:0;border-radius:10px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.08);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#17202a}
+.icon-button:active{transform:scale(.97)}
+.icon-button svg{width:22px;height:22px}
 .portal-version{font-size:14px;color:#667085;margin-bottom:6px}
 .sub{color:#667085;margin-bottom:24px}
 .card{display:block;background:#fff;color:inherit;text-decoration:none;padding:18px;margin:12px 0;border-radius:14px;box-shadow:0 2px 10px rgba(0,0,0,.08)}
@@ -33,8 +33,11 @@ h1{margin:0}
 <main>
   <div class="title-row">
     <h1>オートAI PoC一覧</h1>
-    <button class="qr-button" id="qrButton" type="button" aria-label="このページのQRコードを表示" title="このページをQRコードで共有">
+    <button class="icon-button" id="qrButton" type="button" aria-label="このページのQRコードを表示" title="このページをQRコードで共有">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M3 3h8v8H3V3Zm2 2v4h4V5H5Zm8-2h8v8h-8V3Zm2 2v4h4V5h-4ZM3 13h8v8H3v-8Zm2 2v4h4v-4H5Zm8-2h3v3h-3v-3Zm5 0h3v5h-2v3h-3v-3h2v-2h-2v-3h2Zm-5 5h3v3h-3v-3Z"/></svg>
+    </button>
+    <button class="icon-button" id="reloadButton" type="button" aria-label="画面を更新" title="画面を更新">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.75 10h-2.1A6 6 0 1 1 16.24 7.76L13 11h7V4l-2.35 2.35Z"/></svg>
     </button>
   </div>
   <div class="portal-version">Portal Version 0.5</div>
@@ -57,13 +60,14 @@ h1{margin:0}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 const qrButton=document.getElementById('qrButton');
+const reloadButton=document.getElementById('reloadButton');
 const qrModal=document.getElementById('qrModal');
 const qrCode=document.getElementById('qrcode');
 const qrUrl=document.getElementById('qrUrl');
 const closeQr=document.getElementById('closeQr');
 function openQr(){const url=window.location.href;qrUrl.textContent=url;qrCode.innerHTML='';if(window.QRCode){new QRCode(qrCode,{text:url,width:220,height:220,correctLevel:QRCode.CorrectLevel.M});}else{qrCode.textContent='QRコードの読み込みに失敗しました。';}qrModal.classList.add('open');}
 function closeQrModal(){qrModal.classList.remove('open');}
-qrButton.addEventListener('click',openQr);closeQr.addEventListener('click',closeQrModal);qrModal.addEventListener('click',e=>{if(e.target===qrModal)closeQrModal();});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeQrModal();});
+qrButton.addEventListener('click',openQr);reloadButton.addEventListener('click',()=>window.location.reload());closeQr.addEventListener('click',closeQrModal);qrModal.addEventListener('click',e=>{if(e.target===qrModal)closeQrModal();});document.addEventListener('keydown',e=>{if(e.key==='Escape')closeQrModal();});
 </script>
 </body>
 </html>
