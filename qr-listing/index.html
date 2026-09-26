@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>QR商品出品支援</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#e5e7eb;--accent:#2563eb;--accent-soft:#eff6ff}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+header{background:#fff;border-bottom:1px solid var(--line)}
+.header-inner{max-width:880px;margin:auto;padding:18px 18px 15px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--accent);margin-bottom:5px}
+h1{font-size:25px;line-height:1.25;margin:0}
+.version{margin-top:6px;font-size:12px;color:var(--muted)}
+main{max-width:880px;margin:auto;padding:24px 16px 40px}
+.welcome{margin-bottom:20px}
+.welcome h2{font-size:20px;margin:0 0 6px}
+.welcome p{margin:0;color:var(--muted);line-height:1.55}
+.menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.card{appearance:none;width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:18px;padding:20px;box-shadow:0 3px 14px rgba(15,23,42,.05);cursor:pointer;color:inherit}
+.card:active{transform:scale(.99)}
+.icon{width:46px;height:46px;border-radius:13px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:23px;margin-bottom:14px}
+.card h3{font-size:18px;margin:0 0 7px}
+.card p{font-size:14px;line-height:1.5;color:var(--muted);margin:0}
+.arrow{display:block;margin-top:15px;color:var(--accent);font-size:13px;font-weight:700}
+.note{margin-top:22px;border:1px dashed #cbd5e1;border-radius:14px;padding:13px 15px;color:var(--muted);font-size:13px;line-height:1.5;background:#fff}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#0f172a;color:#fff;padding:11px 16px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:.2s;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:620px){.menu{grid-template-columns:1fr}.card{padding:18px}.header-inner{padding-top:16px}h1{font-size:23px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="eyebrow">QR PRODUCT LISTING SUPPORT</div>
+    <h1>QR商品出品支援</h1>
+    <div class="version">PoC Version 0.1</div>
+  </div>
+</header>
+
+<main>
+  <section class="welcome">
+    <h2>メニュー</h2>
+    <p>利用する機能を選択してください。</p>
+  </section>
+
+  <section class="menu" aria-label="機能メニュー">
+    <button class="card" data-name="商品登録">
+      <div class="icon" aria-hidden="true">📷</div>
+      <h3>商品登録</h3>
+      <p>QRコードと商品写真を取り込み、商品単位で写真をまとめます。</p>
+      <span class="arrow">開く →</span>
+    </button>
+
+    <button class="card" data-name="商品一覧">
+      <div class="icon" aria-hidden="true">📦</div>
+      <h3>商品一覧</h3>
+      <p>登録済みの商品と写真、処理状況を一覧で確認します。</p>
+      <span class="arrow">開く →</span>
+    </button>
+
+    <button class="card" data-name="AI解析・確認">
+      <div class="icon" aria-hidden="true">✨</div>
+      <h3>AI解析・確認</h3>
+      <p>商品画像から生成した商品名・ブランド・状態・説明文などを確認、修正します。</p>
+      <span class="arrow">開く →</span>
+    </button>
+
+    <button class="card" data-name="出品データ">
+      <div class="icon" aria-hidden="true">🛒</div>
+      <h3>出品データ</h3>
+      <p>確認済みの商品情報を出品用データとして確認します。</p>
+      <span class="arrow">開く →</span>
+    </button>
+  </section>
+
+  <div class="note">ログイン後の画面を想定したPoCです。ログイン機能および各機能の詳細画面は今後追加します。</div>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+const toast=document.getElementById('toast');
+let timer;
+document.querySelectorAll('.card').forEach(card=>{
+  card.addEventListener('click',()=>{
+    clearTimeout(timer);
+    toast.textContent=card.dataset.name+'画面は次のPoCで実装します';
+    toast.classList.add('show');
+    timer=setTimeout(()=>toast.classList.remove('show'),1800);
+  });
+});
+</script>
+</body>
+</html>
