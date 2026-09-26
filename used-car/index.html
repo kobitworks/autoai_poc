@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>中古車販売・車両整備管理 PoC</title>
+<style>
+:root{--bg:#f3f5f8;--panel:#fff;--line:#e5e7eb;--text:#18212f;--muted:#667085;--brand:#1f4f82;--brand2:#eaf2fb;--warn:#b54708;--danger:#b42318;--ok:#027a48}
+*{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+button,input,select,textarea{font:inherit} button{cursor:pointer}
+.app{min-height:100vh}.topbar{height:64px;background:#17324d;color:#fff;display:flex;align-items:center;padding:0 18px;gap:14px;position:sticky;top:0;z-index:20}
+.brand{font-size:19px;font-weight:700}.version{font-size:12px;background:rgba(255,255,255,.14);padding:4px 8px;border-radius:999px}.spacer{flex:1}
+.topbtn{border:1px solid rgba(255,255,255,.25);background:transparent;color:#fff;border-radius:9px;padding:8px 11px}
+.layout{display:grid;grid-template-columns:220px 1fr;min-height:calc(100vh - 64px)}
+.side{background:#fff;border-right:1px solid var(--line);padding:16px 12px}
+.nav{display:grid;gap:7px}.nav button{border:0;background:transparent;text-align:left;padding:11px 12px;border-radius:9px;color:#344054}.nav button.active{background:var(--brand2);color:var(--brand);font-weight:700}
+.main{padding:22px;max-width:1300px;width:100%;margin:0 auto}.head{display:flex;align-items:flex-end;gap:12px;margin-bottom:18px}.head h1{font-size:26px;margin:0}.sub{color:var(--muted);font-size:14px;margin-top:5px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}.kpi .n{font-size:30px;font-weight:750;margin-top:5px}.kpi .label{color:var(--muted);font-size:13px}.kpi.warn .n{color:var(--warn)}
+.panel{background:#fff;border:1px solid var(--line);border-radius:14px;margin-top:16px;overflow:hidden}.panel-h{padding:15px 17px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px}.panel-h h2{font-size:17px;margin:0}.panel-b{padding:16px}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}.search{flex:1;min-width:220px;border:1px solid #d0d5dd;border-radius:9px;padding:10px 12px;background:#fff}.primary{border:0;background:var(--brand);color:#fff;border-radius:9px;padding:10px 14px}.secondary{border:1px solid #d0d5dd;background:#fff;color:#344054;border-radius:9px;padding:10px 14px}
+.tablewrap{overflow:auto} table{width:100%;border-collapse:collapse;min-width:780px} th,td{padding:12px 11px;border-bottom:1px solid var(--line);text-align:left;font-size:14px}th{font-size:12px;color:var(--muted);background:#fafbfc;white-space:nowrap}tr.clickable:hover{background:#f8fafc}
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;background:#eef2f6;color:#475467}.badge.warn{background:#fff3e8;color:#b54708}.badge.ok{background:#ecfdf3;color:#027a48}
+.customer-card{border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;gap:14px;align-items:center}.avatar{width:46px;height:46px;border-radius:50%;background:var(--brand2);display:grid;place-items:center;color:var(--brand);font-weight:700}.customer-card h3{margin:0 0 3px;font-size:17px}.customer-card p{margin:0;color:var(--muted);font-size:13px}.cars{margin-left:auto;text-align:right}
+.two{display:grid;grid-template-columns:1.2fr .8fr;gap:16px}.info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.info{padding:11px;background:#f8fafc;border-radius:9px}.info .k{font-size:11px;color:var(--muted);margin-bottom:3px}.info .v{font-size:14px;font-weight:650}
+.timeline{display:grid;gap:10px}.event{border-left:3px solid #98a2b3;padding:8px 10px 8px 12px;background:#fafbfc;border-radius:0 9px 9px 0}.event strong{font-size:14px}.event p{margin:4px 0 0;color:var(--muted);font-size:13px}
+.docs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.doc{border:1px solid var(--line);border-radius:10px;padding:13px;background:#fff}.doc .icon{font-size:24px}.doc b{display:block;margin-top:7px;font-size:14px}.doc span{font-size:12px;color:var(--muted)}
+.vehicle-hero{display:flex;gap:15px;align-items:center}.carimg{width:150px;height:94px;border-radius:11px;background:linear-gradient(135deg,#dce6ef,#eef3f7);display:grid;place-items:center;font-size:42px}.vehicle-hero h2{margin:0 0 4px}.vehicle-hero p{margin:0;color:var(--muted);font-size:13px}
+.back{border:0;background:transparent;color:var(--brand);padding:0;font-weight:650}.hidden{display:none!important}
+.modal{position:fixed;inset:0;background:rgba(16,24,40,.48);display:none;align-items:center;justify-content:center;padding:16px;z-index:40}.modal.open{display:flex}.dialog{background:#fff;width:min(620px,100%);max-height:90vh;overflow:auto;border-radius:15px;padding:19px}.dialog h2{margin:0 0 14px}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field{display:grid;gap:5px}.field.full{grid-column:1/-1}.field label{font-size:12px;color:var(--muted)}.field input,.field select,.field textarea{border:1px solid #d0d5dd;border-radius:8px;padding:10px}.actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.notice{padding:12px 14px;background:#fffaeb;border:1px solid #fedf89;border-radius:10px;color:#7a2e0e;font-size:13px;margin-bottom:14px}
+.mobile-nav{display:none}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.side{display:none}.main{padding:14px}.grid4{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}.info-grid{grid-template-columns:1fr 1fr}.docs{grid-template-columns:1fr 1fr}.mobile-nav{display:flex;overflow:auto;background:#fff;border-bottom:1px solid var(--line);padding:8px;gap:6px;position:sticky;top:64px;z-index:10}.mobile-nav button{white-space:nowrap;border:0;background:#f2f4f7;border-radius:8px;padding:8px 10px}.mobile-nav button.active{background:var(--brand2);color:var(--brand);font-weight:700}}
+@media(max-width:560px){.grid4{grid-template-columns:1fr 1fr}.info-grid,.formgrid,.docs{grid-template-columns:1fr}.field.full{grid-column:auto}.vehicle-hero{align-items:flex-start}.carimg{width:96px;height:70px}.topbar{padding:0 12px}.brand{font-size:16px}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="topbar">
+  <div class="brand">中古車販売・車両整備管理</div><span class="version">PoC v0.1</span><div class="spacer"></div>
+  <button class="topbtn" onclick="location.href='../'">PoC一覧へ</button>
+</header>
+<div class="mobile-nav" id="mobileNav"></div>
+<div class="layout">
+<aside class="side"><nav class="nav" id="nav"></nav></aside>
+<main class="main">
+<section id="dashboardView">
+  <div class="head"><div><h1>管理ダッシュボード</h1><div class="sub">顧客・販売車両・車検・整備履歴を仮データで確認するPoCです。</div></div></div>
+  <div class="notice">現在は管理画面PoCです。AIによる画像判定・OCR・DB保存は未実装で、表示データはすべてサンプルです。</div>
+  <div class="grid4">
+    <div class="kpi"><div class="label">登録顧客</div><div class="n">12</div></div>
+    <div class="kpi"><div class="label">管理車両</div><div class="n">15</div></div>
+    <div class="kpi warn"><div class="label">車検3か月以内</div><div class="n">3</div></div>
+    <div class="kpi"><div class="label">今月の整備</div><div class="n">5</div></div>
+  </div>
+  <div class="panel"><div class="panel-h"><h2>車検が近い車両</h2></div><div class="panel-b tablewrap">
+    <table><thead><tr><th>顧客</th><th>車両</th><th>登録番号</th><th>車検満了</th><th>残日数</th><th></th></tr></thead>
+    <tbody>
+      <tr class="clickable"><td>山田 太郎</td><td>トヨタ プリウス</td><td>大宮 330 あ 12-34</td><td>2026/10/18</td><td><span class="badge warn">22日</span></td><td><button class="secondary" onclick="openVehicle('v1')">詳細</button></td></tr>
+      <tr><td>佐藤 美咲</td><td>ホンダ N-BOX</td><td>川越 580 う 56-78</td><td>2026/11/22</td><td><span class="badge warn">57日</span></td><td><button class="secondary" onclick="openVehicle('v2')">詳細</button></td></tr>
+      <tr><td>鈴木 一郎</td><td>スズキ エブリイ</td><td>熊谷 480 か 90-12</td><td>2026/12/08</td><td><span class="badge">73日</span></td><td><button class="secondary" onclick="openVehicle('v3')">詳細</button></td></tr>
+    </tbody></table>
+  </div></div>
+</section>
+
+<section id="customersView" class="hidden">
+  <div class="head"><div><h1>顧客管理</h1><div class="sub">お客様単位で販売車両と履歴を確認します。</div></div></div>
+  <div class="toolbar"><input class="search" id="customerSearch" placeholder="顧客名・電話番号で検索" oninput="filterCustomers()"><button class="primary" onclick="openMockModal('customer')">＋ 顧客登録</button></div>
+  <div id="customerList" style="display:grid;gap:10px"></div>
+</section>
+
+<section id="vehiclesView" class="hidden">
+  <div class="head"><div><h1>車両管理</h1><div class="sub">販売済み車両を一覧で確認します。</div></div></div>
+  <div class="toolbar"><input class="search" placeholder="車名・ナンバー・顧客名・車台番号で検索"><button class="primary" onclick="openMockModal('vehicle')">＋ 車両登録</button></div>
+  <div class="panel" style="margin-top:0"><div class="tablewrap">
+  <table><thead><tr><th>顧客</th><th>車両</th><th>年式</th><th>登録番号</th><th>走行距離</th><th>車検満了</th><th></th></tr></thead><tbody>
+  <tr><td>山田 太郎</td><td>トヨタ プリウス</td><td>2020</td><td>大宮 330 あ 12-34</td><td>42,300 km</td><td>2026/10/18</td><td><button class="secondary" onclick="openVehicle('v1')">詳細</button></td></tr>
+  <tr><td>佐藤 美咲</td><td>ホンダ N-BOX</td><td>2021</td><td>川越 580 う 56-78</td><td>31,850 km</td><td>2026/11/22</td><td><button class="secondary" onclick="openVehicle('v2')">詳細</button></td></tr>
+  <tr><td>鈴木 一郎</td><td>スズキ エブリイ</td><td>2019</td><td>熊谷 480 か 90-12</td><td>68,210 km</td><td>2026/12/08</td><td><button class="secondary" onclick="openVehicle('v3')">詳細</button></td></tr>
+  </tbody></table></div></div>
+</section>
+
+<section id="inspectionView" class="hidden">
+  <div class="head"><div><h1>車検予定</h1><div class="sub">車検満了日の近い順に確認します。</div></div></div>
+  <div class="panel" style="margin-top:0"><div class="tablewrap"><table><thead><tr><th>車検満了</th><th>顧客</th><th>車両</th><th>登録番号</th><th>連絡状況</th></tr></thead><tbody>
+  <tr><td>2026/10/18</td><td>山田 太郎</td><td>プリウス</td><td>大宮 330 あ 12-34</td><td><span class="badge warn">未連絡</span></td></tr>
+  <tr><td>2026/11/22</td><td>佐藤 美咲</td><td>N-BOX</td><td>川越 580 う 56-78</td><td><span class="badge ok">連絡済</span></td></tr>
+  <tr><td>2026/12/08</td><td>鈴木 一郎</td><td>エブリイ</td><td>熊谷 480 か 90-12</td><td><span class="badge">未対応</span></td></tr>
+  </tbody></table></div></div>
+</section>
+
+<section id="recordsView" class="hidden">
+  <div class="head"><div><h1>整備・修理履歴</h1><div class="sub">全車両の整備履歴を時系列で確認します。</div></div></div>
+  <div class="toolbar"><input class="search" placeholder="作業内容・顧客名・車両で検索"><button class="primary" onclick="openMockModal('repair')">＋ 履歴登録</button></div>
+  <div class="panel" style="margin-top:0"><div class="tablewrap"><table><thead><tr><th>実施日</th><th>顧客</th><th>車両</th><th>作業</th><th>走行距離</th><th>金額</th></tr></thead><tbody>
+  <tr><td>2026/09/10</td><td>山田 太郎</td><td>プリウス</td><td>エンジンオイル交換</td><td>42,300 km</td><td>8,800円</td></tr>
+  <tr><td>2026/08/22</td><td>佐藤 美咲</td><td>N-BOX</td><td>12か月点検</td><td>31,500 km</td><td>16,500円</td></tr>
+  <tr><td>2026/07/03</td><td>山田 太郎</td><td>プリウス</td><td>右ドア板金修理</td><td>40,980 km</td><td>52,800円</td></tr>
+  </tbody></table></div></div>
+</section>
+
+<section id="documentsView" class="hidden">
+  <div class="head"><div><h1>写真・書類</h1><div class="sub">将来、車検証・車両写真・修理記録写真を取り込むための仮管理画面です。</div></div></div>
+  <div class="notice">このPoCでは画像解析は行いません。「アップロード」操作のみ仮体験できます。</div>
+  <div class="toolbar"><button class="primary" onclick="document.getElementById('fileInput').click()">＋ 写真・書類を選択</button><input id="fileInput" type="file" multiple accept="image/*,.pdf" class="hidden" onchange="mockUpload(this)"></div>
+  <div class="docs" id="uploadGrid">
+    <div class="doc"><div class="icon">📄</div><b>車検証_プリウス.jpg</b><span>山田 太郎 / プリウス / 車検証</span></div>
+    <div class="doc"><div class="icon">🚗</div><b>車両正面.jpg</b><span>山田 太郎 / プリウス / 車両写真</span></div>
+    <div class="doc"><div class="icon">🧾</div><b>修理メモ_09010.jpg</b><span>山田 太郎 / プリウス / 修理記録</span></div>
+  </div>
+</section>
+
+<section id="vehicleDetailView" class="hidden">
+  <button class="back" onclick="goBackFromVehicle()">← 戻る</button>
+  <div class="panel"><div class="panel-b">
+    <div class="vehicle-hero"><div class="carimg">🚙</div><div><h2 id="vdTitle">トヨタ プリウス</h2><p id="vdSub">山田 太郎 / 大宮 330 あ 12-34</p><div style="margin-top:9px"><span class="badge warn" id="vdBadge">車検まで22日</span></div></div></div>
+  </div></div>
+  <div class="two">
+    <div>
+      <div class="panel"><div class="panel-h"><h2>車両・販売情報</h2></div><div class="panel-b"><div class="info-grid" id="vehicleInfo"></div></div></div>
+      <div class="panel"><div class="panel-h"><h2>整備・修理履歴</h2><div class="spacer"></div><button class="primary" onclick="openMockModal('repair')">＋ 履歴追加</button></div><div class="panel-b"><div class="timeline" id="vehicleTimeline"></div></div></div>
+    </div>
+    <div>
+      <div class="panel"><div class="panel-h"><h2>顧客情報</h2></div><div class="panel-b" id="customerInfo"></div></div>
+      <div class="panel"><div class="panel-h"><h2>写真・書類</h2></div><div class="panel-b"><div class="docs" style="grid-template-columns:1fr" id="vehicleDocs"></div></div></div>
+    </div>
+  </div>
+</section>
+</main>
+</div>
+</div>
+
+<div class="modal" id="mockModal"><div class="dialog"><h2 id="modalTitle">仮登録</h2>
+<div class="formgrid" id="modalFields"></div><div class="actions"><button class="secondary" onclick="closeModal()">キャンセル</button><button class="primary" onclick="saveMock()">仮登録</button></div>
+</div></div>
+
+<script>
+const navItems=[['dashboard','ダッシュボード'],['customers','顧客管理'],['vehicles','車両管理'],['inspection','車検予定'],['records','整備・修理履歴'],['documents','写真・書類']];
+const customers=[
+ {name:'山田 太郎',phone:'090-1234-5678',area:'埼玉県さいたま市',cars:2,vehicle:'プリウス / アクア'},
+ {name:'佐藤 美咲',phone:'080-2233-4455',area:'埼玉県川越市',cars:1,vehicle:'N-BOX'},
+ {name:'鈴木 一郎',phone:'090-7777-1212',area:'埼玉県熊谷市',cars:1,vehicle:'エブリイ'}
+];
+const vehicles={
+ v1:{title:'トヨタ プリウス',sub:'山田 太郎 / 大宮 330 あ 12-34',badge:'車検まで22日',owner:'山田 太郎',phone:'090-1234-5678',address:'埼玉県さいたま市',info:[['メーカー','トヨタ'],['車名','プリウス'],['年式','2020年'],['車台番号','ZVW51-1234567'],['走行距離','42,300 km'],['販売日','2025/10/15'],['販売価格','1,680,000円'],['車検満了','2026/10/18'],['担当','田中']],events:[['2026/09/10','エンジンオイル交換','42,300km / 8,800円'],['2026/07/03','右ドア板金修理','40,980km / 52,800円'],['2026/03/10','タイヤ4本交換','38,420km / 64,000円']],docs:[['📄','車検証','車検証_プリウス.jpg'],['🚗','車両写真','外観写真 6枚'],['🧾','修理記録','手書き修理メモ 2枚']]},
+ v2:{title:'ホンダ N-BOX',sub:'佐藤 美咲 / 川越 580 う 56-78',badge:'車検まで57日',owner:'佐藤 美咲',phone:'080-2233-4455',address:'埼玉県川越市',info:[['メーカー','ホンダ'],['車名','N-BOX'],['年式','2021年'],['車台番号','JF3-9876543'],['走行距離','31,850 km'],['販売日','2025/06/08'],['販売価格','1,390,000円'],['車検満了','2026/11/22'],['担当','田中']],events:[['2026/08/22','12か月点検','31,500km / 16,500円'],['2026/05/11','エアコンフィルター交換','29,100km / 5,500円']],docs:[['📄','車検証','車検証_NBOX.jpg'],['🚗','車両写真','外観写真 4枚']]},
+ v3:{title:'スズキ エブリイ',sub:'鈴木 一郎 / 熊谷 480 か 90-12',badge:'車検まで73日',owner:'鈴木 一郎',phone:'090-7777-1212',address:'埼玉県熊谷市',info:[['メーカー','スズキ'],['車名','エブリイ'],['年式','2019年'],['車台番号','DA17V-456789'],['走行距離','68,210 km'],['販売日','2024/11/02'],['販売価格','980,000円'],['車検満了','2026/12/08'],['担当','佐々木']],events:[['2026/06/14','ブレーキパッド交換','64,900km / 28,600円'],['2026/02/18','オイル・エレメント交換','61,200km / 9,900円']],docs:[['📄','車検証','車検証_エブリイ.jpg'],['🚗','車両写真','外観写真 5枚'],['🧾','整備記録','整備記録写真 3枚']]}
+};
+let currentView='dashboard',vehicleReturn='vehicles';
+function buildNav(){for(const target of ['nav','mobileNav']){const el=document.getElementById(target);el.innerHTML='';navItems.forEach(([id,label])=>{const b=document.createElement('button');b.textContent=label;b.dataset.view=id;b.onclick=()=>showView(id);el.appendChild(b);});}syncNav();}
+function syncNav(){document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===currentView));}
+function showView(id){currentView=id;document.querySelectorAll('main>section').forEach(s=>s.classList.add('hidden'));document.getElementById(id+'View').classList.remove('hidden');syncNav();if(id==='customers')renderCustomers();window.scrollTo({top:0,behavior:'smooth'});}
+function renderCustomers(list=customers){const el=document.getElementById('customerList');el.innerHTML=list.map((c,i)=>`<div class="customer-card"><div class="avatar">${c.name.charAt(0)}</div><div><h3>${c.name}</h3><p>${c.phone} ・ ${c.area}</p><p style="margin-top:4px">販売車両: ${c.vehicle}</p></div><div class="cars"><b>${c.cars}台</b><br><button class="secondary" style="margin-top:6px" onclick="openVehicle('v${Math.min(i+1,3)}','customers')">車両を見る</button></div></div>`).join('');}
+function filterCustomers(){const q=document.getElementById('customerSearch').value.trim();renderCustomers(customers.filter(c=>c.name.includes(q)||c.phone.includes(q)));}
+function openVehicle(id,from){vehicleReturn=from||currentView;const v=vehicles[id];document.querySelectorAll('main>section').forEach(s=>s.classList.add('hidden'));document.getElementById('vehicleDetailView').classList.remove('hidden');document.getElementById('vdTitle').textContent=v.title;document.getElementById('vdSub').textContent=v.sub;document.getElementById('vdBadge').textContent=v.badge;document.getElementById('vehicleInfo').innerHTML=v.info.map(x=>`<div class="info"><div class="k">${x[0]}</div><div class="v">${x[1]}</div></div>`).join('');document.getElementById('customerInfo').innerHTML=`<b>${v.owner}</b><p style="margin:8px 0 3px;color:var(--muted)">${v.phone}</p><p style="margin:0;color:var(--muted)">${v.address}</p>`;document.getElementById('vehicleTimeline').innerHTML=v.events.map(e=>`<div class="event"><strong>${e[0]}　${e[1]}</strong><p>${e[2]}</p></div>`).join('');document.getElementById('vehicleDocs').innerHTML=v.docs.map(d=>`<div class="doc"><div class="icon">${d[0]}</div><b>${d[1]}</b><span>${d[2]}</span></div>`).join('');window.scrollTo({top:0,behavior:'smooth'});}
+function goBackFromVehicle(){showView(vehicleReturn==='vehicleDetail'? 'vehicles':vehicleReturn);}
+function openMockModal(type){const title={customer:'顧客登録（PoC）',vehicle:'車両登録（PoC）',repair:'整備・修理履歴登録（PoC）'}[type];document.getElementById('modalTitle').textContent=title;const fields={customer:[['氏名','text'],['電話番号','tel'],['住所','text']],vehicle:[['顧客名','text'],['メーカー・車名','text'],['登録番号','text'],['車検満了日','date']],repair:[['実施日','date'],['作業種別','text'],['作業内容','text'],['走行距離','number'],['金額','number'],['メモ','textarea']]}[type];document.getElementById('modalFields').innerHTML=fields.map((f,i)=>`<div class="field ${f[0]==='メモ'?'full':''}"><label>${f[0]}</label>${f[1]==='textarea'?'<textarea rows="3"></textarea>':`<input type="${f[1]}">`}</div>`).join('');document.getElementById('mockModal').classList.add('open');}
+function closeModal(){document.getElementById('mockModal').classList.remove('open');}
+function saveMock(){closeModal();alert('PoCのため、入力内容はDBへ保存せず仮登録として扱います。');}
+function mockUpload(input){if(!input.files.length)return;const grid=document.getElementById('uploadGrid');[...input.files].forEach(f=>{const d=document.createElement('div');d.className='doc';d.innerHTML=`<div class="icon">📎</div><b>${f.name}</b><span>未分類 / AI判定は後工程</span>`;grid.prepend(d);});input.value='';}
+buildNav();renderCustomers();
+</script>
+</body>
+</html>
