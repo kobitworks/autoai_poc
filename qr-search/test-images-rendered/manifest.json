@@ -1,8 +1,11 @@
 [
   {
-    "name": "warehouse_qr_sample_01.jpg",
-    "path": "test-images-rendered/warehouse_qr_sample_01.jpg",
+    "name": "warehouse_qr_sample_01.png",
+    "path": "test-images-rendered/warehouse_qr_sample_01.png",
     "updatedAt": "2026-09-27T22:12:00+09:00",
-    "source": "user_selected_final_image"
+    "source": "user_selected_final_image",
+    "preserveOriginalBytes": true,
+    "width": 1672,
+    "height": 941
   }
 ]
