@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "menus": [
+    {
+      "id": "menu-001",
+      "caption": "商品情報を整理",
+      "targetUrl": "https://chatgpt.com/",
+      "prompt": "このページの情報をもとに商品情報を整理してください。"
+    }
+  ]
+}
