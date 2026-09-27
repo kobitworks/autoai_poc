@@ -34,5 +34,7 @@ jobs:
             echo "No rendered changes"
           else
             git commit -m "Build static QR search sample images [skip ci]"
+            git fetch origin main
+            git rebase origin/main
             git push
           fi
