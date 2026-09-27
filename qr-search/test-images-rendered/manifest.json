@@ -49,5 +49,22 @@
         "4500292732125"
       ]
     }
+  },
+  {
+    "name": "20260927_uploaded_warehouse_03.jpg",
+    "path": "test-images-rendered/20260927_uploaded_warehouse_03.jpg",
+    "updatedAt": "2026-09-27T19:40:17+09:00",
+    "codes": {
+      "url": "https://example.com/package/WH7720",
+      "qr": [
+        "PKG-PLT3287",
+        "ITEM-4509-A7",
+        "ZX-1189-B03"
+      ],
+      "barcodes": [
+        "4580791234567",
+        "TB6201002584"
+      ]
+    }
   }
 ]
