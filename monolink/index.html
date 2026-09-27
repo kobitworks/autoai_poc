@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b5d4b">
+<title>モノリンク PoC</title>
+<style>
+:root{--bg:#f4f7f6;--card:#fff;--text:#17231f;--muted:#66736d;--line:#dce5e1;--brand:#0b6b55;--brand2:#e8f5f0;--danger:#b42318;--danger2:#fff1f0;--warn:#b54708;--warn2:#fff6e8;--ok:#027a48;--shadow:0 8px 28px rgba(17,48,39,.08)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+button,input,select,textarea{font:inherit}button{cursor:pointer}
+.topbar{position:sticky;top:0;z-index:30;background:#0a4f40;color:#fff;border-bottom:1px solid rgba(255,255,255,.1)}
+.topin{max-width:1000px;margin:auto;display:flex;align-items:center;gap:10px;padding:13px 16px}.brand{font-weight:800;font-size:19px}.version{font-size:11px;background:rgba(255,255,255,.14);padding:4px 8px;border-radius:999px}.spacer{flex:1}
+.topbtn{border:1px solid rgba(255,255,255,.28);background:transparent;color:#fff;border-radius:10px;padding:8px 10px}
+main{max-width:1000px;margin:auto;padding:20px 16px 90px}
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:16px;margin-bottom:18px}.hero-card,.panel,.status-card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow)}
+.hero-card{padding:22px}.eyebrow{font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--brand);margin-bottom:7px}.hero h1{font-size:30px;line-height:1.25;margin:0 0 9px}.lead{margin:0;color:var(--muted);line-height:1.65}
+.status-card{padding:18px}.status-row{display:flex;gap:12px;align-items:center}.itemicon{width:54px;height:54px;border-radius:15px;background:var(--brand2);display:grid;place-items:center;font-size:28px}.status-card h2{font-size:17px;margin:0 0 4px}.status-card p{margin:0;color:var(--muted);font-size:13px}.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}.chip{font-size:12px;border-radius:999px;padding:5px 9px;background:#eef2f0;color:#47534e}.chip.lost{background:var(--danger2);color:var(--danger)}.chip.custody{background:var(--warn2);color:var(--warn)}
+.nav{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:16px 0}.nav button{border:1px solid var(--line);background:#fff;color:#43504a;border-radius:12px;padding:11px 8px;font-size:13px}.nav button.active{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:750}
+.view{display:none}.view.active{display:block}.panel{overflow:hidden;margin-bottom:14px}.panel-h{padding:15px 17px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}.panel-h h2{font-size:18px;margin:0}.panel-b{padding:17px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.flow-card{border:1px solid var(--line);border-radius:14px;padding:15px;background:#fff}.flow-card h3{margin:0 0 6px;font-size:16px}.flow-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}.flow-card .num{width:30px;height:30px;border-radius:9px;background:var(--brand2);color:var(--brand);display:grid;place-items:center;font-weight:800;margin-bottom:10px}
+.notice{padding:12px 14px;border-radius:12px;background:#eef7ff;border:1px solid #cfe5ff;color:#31536e;font-size:13px;line-height:1.55;margin-bottom:14px}.notice.warn{background:var(--warn2);border-color:#f4d6a5;color:#7a3d08}.notice.danger{background:var(--danger2);border-color:#f3c3be;color:#8d241c}
+.field{display:grid;gap:6px;margin-bottom:12px}.field label{font-size:12px;color:var(--muted);font-weight:700}.field input,.field select,.field textarea{width:100%;border:1px solid #cdd8d3;border-radius:10px;padding:11px 12px;background:#fff;color:var(--text)}.field textarea{min-height:78px;resize:vertical}
+.actions{display:flex;gap:9px;flex-wrap:wrap}.primary,.secondary,.dangerbtn{border-radius:10px;padding:10px 14px;font-weight:700}.primary{border:0;background:var(--brand);color:#fff}.secondary{border:1px solid #cbd7d2;background:#fff;color:#34423c}.dangerbtn{border:1px solid #f1b9b4;background:#fff4f2;color:var(--danger)}
+.scanbox{border:2px dashed #b8ccc4;border-radius:18px;padding:22px;text-align:center;background:#fbfdfc}.qrmark{width:116px;height:116px;margin:0 auto 12px;background:
+linear-gradient(90deg,#14201c 12px,transparent 12px) 0 0/29px 29px,
+linear-gradient(#14201c 12px,transparent 12px) 0 0/29px 29px,#fff;border:10px solid #fff;box-shadow:0 0 0 1px #d7e2de}.scanbox h3{margin:0 0 5px}.scanbox p{margin:0 0 13px;color:var(--muted);font-size:13px}
+.result{display:none;margin-top:15px}.result.show{display:block}
+.lost-banner{border-radius:14px;background:var(--danger2);border:1px solid #f3c0bb;padding:15px;margin-bottom:13px}.lost-banner strong{display:block;color:var(--danger);font-size:18px;margin-bottom:4px}.lost-banner span{font-size:13px;color:#7f332d}
+.message{border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin:8px 0;max-width:86%;font-size:14px;line-height:1.5}.message.finder{background:#f8faf9}.message.owner{margin-left:auto;background:var(--brand2);border-color:#cfe7de}.msgmeta{font-size:11px;color:var(--muted);margin-top:4px}
+.facility-list{display:grid;gap:8px;margin-top:10px}.facility{border:1px solid var(--line);background:#fff;border-radius:11px;padding:11px 12px;display:flex;align-items:center;gap:10px}.facility b{font-size:14px}.facility span{display:block;color:var(--muted);font-size:12px}.distance{margin-left:auto;font-size:12px;color:var(--brand);font-weight:800}
+.timeline{display:grid;gap:0}.event{display:grid;grid-template-columns:22px 1fr;gap:10px}.dotcol{display:flex;flex-direction:column;align-items:center}.dot{width:10px;height:10px;border-radius:50%;background:var(--brand);margin-top:5px}.line{width:2px;flex:1;background:#d9e5e0;min-height:34px}.event:last-child .line{display:none}.eventbody{padding-bottom:13px}.eventbody b{font-size:13px}.eventbody p{margin:3px 0 0;color:var(--muted);font-size:12px;line-height:1.45}
+.kv{display:grid;grid-template-columns:140px 1fr;gap:8px 14px;font-size:14px}.kv div:nth-child(odd){color:var(--muted)}
+.owner-pill{display:inline-flex;align-items:center;gap:7px;background:var(--brand2);color:var(--brand);border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800}
+.switchrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid var(--line)}.switchrow:first-child{border-top:0}.switch{width:46px;height:26px;border-radius:999px;background:#cbd5d1;padding:3px;border:0;transition:.2s}.switch:after{content:"";display:block;width:20px;height:20px;border-radius:50%;background:white;transition:.2s}.switch.on{background:var(--brand)}.switch.on:after{transform:translateX(20px)}
+.mock-login{display:flex;gap:9px;align-items:center;padding:11px 12px;border-radius:12px;background:#f7faf9;border:1px solid var(--line);margin-bottom:13px}.mock-login .avatar{width:36px;height:36px;border-radius:50%;background:var(--brand2);display:grid;place-items:center}.mock-login b{font-size:13px}.mock-login span{display:block;color:var(--muted);font-size:11px}
+.toast{position:fixed;left:50%;bottom:22px;z-index:100;transform:translateX(-50%) translateY(18px);background:#10221b;color:#fff;padding:11px 15px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:.2s;max-width:calc(100% - 28px);text-align:center}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.footer-note{font-size:12px;color:var(--muted);line-height:1.6;text-align:center;margin-top:20px}
+@media(max-width:760px){.hero{grid-template-columns:1fr}.hero h1{font-size:25px}.grid3,.grid2{grid-template-columns:1fr}.nav{grid-template-columns:repeat(5,minmax(92px,1fr));overflow:auto;padding-bottom:4px}.nav button{white-space:nowrap}.kv{grid-template-columns:110px 1fr}}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="topin"><div class="brand">モノリンク</div><span class="version">PoC v0.1</span><div class="spacer"></div><button class="topbtn" id="resetBtn">リセット</button><button class="topbtn" onclick="location.href='../'">PoC一覧へ</button></div></header>
+<main>
+<section class="hero">
+  <div class="hero-card">
+    <div class="eyebrow">P005 / MONOLINK PROTOTYPE</div>
+    <h1>QRから「持ち主」と「拾った人」をつなぐ</h1>
+    <p class="lead">名前や電話番号を持ち物に書かず、QRを読み込むだけで匿名連絡。紛失時、施設保管、ギフトによる管理権移転までを同じQRで体験する画面PoCです。</p>
+  </div>
+  <div class="status-card">
+    <div class="status-row"><div class="itemicon">☂️</div><div><h2 id="summaryName">青い折りたたみ傘</h2><p>QR ID: ML-DEMO-0001</p></div></div>
+    <div class="chips"><span class="chip" id="ownerChip">所有者: テストユーザー</span><span class="chip" id="lostChip">通常</span><span class="chip" id="custodyChip">自己保管</span></div>
+  </div>
+</section>
+
+<nav class="nav" aria-label="PoC機能">
+  <button class="active" data-view="home">全体</button>
+  <button data-view="owner">所有者</button>
+  <button data-view="finder">拾得者</button>
+  <button data-view="facility">事業者</button>
+  <button data-view="gift">ギフト</button>
+</nav>
+
+<section class="view active" id="homeView">
+  <div class="panel"><div class="panel-h"><h2>PoCで確認できる流れ</h2></div><div class="panel-b">
+    <div class="grid3">
+      <div class="flow-card"><div class="num">1</div><h3>QRを持ち物に登録</h3><p>初回登録で所有者と物品を紐付け。表面には氏名・電話番号を表示しません。</p></div>
+      <div class="flow-card"><div class="num">2</div><h3>紛失・拾得をつなぐ</h3><p>紛失モードなら「持ち主が探しています」を表示し、匿名メッセージで返却調整します。</p></div>
+      <div class="flow-card"><div class="num">3</div><h3>施設保管・譲渡まで</h3><p>駅や店舗の保管登録、ギフト受領による管理権移転も同じQR IDで扱います。</p></div>
+    </div>
+  </div></div>
+  <div class="panel"><div class="panel-h"><h2>現在の状態履歴</h2></div><div class="panel-b"><div class="timeline" id="timeline"></div></div></div>
+  <div class="notice">このPoCは操作体験用です。DB保存、本人確認、通知送信、警察・鉄道との実連携は行いません。</div>
+</section>
+
+<section class="view" id="ownerView">
+  <div class="panel"><div class="panel-h"><h2>所有者：QR登録・紛失設定</h2></div><div class="panel-b">
+    <div class="notice">QRシールを購入後、最初に読み取った人がログインして物品へ紐付ける想定です。管理操作には認証が必要です。</div>
+    <div class="grid2">
+      <div>
+        <div class="field"><label>管理名</label><input id="ownerName" value="テストユーザー"></div>
+        <div class="field"><label>持ち物の名前</label><input id="itemName" value="青い折りたたみ傘"></div>
+        <div class="field"><label>カテゴリ</label><select id="category"><option>傘</option><option>バッグ</option><option>鍵</option><option>子どもの持ち物</option><option>その他</option></select></div>
+        <div class="field"><label>持ち主向けメモ（非公開）</label><textarea id="privateMemo">通勤用。持ち手に小さな傷あり。</textarea></div>
+        <div class="actions"><button class="primary" id="saveOwner">登録内容を反映</button></div>
+      </div>
+      <div>
+        <div class="switchrow"><div><b>紛失モード</b><div style="font-size:12px;color:var(--muted)">拾得者画面を最短導線に切り替えます</div></div><button class="switch" id="lostSwitch" aria-label="紛失モード"></button></div>
+        <div class="switchrow"><div><b>謝礼を用意しています</b><div style="font-size:12px;color:var(--muted)">金額や個人情報は公開しません</div></div><button class="switch" id="rewardSwitch" aria-label="謝礼表示"></button></div>
+        <div class="field" style="margin-top:12px"><label>拾得者への公開メッセージ</label><textarea id="publicMessage">見つけていただきありがとうございます。匿名メッセージからご連絡ください。</textarea></div>
+        <div class="owner-pill">🔒 電話番号・メールアドレスはQR画面に表示しません</div>
+      </div>
+    </div>
+  </div></div>
+</section>
+
+<section class="view" id="finderView">
+  <div class="panel"><div class="panel-h"><h2>拾得者：QR読取後画面</h2></div><div class="panel-b">
+    <div class="scanbox" id="scanBox"><div class="qrmark" aria-hidden="true"></div><h3>QRシールを読み取った想定</h3><p>カメラ機能の代わりに、下のボタンで読み取り結果を表示します。</p><button class="primary" id="scanBtn">QRを読み取る（デモ）</button></div>
+    <div class="result" id="finderResult">
+      <div id="finderState"></div>
+      <div class="panel" style="box-shadow:none;margin-top:12px"><div class="panel-h"><h2>匿名メッセージ</h2></div><div class="panel-b">
+        <div id="messages"></div>
+        <div class="field"><label>持ち主への連絡</label><textarea id="finderMessage" placeholder="例：駅の改札付近で見つけました"></textarea></div>
+        <div class="actions"><button class="primary" id="sendMessage">匿名で送信</button></div>
+      </div></div>
+      <div class="panel" style="box-shadow:none"><div class="panel-h"><h2>周辺の公共機関</h2></div><div class="panel-b">
+        <div class="notice">現在地は周辺案内のためブラウザ内でのみ利用し、モノリンクのサーバーへ保存しない設計です。このPoCの施設一覧はサンプルです。</div>
+        <button class="secondary" id="geoBtn">現在地を使って周辺を表示</button>
+        <div id="geoStatus" style="font-size:12px;color:var(--muted);margin-top:8px"></div>
+        <div class="facility-list" id="facilityList"></div>
+      </div></div>
+    </div>
+  </div></div>
+</section>
+
+<section class="view" id="facilityView">
+  <div class="panel"><div class="panel-h"><h2>事業者：拾得物の保管登録</h2></div><div class="panel-b">
+    <div class="mock-login"><div class="avatar">🏢</div><div><b>事業者アカウントでログイン中（PoC）</b><span>サンプル：中央駅 忘れ物センター / 受付担当</span></div></div>
+    <div class="grid2">
+      <div>
+        <div class="field"><label>保管施設</label><select id="facilityName"><option>中央駅 忘れ物センター</option><option>中央駅 東口交番</option><option>駅前ショッピングモール サービスカウンター</option></select></div>
+        <div class="field"><label>内部保管場所</label><input id="storageLocation" value="A棚-12"></div>
+        <div class="field"><label>受付番号</label><input id="receiptNo" value="CEN-260927-018"></div>
+        <div class="field"><label>受取方法</label><select id="pickupMethod"><option>窓口受取</option><option>警察へ移送予定</option><option>別拠点へ移送予定</option></select></div>
+        <div class="actions"><button class="primary" id="registerCustody">保管を登録し所有者へ通知</button><button class="secondary" id="handoverBtn">引渡し完了</button></div>
+      </div>
+      <div>
+        <div class="notice warn">事業者は所有者の氏名・電話・メールを直接参照しません。保管登録は「所有権変更」ではなく保管イベントとして記録します。</div>
+        <div class="kv" id="custodyInfo"></div>
+      </div>
+    </div>
+  </div></div>
+</section>
+
+<section class="view" id="giftView">
+  <div class="panel"><div class="panel-h"><h2>ギフト・譲渡：管理権移転</h2></div><div class="panel-b">
+    <div class="notice">贈る側が「譲渡オファー」を作成し、受け取る側が認証して受領した時点で、旧管理権を失効させ新しい管理者へ切り替える想定です。</div>
+    <div class="grid2">
+      <div class="flow-card"><div class="num">A</div><h3>贈る側</h3><div class="field"><label>受贈者向け表示名</label><input id="giftTo" value="受贈者A"></div><button class="primary" id="createGift">受領コードを発行</button><div id="giftCodeBox" style="margin-top:12px"></div></div>
+      <div class="flow-card"><div class="num">B</div><h3>受け取る側</h3><div class="field"><label>受領コード</label><input id="giftCodeInput" placeholder="6桁コード"></div><div class="field"><label>新しい管理名</label><input id="newOwnerName" value="受贈者A"></div><button class="primary" id="acceptGift">認証して受領</button></div>
+    </div>
+  </div></div>
+</section>
+<div class="footer-note">PoC Version 0.1 / 表示内容・データはすべてデモ用です。実サービスの法令・本人確認・通知・保管運用は後続タスクで検証します。</div>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+const state={
+ owner:"テストユーザー",
+ item:"青い折りたたみ傘",
+ lost:false,
+ reward:false,
+ custody:null,
+ giftCode:null,
+ messages:[
+  {side:"owner",text:"このQRから匿名で連絡できます。見つけていただきありがとうございます。",meta:"持ち主からの案内"}
+ ],
+ events:[
+  {title:"QRを物品に登録",detail:"青い折りたたみ傘 / 所有者: テストユーザー"},
+  {title:"QRシール有効化",detail:"ML-DEMO-0001"}
+ ]
+};
+const qs=s=>document.querySelector(s), qsa=s=>document.querySelectorAll(s);
+function toast(msg){const t=qs("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove("show"),2000)}
+function addEvent(title,detail){state.events.unshift({title:title,detail:detail});renderTimeline()}
+function renderTimeline(){qs("#timeline").innerHTML=state.events.map((e,i)=>'<div class="event"><div class="dotcol"><div class="dot"></div><div class="line"></div></div><div class="eventbody"><b>'+e.title+'</b><p>'+e.detail+'</p></div></div>').join("")}
+function updateSummary(){
+ qs("#summaryName").textContent=state.item;
+ qs("#ownerChip").textContent="所有者: "+state.owner;
+ qs("#lostChip").textContent=state.lost?"紛失中":"通常";
+ qs("#lostChip").className="chip"+(state.lost?" lost":"");
+ qs("#custodyChip").textContent=state.custody?(state.custody.status==="handed"?"返却済":state.custody.facility+"で保管"):"自己保管";
+ qs("#custodyChip").className="chip"+(state.custody&&state.custody.status!=="handed"?" custody":"");
+ qs("#lostSwitch").classList.toggle("on",state.lost);
+ qs("#rewardSwitch").classList.toggle("on",state.reward);
+ renderCustodyInfo();
+}
+function renderCustodyInfo(){
+ const c=state.custody;
+ qs("#custodyInfo").innerHTML=c?'<div>現在状態</div><div><b>'+(c.status==="handed"?"引渡し済み":"施設保管中")+'</b></div><div>施設</div><div>'+c.facility+'</div><div>内部保管場所</div><div>'+c.storage+'</div><div>受付番号</div><div>'+c.receipt+'</div><div>受取方法</div><div>'+c.pickup+'</div>':'<div>現在状態</div><div><b>施設保管なし</b></div><div>QR ID</div><div>ML-DEMO-0001</div>';
+}
+function renderMessages(){qs("#messages").innerHTML=state.messages.map(m=>'<div class="message '+m.side+'">'+m.text+'<div class="msgmeta">'+m.meta+'</div></div>').join("")}
+qsa(".nav button").forEach(b=>b.addEventListener("click",()=>{
+ qsa(".nav button").forEach(x=>x.classList.toggle("active",x===b));
+ qsa(".view").forEach(v=>v.classList.remove("active"));
+ qs("#"+b.dataset.view+"View").classList.add("active");
+}));
+qs("#saveOwner").addEventListener("click",()=>{
+ state.owner=qs("#ownerName").value.trim()||"テストユーザー";
+ state.item=qs("#itemName").value.trim()||"名称未設定の持ち物";
+ addEvent("所有者情報を更新",state.item+" / 所有者: "+state.owner);
+ updateSummary();toast("登録内容をPoCへ反映しました");
+});
+qs("#lostSwitch").addEventListener("click",()=>{
+ state.lost=!state.lost;
+ addEvent(state.lost?"紛失モード開始":"紛失モード解除",state.lost?"拾得者画面を紛失時表示へ切替":"通常表示へ復帰");
+ updateSummary();toast(state.lost?"紛失モードをONにしました":"紛失モードをOFFにしました");
+});
+qs("#rewardSwitch").addEventListener("click",()=>{state.reward=!state.reward;updateSummary();toast(state.reward?"謝礼表示をONにしました":"謝礼表示をOFFにしました")});
+qs("#scanBtn").addEventListener("click",()=>{
+ const r=qs("#finderResult");r.classList.add("show");
+ let html="";
+ if(state.lost){
+  html='<div class="lost-banner"><strong>持ち主が探しています</strong><span>'+qs("#publicMessage").value+'</span></div>';
+  if(state.reward)html+='<div class="notice warn"><b>謝礼を用意しています</b><br>返却方法を匿名メッセージで相談できます。</div>';
+ }else{
+  html='<div class="notice"><b>この持ち物は紛失登録されていません。</b><br>ご本人の場合はログインして管理画面へ。拾得物の場合は、下の匿名メッセージから持ち主へ連絡できます。</div>';
+ }
+ qs("#finderState").innerHTML=html;renderMessages();addEvent("QRが読み取られました",state.lost?"紛失中のQRとして表示":"通常状態のQRとして表示");
+});
+qs("#sendMessage").addEventListener("click",()=>{
+ const v=qs("#finderMessage").value.trim();if(!v){toast("メッセージを入力してください");return}
+ state.messages.push({side:"finder",text:v,meta:"拾得者（匿名）"});qs("#finderMessage").value="";renderMessages();addEvent("匿名メッセージ受信","拾得者から持ち主へ通知（PoC）");toast("匿名メッセージを送信しました");
+});
+qs("#geoBtn").addEventListener("click",()=>{
+ const status=qs("#geoStatus"),list=qs("#facilityList");
+ const show=()=>{list.innerHTML='<div class="facility"><div>🚉</div><div><b>中央駅 忘れ物センター</b><span>サンプル施設 / 駅構内</span></div><div class="distance">350m</div></div><div class="facility"><div>👮</div><div><b>中央駅 東口交番</b><span>サンプル施設 / 警察</span></div><div class="distance">480m</div></div><div class="facility"><div>🏢</div><div><b>駅前ショッピングモール</b><span>サンプル施設 / サービスカウンター</span></div><div class="distance">620m</div></div>'};
+ if(navigator.geolocation){status.textContent="現在地の利用許可を確認しています…";navigator.geolocation.getCurrentPosition(()=>{status.textContent="現在地を取得しました。この座標は送信・保存していません。施設一覧はPoCサンプルです。";show()},()=>{status.textContent="位置情報は利用されませんでした。施設一覧をサンプル表示します。";show()},{timeout:5000})}else{status.textContent="このブラウザでは位置情報を利用できません。施設一覧をサンプル表示します。";show()}
+});
+qs("#registerCustody").addEventListener("click",()=>{
+ state.custody={facility:qs("#facilityName").value,storage:qs("#storageLocation").value,receipt:qs("#receiptNo").value,pickup:qs("#pickupMethod").value,status:"stored"};
+ addEvent("事業者が保管登録",state.custody.facility+" / 受付番号 "+state.custody.receipt+" / 所有者へ通知");
+ updateSummary();toast("保管登録・所有者通知をPoCへ反映しました");
+});
+qs("#handoverBtn").addEventListener("click",()=>{
+ if(!state.custody){toast("先に保管登録してください");return}
+ state.custody.status="handed";state.lost=false;addEvent("引渡し完了",state.custody.facility+"で所有者へ返却");updateSummary();toast("引渡し完了にしました");
+});
+qs("#createGift").addEventListener("click",()=>{
+ state.giftCode=String(Math.floor(100000+Math.random()*900000));qs("#giftCodeInput").value=state.giftCode;
+ qs("#giftCodeBox").innerHTML='<div class="notice warn" style="margin:0"><b>受領コード: '+state.giftCode+'</b><br>PoCでは自動入力しています。実サービスでは期限付き受領トークンを想定します。</div>';
+ addEvent("ギフト譲渡オファー作成","受贈者: "+(qs("#giftTo").value||"受贈者")+" / 受領待ち");toast("受領コードを発行しました");
+});
+qs("#acceptGift").addEventListener("click",()=>{
+ if(!state.giftCode||qs("#giftCodeInput").value!==state.giftCode){toast("受領コードが一致しません");return}
+ const old=state.owner;state.owner=qs("#newOwnerName").value.trim()||"新しい管理者";state.giftCode=null;
+ addEvent("管理権移転完了",old+" → "+state.owner+" / 旧管理権を失効（PoC）");updateSummary();qs("#giftCodeBox").innerHTML="";qs("#giftCodeInput").value="";toast("新しい管理者へ切り替えました");
+});
+qs("#resetBtn").addEventListener("click",()=>location.reload());
+renderTimeline();renderMessages();updateSummary();
+</script>
+</body>
+</html>
