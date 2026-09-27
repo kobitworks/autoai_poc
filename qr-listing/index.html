@@ -47,31 +47,38 @@ main{max-width:880px;margin:auto;padding:24px 16px 40px}
   </section>
 
   <section class="menu" aria-label="機能メニュー">
-    <button class="card" data-name="商品写真アップロード">
+    <button class="card" data-name="QRコード発行">
+      <div class="icon" aria-hidden="true">▦</div>
+      <h3>QRコード発行</h3>
+      <p>商品撮影・管理に使用するQRコードを発行します。</p>
+      <span class="arrow">開く →</span>
+    </button>
+
+    <button class="card" data-name="商品画像データアップロード（ChatGPT）">
       <div class="icon" aria-hidden="true">📷</div>
-      <h3>商品写真アップロード</h3>
-      <p>スマホで撮影した商品写真をアップロードし、QRコードごとに商品単位でまとめます。</p>
+      <h3>商品画像データアップロード（ChatGPT）</h3>
+      <p>商品画像データをChatGPTへアップロードし、後続の加工処理に使用します。</p>
+      <span class="arrow">開く →</span>
+    </button>
+
+    <button class="card" data-name="アップロードデータ加工処理（ChatGPT）">
+      <div class="icon" aria-hidden="true">✨</div>
+      <h3>アップロードデータ加工処理（ChatGPT）</h3>
+      <p>アップロードした画像をChatGPTで解析し、商品情報として利用できるデータに加工します。</p>
+      <span class="arrow">開く →</span>
+    </button>
+
+    <button class="card" data-name="商品データ取込">
+      <div class="icon" aria-hidden="true">⬇️</div>
+      <h3>商品データ取込</h3>
+      <p>加工済みの商品データをシステムへ取り込みます。</p>
       <span class="arrow">開く →</span>
     </button>
 
     <button class="card" data-name="商品一覧">
       <div class="icon" aria-hidden="true">📦</div>
       <h3>商品一覧</h3>
-      <p>登録済みの商品と写真、処理状況を一覧で確認します。</p>
-      <span class="arrow">開く →</span>
-    </button>
-
-    <button class="card" data-name="AI解析・確認">
-      <div class="icon" aria-hidden="true">✨</div>
-      <h3>AI解析・確認</h3>
-      <p>商品画像から生成した商品名・ブランド・状態・説明文などを確認、修正します。</p>
-      <span class="arrow">開く →</span>
-    </button>
-
-    <button class="card" data-name="出品データ">
-      <div class="icon" aria-hidden="true">🛒</div>
-      <h3>出品データ</h3>
-      <p>確認済みの商品情報を出品用データとして確認します。</p>
+      <p>登録済みの商品情報や処理状況を一覧で確認します。</p>
       <span class="arrow">開く →</span>
     </button>
   </section>
