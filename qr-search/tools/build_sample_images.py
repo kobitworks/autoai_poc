@@ -12,8 +12,9 @@ SRC_DIR = ROOT / "qr-search" / "test-images"
 DATA_DIR = ROOT / "qr-search" / "test-images-data"
 OUT_DIR = ROOT / "qr-search" / "test-images-rendered"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
-for old in OUT_DIR.glob("*.png"):
-    old.unlink()
+for pattern in ("*.png", "*.jpg", "*.jpeg"):
+    for old in OUT_DIR.glob(pattern):
+        old.unlink()
 
 SCENES = [
     ("20260927_uploaded_warehouse_01", DATA_DIR / "uploaded_warehouse_01.b64"),
@@ -120,6 +121,17 @@ for key, src in SCENES:
         "path": "test-images-rendered/" + out_name,
         "updatedAt": updated_at(src),
         "codes": vals,
+    })
+
+for item in STATIC_SCENES:
+    src = item["src"]
+    out_path = OUT_DIR / item["out_name"]
+    Image.open(src).convert("RGB").save(out_path, "JPEG", quality=92, optimize=True, progressive=True)
+    manifest.append({
+        "name": item["out_name"],
+        "path": "test-images-rendered/" + item["out_name"],
+        "updatedAt": updated_at(src),
+        "codes": item["codes"],
     })
 
 (OUT_DIR / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
