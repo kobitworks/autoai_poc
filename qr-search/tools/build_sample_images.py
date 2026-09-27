@@ -12,18 +12,35 @@ SRC_DIR = ROOT / "qr-search" / "test-images"
 DATA_DIR = ROOT / "qr-search" / "test-images-data"
 OUT_DIR = ROOT / "qr-search" / "test-images-rendered"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
-for old in OUT_DIR.glob("*.png"):
-    old.unlink()
+for pattern in ("*.png", "*.jpg", "*.jpeg"):
+    for old in OUT_DIR.glob(pattern):
+        old.unlink()
 
 SCENES = [
     ("20260927_uploaded_warehouse_01", DATA_DIR / "uploaded_warehouse_01.b64"),
     ("20260927_uploaded_warehouse_02", DATA_DIR / "uploaded_warehouse_02.b64"),
+    ("20260927_warehouse_new", SRC_DIR / "20260927_warehouse_new.webp"),
+]
+
+STATIC_SCENES = [
+    {
+        "key": "20260927_uploaded_warehouse_03",
+        "src": DATA_DIR / "uploaded_warehouse_03.jpg",
+        "out_name": "20260927_uploaded_warehouse_03.jpg",
+        "codes": {
+            "url": "https://example.com/package/WH7720",
+            "qr": ["PKG-PLT3287", "ITEM-4509-A7", "ZX-1189-B03"],
+            "barcodes": ["4580791234567", "TB6201002584"],
+        },
+    },
 ]
 
 # Positions are normalized top-left anchors for 4 QR labels + 2 barcodes.
 POSITIONS = {
     "20260927_uploaded_warehouse_01": [(0.12,0.18),(0.17,0.48),(0.60,0.08),(0.86,0.28),(0.17,0.74),(0.57,0.48)],
     "20260927_uploaded_warehouse_02": [(0.20,0.30),(0.50,0.42),(0.68,0.16),(0.78,0.46),(0.08,0.68),(0.67,0.76)],
+    # Align the real test codes with label areas already present on the photo.
+    "20260927_warehouse_new": [(0.285,0.205),(0.455,0.355),(0.145,0.485),(0.885,0.305),(0.405,0.625),(0.705,0.585)],
 }
 
 def font(size):
@@ -34,9 +51,13 @@ def font(size):
     return ImageFont.load_default()
 
 def load_scene(path):
-    if path.suffix.lower() == ".svg":
+    suffix = path.suffix.lower()
+    if suffix == ".svg":
         png = cairosvg.svg2png(bytestring=path.read_bytes(), output_width=1600, output_height=900)
         return Image.open(io.BytesIO(png)).convert("RGB")
+    if suffix in {".png", ".jpg", ".jpeg", ".webp", ".avif"}:
+        im = Image.open(path).convert("RGB")
+        return im.resize((1600, 900), Image.Resampling.LANCZOS)
     raw = base64.b64decode(path.read_text().strip())
     im = Image.open(io.BytesIO(raw)).convert("RGB")
     return im.resize((1600, 900), Image.Resampling.LANCZOS)
@@ -51,7 +72,7 @@ def code_values(key):
         "barcodes": [f"49{n % 10**11:011d}", f"45{(n // 97) % 10**11:011d}"],
     }
 
-def qr_label(value, size=184):
+def qr_label(value, size=128):
     qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, border=4, box_size=8)
     qr.add_data(value)
     qr.make(fit=True)
@@ -61,15 +82,15 @@ def qr_label(value, size=184):
     out.paste(q, (8,8))
     d = ImageDraw.Draw(out)
     label = value if len(value) <= 24 else value[:21] + "..."
-    f = font(16)
+    f = font(13)
     box = d.textbbox((0,0), label, font=f)
     d.text(((out.width-(box[2]-box[0]))/2, size+10), label, fill="black", font=f)
     return out
 
-def barcode_label(value, width=300, height=118):
+def barcode_label(value, width=220, height=92):
     bio = io.BytesIO()
     Code128(value, writer=ImageWriter()).write(
-        bio, options={"module_width":0.32,"module_height":18,"quiet_zone":3,"font_size":11,"text_distance":2,"write_text":True}
+        bio, options={"module_width":0.32,"module_height":18,"quiet_zone":3,"font_size":9,"text_distance":2,"write_text":True}
     )
     im = Image.open(io.BytesIO(bio.getvalue())).convert("RGB")
     im.thumbnail((width,height), Image.Resampling.LANCZOS)
@@ -113,6 +134,17 @@ for key, src in SCENES:
         "path": "test-images-rendered/" + out_name,
         "updatedAt": updated_at(src),
         "codes": vals,
+    })
+
+for item in STATIC_SCENES:
+    src = item["src"]
+    out_path = OUT_DIR / item["out_name"]
+    Image.open(src).convert("RGB").save(out_path, "JPEG", quality=92, optimize=True, progressive=True)
+    manifest.append({
+        "name": item["out_name"],
+        "path": "test-images-rendered/" + item["out_name"],
+        "updatedAt": updated_at(src),
+        "codes": item["codes"],
     })
 
 (OUT_DIR / "manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
