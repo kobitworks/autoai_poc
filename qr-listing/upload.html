@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>商品画像データアップロード | QR商品出品支援</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#e5e7eb;--accent:#2563eb;--accent-soft:#eff6ff;--ok:#047857;--ok-soft:#ecfdf5;--warn:#9a3412;--warn-soft:#fff7ed}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+button,input{font:inherit}
+header{background:#fff;border-bottom:1px solid var(--line)}
+.header-inner{max-width:1080px;margin:auto;padding:18px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--accent);margin-bottom:5px}
+h1{font-size:27px;margin:0}.version{margin-top:6px;font-size:12px;color:var(--muted)}
+main{max-width:1080px;margin:auto;padding:20px 16px 40px}
+.back{display:inline-block;margin-bottom:16px;padding:9px 13px;border:1px solid var(--line);border-radius:999px;background:#fff;text-decoration:none;color:var(--text);font-weight:700;font-size:14px}
+.desc{margin:0 0 18px;color:var(--muted);line-height:1.65}
+.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 3px 14px rgba(15,23,42,.05);margin-bottom:16px}
+.panel h2{font-size:19px;margin:0 0 8px}
+.panel-sub{margin:0 0 14px;color:var(--muted);font-size:13px;line-height:1.55}
+.dropzone{border:2px dashed #94a3b8;border-radius:18px;padding:30px 18px;text-align:center;background:#f8fafc;transition:.15s;cursor:pointer}
+.dropzone.drag{border-color:var(--accent);background:var(--accent-soft)}
+.drop-icon{font-size:34px;margin-bottom:8px}
+.drop-title{font-weight:800;font-size:17px}
+.drop-sub{margin-top:6px;color:var(--muted);font-size:13px;line-height:1.5}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.btn{border:0;border-radius:12px;padding:11px 14px;font-size:14px;font-weight:700;cursor:pointer}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.secondary{background:#eef2ff;color:#1d4ed8}
+.btn.light{background:#fff;border:1px solid #cbd5e1;color:#334155}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}
+.metric{border:1px solid var(--line);border-radius:13px;padding:12px;background:#fff}
+.metric span{display:block;color:var(--muted);font-size:12px;margin-bottom:4px}
+.metric strong{font-size:20px}
+.notice{margin-top:14px;border-radius:13px;padding:12px 13px;font-size:13px;line-height:1.55}
+.notice.info{background:var(--accent-soft);color:#1e40af}
+.notice.ok{background:var(--ok-soft);color:var(--ok)}
+.notice.warn{background:var(--warn-soft);color:var(--warn)}
+.preview-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.preview-card{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:#fff}
+.preview-card img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:#e2e8f0}
+.preview-body{padding:10px}
+.preview-name{font-size:12px;font-weight:700;line-height:1.35;word-break:break-all}
+.preview-meta{margin-top:5px;font-size:11px;color:var(--muted)}
+.preview-remove{margin-top:8px;border:0;background:#f8fafc;color:#475569;border-radius:9px;padding:7px 9px;font-size:12px;font-weight:700;cursor:pointer;width:100%}
+.empty{border:2px dashed #cbd5e1;border-radius:14px;padding:30px 18px;text-align:center;color:var(--muted);background:#f8fafc}
+.result-table-wrap{overflow:auto;border:1px solid var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;min-width:700px;background:#fff}
+th,td{padding:11px 12px;border-bottom:1px solid var(--line);text-align:left;font-size:13px;vertical-align:top}
+th{background:#f8fafc;color:#475569;font-size:12px}
+tr:last-child td{border-bottom:0}
+.status{display:inline-block;padding:4px 8px;border-radius:999px;background:var(--ok-soft);color:var(--ok);font-size:11px;font-weight:800}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#0f172a;color:#fff;padding:10px 15px;border-radius:999px;font-size:13px;opacity:0;transition:.2s;pointer-events:none;white-space:nowrap}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:820px){.preview-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:620px){h1{font-size:23px}.panel{padding:14px}.summary{grid-template-columns:1fr}.preview-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dropzone{padding:24px 12px}}
+@media(max-width:390px){.preview-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="eyebrow">QR PRODUCT LISTING SUPPORT</div>
+    <h1>商品画像データアップロード（ChatGPT）</h1>
+    <div class="version">PoC Version 0.1</div>
+  </div>
+</header>
+
+<main>
+  <a class="back" href="./index.html">← メニューへ戻る</a>
+  <p class="desc">スマホ・タブレット・PCから複数の商品写真を選択し、アップロード前のプレビューと仮取込結果を確認するPoCです。現段階では画像を外部送信・永続保存せず、ブラウザ内だけで処理します。</p>
+
+  <section class="panel">
+    <h2>1. 商品画像を選択</h2>
+    <p class="panel-sub">端末の写真ライブラリ、ファイル選択、またはPCのドラッグ＆ドロップから複数画像を追加できます。</p>
+
+    <input id="imageInput" type="file" accept="image/*" multiple hidden>
+    <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="商品画像を選択">
+      <div class="drop-icon" aria-hidden="true">📷</div>
+      <div class="drop-title">画像を選択 / ドロップ</div>
+      <div class="drop-sub">JPEG / PNG / WebP などの画像ファイル<br>複数ファイルをまとめて選択できます</div>
+    </div>
+
+    <div class="actions">
+      <button class="btn secondary" id="addBtn">画像を追加</button>
+      <button class="btn light" id="clearBtn" disabled>選択をクリア</button>
+      <button class="btn primary" id="importBtn" disabled>選択画像を仮取込</button>
+    </div>
+
+    <div class="summary">
+      <div class="metric"><span>選択画像数</span><strong id="countMetric">0</strong></div>
+      <div class="metric"><span>合計サイズ</span><strong id="sizeMetric">0 B</strong></div>
+      <div class="metric"><span>仮取込状態</span><strong id="statusMetric">未実行</strong></div>
+    </div>
+
+    <div class="notice info">QRコードの検出・商品ID単位の仕分けは後続タスクで実装します。この画面では「写真を取り込めること」と「選択内容を確認できること」までを対象にします。</div>
+  </section>
+
+  <section class="panel">
+    <h2>2. 選択画像プレビュー</h2>
+    <p class="panel-sub">仮取込前に写真、ファイル名、画像サイズを確認できます。</p>
+    <div id="previewArea" class="empty">画像がまだ選択されていません。</div>
+  </section>
+
+  <section class="panel">
+    <h2>3. 仮取込結果</h2>
+    <p class="panel-sub">「選択画像を仮取込」を押すと、この画面内で取込結果を一覧表示します。</p>
+    <div id="resultArea" class="empty">仮取込はまだ実行されていません。</div>
+  </section>
+</main>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+var imageInput=document.getElementById("imageInput");
+var dropzone=document.getElementById("dropzone");
+var addBtn=document.getElementById("addBtn");
+var clearBtn=document.getElementById("clearBtn");
+var importBtn=document.getElementById("importBtn");
+var previewArea=document.getElementById("previewArea");
+var resultArea=document.getElementById("resultArea");
+var countMetric=document.getElementById("countMetric");
+var sizeMetric=document.getElementById("sizeMetric");
+var statusMetric=document.getElementById("statusMetric");
+var toast=document.getElementById("toast");
+var selected=[];
+
+function notify(text){
+  toast.textContent=text;
+  toast.classList.add("show");
+  clearTimeout(notify.t);
+  notify.t=setTimeout(function(){toast.classList.remove("show")},1800);
+}
+function formatBytes(bytes){
+  if(!bytes)return "0 B";
+  var units=["B","KB","MB","GB"],i=Math.floor(Math.log(bytes)/Math.log(1024));
+  i=Math.min(i,units.length-1);
+  return (bytes/Math.pow(1024,i)).toFixed(i===0?0:1)+" "+units[i];
+}
+function fileKey(file){
+  return [file.name,file.size,file.lastModified].join("|");
+}
+function revoke(item){
+  if(item.url)URL.revokeObjectURL(item.url);
+}
+function resetImportResult(){
+  statusMetric.textContent="未実行";
+  resultArea.className="empty";
+  resultArea.textContent="仮取込はまだ実行されていません。";
+}
+function updateMetrics(){
+  countMetric.textContent=String(selected.length);
+  sizeMetric.textContent=formatBytes(selected.reduce(function(sum,item){return sum+item.file.size},0));
+  clearBtn.disabled=!selected.length;
+  importBtn.disabled=!selected.length;
+}
+function renderPreview(){
+  updateMetrics();
+  if(!selected.length){
+    previewArea.className="empty";
+    previewArea.textContent="画像がまだ選択されていません。";
+    return;
+  }
+  previewArea.className="preview-grid";
+  previewArea.innerHTML="";
+  selected.forEach(function(item,index){
+    var card=document.createElement("div");
+    card.className="preview-card";
+    var img=document.createElement("img");
+    img.src=item.url;
+    img.alt=item.file.name+" のプレビュー";
+    var body=document.createElement("div");
+    body.className="preview-body";
+    var name=document.createElement("div");
+    name.className="preview-name";
+    name.textContent=item.file.name;
+    var meta=document.createElement("div");
+    meta.className="preview-meta";
+    meta.textContent=formatBytes(item.file.size)+(item.width&&item.height?" / "+item.width+"×"+item.height+"px":"");
+    var remove=document.createElement("button");
+    remove.className="preview-remove";
+    remove.type="button";
+    remove.textContent="この画像を外す";
+    remove.addEventListener("click",function(){
+      revoke(selected[index]);
+      selected.splice(index,1);
+      resetImportResult();
+      renderPreview();
+    });
+    body.appendChild(name);
+    body.appendChild(meta);
+    body.appendChild(remove);
+    card.appendChild(img);
+    card.appendChild(body);
+    previewArea.appendChild(card);
+  });
+}
+function readDimensions(item){
+  return new Promise(function(resolve){
+    var img=new Image();
+    img.onload=function(){item.width=img.naturalWidth;item.height=img.naturalHeight;resolve()};
+    img.onerror=function(){resolve()};
+    img.src=item.url;
+  });
+}
+async function addFiles(fileList){
+  var incoming=Array.prototype.slice.call(fileList||[]).filter(function(file){return file.type.indexOf("image/")===0});
+  if(!incoming.length){notify("画像ファイルを選択してください");return}
+  var known={};
+  selected.forEach(function(item){known[fileKey(item.file)]=true});
+  var added=[];
+  incoming.forEach(function(file){
+    var key=fileKey(file);
+    if(known[key])return;
+    known[key]=true;
+    var item={file:file,url:URL.createObjectURL(file),width:0,height:0};
+    selected.push(item);
+    added.push(item);
+  });
+  await Promise.all(added.map(readDimensions));
+  resetImportResult();
+  renderPreview();
+  notify(added.length+"枚追加しました");
+}
+function clearSelection(){
+  selected.forEach(revoke);
+  selected=[];
+  imageInput.value="";
+  resetImportResult();
+  renderPreview();
+  notify("選択をクリアしました");
+}
+function importSelected(){
+  if(!selected.length)return;
+  statusMetric.textContent="仮取込済";
+  resultArea.className="result-table-wrap";
+  var table=document.createElement("table");
+  var thead=document.createElement("thead");
+  thead.innerHTML="<tr><th>#</th><th>ファイル名</th><th>形式</th><th>画像サイズ</th><th>ファイルサイズ</th><th>状態</th></tr>";
+  table.appendChild(thead);
+  var tbody=document.createElement("tbody");
+  selected.forEach(function(item,index){
+    var tr=document.createElement("tr");
+    var values=[
+      String(index+1),
+      item.file.name,
+      item.file.type||"不明",
+      item.width&&item.height?item.width+"×"+item.height+"px":"取得不可",
+      formatBytes(item.file.size)
+    ];
+    values.forEach(function(value){
+      var td=document.createElement("td");
+      td.textContent=value;
+      tr.appendChild(td);
+    });
+    var statusTd=document.createElement("td");
+    statusTd.innerHTML='<span class="status">仮取込完了</span>';
+    tr.appendChild(statusTd);
+    tbody.appendChild(tr);
+  });
+  table.appendChild(tbody);
+  resultArea.innerHTML="";
+  resultArea.appendChild(table);
+  notify(selected.length+"枚を仮取込しました");
+}
+function openPicker(){imageInput.click()}
+
+addBtn.addEventListener("click",openPicker);
+dropzone.addEventListener("click",openPicker);
+dropzone.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();openPicker()}});
+imageInput.addEventListener("change",function(){addFiles(imageInput.files)});
+clearBtn.addEventListener("click",clearSelection);
+importBtn.addEventListener("click",importSelected);
+
+["dragenter","dragover"].forEach(function(type){
+  dropzone.addEventListener(type,function(e){e.preventDefault();dropzone.classList.add("drag")});
+});
+["dragleave","drop"].forEach(function(type){
+  dropzone.addEventListener(type,function(e){e.preventDefault();dropzone.classList.remove("drag")});
+});
+dropzone.addEventListener("drop",function(e){addFiles(e.dataTransfer.files)});
+window.addEventListener("beforeunload",function(){selected.forEach(revoke)});
+
+renderPreview();
+</script>
+</body>
+</html>
