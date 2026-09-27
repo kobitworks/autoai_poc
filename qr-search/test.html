@@ -1,86 +1,54 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>QR・バーコード探索PoC テスト画面</title><style>body{margin:0;background:#101316;color:#fff;font-family:system-ui,sans-serif}.wrap{max-width:1440px;margin:auto;padding:18px}h1{margin:0 0 6px;font-size:24px}.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0}.toolbar button{font-size:17px;font-weight:700;padding:10px 16px;border:0;border-radius:8px;cursor:pointer}.toolbar button:disabled{opacity:.55;cursor:wait}.imageInfo{font-size:14px;color:#aeb8c1}.note{color:#c9d1d9;margin-bottom:14px}.scene{position:relative;aspect-ratio:16/9;overflow:hidden;border-radius:12px;background:#333 center/cover no-repeat;box-shadow:0 8px 30px #0008}.scene:after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,#0000 65%,#0005);pointer-events:none}.tag{position:absolute;background:#fff;color:#111;padding:8px 8px 6px;border-radius:2px;box-shadow:0 2px 8px #0007;text-align:center;z-index:2}.tag .qr{width:110px;height:110px;background:#fff}.tag svg.bar{width:190px;height:85px}.tag small{display:block;font-weight:700;font-size:14px;white-space:nowrap}.q1{left:8%;top:18%}.q2{left:32%;top:48%}.q3{left:57%;top:20%}.q4{left:78%;top:52%}.b1{left:14%;top:65%}.b2{left:56%;top:66%}.legend{margin-top:16px;padding:14px;background:#1b2025;border-radius:10px;line-height:1.7}.legend code{background:#0d1117;padding:2px 5px;border-radius:4px}@media(max-width:800px){.tag{transform:scale(.72);transform-origin:top left}.tag .qr{width:100px;height:100px}.tag svg.bar{width:170px}.legend{font-size:14px}}</style><script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script></head><body><div class="wrap"><h1>QR・バーコード探索PoC テスト画面</h1><div class="toolbar"><button id="nextImage">次のテスト画像</button><span id="imageInfo" class="imageInfo">テスト画像を読み込み中…</span></div><div class="note">倉庫・荷物シーンごとに別のQR／バーコードを生成します。表示コードは実際に読み取りテストできます。</div><div id="scene" class="scene"><div class="tag q1"><div id="q1" class="qr"></div><small id="l1">URL QR</small></div><div class="tag q2"><div id="q2" class="qr"></div><small id="l2"></small></div><div class="tag q3"><div id="q3" class="qr"></div><small id="l3"></small></div><div class="tag q4"><div id="q4" class="qr"></div><small id="l4"></small></div><div class="tag b1"><svg id="b1" class="bar"></svg></div><div class="tag b2"><svg id="b2" class="bar"></svg></div></div><div id="legend" class="legend"></div></div><script>
-function hashCode(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
-function ean13(seed,offset){let n=String((seed+offset*7919)%1000000000000).padStart(12,'0'),sum=0;for(let i=0;i<12;i++)sum+=(+n[i])*(i%2?3:1);return n+((10-sum%10)%10)}
-function renderCodes(path){const h=hashCode(path),id=String(h%10000).padStart(4,'0'),q=['https://example.com/package/'+id,'PKG-'+id+'-'+String((h>>>4)%100).padStart(2,'0'),'WH'+String((h>>>8)%99999).padStart(5,'0'),'BOX-'+String((h>>>12)%999999).padStart(6,'0')],b=[ean13(h,1),ean13(h,2)];for(let i=0;i<4;i++){const el=document.getElementById('q'+(i+1));el.innerHTML='';new QRCode(el,{text:q[i],width:110,height:110,correctLevel:QRCode.CorrectLevel.M});document.getElementById('l'+(i+1)).textContent=i===0?'URL QR':q[i]}JsBarcode('#b1',b[0],{format:'EAN13',displayValue:true,height:55,margin:6,fontSize:18});JsBarcode('#b2',b[1],{format:'EAN13',displayValue:true,height:55,margin:6,fontSize:18});document.getElementById('legend').innerHTML='<b>この画像のテストコード</b><br>URL QR: <code>'+q[0]+'</code><br>QR: <code>'+q.slice(1).join('</code> / <code>')+'</code><br>バーコード: <code>'+b.join('</code> / <code>')+'</code>'}
-const REPO='kobitworks/autoai_poc',BRANCH='main',IMAGE_DIR='qr-search/test-images';
-const UPLOADED_IMAGES=[
-{name:'20260927_uploaded_warehouse_01.webp',path:'uploaded:warehouse_01',updatedAt:Date.parse('2026-09-27T06:35:12Z'),base64Path:'./test-images-data/uploaded_warehouse_01.b64'},
-{name:'20260927_uploaded_warehouse_02.webp',path:'uploaded:warehouse_02',updatedAt:Date.parse('2026-09-27T06:35:16Z'),base64Path:'./test-images-data/uploaded_warehouse_02.b64'}
-];
-const uploadedImageCache={};
-const IMAGE_EXT=/\.(png|jpe?g|webp|gif|svg|avif)$/i;
-const scene=document.getElementById('scene'),info=document.getElementById('imageInfo'),nextBtn=document.getElementById('nextImage');
-let currentPath=sessionStorage.getItem('qrSearchCurrentImage')||'';
-let seen=JSON.parse(sessionStorage.getItem('qrSearchSeenImages')||'[]');
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>QR・バーコード探索PoC テスト画面</title><style>
+body{margin:0;background:#101316;color:#fff;font-family:system-ui,sans-serif}.wrap{max-width:1440px;margin:auto;padding:18px}h1{margin:0 0 6px;font-size:24px}.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:10px 0}.toolbar button{font-size:17px;font-weight:700;padding:10px 16px;border:0;border-radius:8px;cursor:pointer}.toolbar button:disabled{opacity:.55;cursor:wait}.imageInfo{font-size:14px;color:#aeb8c1}.note{color:#c9d1d9;margin-bottom:14px}.scene{background:#222;border-radius:12px;overflow:hidden;box-shadow:0 8px 30px #0008}.scene img{display:block;width:100%;height:auto}.legend{margin-top:16px;padding:14px;background:#1b2025;border-radius:10px;line-height:1.7}.legend code{background:#0d1117;padding:2px 5px;border-radius:4px;word-break:break-all}
+</style></head><body><div class="wrap"><h1>QR・バーコード探索PoC テスト画面</h1><div class="toolbar"><button id="nextImage">次のテスト画像</button><span id="imageInfo" class="imageInfo">サンプル画像を読み込み中…</span></div><div class="note">QR／バーコードは画面上で生成していません。すべて完成画像の中に読み取り可能な解像度で埋め込んであります。</div><div class="scene"><img id="sceneImage" alt="QR・バーコード探索テスト画像"></div><div id="legend" class="legend"></div></div><script>
+const MANIFEST='./test-images-rendered/manifest.json';
+const img=document.getElementById('sceneImage'),info=document.getElementById('imageInfo'),btn=document.getElementById('nextImage'),legend=document.getElementById('legend');
+let list=[],current=sessionStorage.getItem('qrStaticSampleCurrent')||'',seen=JSON.parse(sessionStorage.getItem('qrStaticSampleSeen')||'[]');
 
-async function getImages(){
-  const url='https://api.github.com/repos/'+REPO+'/contents/'+IMAGE_DIR+'?ref='+encodeURIComponent(BRANCH)+'&t='+Date.now();
-  const res=await fetch(url,{headers:{Accept:'application/vnd.github+json'}});
-  if(!res.ok) throw new Error('画像一覧の取得に失敗しました');
-  const list=(await res.json()).filter(x=>x.type==='file'&&IMAGE_EXT.test(x.name));
-  await Promise.all(list.map(async x=>{
-    try{
-      const u='https://api.github.com/repos/'+REPO+'/commits?path='+encodeURIComponent(x.path)+'&sha='+encodeURIComponent(BRANCH)+'&per_page=1';
-      const r=await fetch(u,{headers:{Accept:'application/vnd.github+json'}});
-      const c=await r.json();
-      x.updatedAt=(Array.isArray(c)&&c[0]&&c[0].commit&&c[0].commit.committer&&c[0].commit.committer.date)?Date.parse(c[0].commit.committer.date):0;
-    }catch(e){x.updatedAt=0}
-  }));
-  return list.concat(UPLOADED_IMAGES);
-}
-async function resolveImageUrl(item){
-  if(!item.base64Path)return 'https://raw.githubusercontent.com/'+REPO+'/'+BRANCH+'/'+item.path;
-  if(!uploadedImageCache[item.path]){
-    const r=await fetch(item.base64Path+'?t='+Date.now());
-    if(!r.ok)throw new Error('添付テスト画像の読み込みに失敗しました');
-    uploadedImageCache[item.path]='data:image/webp;base64,'+(await r.text()).trim();
-  }
-  return uploadedImageCache[item.path];
-}
-function chooseOrder(list){
-  const byDate=Math.random()<.5,ascending=Math.random()<.5;
-  const sorted=[...list].sort((a,b)=>{
-    let n=byDate?((a.updatedAt||0)-(b.updatedAt||0)):a.name.localeCompare(b.name,'ja',{numeric:true,sensitivity:'base'});
+function chooseOrder(items){
+  const byDate=Math.random()<.5,asc=Math.random()<.5;
+  const sorted=[...items].sort((a,b)=>{
+    let n;
+    if(byDate){n=String(a.updatedAt||'').localeCompare(String(b.updatedAt||''));}
+    else{n=a.name.localeCompare(b.name,'ja',{numeric:true,sensitivity:'base'});}
     if(!n)n=a.name.localeCompare(b.name,'ja',{numeric:true,sensitivity:'base'});
-    return ascending?n:-n;
+    return asc?n:-n;
   });
-  return {sorted,label:(byDate?'更新日順':'名前順')+'・'+(ascending?'昇順':'降順')};
+  return {sorted,label:(byDate?'更新日順':'名前順')+'・'+(asc?'昇順':'降順')};
 }
 function pickNext(sorted){
-  if(!sorted.length)return null;
-  const unseen=sorted.filter(x=>!seen.includes(x.path)&&x.path!==currentPath);
+  const unseen=sorted.filter(x=>!seen.includes(x.path)&&x.path!==current);
   if(unseen.length)return unseen[0];
-  if(seen.length){seen=[];sessionStorage.setItem('qrSearchSeenImages','[]')}
-  const idx=sorted.findIndex(x=>x.path===currentPath);
-  if(idx<0)return sorted[0];
-  return sorted[(idx+1)%sorted.length];
+  seen=[];sessionStorage.setItem('qrStaticSampleSeen','[]');
+  const i=sorted.findIndex(x=>x.path===current);
+  return sorted[(i+1+sorted.length)%sorted.length];
 }
-async function showImage(item,label){
-  if(!item)return;
-  const raw=await resolveImageUrl(item);
-  scene.style.backgroundImage='url("'+raw.replace(/"/g,'%22')+'")';
-  currentPath=item.path;
+function show(item,label){
+  current=item.path;
   if(!seen.includes(item.path))seen.push(item.path);
-  sessionStorage.setItem('qrSearchCurrentImage',currentPath);
-  sessionStorage.setItem('qrSearchSeenImages',JSON.stringify(seen));
-  info.textContent=item.name+' ／ '+label;renderCodes(item.path);
+  sessionStorage.setItem('qrStaticSampleCurrent',current);
+  sessionStorage.setItem('qrStaticSampleSeen',JSON.stringify(seen));
+  img.src='./'+item.path+'?v='+encodeURIComponent(item.updatedAt||item.name);
+  info.textContent=item.name+' ／ '+label;
+  const c=item.codes||{};
+  legend.innerHTML='<b>この画像に焼き込まれているテストコード</b><br>'+
+    'URL QR: <code>'+((c.url)||'')+'</code><br>'+
+    'QR: '+((c.qr)||[]).map(v=>'<code>'+v+'</code>').join(' / ')+'<br>'+
+    'バーコード: '+((c.barcodes)||[]).map(v=>'<code>'+v+'</code>').join(' / ');
 }
-async function nextImage(initial=false){
-  nextBtn.disabled=true;
-  info.textContent='画像一覧を取得中…';
+async function load(){
+  btn.disabled=true;
   try{
-    const list=await getImages();
-    if(!list.length){info.textContent='test-images フォルダに画像がありません';return}
-    const {sorted,label}=chooseOrder(list);
-    if(initial&&currentPath){
-      const current=sorted.find(x=>x.path===currentPath);
-      if(current){await showImage(current,'前回表示');return}
-    }
-    await showImage(pickNext(sorted),label);
-  }catch(e){
-    info.textContent=e.message||'テスト画像の切替に失敗しました';
-  }finally{nextBtn.disabled=false}
+    const r=await fetch(MANIFEST+'?t='+Date.now());
+    if(!r.ok)throw new Error('サンプル画像の生成待ちです');
+    list=await r.json();
+    if(!list.length)throw new Error('サンプル画像がありません');
+    const o=chooseOrder(list);
+    const prev=o.sorted.find(x=>x.path===current);
+    show(prev||pickNext(o.sorted),prev?'前回表示':o.label);
+  }catch(e){info.textContent=e.message;legend.textContent='GitHub Actionsで静的サンプル画像を生成しています。少し待って再読み込みしてください。'}
+  finally{btn.disabled=false}
 }
-nextBtn.addEventListener('click',()=>nextImage(false));
-nextImage(true);
+btn.onclick=()=>{if(!list.length)return load();const o=chooseOrder(list);show(pickNext(o.sorted),o.label)};
+load();
 </script></body></html>
