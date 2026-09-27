@@ -1,0 +1,38 @@
+name: Build QR search sample images
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'qr-search/test-images/**'
+      - 'qr-search/test-images-data/uploaded_warehouse_01.b64'
+      - 'qr-search/test-images-data/uploaded_warehouse_02.b64'
+      - 'qr-search/tools/build_sample_images.py'
+      - '.github/workflows/build-qr-search-images.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pillow qrcode python-barcode cairosvg
+      - run: python qr-search/tools/build_sample_images.py
+      - name: Commit rendered samples
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add qr-search/test-images-rendered
+          if git diff --cached --quiet; then
+            echo "No rendered changes"
+          else
+            git commit -m "Build static QR search sample images [skip ci]"
+            git push
+          fi
