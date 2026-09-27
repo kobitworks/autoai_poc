@@ -12,11 +12,10 @@ SRC_DIR = ROOT / "qr-search" / "test-images"
 DATA_DIR = ROOT / "qr-search" / "test-images-data"
 OUT_DIR = ROOT / "qr-search" / "test-images-rendered"
 OUT_DIR.mkdir(parents=True, exist_ok=True)
+for old in OUT_DIR.glob("*.png"):
+    old.unlink()
 
 SCENES = [
-    ("20260927_warehouse_a", SRC_DIR / "20260927_warehouse_a.svg"),
-    ("20260927_warehouse_b", SRC_DIR / "20260927_warehouse_b.svg"),
-    ("20260927_loading_zone", SRC_DIR / "20260927_loading_zone.svg"),
     ("20260927_uploaded_warehouse_01", DATA_DIR / "uploaded_warehouse_01.b64"),
     ("20260927_uploaded_warehouse_02", DATA_DIR / "uploaded_warehouse_02.b64"),
 ]
@@ -25,9 +24,6 @@ SCENES = [
 POSITIONS = {
     "20260927_uploaded_warehouse_01": [(0.12,0.18),(0.17,0.48),(0.60,0.08),(0.86,0.28),(0.17,0.74),(0.57,0.48)],
     "20260927_uploaded_warehouse_02": [(0.20,0.30),(0.50,0.42),(0.68,0.16),(0.78,0.46),(0.08,0.68),(0.67,0.76)],
-    "20260927_warehouse_a": [(0.09,0.23),(0.28,0.46),(0.69,0.22),(0.78,0.49),(0.13,0.68),(0.56,0.67)],
-    "20260927_warehouse_b": [(0.11,0.21),(0.35,0.22),(0.64,0.22),(0.71,0.48),(0.14,0.68),(0.57,0.67)],
-    "20260927_loading_zone": [(0.12,0.24),(0.42,0.24),(0.72,0.24),(0.57,0.60),(0.20,0.68),(0.68,0.68)],
 }
 
 def font(size):
