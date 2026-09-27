@@ -30,11 +30,15 @@ function show(item,label){
   sessionStorage.setItem('qrStaticSampleSeen',JSON.stringify(seen));
   img.src='./'+item.path+'?v='+encodeURIComponent(item.updatedAt||item.name);
   info.textContent=item.name+' ／ '+label;
-  const c=item.codes||{};
-  legend.innerHTML='<b>この画像に焼き込まれているテストコード</b><br>'+
-    'URL QR: <code>'+((c.url)||'')+'</code><br>'+
-    'QR: '+((c.qr)||[]).map(v=>'<code>'+v+'</code>').join(' / ')+'<br>'+
-    'バーコード: '+((c.barcodes)||[]).map(v=>'<code>'+v+'</code>').join(' / ');
+  const c=item.codes||null;
+  if(c){
+    legend.innerHTML='<b>この画像に含まれるテストコード</b><br>'+
+      'URL QR: <code>'+((c.url)||'')+'</code><br>'+
+      'QR: '+((c.qr)||[]).map(v=>'<code>'+v+'</code>').join(' / ')+'<br>'+
+      'バーコード: '+((c.barcodes)||[]).map(v=>'<code>'+v+'</code>').join(' / ');
+  }else{
+    legend.innerHTML='<b>この画像は元画像をそのまま使用しています</b><br>QR／バーコードの二重合成は行っていません。画像内にあるラベルを読み取りテストしてください。';
+  }
 }
 async function load(){
   btn.disabled=true;
