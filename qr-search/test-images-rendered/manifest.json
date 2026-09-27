@@ -1,54 +1,18 @@
 [
   {
-    "name": "20260927_uploaded_warehouse_01.png",
-    "path": "test-images-rendered/20260927_uploaded_warehouse_01.png",
-    "updatedAt": "2026-09-27T15:47:17+09:00",
-    "codes": {
-      "url": "https://example.com/package/7bc9ce",
-      "qr": [
-        "PKG-7BC9CE",
-        "WH-3A1D77FB",
-        "BOX-8087A984"
-      ],
-      "barcodes": [
-        "4906678558071",
-        "4503161634619"
-      ]
-    }
+    "name": "20260927_uploaded_warehouse_01.jpg",
+    "path": "test-images-rendered/20260927_uploaded_warehouse_01.jpg",
+    "updatedAt": "2026-09-27T15:47:17+09:00"
   },
   {
-    "name": "20260927_uploaded_warehouse_02.png",
-    "path": "test-images-rendered/20260927_uploaded_warehouse_02.png",
-    "updatedAt": "2026-09-27T15:48:14+09:00",
-    "codes": {
-      "url": "https://example.com/package/09d7c2",
-      "qr": [
-        "PKG-09D7C2",
-        "WH-11DFEA34",
-        "BOX-E3B0647D"
-      ],
-      "barcodes": [
-        "4922278569962",
-        "4511569882164"
-      ]
-    }
+    "name": "20260927_uploaded_warehouse_02.jpg",
+    "path": "test-images-rendered/20260927_uploaded_warehouse_02.jpg",
+    "updatedAt": "2026-09-27T15:48:14+09:00"
   },
   {
-    "name": "20260927_warehouse_new.png",
-    "path": "test-images-rendered/20260927_warehouse_new.png",
-    "updatedAt": "",
-    "codes": {
-      "url": "https://example.com/package/72b68e",
-      "qr": [
-        "PKG-72B68E",
-        "WH-2E57E4B0",
-        "BOX-19A00C5C"
-      ],
-      "barcodes": [
-        "4928395016164",
-        "4500292732125"
-      ]
-    }
+    "name": "20260927_warehouse_new.jpg",
+    "path": "test-images-rendered/20260927_warehouse_new.jpg",
+    "updatedAt": ""
   },
   {
     "name": "20260927_uploaded_warehouse_03.jpg",
