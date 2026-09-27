@@ -36,7 +36,7 @@ main{max-width:880px;margin:auto;padding:24px 16px 40px}
   <div class="header-inner">
     <div class="eyebrow">QR PRODUCT LISTING SUPPORT</div>
     <h1>QR商品出品支援</h1>
-    <div class="version">PoC Version 0.1</div>
+    <div class="version">PoC Version 0.2</div>
   </div>
 </header>
 
@@ -47,7 +47,7 @@ main{max-width:880px;margin:auto;padding:24px 16px 40px}
   </section>
 
   <section class="menu" aria-label="機能メニュー">
-    <button class="card" data-name="QRコード発行">
+    <button class="card" data-name="QRコード発行" data-link="./qr-generator.html">
       <div class="icon" aria-hidden="true">▦</div>
       <h3>QRコード発行</h3>
       <p>商品撮影・管理に使用するQRコードを発行します。</p>
@@ -83,7 +83,7 @@ main{max-width:880px;margin:auto;padding:24px 16px 40px}
     </button>
   </section>
 
-  <div class="note">ログイン後の画面を想定したPoCです。ログイン機能および各機能の詳細画面は今後追加します。</div>
+  <div class="note">ログイン後の画面を想定したPoCです。現在は「QRコード発行」のみ画面遷移し、他メニューは次のPoCで実装予定です。</div>
 </main>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -92,6 +92,8 @@ const toast=document.getElementById('toast');
 let timer;
 document.querySelectorAll('.card').forEach(card=>{
   card.addEventListener('click',()=>{
+    const link=card.dataset.link;
+    if(link){ location.href=link; return; }
     clearTimeout(timer);
     toast.textContent=card.dataset.name+'画面は次のPoCで実装します';
     toast.classList.add('show');
