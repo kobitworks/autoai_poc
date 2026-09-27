@@ -3,6 +3,11 @@ function hashCode(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeA
 function ean13(seed,offset){let n=String((seed+offset*7919)%1000000000000).padStart(12,'0'),sum=0;for(let i=0;i<12;i++)sum+=(+n[i])*(i%2?3:1);return n+((10-sum%10)%10)}
 function renderCodes(path){const h=hashCode(path),id=String(h%10000).padStart(4,'0'),q=['https://example.com/package/'+id,'PKG-'+id+'-'+String((h>>>4)%100).padStart(2,'0'),'WH'+String((h>>>8)%99999).padStart(5,'0'),'BOX-'+String((h>>>12)%999999).padStart(6,'0')],b=[ean13(h,1),ean13(h,2)];for(let i=0;i<4;i++){const el=document.getElementById('q'+(i+1));el.innerHTML='';new QRCode(el,{text:q[i],width:110,height:110,correctLevel:QRCode.CorrectLevel.M});document.getElementById('l'+(i+1)).textContent=i===0?'URL QR':q[i]}JsBarcode('#b1',b[0],{format:'EAN13',displayValue:true,height:55,margin:6,fontSize:18});JsBarcode('#b2',b[1],{format:'EAN13',displayValue:true,height:55,margin:6,fontSize:18});document.getElementById('legend').innerHTML='<b>この画像のテストコード</b><br>URL QR: <code>'+q[0]+'</code><br>QR: <code>'+q.slice(1).join('</code> / <code>')+'</code><br>バーコード: <code>'+b.join('</code> / <code>')+'</code>'}
 const REPO='kobitworks/autoai_poc',BRANCH='main',IMAGE_DIR='qr-search/test-images';
+const UPLOADED_IMAGES=[
+{name:'20260927_uploaded_warehouse_01.webp',path:'uploaded:warehouse_01',updatedAt:Date.parse('2026-09-27T06:35:12Z'),base64Path:'./test-images-data/uploaded_warehouse_01.b64'},
+{name:'20260927_uploaded_warehouse_02.webp',path:'uploaded:warehouse_02',updatedAt:Date.parse('2026-09-27T06:35:16Z'),base64Path:'./test-images-data/uploaded_warehouse_02.b64'}
+];
+const uploadedImageCache={};
 const IMAGE_EXT=/\.(png|jpe?g|webp|gif|svg|avif)$/i;
 const scene=document.getElementById('scene'),info=document.getElementById('imageInfo'),nextBtn=document.getElementById('nextImage');
 let currentPath=sessionStorage.getItem('qrSearchCurrentImage')||'';
@@ -21,7 +26,16 @@ async function getImages(){
       x.updatedAt=(Array.isArray(c)&&c[0]&&c[0].commit&&c[0].commit.committer&&c[0].commit.committer.date)?Date.parse(c[0].commit.committer.date):0;
     }catch(e){x.updatedAt=0}
   }));
-  return list;
+  return list.concat(UPLOADED_IMAGES);
+}
+async function resolveImageUrl(item){
+  if(!item.base64Path)return 'https://raw.githubusercontent.com/'+REPO+'/'+BRANCH+'/'+item.path;
+  if(!uploadedImageCache[item.path]){
+    const r=await fetch(item.base64Path+'?t='+Date.now());
+    if(!r.ok)throw new Error('添付テスト画像の読み込みに失敗しました');
+    uploadedImageCache[item.path]='data:image/webp;base64,'+(await r.text()).trim();
+  }
+  return uploadedImageCache[item.path];
 }
 function chooseOrder(list){
   const byDate=Math.random()<.5,ascending=Math.random()<.5;
@@ -41,9 +55,9 @@ function pickNext(sorted){
   if(idx<0)return sorted[0];
   return sorted[(idx+1)%sorted.length];
 }
-function showImage(item,label){
+async function showImage(item,label){
   if(!item)return;
-  const raw='https://raw.githubusercontent.com/'+REPO+'/'+BRANCH+'/'+item.path;
+  const raw=await resolveImageUrl(item);
   scene.style.backgroundImage='url("'+raw.replace(/"/g,'%22')+'")';
   currentPath=item.path;
   if(!seen.includes(item.path))seen.push(item.path);
@@ -60,9 +74,9 @@ async function nextImage(initial=false){
     const {sorted,label}=chooseOrder(list);
     if(initial&&currentPath){
       const current=sorted.find(x=>x.path===currentPath);
-      if(current){showImage(current,'前回表示');return}
+      if(current){await showImage(current,'前回表示');return}
     }
-    showImage(pickNext(sorted),label);
+    await showImage(pickNext(sorted),label);
   }catch(e){
     info.textContent=e.message||'テスト画像の切替に失敗しました';
   }finally{nextBtn.disabled=false}
