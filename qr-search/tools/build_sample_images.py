@@ -22,6 +22,19 @@ SCENES = [
     ("20260927_warehouse_new", SRC_DIR / "20260927_warehouse_new.webp"),
 ]
 
+STATIC_SCENES = [
+    {
+        "key": "20260927_uploaded_warehouse_03",
+        "src": DATA_DIR / "uploaded_warehouse_03.jpg",
+        "out_name": "20260927_uploaded_warehouse_03.jpg",
+        "codes": {
+            "url": "https://example.com/package/WH7720",
+            "qr": ["PKG-PLT3287", "ITEM-4509-A7", "ZX-1189-B03"],
+            "barcodes": ["4580791234567", "TB6201002584"],
+        },
+    },
+]
+
 # Positions are normalized top-left anchors for 4 QR labels + 2 barcodes.
 POSITIONS = {
     "20260927_uploaded_warehouse_01": [(0.12,0.18),(0.17,0.48),(0.60,0.08),(0.86,0.28),(0.17,0.74),(0.57,0.48)],
