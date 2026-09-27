@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>QRコード発行 | QR商品出品支援</title>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#e5e7eb;--accent:#2563eb;--accent-soft:#eff6ff}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+header{background:#fff;border-bottom:1px solid var(--line)}
+.header-inner{max-width:1180px;margin:auto;padding:18px}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--accent);margin-bottom:5px}
+h1{font-size:27px;margin:0}.version{margin-top:6px;font-size:12px;color:var(--muted)}
+main{max-width:1180px;margin:auto;padding:20px 16px 40px}
+.back{display:inline-block;margin-bottom:16px;padding:9px 13px;border:1px solid var(--line);border-radius:999px;background:#fff;text-decoration:none;color:var(--text);font-weight:700;font-size:14px}
+.desc{margin:0 0 18px;color:var(--muted);line-height:1.6}
+.layout{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start}
+.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 3px 14px rgba(15,23,42,.05)}
+.panel h2{font-size:19px;margin:0 0 14px}
+.field{margin-bottom:14px}.field label{display:block;font-size:13px;font-weight:700;margin-bottom:6px}
+.field input{width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:12px;font-size:14px}
+.field small{display:block;margin-top:5px;color:var(--muted);line-height:1.45}
+.inline{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions{display:grid;gap:9px}
+.btn{border:0;border-radius:13px;padding:12px 14px;font-size:14px;font-weight:700;cursor:pointer}
+.primary{background:var(--accent);color:#fff}.secondary{background:#eef2ff;color:#1d4ed8}.light{background:#f8fafc;color:#334155;border:1px solid #cbd5e1}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.summary{margin-top:13px;padding:11px 12px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;color:var(--muted);font-size:13px;line-height:1.5}
+.preview-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-end;margin-bottom:12px}.preview-head h2{margin:0}.meta{font-size:13px;color:var(--muted)}
+.sheet-wrap{overflow:auto;padding:8px;background:#e2e8f0;border-radius:16px}
+.sheet{width:210mm;height:297mm;background:#fff;margin:auto;padding:11mm 14mm;display:grid;grid-template-columns:repeat(2,91mm);grid-template-rows:repeat(5,55mm);box-shadow:0 8px 28px rgba(15,23,42,.16)}
+.card{width:91mm;height:55mm;border:.25mm dashed #cbd5e1;padding:4mm;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+.card-top{display:flex;justify-content:space-between;gap:4mm}.brand{font-size:3.2mm;font-weight:700}.sub{margin-top:1mm;font-size:2.6mm;color:#64748b}
+.qr{width:24mm;height:24mm;flex:0 0 24mm}.qr img,.qr canvas{width:24mm!important;height:24mm!important}
+.code-box{border:.25mm solid #cbd5e1;border-radius:1.4mm;padding:2mm 2.2mm;background:#f8fafc}
+.code-line{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:3.6mm;line-height:1.35;letter-spacing:.4mm}
+.card-foot{display:flex;justify-content:space-between;align-items:end;gap:3mm}.memo{font-size:2.4mm;color:#64748b}.fullcode{font-size:2.3mm;color:#475569}
+.placeholder{min-height:360px;display:flex;align-items:center;justify-content:center;text-align:center;background:#fff;border:2px dashed #cbd5e1;border-radius:16px;color:#64748b}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#0f172a;color:#fff;padding:10px 15px;border-radius:999px;font-size:13px;opacity:0;transition:.2s;pointer-events:none}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:980px){.layout{grid-template-columns:1fr}}
+@media(max-width:700px){.inline{grid-template-columns:1fr}.sheet{transform-origin:top left}.panel{padding:14px}}
+@media print{header,.back,.desc,.layout>.panel:first-child,.preview-head,.toast{display:none!important}main{max-width:none;padding:0}.layout{display:block}.panel{border:0;box-shadow:none;padding:0}.sheet-wrap{padding:0;background:#fff;overflow:visible}.sheet{box-shadow:none;margin:0}}
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="eyebrow">QR PRODUCT LISTING SUPPORT</div>
+    <h1>QRコード発行</h1>
+    <div class="version">PoC Version 0.2</div>
+  </div>
+</header>
+<main>
+  <a class="back" href="./index.html">← メニューへ戻る</a>
+  <p class="desc">A4サイズ・名刺10面のQRコード台紙を生成し、PDFでダウンロードできます。QRコードには「発行日時14桁＋補助番号4桁」の18桁コードを格納します。</p>
+  <div class="layout">
+    <section class="panel">
+      <h2>発行設定</h2>
+      <div class="field">
+        <label for="issuedAt">発行日時</label>
+        <input id="issuedAt" readonly value="未生成">
+      </div>
+      <div class="inline">
+        <div class="field">
+          <label for="startNo">開始補助番号</label>
+          <input id="startNo" type="number" min="1" max="9999" value="1">
+          <small>0001〜9999。10枚連番で発行します。</small>
+        </div>
+        <div class="field">
+          <label for="count">発行枚数</label>
+          <input id="count" value="10" readonly>
+          <small>A4名刺10面のため10枚固定です。</small>
+        </div>
+      </div>
+      <div class="field">
+        <label for="memo">印字メモ（任意）</label>
+        <input id="memo" maxlength="30" placeholder="例：商品撮影用">
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="generateBtn">プレビュー生成</button>
+        <button class="btn secondary" id="downloadBtn" disabled>PDFダウンロード</button>
+        <button class="btn light" id="printBtn" disabled>ブラウザ印刷</button>
+      </div>
+      <div class="summary" id="summary">まだ生成されていません。</div>
+    </section>
+    <section class="panel">
+      <div class="preview-head">
+        <h2>印刷プレビュー</h2>
+        <div class="meta" id="meta">未生成</div>
+      </div>
+      <div class="sheet-wrap">
+        <div class="placeholder" id="placeholder">ここにA4・10面のQRカードが表示されます。</div>
+        <div class="sheet" id="sheet" style="display:none"></div>
+      </div>
+    </section>
+  </div>
+</main>
+<div class="toast" id="toast"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+var issuedAt=document.getElementById("issuedAt");
+var startNo=document.getElementById("startNo");
+var memo=document.getElementById("memo");
+var sheet=document.getElementById("sheet");
+var placeholder=document.getElementById("placeholder");
+var meta=document.getElementById("meta");
+var summary=document.getElementById("summary");
+var downloadBtn=document.getElementById("downloadBtn");
+var printBtn=document.getElementById("printBtn");
+var toast=document.getElementById("toast");
+var currentBatch=null;
+function pad(n,len){return String(n).padStart(len,"0")}
+function wrapNo(n){return ((Number(n)-1)%9999+9999)%9999+1}
+function compactDate(d){return ""+d.getFullYear()+pad(d.getMonth()+1,2)+pad(d.getDate(),2)+pad(d.getHours(),2)+pad(d.getMinutes(),2)+pad(d.getSeconds(),2)}
+function displayDate(d){return d.getFullYear()+"-"+pad(d.getMonth()+1,2)+"-"+pad(d.getDate(),2)+" "+pad(d.getHours(),2)+":"+pad(d.getMinutes(),2)+":"+pad(d.getSeconds(),2)}
+function notify(t){toast.textContent=t;toast.classList.add("show");clearTimeout(notify.t);notify.t=setTimeout(function(){toast.classList.remove("show")},1800)}
+function generate(){
+  var n=Math.max(1,Math.min(9999,Number(startNo.value||1)));startNo.value=n;
+  var now=new Date(),stamp=compactDate(now),display=displayDate(now),m=memo.value.trim()||"商品撮影用QRカード";
+  var cards=[];
+  for(var i=0;i<10;i++){var seq=pad(wrapNo(n+i),4);cards.push({stamp:stamp,seq:seq,code:stamp+seq,memo:m})}
+  currentBatch={stamp:stamp,display:display,cards:cards};
+  sheet.innerHTML="";
+  cards.forEach(function(item){
+    var card=document.createElement("div");card.className="card";
+    card.innerHTML='<div class="card-top"><div><div class="brand">QR商品出品支援</div><div class="sub">商品と一緒に撮影してください</div></div><div class="qr"></div></div>'+
+      '<div class="code-box"><div class="code-line">'+item.stamp+'</div><div class="code-line">'+item.seq+'</div></div>'+
+      '<div class="card-foot"><div class="memo">'+item.memo+'</div><div class="fullcode">'+item.code+'</div></div>';
+    sheet.appendChild(card);
+    new QRCode(card.querySelector(".qr"),{text:item.code,width:128,height:128,colorDark:"#111827",colorLight:"#ffffff",correctLevel:QRCode.CorrectLevel.M});
+  });
+  issuedAt.value=display;placeholder.style.display="none";sheet.style.display="grid";
+  meta.textContent=display+" / "+cards[0].seq+"〜"+cards[9].seq;
+  summary.innerHTML="QRコード10件を生成しました。<br>先頭: <strong>"+cards[0].code+"</strong><br>末尾: <strong>"+cards[9].code+"</strong>";
+  downloadBtn.disabled=false;printBtn.disabled=false;notify("QRカードを生成しました");
+}
+async function downloadPdf(){
+  if(!currentBatch)return;
+  downloadBtn.disabled=true;downloadBtn.textContent="PDF生成中...";
+  try{
+    var canvas=await html2canvas(sheet,{scale:2,backgroundColor:"#ffffff",useCORS:true});
+    var img=canvas.toDataURL("image/png");
+    var jsPDF=window.jspdf.jsPDF;
+    var pdf=new jsPDF({orientation:"p",unit:"mm",format:"a4"});
+    pdf.addImage(img,"PNG",0,0,210,297,undefined,"FAST");
+    pdf.save("qr_cards_"+currentBatch.stamp+"_"+currentBatch.cards[0].seq+"-"+currentBatch.cards[9].seq+".pdf");
+    notify("PDFをダウンロードしました");
+  }catch(e){console.error(e);notify("PDF生成に失敗しました")}
+  finally{downloadBtn.disabled=false;downloadBtn.textContent="PDFダウンロード"}
+}
+document.getElementById("generateBtn").addEventListener("click",generate);
+downloadBtn.addEventListener("click",downloadPdf);
+printBtn.addEventListener("click",function(){if(currentBatch)window.print()});
+</script>
+</body>
+</html>
