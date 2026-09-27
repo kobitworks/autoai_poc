@@ -1,5 +1,7 @@
-name = "autoai-web-poc"
+name = "autoai-web-production"
 compatibility_date = "2026-09-27"
 
-# WEB-003 で Workers / D1 / R2 / Preview の実リソースと binding を追加する。
+# 本ファイルは、本番化時に専用リポジトリへ切り出した後のCloudflare構成用テンプレート。
+# 共通PoC autoai_poc/develop のGitHub Pages公開だけでは使用しない。
+# Workers / D1 / R2 / bindings は本番要件に応じて追加する。
 # 秘密情報はここに書かず、Cloudflare / GitHub Secrets で管理する。
