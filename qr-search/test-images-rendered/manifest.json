@@ -32,5 +32,39 @@
         "4511569882164"
       ]
     }
+  },
+  {
+    "name": "20260927_warehouse_new.png",
+    "path": "test-images-rendered/20260927_warehouse_new.png",
+    "updatedAt": "",
+    "codes": {
+      "url": "https://example.com/package/72b68e",
+      "qr": [
+        "PKG-72B68E",
+        "WH-2E57E4B0",
+        "BOX-19A00C5C"
+      ],
+      "barcodes": [
+        "4928395016164",
+        "4500292732125"
+      ]
+    }
+  },
+  {
+    "name": "20260927_uploaded_warehouse_03.jpg",
+    "path": "test-images-rendered/20260927_uploaded_warehouse_03.jpg",
+    "updatedAt": "2026-09-27T19:52:19+09:00",
+    "codes": {
+      "url": "https://example.com/package/WH7720",
+      "qr": [
+        "PKG-PLT3287",
+        "ITEM-4509-A7",
+        "ZX-1189-B03"
+      ],
+      "barcodes": [
+        "4580791234567",
+        "TB6201002584"
+      ]
+    }
   }
 ]
