@@ -1,46 +1,25 @@
-name: Build QR search sample images
+name: Validate QR search sample images
+
 on:
   push:
     branches: [develop]
     paths:
-      - 'qr-search/test-images/**'
-      - 'qr-search/test-images-data/uploaded_warehouse_01.b64'
-      - 'qr-search/test-images-data/uploaded_warehouse_02.b64'
-      - 'qr-search/test-images-data/uploaded_warehouse_03.jpg'
-      - 'qr-search/test-images-data/warehouse_sample_20260927.part*.b64'
-      - 'qr-search/tools/build_sample_images.py'
+      - 'qr-search/test-images-rendered/**'
+      - 'qr-search/test.html'
+      - 'qr-search/tools/validate_sample_images.py'
       - '.github/workflows/build-qr-search-images.yml'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  build:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install pillow qrcode python-barcode cairosvg
-      - name: Rebuild uploaded warehouse source
-        run: |
-          mkdir -p qr-search/test-images
-          cat             qr-search/test-images-data/warehouse_sample_20260927.part00.b64             qr-search/test-images-data/warehouse_sample_20260927.part01.b64             qr-search/test-images-data/warehouse_sample_20260927.part02.b64             qr-search/test-images-data/warehouse_sample_20260927.part03.b64             qr-search/test-images-data/warehouse_sample_20260927.part04a.b64             qr-search/test-images-data/warehouse_sample_20260927.part04b.b64             qr-search/test-images-data/warehouse_sample_20260927.part04c.b64             | tr -d '\n\r '             | base64 --decode             > qr-search/test-images/20260927_warehouse_new.webp
-      - run: python qr-search/tools/build_sample_images.py
-      - name: Commit rendered samples
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add qr-search/test-images-rendered
-          if git diff --cached --quiet; then
-            echo "No rendered changes"
-          else
-            git commit -m "Build static QR search sample images [skip ci]"
-            git fetch origin develop
-            git rebase origin/develop
-            git push origin HEAD:develop
-          fi
+      - run: pip install opencv-python-headless
+      - run: python qr-search/tools/validate_sample_images.py
