@@ -1,0 +1,50 @@
+name: P008 Cloudflare preflight
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+    paths:
+      - ".github/workflows/p008-cloudflare-preflight.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          for name in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do
+            if [ -z "${!name:-}" ]; then
+              echo "::error::${name} is not configured"
+              missing=1
+            fi
+          done
+          test "${missing}" -eq 0
+
+      - name: Verify Cloudflare API token
+        shell: bash
+        run: |
+          set -euo pipefail
+          response="$(curl -fsS https://api.cloudflare.com/client/v4/user/tokens/verify \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json")"
+          echo "${response}" | jq -e '.success == true and .result.status == "active"' >/dev/null
+
+      - name: Verify Cloudflare account access
+        shell: bash
+        run: |
+          set -euo pipefail
+          response="$(curl -fsS "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json")"
+          echo "${response}" | jq -e '.success == true' >/dev/null
