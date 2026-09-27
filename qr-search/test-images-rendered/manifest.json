@@ -2,19 +2,7 @@
   {
     "name": "warehouse_qr_sample_01.jpg",
     "path": "test-images-rendered/warehouse_qr_sample_01.jpg",
-    "updatedAt": "2026-09-27T22:03:00+09:00",
-    "source": "user_selected_final_image"
-  },
-  {
-    "name": "warehouse_qr_sample_02.jpg",
-    "path": "test-images-rendered/warehouse_qr_sample_02.jpg",
-    "updatedAt": "2026-09-27T22:03:00+09:00",
-    "source": "user_selected_final_image"
-  },
-  {
-    "name": "warehouse_qr_sample_03.jpg",
-    "path": "test-images-rendered/warehouse_qr_sample_03.jpg",
-    "updatedAt": "2026-09-27T22:03:00+09:00",
+    "updatedAt": "2026-09-27T22:12:00+09:00",
     "source": "user_selected_final_image"
   }
 ]
