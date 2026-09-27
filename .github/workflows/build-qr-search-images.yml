@@ -1,7 +1,7 @@
 name: Build QR search sample images
 on:
   push:
-    branches: [main]
+    branches: [develop]
     paths:
       - 'qr-search/test-images/**'
       - 'qr-search/test-images-data/uploaded_warehouse_01.b64'
@@ -28,13 +28,13 @@ jobs:
       - name: Commit rendered samples
         run: |
           git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config user.email "41898278+github-actions[bot]@users.noreply.github.com"
           git add qr-search/test-images-rendered
           if git diff --cached --quiet; then
             echo "No rendered changes"
           else
             git commit -m "Build static QR search sample images [skip ci]"
-            git fetch origin main
-            git rebase origin/main
-            git push
+            git fetch origin develop
+            git rebase origin/develop
+            git push origin HEAD:develop
           fi
