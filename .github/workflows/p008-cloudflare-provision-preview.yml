@@ -36,6 +36,23 @@ jobs:
           curl -fsS "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/tokens/verify"             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"             -H "Content-Type: application/json"             | jq -e '.success == true and .result.status == "active"' >/dev/null
           curl -fsS "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}"             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"             -H "Content-Type: application/json"             | jq -e '.success == true' >/dev/null
 
+      - name: Verify P008 D1 partial state
+        shell: bash
+        run: |
+          set -euo pipefail
+          p008_json="$(curl -fsS "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/d1/database?name=p008-web-template-production&per_page=10"             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"             -H "Content-Type: application/json")"
+          p008_uuid="$(printf '%s' "$p008_json" | jq -er '[.result[] | select(.name == "p008-web-template-production")] | if length == 1 then .[0].uuid else error("P008 D1 missing or duplicated") end')"
+
+          control_json="$(curl -fsS "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/d1/database?name=p016-db-management-production&per_page=10"             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"             -H "Content-Type: application/json")"
+          control_uuid="$(printf '%s' "$control_json" | jq -er '[.result[] | select(.name == "p016-db-management-production")] | if length == 1 then .[0].uuid else error("P016 control D1 missing or duplicated") end')"
+
+          body="$(jq -n --arg sql "SELECT d.database_name,d.database_uuid,sv.version AS schema_version FROM databases d LEFT JOIN schema_versions sv ON sv.database_id=d.id WHERE d.project_id='P008' AND d.environment='production';" '{sql:$sql}')"
+          catalog_json="$(curl -fsS "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/d1/database/${control_uuid}/query"             -X POST             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"             -H "Content-Type: application/json"             --data "$body")"
+          catalog_uuid="$(printf '%s' "$catalog_json" | jq -er '.result[0].results | if length == 1 then .[0].database_uuid else error("P008 catalog row missing or duplicated") end')"
+          schema_version="$(printf '%s' "$catalog_json" | jq -er '.result[0].results[0].schema_version')"
+          test "$catalog_uuid" = "$p008_uuid"
+          echo "P008_D1_STATE=exists,catalog_registered=true,schema_version=${schema_version}"
+
       - name: Check R2 subscription readiness
         shell: bash
         run: |
