@@ -1,5 +1,293 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>QR解析・商品データ | QR商品出品支援</title><style>
-:root{--bg:#080c15;--p:#111827;--line:#29364d;--t:#f8fafc;--m:#94a3b8;--a:#67e8f9;--v:#a78bfa}*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 80% 0,#2b1e4c,#080c15 48%);color:var(--t);font-family:system-ui,sans-serif}.w{max-width:1100px;margin:auto;padding:22px 16px 50px}.top{display:flex;justify-content:space-between}.top a{color:var(--m);text-decoration:none}.tag{border:1px solid var(--line);border-radius:20px;padding:6px 9px;font-size:12px;color:#c4b5fd}h1{font-size:clamp(32px,6vw,54px);line-height:1;margin:40px 0 12px}.lead{color:var(--m);line-height:1.7}.p{margin-top:20px;background:rgba(17,24,39,.95);border:1px solid var(--line);border-radius:20px;padding:18px}.tools{display:flex;gap:9px;flex-wrap:wrap;align-items:center}select,input,textarea{background:#0a1220;color:#fff;border:1px solid #3a4966;border-radius:9px;padding:9px;font:inherit}select{min-width:210px}button,.btn{border:0;border-radius:10px;padding:10px 13px;font-weight:700;cursor:pointer}.primary{background:var(--a);color:#05202a}.purple{background:var(--v);color:#160b2a}.secondary{background:#24324a;color:#fff}.status,.note{color:var(--m);font-size:12px;line-height:1.6;margin-top:12px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:14px}.card{display:grid;grid-template-columns:92px 1fr;gap:10px;border:1px solid var(--line);border-radius:13px;padding:9px}.card img{width:92px;height:86px;object-fit:cover;border-radius:8px}.name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.qr{display:flex;gap:6px;margin-top:7px}.qr input{min-width:0;width:100%}.tiny{padding:7px;background:#25334b;color:#fff}.group{border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}.group h3{margin:0 0 8px}.files{color:var(--m);font-size:12px}.form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.f label{display:block;font-size:11px;color:var(--m);margin-bottom:4px}.f input,.f textarea{width:100%}.f textarea{min-height:80px}.wide{grid-column:1/-1}.bar{height:7px;background:#09101b;border-radius:20px;overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--v),var(--a))}@media(max-width:760px){.grid{grid-template-columns:1fr}.form{grid-template-columns:1fr}.wide{grid-column:auto}select{width:100%}}
-</style><script src="./poc-store.js"></script><script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script><script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script></head><body><div class="w"><div class="top"><a href="./upload.html">← 商品画像アップロード</a><span class="tag">PoC / Step 3</span></div><h1>QRでまとめて、<br>商品データにする。</h1><p class="lead">写真内のQRを読み取り、商品ごとの仮想フォルダへ分類。管理コード＋連番へファイル名を変換し、ZIP出力と商品情報JSONを作成します。</p><section class="p"><div class="tools"><select id="batch"></select><button id="load" class="secondary">読込</button><button id="scan" class="purple">QRを一括解析</button><button id="zip" class="primary" disabled>商品別ZIPを出力</button></div><div id="status" class="status">バッチを選択してください。</div><div class="bar"><i id="bar"></i></div><div id="images" class="grid"></div></section><section class="p"><div class="tools"><b>商品グループ</b><select id="channel"><option value="mercari">メルカリ</option><option value="generic">汎用EC</option></select><button id="draft" class="secondary">商品情報フォームを作成</button></div><div id="groups"></div><p class="note">QR解析・分類・リネーム・ZIP生成は実動します。ChatGPT画像解析は静的GitHub PagesからAPIキーを安全に扱えないため未接続です。PoCではAI解析結果を受け取る商品データ構造・編集・保存・出力まで実装しています。</p></section></div><script>
-var q=function(s){return document.querySelector(s)},images=[],groups={},current='';function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}function ext(x){var m=(x.originalName||'').match(/\.([a-z0-9]{2,5})$/i);return m?m[1].toLowerCase():(x.mimeType==='image/png'?'png':'jpg')}function norm(s){s=String(s||'').trim();if(!s)return'';var m=s.match(/QR[-_ ]?[A-Z0-9-]{3,}/i);if(m)return m[0].replace(/_/g,'-').replace(/\s+/g,'-').toUpperCase();try{var u=new URL(s),x=decodeURIComponent(u.pathname.split('/').filter(Boolean).pop()||'');return norm(x)||x}catch(e){}return s.slice(0,64)}async function decode(blob){if('BarcodeDetector' in window){try{var f=await BarcodeDetector.getSupportedFormats();if(f.indexOf('qr_code')>=0){var d=new BarcodeDetector({formats:['qr_code']}),b=await createImageBitmap(blob),r=await d.detect(b);b.close();if(r[0]&&r[0].rawValue)return r[0].rawValue}}catch(e){}}if(window.ZXingBrowser){var u=URL.createObjectURL(blob);try{var z=new ZXingBrowser.BrowserQRCodeReader(),x=await z.decodeFromImageUrl(u);return x&&x.getText?x.getText():''}catch(e){}finally{URL.revokeObjectURL(u)}}return''}async function init(){var a=await AutoAIStore.listBatches(),s=q('#batch');s.innerHTML='';a.forEach(function(x){var o=document.createElement('option');o.value=x.batchId;o.textContent=x.batchId+' ('+x.count+'枚)';s.append(o)});var p=new URLSearchParams(location.search).get('batch');if(p)s.value=p;if(a.length)await load()}async function load(){current=q('#batch').value;images=await AutoAIStore.getImages(current);renderImages();build();q('#zip').disabled=!images.length;q('#status').textContent=images.length+'枚を読み込みました。'}function renderImages(){var box=q('#images');box.innerHTML='';images.forEach(function(x){var c=document.createElement('div');c.className='card';var im=document.createElement('img'),u=URL.createObjectURL(x.blob);im.src=u;im.onload=function(){URL.revokeObjectURL(u)};var i=document.createElement('div');i.innerHTML='<div class="name">'+esc(x.originalName)+'</div><div class="status">'+(x.virtualName?esc(x.virtualName):'未分類')+'</div><div class="qr"><input value="'+esc(x.qrCode||'')+'"><button class="tiny">適用</button></div>';var inp=i.querySelector('input');i.querySelector('button').onclick=async function(){x=await AutoAIStore.updateImage(x.id,{qrCode:norm(inp.value)||'UNREAD'});var n=images.findIndex(function(y){return y.id===x.id});images[n]=x;build();renderImages()};c.append(im,i);box.append(c)})}function build(){groups={};images.forEach(function(x){var c=x.qrCode||'UNREAD';(groups[c]||(groups[c]=[])).push(x)});Object.keys(groups).forEach(function(c){groups[c].sort(function(a,b){return a.originalName.localeCompare(b.originalName,'ja')}).forEach(function(x,i){x.virtualName=c+'_'+String(i+1).padStart(2,'0')+'.'+ext(x)})});renderGroups()}function field(label,name,val,area){return '<div class="f'+(area?' wide':'')+'"><label>'+label+'</label>'+(area?'<textarea data-f="'+name+'">'+esc(val||'')+'</textarea>':'<input data-f="'+name+'" value="'+esc(val||'')+'">')+'</div>'}async function renderGroups(){var box=q('#groups');box.innerHTML='';for(var c of Object.keys(groups)){var a=groups[c],p=await AutoAIStore.getProduct(c),d=document.createElement('div');d.className='group';var list=a.map(function(x){return '<li>'+esc(x.virtualName)+' ← '+esc(x.originalName)+'</li>'}).join(''),form='';if(p)form='<div class="form">'+field('商品名','title',p.title)+field('カテゴリ','category',p.category)+field('ブランド','brand',p.brand)+field('状態','condition',p.condition)+field('価格','price',p.price)+field('在庫','stock',p.stock)+field('商品説明','description',p.description,true)+field('チャネル固有情報','channelMemo',p.channelMemo,true)+'</div><div class="tools" style="margin-top:8px"><button class="tiny save">保存</button><button class="tiny json">JSON</button></div>';d.innerHTML='<h3>'+esc(c)+' <span class="status">'+a.length+'枚</span></h3><ul class="files">'+list+'</ul>'+form;if(p){d.querySelector('.save').onclick=(function(div,code,arr){return async function(){await AutoAIStore.putProduct(read(div,code,arr));q('#status').textContent=code+' を保存しました。'}})(d,c,a);d.querySelector('.json').onclick=(function(div,code,arr){return function(){download(new Blob([JSON.stringify(read(div,code,arr),null,2)],{type:'application/json'}),code+'.json')}})(d,c,a)}box.append(d)}}function read(d,c,a){var g=function(n){var e=d.querySelector('[data-f="'+n+'"]');return e?e.value:''};return {code:c,channel:q('#channel').value,imageCount:a.length,files:a.map(function(x){return x.virtualName}),title:g('title'),category:g('category'),brand:g('brand'),condition:g('condition'),price:g('price'),stock:Number(g('stock')||1),description:g('description'),channelMemo:g('channelMemo')}}q('#load').onclick=load;q('#batch').onchange=load;q('#scan').onclick=async function(){if(!images.length)return;q('#scan').disabled=true;for(var i=0;i<images.length;i++){var raw=await decode(images[i].blob),code=norm(raw);images[i]=await AutoAIStore.updateImage(images[i].id,{qrCode:code,status:code?'grouped':'unread'});q('#bar').style.width=((i+1)/images.length*100)+'%';q('#status').textContent='QR解析 '+(i+1)+'/'+images.length}build();renderImages();q('#scan').disabled=false;q('#status').textContent='解析完了。商品 '+Object.keys(groups).filter(function(x){return x!=='UNREAD'}).length+'件 / 未読 '+((groups.UNREAD||[]).length)+'枚'};q('#draft').onclick=async function(){for(var c of Object.keys(groups)){if(c==='UNREAD')continue;var old=await AutoAIStore.getProduct(c);if(!old)await AutoAIStore.putProduct({code:c,channel:q('#channel').value,imageCount:groups[c].length,files:groups[c].map(function(x){return x.virtualName}),title:'',category:'',brand:'',condition:'',price:'',stock:1,description:'管理コード: '+c+'\n画像: '+groups[c].length+'枚',channelMemo:q('#channel').value==='mercari'?'配送負担・配送方法・発送元・発送までの日数を設定':'チャネル固有項目を設定'})}await renderGroups();q('#status').textContent='商品情報フォームを作成しました。'};q('#zip').onclick=async function(){var z=new JSZip();for(var c of Object.keys(groups)){var f=z.folder(c);groups[c].forEach(function(x){f.file(x.virtualName,x.blob)});var p=await AutoAIStore.getProduct(c);if(p)f.file('product.json',JSON.stringify(p,null,2))}download(await z.generateAsync({type:'blob'}),'qr-products-'+current+'.zip')};function download(blob,name){var a=document.createElement('a'),u=URL.createObjectURL(blob);a.href=u;a.download=name;a.click();setTimeout(function(){URL.revokeObjectURL(u)},1000)}init();
-</script></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>QR解析・商品グルーピング | QR商品出品支援</title>
+<style>
+:root{--bg:#080c15;--p:#111827;--line:#29364d;--t:#f8fafc;--m:#94a3b8;--a:#67e8f9;--v:#a78bfa;--ok:#34d399;--warn:#fbbf24;--bad:#fb7185}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at 80% 0,#2b1e4c,#080c15 48%);color:var(--t);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button,input,select,textarea{font:inherit}
+.w{max-width:1160px;margin:auto;padding:22px 16px 50px}
+.top{display:flex;justify-content:space-between;gap:12px;align-items:center}.top a{color:var(--m);text-decoration:none}
+.tag{border:1px solid var(--line);border-radius:20px;padding:6px 9px;font-size:12px;color:#c4b5fd}
+h1{font-size:clamp(30px,6vw,52px);line-height:1.05;margin:34px 0 12px}.lead{color:var(--m);line-height:1.7}
+.p{margin-top:20px;background:rgba(17,24,39,.95);border:1px solid var(--line);border-radius:20px;padding:18px}
+.p h2{font-size:18px;margin:0 0 10px}.tools{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+select,input,textarea{background:#0a1220;color:#fff;border:1px solid #3a4966;border-radius:9px;padding:9px}
+select{min-width:210px}button,.btn{border:0;border-radius:10px;padding:10px 13px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+button:disabled{opacity:.45;cursor:not-allowed}.primary{background:var(--a);color:#05202a}.purple{background:var(--v);color:#160b2a}.secondary{background:#24324a;color:#fff}
+.status,.note{color:var(--m);font-size:12px;line-height:1.6;margin-top:12px}.bar{height:7px;background:#09101b;border-radius:20px;overflow:hidden;margin-top:10px}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--v),var(--a));transition:width .15s}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:14px}.metric{border:1px solid var(--line);border-radius:12px;padding:10px;background:#0b1423}.metric span{display:block;color:var(--m);font-size:10px}.metric strong{font-size:20px}
+.spec{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}.spec div{border:1px solid var(--line);border-radius:11px;padding:10px;color:#cbd5e1;font-size:12px;line-height:1.55}.spec b{color:#fff}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px}.card{display:grid;grid-template-columns:110px 1fr;gap:10px;border:1px solid var(--line);border-radius:13px;padding:9px;background:#0c1524}.card img{width:110px;height:104px;object-fit:cover;border-radius:8px}.name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badges{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.badge{display:inline-block;padding:4px 7px;border-radius:999px;font-size:10px;font-weight:800}.b-ok{background:#063b33;color:#6ee7b7}.b-warn{background:#47320a;color:#fde68a}.b-bad{background:#4c1725;color:#fda4af}.b-info{background:#172554;color:#93c5fd}
+.qr{display:flex;gap:6px;margin-top:7px}.qr input{min-width:0;width:100%}.tiny{padding:7px 9px;background:#25334b;color:#fff;font-size:11px}.candidate-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}.candidate{border:1px solid #6654a8;background:#20193e;color:#ddd6fe;border-radius:8px;padding:5px 7px;font-size:10px}
+.group{border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px;background:#0b1423}.group.unresolved{border-color:#6b4c19}.group h3{margin:0 0 8px}.files{color:var(--m);font-size:12px;line-height:1.7}.group-note{font-size:11px;color:#86efac;margin-top:6px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.f label{display:block;font-size:11px;color:var(--m);margin-bottom:4px}.f input,.f textarea{width:100%}.f textarea{min-height:80px}.wide{grid-column:1/-1}
+.empty{border:1px dashed #3a4966;border-radius:12px;padding:20px;text-align:center;color:var(--m);margin-top:10px}
+@media(max-width:800px){.grid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.spec{grid-template-columns:1fr}}
+@media(max-width:520px){.form{grid-template-columns:1fr}.wide{grid-column:auto}.card{grid-template-columns:86px 1fr}.card img{width:86px;height:86px}.metrics{grid-template-columns:1fr 1fr}select{width:100%}}
+</style>
+<script src="./poc-store.js"></script>
+<script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+</head>
+<body>
+<div class="w">
+  <div class="top"><a href="./upload.html">← 商品画像アップロード</a><span class="tag">PoC / QR-005</span></div>
+  <h1>QRを読み取り、<br>商品単位にまとめる。</h1>
+  <p class="lead">写真内の管理QRを解析し、同一商品コードの写真を1グループにまとめます。未検出・複数QR・形式不正は自動確定せず、画像ごとに手動補正できます。</p>
+
+  <section class="p">
+    <h2>PoC確定ルール</h2>
+    <div class="spec">
+      <div><b>商品ID形式</b><br><code>QPMS + YYMMDDHHMMSS + 4桁番号</code><br>合計20文字。例: QPMS2609281234560001</div>
+      <div><b>同じQRが複数写真に写る</b><br>正常ケース。同一商品として1グループへ統合し、写真は連番で扱います。</div>
+      <div><b>QR未検出 / 形式不正</b><br>未確定として残し、自動で商品グループへ入れません。手入力で修正可能です。</div>
+      <div><b>1画像に異なる複数QR</b><br>候補を表示して自動確定を停止します。ユーザーが正しい商品IDを選択または入力します。</div>
+    </div>
+  </section>
+
+  <section class="p">
+    <div class="tools">
+      <select id="batch"></select>
+      <button id="load" class="secondary">読込</button>
+      <button id="scan" class="purple">QRを一括解析</button>
+      <button id="zip" class="primary" disabled>商品別ZIPを出力</button>
+    </div>
+    <div id="status" class="status">バッチを選択してください。</div>
+    <div class="bar"><i id="bar"></i></div>
+    <div class="metrics">
+      <div class="metric"><span>画像数</span><strong id="mImages">0</strong></div>
+      <div class="metric"><span>商品グループ</span><strong id="mGroups">0</strong></div>
+      <div class="metric"><span>未確定</span><strong id="mUnresolved">0</strong></div>
+      <div class="metric"><span>複数QR</span><strong id="mMulti">0</strong></div>
+    </div>
+    <div id="images" class="grid"></div>
+  </section>
+
+  <section class="p">
+    <div class="tools">
+      <b>商品グループ</b>
+      <select id="channel"><option value="mercari">メルカリ</option><option value="generic">汎用EC</option></select>
+      <button id="draft" class="secondary">商品情報フォームを作成</button>
+    </div>
+    <div id="groups"></div>
+    <p class="note">QR解析・例外判定・手動補正・商品ID別グルーピング・仮想リネーム・ZIP生成はPoCとして動作します。画像と解析結果はブラウザ内IndexedDBに保持し、D1/R2への永続化は後続タスクで実装します。</p>
+  </section>
+</div>
+
+<script>
+var q=function(s){return document.querySelector(s)};
+var images=[],groups={},unresolved=[],current='';
+var PRODUCT_RE=/QPMS[0-9]{16}/i;
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function ext(x){var m=(x.originalName||'').match(/\.([a-z0-9]{2,5})$/i);return m?m[1].toLowerCase():(x.mimeType==='image/png'?'png':'jpg')}
+function uniq(a){var out=[];a.forEach(function(x){if(x&&out.indexOf(x)<0)out.push(x)});return out}
+function validCode(s){return /^QPMS[0-9]{16}$/.test(String(s||'').toUpperCase())}
+function norm(raw){
+  var s=String(raw||'').trim();
+  if(!s)return '';
+  try{s=decodeURIComponent(s)}catch(e){}
+  var m=s.match(PRODUCT_RE);
+  return m?m[0].toUpperCase():'';
+}
+function statusLabel(x){
+  if(x.status==='grouped')return ['自動確定','b-ok'];
+  if(x.status==='manual')return ['手動確定','b-info'];
+  if(x.status==='multi')return ['複数QR・要選択','b-warn'];
+  if(x.status==='invalid')return ['形式不正','b-bad'];
+  if(x.status==='unread')return ['QR未検出','b-warn'];
+  return ['未解析','b-info'];
+}
+function makeVirtualNames(){
+  Object.keys(groups).sort().forEach(function(code){
+    groups[code].sort(function(a,b){return a.originalName.localeCompare(b.originalName,'ja')}).forEach(function(x,i){
+      x.virtualName=code+'_'+String(i+1).padStart(2,'0')+'.'+ext(x);
+    });
+  });
+}
+async function decodeAll(blob){
+  var raw=[],engine='';
+  if('BarcodeDetector' in window){
+    try{
+      var formats=await BarcodeDetector.getSupportedFormats();
+      if(formats.indexOf('qr_code')>=0){
+        var detector=new BarcodeDetector({formats:['qr_code']});
+        var bitmap=await createImageBitmap(blob);
+        try{
+          var found=await detector.detect(bitmap);
+          raw=uniq(found.map(function(x){return String(x.rawValue||'').trim()}).filter(Boolean));
+          if(raw.length)engine='BarcodeDetector';
+        }finally{bitmap.close()}
+      }
+    }catch(e){}
+  }
+  if(!raw.length&&window.ZXingBrowser){
+    var url=URL.createObjectURL(blob);
+    try{
+      var reader=new ZXingBrowser.BrowserQRCodeReader();
+      var result=await reader.decodeFromImageUrl(url);
+      var text=result&&result.getText?result.getText():'';
+      if(text){raw=[String(text).trim()];engine='ZXing'}
+    }catch(e){}finally{URL.revokeObjectURL(url)}
+  }
+  var candidates=uniq(raw.map(norm).filter(Boolean));
+  return {raw:raw,candidates:candidates,engine:engine||'none'};
+}
+async function saveDecision(item,patch){
+  var updated=await AutoAIStore.updateImage(item.id,patch);
+  var index=images.findIndex(function(x){return x.id===item.id});
+  if(index>=0)images[index]=updated;
+  build();
+  renderImages();
+}
+async function applyManual(item,value){
+  var code=norm(value);
+  if(!code){
+    q('#status').textContent='入力値から有効な20文字の商品IDを確認できません。QPMS＋16桁数字で入力してください。';
+    return;
+  }
+  await saveDecision(item,{qrCode:code,status:'manual',qrCandidates:[code],qrRaw:[String(value||'').trim()]});
+  q('#status').textContent=code+' を手動確定しました。';
+}
+async function markUnread(item){
+  await saveDecision(item,{qrCode:'',status:'unread',qrCandidates:[],qrRaw:item.qrRaw||[]});
+  q('#status').textContent=item.originalName+' を未確定に戻しました。';
+}
+async function init(){
+  var batches=await AutoAIStore.listBatches(),select=q('#batch');
+  select.innerHTML='';
+  batches.forEach(function(x){var o=document.createElement('option');o.value=x.batchId;o.textContent=x.batchId+' ('+x.count+'枚)';select.append(o)});
+  var requested=new URLSearchParams(location.search).get('batch');
+  if(requested)select.value=requested;
+  if(batches.length)await load();
+}
+async function load(){
+  current=q('#batch').value;
+  images=await AutoAIStore.getImages(current);
+  build();
+  renderImages();
+  q('#zip').disabled=!images.length;
+  q('#status').textContent=images.length+'枚を読み込みました。QR解析を実行してください。';
+  q('#bar').style.width='0%';
+}
+function build(){
+  groups={};unresolved=[];
+  images.forEach(function(x){
+    if(validCode(x.qrCode)&&(x.status==='grouped'||x.status==='manual')){
+      (groups[x.qrCode]||(groups[x.qrCode]=[])).push(x);
+    }else{
+      unresolved.push(x);
+    }
+  });
+  makeVirtualNames();
+  q('#mImages').textContent=String(images.length);
+  q('#mGroups').textContent=String(Object.keys(groups).length);
+  q('#mUnresolved').textContent=String(unresolved.length);
+  q('#mMulti').textContent=String(images.filter(function(x){return x.status==='multi'}).length);
+  renderGroups();
+}
+function renderImages(){
+  var box=q('#images');box.innerHTML='';
+  if(!images.length){box.innerHTML='<div class="empty">画像がありません。</div>';return}
+  images.forEach(function(item){
+    var card=document.createElement('div');card.className='card';
+    var img=document.createElement('img'),url=URL.createObjectURL(item.blob);
+    img.src=url;img.alt=item.originalName;img.onload=function(){URL.revokeObjectURL(url)};
+    var body=document.createElement('div');
+    var state=statusLabel(item);
+    var candidateHtml=(item.qrCandidates||[]).length>1?'<div class="candidate-row">'+item.qrCandidates.map(function(c){return '<button type="button" class="candidate" data-code="'+esc(c)+'">'+esc(c)+'</button>'}).join('')+'</div>':'';
+    body.innerHTML='<div class="name">'+esc(item.originalName)+'</div>'+
+      '<div class="badges"><span class="badge '+state[1]+'">'+state[0]+'</span>'+
+      (item.scanEngine?'<span class="badge b-info">'+esc(item.scanEngine)+'</span>':'')+'</div>'+
+      candidateHtml+
+      '<div class="qr"><input aria-label="商品ID" value="'+esc(item.qrCode||((item.qrCandidates||[])[0]||''))+'" placeholder="QPMS2609281234560001"><button type="button" class="tiny apply">適用</button><button type="button" class="tiny unread">未確定</button></div>';
+    var input=body.querySelector('input');
+    body.querySelector('.apply').onclick=function(){applyManual(item,input.value)};
+    body.querySelector('.unread').onclick=function(){markUnread(item)};
+    body.querySelectorAll('.candidate').forEach(function(btn){btn.onclick=function(){input.value=btn.dataset.code;applyManual(item,btn.dataset.code)}});
+    card.append(img,body);box.append(card);
+  });
+}
+function field(label,name,val,area){return '<div class="f'+(area?' wide':'')+'"><label>'+label+'</label>'+(area?'<textarea data-f="'+name+'">'+esc(val||'')+'</textarea>':'<input data-f="'+name+'" value="'+esc(val||'')+'">')+'</div>'}
+async function renderGroups(){
+  var box=q('#groups');box.innerHTML='';
+  if(unresolved.length){
+    var u=document.createElement('div');u.className='group unresolved';
+    u.innerHTML='<h3>未確定 <span class="status">'+unresolved.length+'枚</span></h3><div class="files">'+unresolved.map(function(x){var s=statusLabel(x)[0];return '・'+esc(x.originalName)+' — '+esc(s)}).join('<br>')+'</div><div class="status">未確定画像は商品グループ・商品情報生成の対象外です。上の画像カードで補正してください。</div>';
+    box.append(u);
+  }
+  var codes=Object.keys(groups).sort();
+  if(!codes.length){
+    if(!unresolved.length)box.innerHTML='<div class="empty">QR解析後、商品グループがここに表示されます。</div>';
+    return;
+  }
+  for(var ci=0;ci<codes.length;ci++){
+    var code=codes[ci],arr=groups[code],product=await AutoAIStore.getProduct(code),d=document.createElement('div');d.className='group';
+    var list=arr.map(function(x){return '<li>'+esc(x.virtualName)+' ← '+esc(x.originalName)+'</li>'}).join('');
+    var form='';
+    if(product)form='<div class="form">'+field('商品名','title',product.title)+field('カテゴリ','category',product.category)+field('ブランド','brand',product.brand)+field('状態','condition',product.condition)+field('価格','price',product.price)+field('在庫','stock',product.stock)+field('商品説明','description',product.description,true)+field('チャネル固有情報','channelMemo',product.channelMemo,true)+'</div><div class="tools" style="margin-top:8px"><button class="tiny save">保存</button><button class="tiny json">JSON</button></div>';
+    d.innerHTML='<h3>'+esc(code)+' <span class="status">'+arr.length+'枚</span></h3><ul class="files">'+list+'</ul>'+(arr.length>1?'<div class="group-note">同じQRのため '+arr.length+'枚を同一商品として統合しています。</div>':'')+form;
+    if(product){
+      d.querySelector('.save').onclick=(function(div,c,a){return async function(){await AutoAIStore.putProduct(readProduct(div,c,a));q('#status').textContent=c+' を保存しました。'}})(d,code,arr);
+      d.querySelector('.json').onclick=(function(div,c,a){return function(){download(new Blob([JSON.stringify(readProduct(div,c,a),null,2)],{type:'application/json'}),c+'.json')}})(d,code,arr);
+    }
+    box.append(d);
+  }
+}
+function readProduct(d,code,arr){
+  var get=function(name){var e=d.querySelector('[data-f="'+name+'"]');return e?e.value:''};
+  return {code:code,channel:q('#channel').value,imageCount:arr.length,files:arr.map(function(x){return x.virtualName}),title:get('title'),category:get('category'),brand:get('brand'),condition:get('condition'),price:get('price'),stock:Number(get('stock')||1),description:get('description'),channelMemo:get('channelMemo')};
+}
+q('#load').onclick=load;
+q('#batch').onchange=load;
+q('#scan').onclick=async function(){
+  if(!images.length)return;
+  q('#scan').disabled=true;q('#bar').style.width='0%';
+  try{
+    for(var i=0;i<images.length;i++){
+      var scan=await decodeAll(images[i].blob);
+      var status='unread',code='';
+      if(scan.candidates.length===1){status='grouped';code=scan.candidates[0]}
+      else if(scan.candidates.length>1){status='multi'}
+      else if(scan.raw.length){status='invalid'}
+      images[i]=await AutoAIStore.updateImage(images[i].id,{qrCode:code,qrCandidates:scan.candidates,qrRaw:scan.raw,status:status,scanEngine:scan.engine});
+      q('#bar').style.width=((i+1)/images.length*100)+'%';
+      q('#status').textContent='QR解析 '+(i+1)+' / '+images.length;
+    }
+    build();renderImages();
+    q('#status').textContent='解析完了。商品 '+Object.keys(groups).length+'件 / 未確定 '+unresolved.length+'枚。未確定画像は手動補正してください。';
+  }finally{q('#scan').disabled=false}
+};
+q('#draft').onclick=async function(){
+  var codes=Object.keys(groups);
+  for(var i=0;i<codes.length;i++){
+    var code=codes[i],old=await AutoAIStore.getProduct(code);
+    if(!old)await AutoAIStore.putProduct({code:code,channel:q('#channel').value,imageCount:groups[code].length,files:groups[code].map(function(x){return x.virtualName}),title:'',category:'',brand:'',condition:'',price:'',stock:1,description:'管理コード: '+code+'\n画像: '+groups[code].length+'枚',channelMemo:q('#channel').value==='mercari'?'配送負担・配送方法・発送元・発送までの日数を設定':'チャネル固有項目を設定'});
+  }
+  await renderGroups();q('#status').textContent='確定済み '+codes.length+'商品の商品情報フォームを作成しました。';
+};
+q('#zip').onclick=async function(){
+  var zip=new JSZip(),codes=Object.keys(groups);
+  for(var i=0;i<codes.length;i++){
+    var code=codes[i],folder=zip.folder(code);
+    groups[code].forEach(function(x){folder.file(x.virtualName,x.blob)});
+    var product=await AutoAIStore.getProduct(code);
+    if(product)folder.file('product.json',JSON.stringify(product,null,2));
+  }
+  if(unresolved.length){
+    var pending=zip.folder('_UNRESOLVED');
+    unresolved.forEach(function(x){pending.file(x.originalName,x.blob)});
+  }
+  download(await zip.generateAsync({type:'blob'}),'qr-products-'+current+'.zip');
+};
+function download(blob,name){var a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=name;a.click();setTimeout(function(){URL.revokeObjectURL(url)},1000)}
+init();
+</script>
+</body>
+</html>
