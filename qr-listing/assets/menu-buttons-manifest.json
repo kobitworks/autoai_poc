@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "usage": "qr-listing operation menu decorative button artwork",
+  "functionalCodeTestSource": false,
+  "filenamePolicy": "ASCII-compatible sequential asset names",
+  "assets": [
+    {
+      "sector": "01",
+      "label": "QR発行",
+      "file": "menu-button-01.webp",
+      "decorativeQrOnly": true
+    },
+    {
+      "sector": "02",
+      "label": "商品画像アップロード",
+      "file": "menu-button-02.webp",
+      "decorativeQrOnly": true
+    },
+    {
+      "sector": "03",
+      "label": "商品画像AI解析",
+      "file": "menu-button-03.webp",
+      "decorativeQrOnly": true
+    },
+    {
+      "sector": "04",
+      "label": "商品データ取込",
+      "file": "menu-button-04.webp",
+      "decorativeQrOnly": true
+    },
+    {
+      "sector": "05",
+      "label": "商品一覧",
+      "file": "menu-button-05.webp",
+      "decorativeQrOnly": true
+    }
+  ]
+}
