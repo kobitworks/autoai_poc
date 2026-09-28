@@ -1,0 +1,13 @@
+(function(){
+var DB='autoai-qr-listing-poc',VER=1;
+function open(){return new Promise(function(ok,ng){var r=indexedDB.open(DB,VER);r.onupgradeneeded=function(){var d=r.result,s;if(!d.objectStoreNames.contains('images')){s=d.createObjectStore('images',{keyPath:'id'});s.createIndex('batchId','batchId',{unique:false});}if(!d.objectStoreNames.contains('products'))d.createObjectStore('products',{keyPath:'code'});};r.onsuccess=function(){ok(r.result)};r.onerror=function(){ng(r.error)};});}
+function done(t){return new Promise(function(ok,ng){t.oncomplete=ok;t.onerror=function(){ng(t.error)};t.onabort=function(){ng(t.error)};});}
+async function saveImages(files,batchId){var d=await open(),t=d.transaction('images','readwrite'),s=t.objectStore('images'),now=new Date().toISOString(),out=[];Array.from(files).forEach(function(f,i){var x={id:crypto.randomUUID(),batchId:batchId,originalName:f.name||('image-'+(i+1)+'.jpg'),mimeType:f.type||'image/jpeg',size:f.size||0,createdAt:now,qrCode:'',virtualName:'',status:'uploaded',blob:f};s.put(x);out.push(x);});await done(t);d.close();return out;}
+async function all(){var d=await open(),t=d.transaction('images','readonly'),r=t.objectStore('images').getAll(),a=await new Promise(function(ok,ng){r.onsuccess=function(){ok(r.result||[])};r.onerror=function(){ng(r.error)};});d.close();return a;}
+async function getImages(batchId){return (await all()).filter(function(x){return x.batchId===batchId}).sort(function(a,b){return a.originalName.localeCompare(b.originalName,'ja')});}
+async function listBatches(){var a=await all(),m={};a.forEach(function(x){if(!m[x.batchId])m[x.batchId]={batchId:x.batchId,count:0,createdAt:x.createdAt};m[x.batchId].count++;});return Object.values(m).sort(function(a,b){return b.createdAt.localeCompare(a.createdAt)});}
+async function updateImage(id,patch){var d=await open(),t=d.transaction('images','readwrite'),s=t.objectStore('images'),r=s.get(id),x=await new Promise(function(ok,ng){r.onsuccess=function(){ok(r.result)};r.onerror=function(){ng(r.error)};});Object.assign(x,patch);s.put(x);await done(t);d.close();return x;}
+async function putProduct(x){var d=await open(),t=d.transaction('products','readwrite');x.updatedAt=new Date().toISOString();t.objectStore('products').put(x);await done(t);d.close();}
+async function getProduct(code){var d=await open(),t=d.transaction('products','readonly'),r=t.objectStore('products').get(code),x=await new Promise(function(ok,ng){r.onsuccess=function(){ok(r.result||null)};r.onerror=function(){ng(r.error)};});d.close();return x;}
+window.AutoAIStore={saveImages:saveImages,getImages:getImages,listBatches:listBatches,updateImage:updateImage,putProduct:putProduct,getProduct:getProduct};
+})();
