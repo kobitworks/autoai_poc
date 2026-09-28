@@ -19,28 +19,51 @@ input{padding:0 12px;font-size:18px}
 button{padding:0 14px;background:#fff;font-weight:700}
 button.primary{background:#1769e0;color:#fff;border-color:#1769e0}
 #status{font-size:13px;color:#667085;margin-top:6px;min-height:18px;line-height:1.35}
+#mapWrap{position:relative;width:100%;height:100%;min-height:0}
 #map{width:100%;height:100%}
+#driveHud{position:absolute;right:12px;top:12px;z-index:900;display:grid;grid-template-columns:repeat(2,minmax(112px,1fr));gap:8px;pointer-events:none}
+.hudCard{min-width:112px;background:#111e;color:#fff;border:1px solid #ffffff30;border-radius:14px;padding:10px 12px;box-shadow:0 3px 14px #0005;text-align:center;backdrop-filter:blur(4px)}
+.hudLabel{display:block;font-size:12px;font-weight:700;letter-spacing:.04em;color:#d0d5dd}
+.hudValue{font-size:44px;line-height:1;font-variant-numeric:tabular-nums}
+.hudUnit{font-size:14px;margin-left:3px;color:#d0d5dd}
+.hudSub{display:block;min-height:16px;margin-top:4px;font-size:11px;color:#98a2b3}
+#headingValue{font-size:34px}
 #panel{position:absolute;left:12px;right:12px;bottom:16px;z-index:900;background:#fff;border-radius:14px;padding:10px 12px;box-shadow:0 3px 16px #0004;display:none}
 #panel strong{font-size:20px}
 #panel span{color:#667085;margin-left:8px}
 .leaflet-control-zoom a{width:44px!important;height:44px!important;line-height:44px!important;font-size:26px!important}
 @media (orientation:landscape){header{padding:8px 12px}.row{grid-template-columns:minmax(320px,1fr) auto auto auto}}
+@media (max-width:560px){#driveHud{grid-template-columns:repeat(2,minmax(96px,1fr));right:8px;top:8px}.hudCard{min-width:96px;padding:8px}.hudValue{font-size:38px}#headingValue{font-size:30px}}
 </style>
 </head>
 <body>
 <div id="app">
 <header>
-  <div class="topline"><a class="back" href="../">← PoC一覧へ戻る</a><span class="version">Version 0.2</span></div>
+  <div class="topline"><a class="back" href="../">← PoC一覧へ戻る</a><span class="version">Version 0.3</span></div>
   <h1>🚚 タブレットナビ PoC</h1>
   <div class="row">
     <input id="q" type="search" inputmode="search" placeholder="目的地を入力（例：渋川駅）" autocomplete="off">
     <button id="voice" title="音声入力">🎤</button>
     <button id="search" class="primary">検索</button>
-    <button id="locate">GPS再取得</button>
+    <button id="locate">現在地へ</button>
   </div>
   <div id="status">GPSを開始しています…</div>
 </header>
-<div id="map"></div>
+<div id="mapWrap">
+  <div id="map"></div>
+  <div id="driveHud" aria-live="polite">
+    <div class="hudCard">
+      <span class="hudLabel">GPS速度</span>
+      <strong id="speedValue" class="hudValue">--</strong><span class="hudUnit">km/h</span>
+      <small id="speedSource" class="hudSub">測位待ち</small>
+    </div>
+    <div class="hudCard">
+      <span class="hudLabel">方角</span>
+      <strong id="headingValue" class="hudValue">--</strong>
+      <small id="headingDetail" class="hudSub">測位待ち</small>
+    </div>
+  </div>
+</div>
 </div>
 <div id="panel"><strong id="distance"></strong><span id="duration"></span><br><small id="dest"></small></div>
 
@@ -48,16 +71,94 @@ button.primary{background:#1769e0;color:#fff;border-color:#1769e0}
 <script>
 const statusEl=document.getElementById('status'), q=document.getElementById('q');
 const panel=document.getElementById('panel'), distEl=document.getElementById('distance'), durEl=document.getElementById('duration'), destEl=document.getElementById('dest');
+const speedEl=document.getElementById('speedValue'), speedSourceEl=document.getElementById('speedSource');
+const headingEl=document.getElementById('headingValue'), headingDetailEl=document.getElementById('headingDetail');
 const map=L.map('map',{zoomControl:true}).setView([36.2,138.2],6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
 
 let current=null,currentMarker=null,accuracyCircle=null,destMarker=null,routeLine=null,watchId=null,firstFix=true;
+let followMode=true,lastFix=null;
 function setStatus(s){statusEl.textContent=s}
+
+function toRad(v){return v*Math.PI/180}
+function toDeg(v){return v*180/Math.PI}
+function distanceMeters(a,b){
+  const R=6371000;
+  const dLat=toRad(b.lat-a.lat), dLon=toRad(b.lon-a.lon);
+  const la1=toRad(a.lat), la2=toRad(b.lat);
+  const h=Math.sin(dLat/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLon/2)**2;
+  return 2*R*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
+}
+function bearingDegrees(a,b){
+  const la1=toRad(a.lat), la2=toRad(b.lat), dLon=toRad(b.lon-a.lon);
+  const y=Math.sin(dLon)*Math.cos(la2);
+  const x=Math.cos(la1)*Math.sin(la2)-Math.sin(la1)*Math.cos(la2)*Math.cos(dLon);
+  return (toDeg(Math.atan2(y,x))+360)%360;
+}
+function headingLabel(deg){
+  const labels=['北','北東','東','南東','南','南西','西','北西'];
+  return labels[Math.round(deg/45)%8];
+}
+function clearMotion(reason='測位待ち'){
+  speedEl.textContent='--';
+  speedSourceEl.textContent=reason;
+  headingEl.textContent='--';
+  headingDetailEl.textContent=reason;
+}
+function updateMotion(c,timestamp){
+  const now={
+    lat:c.latitude,
+    lon:c.longitude,
+    accuracy:Number.isFinite(c.accuracy)?c.accuracy:9999,
+    time:timestamp||Date.now()
+  };
+
+  let speedMps=null, speedSource='';
+  if(Number.isFinite(c.speed) && c.speed>=0){
+    speedMps=c.speed;
+    speedSource='端末GPS';
+  }else if(lastFix){
+    const dt=(now.time-lastFix.time)/1000;
+    const d=distanceMeters(lastFix,now);
+    if(dt>=0.8 && dt<=10 && d>=2 && Math.max(now.accuracy,lastFix.accuracy)<=60){
+      speedMps=d/dt;
+      speedSource='位置差から推定';
+    }
+  }
+  if(speedMps!==null && speedMps*3.6<=250){
+    speedEl.textContent=String(Math.round(speedMps*3.6));
+    speedSourceEl.textContent=speedSource;
+  }else{
+    speedEl.textContent='--';
+    speedSourceEl.textContent='速度取得不可';
+  }
+
+  let heading=null, headingSource='';
+  if(Number.isFinite(c.heading) && c.heading>=0){
+    heading=((c.heading%360)+360)%360;
+    headingSource='端末GPS';
+  }else if(lastFix){
+    const d=distanceMeters(lastFix,now);
+    if(d>=5 && Math.max(now.accuracy,lastFix.accuracy)<=60){
+      heading=bearingDegrees(lastFix,now);
+      headingSource='移動方向から推定';
+    }
+  }
+  if(heading!==null){
+    headingEl.textContent=headingLabel(heading);
+    headingDetailEl.textContent=Math.round(heading)+'° ・ '+headingSource;
+  }else{
+    headingEl.textContent='--';
+    headingDetailEl.textContent='方角取得不可';
+  }
+  lastFix=now;
+}
 function gpsError(e){
   const msg=e&&e.code===1?'位置情報が拒否されています。ブラウザ設定でこのサイトの位置情報を「許可」にしてください。':
             e&&e.code===2?'現在地を取得できません。GPS/Wi-Fi/モバイル通信を確認してください。':
-            e&&e.code===3?'GPS取得がタイムアウトしました。屋外で「GPS再取得」を押してください。':
+            e&&e.code===3?'GPS取得がタイムアウトしました。屋外で「現在地へ」を押してください。':
             '現在地を取得できません。';
+  clearMotion('GPSエラー');
   setStatus(msg);
 }
 function onPosition(p){
@@ -68,13 +169,23 @@ function onPosition(p){
   else currentMarker=L.marker(current).addTo(map).bindPopup('現在地');
   if(accuracyCircle) accuracyCircle.setLatLng(current).setRadius(c.accuracy||0);
   else accuracyCircle=L.circle(current,{radius:c.accuracy||0,weight:1,fillOpacity:.08}).addTo(map);
-  if(firstFix){map.setView(current,16);firstFix=false}
-  setStatus('GPS受信中：精度 約'+acc+'m'+(acc>100?'（精度が低めです）':''));
+
+  updateMotion(c,p.timestamp);
+  if(firstFix){
+    map.setView(current,16);
+    firstFix=false;
+  }else if(followMode){
+    map.panTo(current,{animate:false});
+  }
+  setStatus('GPS受信中：精度 約'+acc+'m'+(acc>100?'（精度が低めです）':'')+(followMode?' ・ 地図追従中':' ・ 地図追従停止'));
 }
 function startGps(){
-  if(!navigator.geolocation){setStatus('このブラウザでは位置情報を利用できません。');return}
+  if(!navigator.geolocation){clearMotion('未対応');setStatus('このブラウザでは位置情報を利用できません。');return}
   if(watchId!==null) navigator.geolocation.clearWatch(watchId);
   firstFix=true;
+  followMode=true;
+  lastFix=null;
+  clearMotion();
   setStatus('GPSを取得しています…');
   watchId=navigator.geolocation.watchPosition(onPosition,gpsError,{
     enableHighAccuracy:true,
@@ -83,7 +194,8 @@ function startGps(){
   });
 }
 function recenter(){
-  if(current){map.setView(current,16);setStatus('現在地を中心に戻しました。GPSは継続測位中です。')}
+  followMode=true;
+  if(current){map.setView(current,16);setStatus('現在地を中心に戻しました。地図追従を再開します。')}
   else startGps();
 }
 
@@ -123,6 +235,10 @@ async function drawRoute(a,b){
 document.getElementById('search').onclick=searchDest;
 document.getElementById('locate').onclick=recenter;
 q.addEventListener('keydown',e=>{if(e.key==='Enter')searchDest()});
+map.on('dragstart',()=>{
+  followMode=false;
+  if(current) setStatus('地図を手動操作中です。「現在地へ」で追従を再開できます。');
+});
 map.on('click',async e=>{
   if(destMarker) destMarker.setLatLng(e.latlng); else destMarker=L.marker(e.latlng).addTo(map);
   destEl.textContent='地図で指定した地点';
