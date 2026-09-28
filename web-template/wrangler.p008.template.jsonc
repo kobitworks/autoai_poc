@@ -1,0 +1,44 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "p008-web-template",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-09-28",
+  "workers_dev": true,
+  "preview_urls": true,
+  "vars": {
+    "ENVIRONMENT": "production",
+    "DB_WRITE_ENABLED": "false"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "p008-web-template-production",
+      "database_id": "__D1_DATABASE_ID__"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "FILES",
+      "bucket_name": "p008-web-template-files-production"
+    }
+  ],
+  "previews": {
+    "vars": {
+      "ENVIRONMENT": "preview",
+      "DB_WRITE_ENABLED": "false"
+    },
+    "d1_databases": [
+      {
+        "binding": "DB",
+        "database_name": "p008-web-template-production",
+        "database_id": "__D1_DATABASE_ID__"
+      }
+    ],
+    "r2_buckets": [
+      {
+        "binding": "FILES",
+        "bucket_name": "p008-web-template-files-staging"
+      }
+    ]
+  }
+}
