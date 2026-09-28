@@ -11,6 +11,9 @@
 body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
 header{background:#fff;border-bottom:1px solid var(--line)}
 .header-inner{max-width:880px;margin:auto;padding:18px 18px 15px}
+.header-top{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.main-back{display:inline-flex;align-items:center;gap:5px;color:var(--accent);text-decoration:none;font-size:14px;font-weight:700;white-space:nowrap}
+.main-back:hover{text-decoration:underline}
 .eyebrow{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--accent);margin-bottom:5px}
 h1{font-size:25px;line-height:1.25;margin:0}
 .version{margin-top:6px;font-size:12px;color:var(--muted)}
@@ -28,15 +31,20 @@ main{max-width:880px;margin:auto;padding:24px 16px 40px}
 .note{margin-top:22px;border:1px dashed #cbd5e1;border-radius:14px;padding:13px 15px;color:var(--muted);font-size:13px;line-height:1.5;background:#fff}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#0f172a;color:#fff;padding:11px 16px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:.2s;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media(max-width:620px){.menu{grid-template-columns:1fr}.card{padding:18px}.header-inner{padding-top:16px}h1{font-size:23px}}
+@media(max-width:620px){.menu{grid-template-columns:1fr}.card{padding:18px}.header-inner{padding-top:16px}h1{font-size:23px}.header-top{align-items:flex-start}}
 </style>
 </head>
 <body>
 <header>
   <div class="header-inner">
-    <div class="eyebrow">QR PRODUCT LISTING SUPPORT</div>
-    <h1>QR商品出品支援</h1>
-    <div class="version">PoC Version 0.2</div>
+    <div class="header-top">
+      <div>
+        <div class="eyebrow">QR PRODUCT LISTING SUPPORT</div>
+        <h1>QR商品出品支援</h1>
+        <div class="version">PoC Version 0.2</div>
+      </div>
+      <a class="main-back" href="../">← メインに戻る</a>
+    </div>
   </div>
 </header>
 
