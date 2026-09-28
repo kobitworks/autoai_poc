@@ -3,111 +3,292 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0f172a">
+<meta name="theme-color" content="#eef3f8">
 <title>QR商品出品支援</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 <style>
-:root{--bg:#f5f7fb;--card:#fff;--text:#172033;--muted:#667085;--line:#e5e7eb;--accent:#2563eb;--accent-soft:#eff6ff}
+:root{
+  --bg:#f0f3f8;--panel:#ffffff;--panel-2:#f8fafc;--text:#172033;--muted:#667085;
+  --line:#dde4ec;--line-strong:#cfd8e3;--cyan:#17b7e9;--blue:#2387ff;--green:#21c58b;
+  --accent:linear-gradient(135deg,#18b9ea 0%,#2588ff 48%,#21c58b 100%);
+  --shadow:0 14px 36px rgba(29,49,76,.08);--shadow-hover:0 18px 44px rgba(35,135,255,.16);
+}
 *{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
-header{background:#fff;border-bottom:1px solid var(--line)}
-.header-inner{max-width:880px;margin:auto;padding:18px 18px 15px}
-.header-top{display:flex;align-items:center;justify-content:space-between;gap:16px}
-.main-back{display:inline-flex;align-items:center;gap:5px;color:var(--accent);text-decoration:none;font-size:14px;font-weight:700;white-space:nowrap}
-.main-back:hover{text-decoration:underline}
-.eyebrow{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--accent);margin-bottom:5px}
-h1{font-size:25px;line-height:1.25;margin:0}
-.version{margin-top:6px;font-size:12px;color:var(--muted)}
-main{max-width:880px;margin:auto;padding:24px 16px 40px}
-.welcome{margin-bottom:20px}
-.welcome h2{font-size:20px;margin:0 0 6px}
-.welcome p{margin:0;color:var(--muted);line-height:1.55}
-.menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
-.card{appearance:none;width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:18px;padding:20px;box-shadow:0 3px 14px rgba(15,23,42,.05);cursor:pointer;color:inherit}
-.card:active{transform:scale(.99)}
-.icon{width:46px;height:46px;border-radius:13px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;font-size:23px;margin-bottom:14px}
-.card h3{font-size:18px;margin:0 0 7px}
-.card p{font-size:14px;line-height:1.5;color:var(--muted);margin:0}
-.arrow{display:block;margin-top:15px;color:var(--accent);font-size:13px;font-weight:700}
-.note{margin-top:22px;border:1px dashed #cbd5e1;border-radius:14px;padding:13px 15px;color:var(--muted);font-size:13px;line-height:1.5;background:#fff}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#0f172a;color:#fff;padding:11px 16px;border-radius:999px;font-size:13px;opacity:0;pointer-events:none;transition:.2s;white-space:nowrap}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:"Noto Sans JP",system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text)}
+button,a{font:inherit}
+button{color:inherit}
+.shell{min-height:100vh}
+.topbar{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:blur(14px);border-bottom:1px solid rgba(207,216,227,.9)}
+.topbar-inner{max-width:1120px;margin:auto;padding:14px 18px 10px}
+.brandrow{display:flex;align-items:center;justify-content:space-between;gap:16px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brandmark{width:42px;height:42px;border-radius:13px;background:var(--accent);box-shadow:0 8px 20px rgba(35,135,255,.18);display:grid;place-items:center;color:#fff;font-size:21px;flex:0 0 auto}
+.brandcopy{min-width:0}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:.11em;color:#2682e8;margin-bottom:2px}
+h1{font-size:22px;line-height:1.25;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{font-size:11px;color:var(--muted);margin-top:3px}
+.header-actions{display:flex;align-items:center;gap:8px}
+.icon-btn,.back-btn{border:1px solid var(--line);background:#fff;border-radius:12px;min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:7px;text-decoration:none;cursor:pointer;transition:.16s ease;box-shadow:0 4px 12px rgba(29,49,76,.04)}
+.icon-btn{width:40px;padding:0}
+.back-btn{padding:0 13px;color:var(--text);font-size:13px;font-weight:800}
+.icon-btn:hover,.back-btn:hover{transform:translateY(-2px);border-color:#9fcff5;box-shadow:var(--shadow-hover)}
+.icon-btn:active,.back-btn:active{transform:scale(.96)}
+.tabs{display:flex;gap:8px;margin-top:12px}
+.tab{border:0;background:transparent;border-radius:12px;padding:10px 14px;font-size:13px;font-weight:800;color:var(--muted);cursor:pointer;position:relative;transition:.16s ease}
+.tab:hover{background:#f3f8fc;color:var(--text)}
+.tab.active{background:#fff;color:#1979dd;box-shadow:0 4px 14px rgba(29,49,76,.06)}
+.tab.active::after{content:"";position:absolute;left:14px;right:14px;bottom:-10px;height:3px;border-radius:999px;background:var(--accent)}
+main{max-width:1120px;margin:auto;padding:24px 18px 48px}
+.view{display:none}
+.view.active{display:block}
+.hero{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,.7fr);gap:16px;margin-bottom:18px}
+.hero-main,.status-panel{background:var(--panel);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}
+.hero-main{padding:24px;position:relative;overflow:hidden}
+.hero-main::after{content:"";position:absolute;right:-70px;top:-80px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(23,183,233,.18),rgba(33,197,139,0) 68%)}
+.hero-kicker{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:800;color:#1c84dc;background:#eef8ff;border:1px solid #cfeeff;border-radius:999px;padding:6px 10px;margin-bottom:12px}
+.hero h2{font-size:26px;line-height:1.35;margin:0 0 8px}
+.hero p{margin:0;color:var(--muted);line-height:1.7;font-size:14px;max-width:680px}
+.status-panel{padding:18px}
+.status-title{font-size:12px;color:var(--muted);font-weight:800;margin-bottom:12px}
+.status-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid #eef2f6;font-size:13px}
+.status-row:first-of-type{border-top:0;padding-top:0}
+.status-value{font-weight:800}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 8px;font-size:11px;font-weight:800}
+.badge.ready{background:#eafaf4;color:#0e8f64}
+.badge.poc{background:#eef5ff;color:#2b72d6}
+.section-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:26px 0 12px}
+.section-head h3{font-size:17px;margin:0}
+.section-head p{font-size:12px;color:var(--muted);margin:4px 0 0}
+.menu-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.card{appearance:none;text-align:left;border:1px solid var(--line);background:var(--panel);border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(29,49,76,.05);cursor:pointer;position:relative;overflow:hidden;transition:transform .16s ease,box-shadow .16s ease,border-color .16s ease}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--accent);opacity:.9}
+.card:hover{transform:translateY(-4px);border-color:#9ed8ef;box-shadow:var(--shadow-hover)}
+.card:active,.card.press{transform:translateY(0) scale(.975)}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.card-icon{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,#ecf9ff,#effcf7);border:1px solid #d9eef2;color:#1b8fd7;font-size:22px}
+.card-no{font-size:10px;font-weight:800;color:#8a98aa;letter-spacing:.08em}
+.card h4{font-size:16px;line-height:1.5;margin:14px 0 7px}
+.card p{font-size:12px;line-height:1.65;color:var(--muted);margin:0;min-height:40px}
+.card-foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
+.open{display:inline-flex;align-items:center;gap:6px;color:#197ddd;font-size:12px;font-weight:800}
+.state{font-size:10px;font-weight:800;border-radius:999px;padding:4px 7px;background:#f3f6f9;color:#7b8796}
+.state.live{background:#ebfbf4;color:#0f9469}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:14px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:17px;box-shadow:0 8px 24px rgba(29,49,76,.05)}
+.kpi-label{font-size:11px;color:var(--muted);font-weight:800}
+.kpi-value{font-size:30px;font-weight:800;letter-spacing:-.03em;margin-top:5px}
+.kpi-unit{font-size:12px;color:var(--muted);margin-left:3px}
+.kpi-sub{font-size:10px;color:#8090a3;margin-top:5px}
+.dashboard-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(280px,.7fr);gap:14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(29,49,76,.05)}
+.panel-title{font-size:14px;font-weight:800;margin:0 0 16px}
+.bars{display:flex;align-items:flex-end;gap:12px;height:190px;padding-top:8px}
+.bar-wrap{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:8px;height:100%}
+.bar{width:100%;max-width:48px;height:0;border-radius:10px 10px 4px 4px;background:linear-gradient(180deg,#1db8e8,#2387ff 55%,#21c58b);transition:height .55s cubic-bezier(.2,.8,.2,1)}
+.bar-label{font-size:10px;color:var(--muted)}
+.progress-list{display:grid;gap:13px}
+.progress-row{display:grid;gap:6px}
+.progress-head{display:flex;justify-content:space-between;font-size:11px;font-weight:800}
+.track{height:8px;border-radius:999px;background:#edf2f6;overflow:hidden}
+.fill{height:100%;width:0;border-radius:inherit;background:var(--accent);transition:width .55s cubic-bezier(.2,.8,.2,1)}
+.note{margin-top:18px;border:1px dashed #c9d5e2;border-radius:14px;padding:12px 14px;color:var(--muted);font-size:11px;line-height:1.6;background:rgba(255,255,255,.65)}
+.toast{position:fixed;left:50%;bottom:24px;z-index:40;transform:translateX(-50%) translateY(20px);background:#172033;color:#fff;padding:11px 15px;border-radius:999px;font-size:12px;opacity:0;pointer-events:none;transition:.2s ease;white-space:nowrap;box-shadow:0 10px 30px rgba(23,32,51,.22)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media(max-width:620px){.menu{grid-template-columns:1fr}.card{padding:18px}.header-inner{padding-top:16px}h1{font-size:23px}.header-top{align-items:flex-start}}
+:focus-visible{outline:3px solid rgba(35,135,255,.28);outline-offset:2px}
+@media(max-width:900px){.menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hero,.dashboard-grid{grid-template-columns:1fr}}
+@media(max-width:620px){
+  .topbar-inner{padding:12px 12px 8px}.brandmark{width:38px;height:38px;border-radius:12px}h1{font-size:18px}.eyebrow{font-size:9px}.meta{font-size:10px}
+  .back-btn span{display:none}.back-btn{width:40px;padding:0}.tabs{overflow-x:auto}.tab{white-space:nowrap;padding:9px 12px}
+  main{padding:18px 12px 36px}.hero-main{padding:18px}.hero h2{font-size:21px}.menu-grid,.kpi-grid{grid-template-columns:1fr}.card{padding:16px}
+  .card p{min-height:auto}.header-actions{gap:6px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.001ms!important;animation-duration:.001ms!important}}
 </style>
 </head>
 <body>
-<header>
-  <div class="header-inner">
-    <div class="header-top">
-      <div>
-        <div class="eyebrow">QR PRODUCT LISTING SUPPORT</div>
-        <h1>QR商品出品支援</h1>
-        <div class="version">PoC Version 0.2</div>
+<div class="shell">
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brandrow">
+      <div class="brand">
+        <div class="brandmark" aria-hidden="true"><i class="bi bi-qr-code-scan"></i></div>
+        <div class="brandcopy">
+          <div class="eyebrow">AUTOAI / QR PRODUCT LISTING</div>
+          <h1>QR商品出品支援</h1>
+          <div class="meta">AutoAI標準 UI ・ PoC Version 0.3</div>
+        </div>
       </div>
-      <a class="main-back" href="../">← メインに戻る</a>
+      <div class="header-actions">
+        <button class="icon-btn" id="reloadBtn" type="button" aria-label="画面を更新"><i class="bi bi-arrow-clockwise"></i></button>
+        <a class="back-btn" href="../"><i class="bi bi-grid"></i><span>メインに戻る</span></a>
+      </div>
     </div>
+    <nav class="tabs" aria-label="画面切替">
+      <button class="tab active" type="button" data-view="menuView"><i class="bi bi-grid-1x2"></i> メインメニュー</button>
+      <button class="tab" type="button" data-view="dashboardView"><i class="bi bi-speedometer2"></i> ダッシュボード</button>
+    </nav>
   </div>
 </header>
 
 <main>
-  <section class="welcome">
-    <h2>メニュー</h2>
-    <p>利用する機能を選択してください。</p>
+  <section class="view active" id="menuView">
+    <div class="hero">
+      <div class="hero-main">
+        <div class="hero-kicker"><i class="bi bi-lightning-charge-fill"></i> QUICK OPERATION</div>
+        <h2>出品作業を、迷わず次のステップへ。</h2>
+        <p>QRコード発行から画像アップロード、AI加工、商品取込、商品確認までを、作業フローに沿って操作できます。</p>
+      </div>
+      <aside class="status-panel" aria-label="PoC状態">
+        <div class="status-title">SYSTEM STATUS</div>
+        <div class="status-row"><span>画面モード</span><span class="badge poc"><i class="bi bi-flask"></i> PoC</span></div>
+        <div class="status-row"><span>利用可能機能</span><span class="status-value">2 / 5</span></div>
+        <div class="status-row"><span>UI標準</span><span class="badge ready"><i class="bi bi-check-circle-fill"></i> AutoAI</span></div>
+      </aside>
+    </div>
+
+    <div class="section-head">
+      <div>
+        <h3>オペレーションメニュー</h3>
+        <p>実行する機能を選択してください。</p>
+      </div>
+    </div>
+
+    <section class="menu-grid" aria-label="機能メニュー">
+      <button class="card" data-name="QRコード発行" data-link="./qr-generator.html">
+        <div class="card-top"><div class="card-icon"><i class="bi bi-qr-code"></i></div><div class="card-no">SECTOR 01</div></div>
+        <h4>QRコード発行</h4>
+        <p>商品撮影・管理に使用するQRコードを発行します。</p>
+        <div class="card-foot"><span class="open">開く <i class="bi bi-arrow-right"></i></span><span class="state live">利用可能</span></div>
+      </button>
+
+      <button class="card" data-name="商品画像データアップロード（ChatGPT）" data-link="./upload.html">
+        <div class="card-top"><div class="card-icon"><i class="bi bi-cloud-arrow-up"></i></div><div class="card-no">SECTOR 02</div></div>
+        <h4>商品画像データアップロード（ChatGPT）</h4>
+        <p>商品画像をChatGPTへアップロードし、後続処理へ渡します。</p>
+        <div class="card-foot"><span class="open">開く <i class="bi bi-arrow-right"></i></span><span class="state live">利用可能</span></div>
+      </button>
+
+      <button class="card" data-name="アップロードデータ加工処理（ChatGPT）">
+        <div class="card-top"><div class="card-icon"><i class="bi bi-stars"></i></div><div class="card-no">SECTOR 03</div></div>
+        <h4>アップロードデータ加工処理（ChatGPT）</h4>
+        <p>画像をAIで解析し、商品情報として使えるデータへ加工します。</p>
+        <div class="card-foot"><span class="open">確認 <i class="bi bi-arrow-right"></i></span><span class="state">準備中</span></div>
+      </button>
+
+      <button class="card" data-name="商品データ取込">
+        <div class="card-top"><div class="card-icon"><i class="bi bi-database-down"></i></div><div class="card-no">SECTOR 04</div></div>
+        <h4>商品データ取込</h4>
+        <p>加工済みの商品データをシステムへ取り込みます。</p>
+        <div class="card-foot"><span class="open">確認 <i class="bi bi-arrow-right"></i></span><span class="state">準備中</span></div>
+      </button>
+
+      <button class="card" data-name="商品一覧">
+        <div class="card-top"><div class="card-icon"><i class="bi bi-box-seam"></i></div><div class="card-no">SECTOR 05</div></div>
+        <h4>商品一覧</h4>
+        <p>登録済みの商品情報、画像、処理状態を一覧で確認します。</p>
+        <div class="card-foot"><span class="open">確認 <i class="bi bi-arrow-right"></i></span><span class="state">準備中</span></div>
+      </button>
+    </section>
+
+    <div class="note">このPoCでは「QRコード発行」と「商品画像データアップロード（ChatGPT）」を操作できます。その他の機能は、画面設計の確認後に順次接続します。</div>
   </section>
 
-  <section class="menu" aria-label="機能メニュー">
-    <button class="card" data-name="QRコード発行" data-link="./qr-generator.html">
-      <div class="icon" aria-hidden="true">▦</div>
-      <h3>QRコード発行</h3>
-      <p>商品撮影・管理に使用するQRコードを発行します。</p>
-      <span class="arrow">開く →</span>
-    </button>
+  <section class="view" id="dashboardView">
+    <div class="section-head" style="margin-top:0">
+      <div>
+        <h3>ダッシュボード</h3>
+        <p>PoC確認用のサンプル指標です。</p>
+      </div>
+    </div>
 
-    <button class="card" data-name="商品画像データアップロード（ChatGPT）" data-link="./upload.html">
-      <div class="icon" aria-hidden="true">📷</div>
-      <h3>商品画像データアップロード（ChatGPT）</h3>
-      <p>商品画像データをChatGPTへアップロードし、後続の加工処理に使用します。</p>
-      <span class="arrow">開く →</span>
-    </button>
+    <div class="kpi-grid">
+      <div class="kpi"><div class="kpi-label">登録商品</div><div><span class="kpi-value" data-target="128">0</span><span class="kpi-unit">件</span></div><div class="kpi-sub">サンプルデータ</div></div>
+      <div class="kpi"><div class="kpi-label">画像取込</div><div><span class="kpi-value" data-target="342">0</span><span class="kpi-unit">枚</span></div><div class="kpi-sub">サンプルデータ</div></div>
+      <div class="kpi"><div class="kpi-label">AI加工済み</div><div><span class="kpi-value" data-target="76">0</span><span class="kpi-unit">件</span></div><div class="kpi-sub">サンプルデータ</div></div>
+      <div class="kpi"><div class="kpi-label">処理完了率</div><div><span class="kpi-value" data-target="64">0</span><span class="kpi-unit">%</span></div><div class="kpi-sub">サンプルデータ</div></div>
+    </div>
 
-    <button class="card" data-name="アップロードデータ加工処理（ChatGPT）">
-      <div class="icon" aria-hidden="true">✨</div>
-      <h3>アップロードデータ加工処理（ChatGPT）</h3>
-      <p>アップロードした画像をChatGPTで解析し、商品情報として利用できるデータに加工します。</p>
-      <span class="arrow">開く →</span>
-    </button>
-
-    <button class="card" data-name="商品データ取込">
-      <div class="icon" aria-hidden="true">⬇️</div>
-      <h3>商品データ取込</h3>
-      <p>加工済みの商品データをシステムへ取り込みます。</p>
-      <span class="arrow">開く →</span>
-    </button>
-
-    <button class="card" data-name="商品一覧">
-      <div class="icon" aria-hidden="true">📦</div>
-      <h3>商品一覧</h3>
-      <p>登録済みの商品情報や処理状況を一覧で確認します。</p>
-      <span class="arrow">開く →</span>
-    </button>
+    <div class="dashboard-grid">
+      <div class="panel">
+        <h4 class="panel-title">直近7日間の登録推移</h4>
+        <div class="bars" aria-label="登録推移グラフ">
+          <div class="bar-wrap"><div class="bar" data-height="38"></div><div class="bar-label">月</div></div>
+          <div class="bar-wrap"><div class="bar" data-height="54"></div><div class="bar-label">火</div></div>
+          <div class="bar-wrap"><div class="bar" data-height="46"></div><div class="bar-label">水</div></div>
+          <div class="bar-wrap"><div class="bar" data-height="72"></div><div class="bar-label">木</div></div>
+          <div class="bar-wrap"><div class="bar" data-height="58"></div><div class="bar-label">金</div></div>
+          <div class="bar-wrap"><div class="bar" data-height="84"></div><div class="bar-label">土</div></div>
+          <div class="bar-wrap"><div class="bar" data-height="66"></div><div class="bar-label">日</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h4 class="panel-title">処理ステータス</h4>
+        <div class="progress-list">
+          <div class="progress-row"><div class="progress-head"><span>画像アップロード</span><span>82%</span></div><div class="track"><div class="fill" data-width="82"></div></div></div>
+          <div class="progress-row"><div class="progress-head"><span>AIデータ加工</span><span>64%</span></div><div class="track"><div class="fill" data-width="64"></div></div></div>
+          <div class="progress-row"><div class="progress-head"><span>商品データ取込</span><span>41%</span></div><div class="track"><div class="fill" data-width="41"></div></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="note">ダッシュボード内の数値・グラフはUI確認用のmockです。実データ連携は未実装です。</div>
   </section>
-
-  <div class="note">ログイン後の画面を想定したPoCです。現在は「QRコード発行」と「商品画像データアップロード（ChatGPT）」を操作できます。その他メニューは次のPoCで実装予定です。</div>
 </main>
+</div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script>
 const toast=document.getElementById('toast');
-let timer;
+let toastTimer;
+function showToast(message){
+  clearTimeout(toastTimer);
+  toast.textContent=message;
+  toast.classList.add('show');
+  toastTimer=setTimeout(()=>toast.classList.remove('show'),1700);
+}
+function pressFx(el){
+  el.classList.add('press');
+  setTimeout(()=>el.classList.remove('press'),110);
+}
 document.querySelectorAll('.card').forEach(card=>{
   card.addEventListener('click',()=>{
+    pressFx(card);
     const link=card.dataset.link;
-    if(link){ location.href=link; return; }
-    clearTimeout(timer);
-    toast.textContent=card.dataset.name+'画面は次のPoCで実装します';
-    toast.classList.add('show');
-    timer=setTimeout(()=>toast.classList.remove('show'),1800);
+    if(link){ setTimeout(()=>location.href=link,90); return; }
+    showToast(card.dataset.name+' は次のPoCで実装します');
   });
 });
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===tab));
+    document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===tab.dataset.view));
+    if(tab.dataset.view==='dashboardView') animateDashboard();
+  });
+});
+document.getElementById('reloadBtn').addEventListener('click',e=>{pressFx(e.currentTarget);setTimeout(()=>location.reload(),100)});
+let dashboardAnimated=false;
+function easeOutExpo(x){return x===1?1:1-Math.pow(2,-10*x)}
+function animateValue(el,target,duration=520){
+  const start=performance.now();
+  function tick(now){
+    const p=Math.min(1,(now-start)/duration);
+    el.textContent=Math.round(target*easeOutExpo(p)).toLocaleString('ja-JP');
+    if(p<1)requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+function animateDashboard(){
+  if(dashboardAnimated)return;
+  dashboardAnimated=true;
+  document.querySelectorAll('.kpi-value').forEach(el=>animateValue(el,Number(el.dataset.target||0)));
+  requestAnimationFrame(()=>{
+    document.querySelectorAll('.bar').forEach(el=>el.style.height=(el.dataset.height||0)+'%');
+    document.querySelectorAll('.fill').forEach(el=>el.style.width=(el.dataset.width||0)+'%');
+  });
+}
 </script>
 </body>
 </html>
