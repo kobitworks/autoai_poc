@@ -31,11 +31,11 @@ jobs:
           done
           test "${missing}" -eq 0
 
-      - name: Verify Cloudflare API token
+      - name: Verify Cloudflare account API token
         shell: bash
         run: |
           set -euo pipefail
-          response="$(curl -fsS https://api.cloudflare.com/client/v4/user/tokens/verify \
+          response="$(curl -fsS https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/tokens/verify \
             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
             -H "Content-Type: application/json")"
           echo "${response}" | jq -e '.success == true and .result.status == "active"' >/dev/null
