@@ -89,7 +89,7 @@ main{max-width:1280px;margin:auto;padding:18px 18px 44px}
       <div class="brandcopy">
         <div class="eyebrow">AUTOAI OPERATION CONTROL</div>
         <h1>QR商品出品支援</h1>
-        <div class="version">Phaser 4 PoC / QR Image Button v0.6.1</div>
+        <div class="version">Phaser 4 PoC / QR Image Button v0.6.2</div>
       </div>
     </div>
     <div class="header-actions">
@@ -291,22 +291,54 @@ if (!window.Phaser) {
       if(sector.no==='01'){
         const shadow=this.add.rectangle(5,8,220,150,0x1f3650,.08);
         const outer=this.add.rectangle(0,0,220,150,0xffffff,.98)
-          .setStrokeStyle(2,0x5fa7ff,1);
-        const image=this.add.image(0,0,'qrPrintButton').setDisplaySize(208,117);
+          .setStrokeStyle(2,0x7fcff0,1);
+        const topLine=this.add.rectangle(0,-72,218,6,0x1bc3ed,1);
+
+        const no=this.add.text(-94,-65,'SECTOR 01',{
+          fontFamily:'Arial, sans-serif',fontSize:'9px',fontStyle:'bold',color:'#7b8b9d',letterSpacing:1
+        });
+        const title=this.add.text(-94,-45,'QR発行',{
+          fontFamily:'"Noto Sans JP", sans-serif',fontSize:'17px',fontStyle:'bold',color:'#17263a'
+        });
+        const sub=this.add.text(-94,-19,'IDENTIFICATION STATION',{
+          fontFamily:'Arial, sans-serif',fontSize:'8px',fontStyle:'bold',color:'#7f90a3',letterSpacing:.5
+        });
+
+        const artBg=this.add.rectangle(50,4,94,104,0xf4fbff,1)
+          .setStrokeStyle(1,0xd6edf7,1)
+          .setAngle(-2);
+        const halo=this.add.circle(50,4,39,0x1bc3ed,.07);
+        const image=this.add.image(50,4,'qrPrintButton').setDisplaySize(92,52);
+
+        const badgeBg=this.add.rectangle(-45,34,96,25,0xeafaf5,1)
+          .setStrokeStyle(1,0xbbeada,1);
+        const badgeDot=this.add.circle(-80,34,4,0x19c895,1);
+        const badge=this.add.text(-70,26,'READY',{
+          fontFamily:'Arial, sans-serif',fontSize:'9px',fontStyle:'bold',color:'#158260'
+        });
+        const action=this.add.text(28,26,'OPEN  →',{
+          fontFamily:'Arial, sans-serif',fontSize:'9px',fontStyle:'bold',color:'#267fe0'
+        });
+
         const hit=this.add.rectangle(0,0,220,150,0xffffff,0.001).setInteractive({useHandCursor:true});
-        container.add([shadow,outer,image,hit]);
+        container.add([shadow,outer,topLine,no,title,sub,artBg,halo,image,badgeBg,badgeDot,badge,action,hit]);
+
+        if(!reducedMotion){
+          this.tweens.add({targets:image,y:{from:5,to:2},duration:900,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
+          this.tweens.add({targets:halo,scale:{from:1,to:1.18},alpha:{from:.08,to:.025},duration:1200,yoyo:true,repeat:-1});
+        }
 
         hit.on('pointerover',()=>{
           this.selected=sector.no;
           this.children.bringToTop(container);
-          this.tweens.add({targets:container,scaleX:1.05,scaleY:1.05,y:y-5,duration:120,ease:'Quad.easeOut'});
-          outer.setStrokeStyle(3,0x287bff,1);
+          this.tweens.add({targets:container,scaleX:1.045,scaleY:1.045,y:y-5,duration:120,ease:'Quad.easeOut'});
+          outer.setStrokeStyle(2,0x29c8ec,1);
           this.showSectorDetail(sector);
         });
         hit.on('pointerout',()=>{
           if(this.selected===sector.no)this.selected=null;
           this.tweens.add({targets:container,scaleX:1,scaleY:1,y:y,duration:120,ease:'Quad.easeOut'});
-          outer.setStrokeStyle(2,0x5fa7ff,1);
+          outer.setStrokeStyle(2,0x7fcff0,1);
           this.clearSectorDetail();
         });
         hit.on('pointerdown',()=>{
