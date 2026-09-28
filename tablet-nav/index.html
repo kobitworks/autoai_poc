@@ -113,8 +113,10 @@ function updateMotion(c,timestamp){
     time:timestamp||Date.now()
   };
 
+  const reliableAccuracy=now.accuracy<=60;
+
   let speedMps=null, speedSource='';
-  if(Number.isFinite(c.speed) && c.speed>=0){
+  if(reliableAccuracy && Number.isFinite(c.speed) && c.speed>=0){
     speedMps=c.speed;
     speedSource='端末GPS';
   }else if(lastFix){
@@ -130,11 +132,11 @@ function updateMotion(c,timestamp){
     speedSourceEl.textContent=speedSource;
   }else{
     speedEl.textContent='--';
-    speedSourceEl.textContent='速度取得不可';
+    speedSourceEl.textContent=reliableAccuracy?'速度取得不可':'GPS精度低下';
   }
 
   let heading=null, headingSource='';
-  if(Number.isFinite(c.heading) && c.heading>=0){
+  if(reliableAccuracy && Number.isFinite(c.heading) && c.heading>=0){
     heading=((c.heading%360)+360)%360;
     headingSource='端末GPS';
   }else if(lastFix){
@@ -149,7 +151,7 @@ function updateMotion(c,timestamp){
     headingDetailEl.textContent=Math.round(heading)+'° ・ '+headingSource;
   }else{
     headingEl.textContent='--';
-    headingDetailEl.textContent='方角取得不可';
+    headingDetailEl.textContent=reliableAccuracy?'方角取得不可':'GPS精度低下';
   }
   lastFix=now;
 }
