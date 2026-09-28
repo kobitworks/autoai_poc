@@ -1,0 +1,85 @@
+name: P005 provision production D1
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - ".github/workflows/p005-provision-d1.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p005-provision-production-d1
+  cancel-in-progress: false
+
+jobs:
+  provision:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+
+      - name: Syntax check
+        run: python3 -m py_compile monolink/scripts/provision_p005_d1.py
+
+      - name: Provision P005 production D1
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 monolink/scripts/provision_p005_d1.py | tee p005-d1-summary.json
+          jq -e '
+            .project_id == "P005"
+            and .capacity.check_passed == true
+            and .production.read_verified == true
+            and .production.catalog_registered == true
+            and .production.schema_version == 0
+            and .migration_applied == false
+            and .destructive_operation == false
+          ' p005-d1-summary.json >/dev/null
+
+      - name: Add non-secret summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          d=json.loads(Path("p005-d1-summary.json").read_text())
+          c=d["capacity"]
+          p=d["production"]
+          lines=[
+            "## P005 production D1 provisioning",
+            "",
+            f"- capacity before: {c['current_count_before']} / conservative limit {c['conservative_limit']}",
+            f"- minimum available slots before: {c['minimum_available_slots_before']}",
+            f"- database: {p['database_name']} / {p['database_uuid']}",
+            f"- created: {p['created']}",
+            f"- P016 catalog registered: {p['catalog_registered']}",
+            f"- schema version: {p['schema_version']}",
+            "- migration applied: false (MONO-014 scope)",
+            "- legacy staging: untouched",
+          ]
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a",encoding="utf-8") as f:
+            f.write("\n".join(lines)+"\n")
+          PY
+
+      - name: Upload provisioning evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: p005-production-d1-provision-summary
+          path: p005-d1-summary.json
+          if-no-files-found: error
+          retention-days: 14
