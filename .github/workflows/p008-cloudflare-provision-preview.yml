@@ -1,0 +1,181 @@
+name: P008 provision Cloudflare preview
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - develop
+    paths:
+      - ".github/workflows/p008-cloudflare-provision-preview.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  provision-preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${CLOUDFLARE_API_TOKEN:-}"
+          test -n "${CLOUDFLARE_ACCOUNT_ID:-}"
+
+      - name: Verify Cloudflare account token and access
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsS "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/tokens/verify"             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"             -H "Content-Type: application/json"             | jq -e '.success == true and .result.status == "active"' >/dev/null
+          curl -fsS "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}"             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"             -H "Content-Type: application/json"             | jq -e '.success == true' >/dev/null
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install Wrangler
+        working-directory: web-template
+        run: npm install --no-audit --no-fund
+
+      - name: Provision D1 and R2 safely
+        working-directory: web-template
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/provision_p008_cloudflare.py | tee p008-resources.json
+          jq -e '
+            .d1.catalog_registered == true
+            and .r2.staging.private_verified == true
+            and .r2.production.private_verified == true
+            and .production_worker_deployed == false
+          ' p008-resources.json >/dev/null
+
+      - name: Render Wrangler config
+        working-directory: web-template
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          data=json.loads(Path("p008-resources.json").read_text())
+          d1=data["d1"]["database_uuid"]
+          text=Path("wrangler.p008.template.jsonc").read_text()
+          if "__D1_DATABASE_ID__" not in text:
+              raise SystemExit("D1 placeholder missing")
+          text=text.replace("__D1_DATABASE_ID__", d1)
+          if "__D1_DATABASE_ID__" in text:
+              raise SystemExit("D1 placeholder was not fully replaced")
+          Path("wrangler.p008.generated.jsonc").write_text(text)
+          PY
+
+      - name: Deploy develop Preview
+        working-directory: web-template
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler preview             --name develop             --config wrangler.p008.generated.jsonc             --ignore-base-config             --json             > preview.json
+          cat preview.json
+
+      - name: Extract Preview URL
+        working-directory: web-template
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json, re
+          from pathlib import Path
+          raw=Path("preview.json").read_text()
+          try:
+              data=json.loads(raw)
+          except json.JSONDecodeError:
+              data=raw
+          values=[]
+          def walk(x):
+              if isinstance(x, dict):
+                  for v in x.values(): walk(v)
+              elif isinstance(x, list):
+                  for v in x: walk(v)
+              elif isinstance(x, str):
+                  values.append(x)
+          walk(data)
+          urls=[]
+          for s in values+[raw]:
+              urls += re.findall(r"https://[^\\s\\\"']+workers\\.dev(?:/[^\\s\\\"']*)?", s)
+          urls=list(dict.fromkeys(u.rstrip("/") for u in urls))
+          preferred=[u for u in urls if "develop-p008-web-template" in u]
+          if not preferred:
+              preferred=[u for u in urls if "p008-web-template" in u]
+          if not preferred:
+              raise SystemExit("Preview workers.dev URL not found in Wrangler output")
+          Path("preview-url.txt").write_text(preferred[0]+"\n")
+          print(preferred[0])
+          PY
+
+      - name: Probe Preview and bindings
+        working-directory: web-template
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="$(cat preview-url.txt)"
+          ok=0
+          for attempt in $(seq 1 20); do
+            if curl -fsS "${url}/health" -o health.json; then
+              if jq -e '
+                .ok == true
+                and .environment == "preview"
+                and .db_write_enabled == false
+                and .d1_read == true
+                and .r2_read == true
+              ' health.json >/dev/null; then
+                ok=1
+                break
+              fi
+            fi
+            sleep 3
+          done
+          test "$ok" -eq 1
+          curl -fsSI "${url}/" | head -n 1 | grep -Eq " 200( |$)"
+
+      - name: Build non-secret summary
+        working-directory: web-template
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          resources=json.loads(Path("p008-resources.json").read_text())
+          health=json.loads(Path("health.json").read_text())
+          summary={
+            **resources,
+            "worker_name":"p008-web-template",
+            "preview_name":"develop",
+            "preview_url":Path("preview-url.txt").read_text().strip(),
+            "preview_health":health,
+            "workflow_run_url":"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "source_sha":"${{ github.sha }}",
+          }
+          Path("p008-cloudflare-summary.json").write_text(
+            json.dumps(summary,ensure_ascii=False,indent=2,sort_keys=True)+"\n"
+          )
+          print(json.dumps(summary,ensure_ascii=False,indent=2,sort_keys=True))
+          PY
+
+      - name: Upload provisioning evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: p008-cloudflare-provision-summary
+          path: |
+            web-template/p008-cloudflare-summary.json
+            web-template/preview.json
+            web-template/health.json
+          if-no-files-found: error
