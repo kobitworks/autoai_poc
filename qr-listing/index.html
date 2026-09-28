@@ -89,7 +89,7 @@ main{max-width:1280px;margin:auto;padding:18px 18px 44px}
       <div class="brandcopy">
         <div class="eyebrow">AUTOAI OPERATION CONTROL</div>
         <h1>QR商品出品支援</h1>
-        <div class="version">Phaser 4 PoC / QR Worker Illustration Buttons v0.5</div>
+        <div class="version">Phaser 4 PoC / QR Image Button v0.6</div>
       </div>
     </div>
     <div class="header-actions">
@@ -191,6 +191,10 @@ if (!window.Phaser) {
   class ControlCenter extends Phaser.Scene {
     constructor(){ super('ControlCenter'); }
 
+    preload(){
+      this.load.image('qrPrintButton','./assets/qr-print-button.webp');
+    }
+
     create(){
       this.baseW = 1200;
       this.baseH = 630;
@@ -283,6 +287,35 @@ if (!window.Phaser) {
       const container=this.add.container(x,y);
       container.alpha=0;
       container.y += 24;
+
+      if(sector.no==='01'){
+        const shadow=this.add.rectangle(5,8,220,150,0x1f3650,.08);
+        const outer=this.add.rectangle(0,0,220,150,0xffffff,.98)
+          .setStrokeStyle(2,0x5fa7ff,1);
+        const image=this.add.image(0,0,'qrPrintButton').setDisplaySize(208,138);
+        const hit=this.add.rectangle(0,0,220,150,0xffffff,0.001).setInteractive({useHandCursor:true});
+        container.add([shadow,outer,image,hit]);
+
+        hit.on('pointerover',()=>{
+          this.selected=sector.no;
+          this.children.bringToTop(container);
+          this.tweens.add({targets:container,scaleX:1.05,scaleY:1.05,y:y-5,duration:120,ease:'Quad.easeOut'});
+          outer.setStrokeStyle(3,0x287bff,1);
+          this.showSectorDetail(sector);
+        });
+        hit.on('pointerout',()=>{
+          if(this.selected===sector.no)this.selected=null;
+          this.tweens.add({targets:container,scaleX:1,scaleY:1,y:y,duration:120,ease:'Quad.easeOut'});
+          outer.setStrokeStyle(2,0x5fa7ff,1);
+          this.clearSectorDetail();
+        });
+        hit.on('pointerdown',()=>{
+          this.tweens.add({targets:container,scaleX:.985,scaleY:.985,duration:65,yoyo:true});
+        });
+        hit.on('pointerup',()=>this.activateSector(sector,container));
+        this.nodes.push({container,sector,outer,x,y});
+        return;
+      }
 
       const shadow=this.add.rectangle(5,8,220,150,0x1f3650,.08);
       const outer=this.add.rectangle(0,0,220,150,0xffffff,.97)
