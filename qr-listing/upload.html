@@ -58,6 +58,7 @@ tr:last-child td{border-bottom:0}
 @media(max-width:620px){h1{font-size:23px}.panel{padding:14px}.summary{grid-template-columns:1fr}.preview-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.dropzone{padding:24px 12px}}
 @media(max-width:390px){.preview-grid{grid-template-columns:1fr}}
 </style>
+<script src="./poc-store.js"></script>
 </head>
 <body>
 <header>
@@ -70,7 +71,7 @@ tr:last-child td{border-bottom:0}
 
 <main>
   <a class="back" href="./index.html">← メニューへ戻る</a>
-  <p class="desc">スマホ・タブレット・PCから複数の商品写真を選択し、アップロード前のプレビューと仮取込結果を確認するPoCです。現段階では画像を外部送信・永続保存せず、ブラウザ内だけで処理します。</p>
+  <p class="desc">スマホ・タブレット・PCから複数の商品写真を選択し、受信バッチとして保存するPoCです。保存後はQR解析画面へ進み、商品ごとに自動分類できます。PoCではブラウザ内のIndexedDBへ保存します。</p>
 
   <section class="panel">
     <h2>1. 商品画像を選択</h2>
@@ -86,16 +87,16 @@ tr:last-child td{border-bottom:0}
     <div class="actions">
       <button class="btn secondary" id="addBtn">画像を追加</button>
       <button class="btn light" id="clearBtn" disabled>選択をクリア</button>
-      <button class="btn primary" id="importBtn" disabled>選択画像を仮取込</button>
+      <button class="btn primary" id="importBtn" disabled>選択画像を保存</button>
     </div>
 
     <div class="summary">
       <div class="metric"><span>選択画像数</span><strong id="countMetric">0</strong></div>
       <div class="metric"><span>合計サイズ</span><strong id="sizeMetric">0 B</strong></div>
-      <div class="metric"><span>仮取込状態</span><strong id="statusMetric">未実行</strong></div>
+      <div class="metric"><span>保存状態</span><strong id="statusMetric">未実行</strong></div>
     </div>
 
-    <div class="notice info">QRコードの検出・商品ID単位の仕分けは後続タスクで実装します。この画面では「写真を取り込めること」と「選択内容を確認できること」までを対象にします。</div>
+    <div class="notice info">保存後は「Step 3：QR解析」へ進めます。写真内のQRコードを読み取り、商品単位の分類・リネーム・商品情報作成を行います。</div>
   </section>
 
   <section class="panel">
@@ -105,9 +106,9 @@ tr:last-child td{border-bottom:0}
   </section>
 
   <section class="panel">
-    <h2>3. 仮取込結果</h2>
-    <p class="panel-sub">「選択画像を仮取込」を押すと、この画面内で取込結果を一覧表示します。</p>
-    <div id="resultArea" class="empty">仮取込はまだ実行されていません。</div>
+    <h2>3. 保存結果</h2>
+    <p class="panel-sub">「選択画像を保存」を押すと、受信バッチを作成してブラウザ内へ保存します。</p>
+    <div id="resultArea" class="empty">保存はまだ実行されていません。</div>
   </section>
 </main>
 
@@ -148,7 +149,12 @@ function revoke(item){
 function resetImportResult(){
   statusMetric.textContent="未実行";
   resultArea.className="empty";
-  resultArea.textContent="仮取込はまだ実行されていません。";
+  resultArea.textContent="保存はまだ実行されていません。";
+}
+function makeBatchId(){
+  var d=new Date();
+  function p(n){return String(n).padStart(2,"0")}
+  return ""+d.getFullYear()+p(d.getMonth()+1)+p(d.getDate())+"-"+p(d.getHours())+p(d.getMinutes())+p(d.getSeconds());
 }
 function updateMetrics(){
   countMetric.textContent=String(selected.length);
@@ -232,38 +238,57 @@ function clearSelection(){
   renderPreview();
   notify("選択をクリアしました");
 }
-function importSelected(){
+async function importSelected(){
   if(!selected.length)return;
-  statusMetric.textContent="仮取込済";
-  resultArea.className="result-table-wrap";
-  var table=document.createElement("table");
-  var thead=document.createElement("thead");
-  thead.innerHTML="<tr><th>#</th><th>ファイル名</th><th>形式</th><th>画像サイズ</th><th>ファイルサイズ</th><th>状態</th></tr>";
-  table.appendChild(thead);
-  var tbody=document.createElement("tbody");
-  selected.forEach(function(item,index){
-    var tr=document.createElement("tr");
-    var values=[
-      String(index+1),
-      item.file.name,
-      item.file.type||"不明",
-      item.width&&item.height?item.width+"×"+item.height+"px":"取得不可",
-      formatBytes(item.file.size)
-    ];
-    values.forEach(function(value){
-      var td=document.createElement("td");
-      td.textContent=value;
-      tr.appendChild(td);
+  importBtn.disabled=true;
+  statusMetric.textContent="保存中";
+  var batchId=makeBatchId();
+  try{
+    await AutoAIStore.saveImages(selected.map(function(item){return item.file}),batchId);
+    statusMetric.textContent="保存済";
+    resultArea.className="";
+    var wrap=document.createElement("div");
+    wrap.className="result-table-wrap";
+    var table=document.createElement("table");
+    var thead=document.createElement("thead");
+    thead.innerHTML="<tr><th>#</th><th>ファイル名</th><th>形式</th><th>画像サイズ</th><th>ファイルサイズ</th><th>状態</th></tr>";
+    table.appendChild(thead);
+    var tbody=document.createElement("tbody");
+    selected.forEach(function(item,index){
+      var tr=document.createElement("tr");
+      var values=[
+        String(index+1),
+        item.file.name,
+        item.file.type||"不明",
+        item.width&&item.height?item.width+"×"+item.height+"px":"取得不可",
+        formatBytes(item.file.size)
+      ];
+      values.forEach(function(value){
+        var td=document.createElement("td");
+        td.textContent=value;
+        tr.appendChild(td);
+      });
+      var statusTd=document.createElement("td");
+      statusTd.innerHTML='<span class="status">保存完了</span>';
+      tr.appendChild(statusTd);
+      tbody.appendChild(tr);
     });
-    var statusTd=document.createElement("td");
-    statusTd.innerHTML='<span class="status">仮取込完了</span>';
-    tr.appendChild(statusTd);
-    tbody.appendChild(tr);
-  });
-  table.appendChild(tbody);
-  resultArea.innerHTML="";
-  resultArea.appendChild(table);
-  notify(selected.length+"枚を仮取込しました");
+    table.appendChild(tbody);
+    wrap.appendChild(table);
+    var next=document.createElement("div");
+    next.className="notice ok";
+    next.innerHTML='受信バッチ <strong>'+batchId+'</strong> として '+selected.length+'枚を保存しました。<div class="actions"><a class="btn primary" href="./analyze.html?batch='+encodeURIComponent(batchId)+'">Step 3：QR解析へ →</a></div>';
+    resultArea.innerHTML="";
+    resultArea.appendChild(wrap);
+    resultArea.appendChild(next);
+    notify(selected.length+"枚を保存しました");
+  }catch(err){
+    statusMetric.textContent="保存エラー";
+    resultArea.className="notice warn";
+    resultArea.textContent="保存に失敗しました: "+(err&&err.message?err.message:err);
+  }finally{
+    importBtn.disabled=!selected.length;
+  }
 }
 function openPicker(){imageInput.click()}
 
