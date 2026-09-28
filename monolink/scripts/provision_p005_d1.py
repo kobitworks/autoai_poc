@@ -115,12 +115,8 @@ class D1Client:
         items = [x for x in result if isinstance(x, dict)]
         info = data.get("result_info") or {}
         total_count = int(info.get("total_count", len(items)))
-        if total_count != len(items):
-            # We only create under the conservative limit of 10, so a larger
-            # paginated account is not safe to auto-provision in this workflow.
-            if total_count >= CONSERVATIVE_DATABASE_LIMIT:
-                return items, total_count
-            raise ProvisioningError("D1 list pagination mismatch below conservative limit")
+        if total_count < 0:
+            raise ProvisioningError("Invalid D1 total_count")
         return items, total_count
 
     def find_exact(self, name: str) -> dict[str, str] | None:
