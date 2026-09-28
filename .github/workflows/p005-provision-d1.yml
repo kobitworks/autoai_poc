@@ -6,6 +6,7 @@ on:
       - develop
     paths:
       - ".github/workflows/p005-provision-d1.yml"
+      - "monolink/scripts/provision_p005_d1.py"
 
 permissions:
   contents: read
