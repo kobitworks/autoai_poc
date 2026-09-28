@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>よいおやさい受付管理 V2 PoC</title>
+<style>
+:root{--bg:#f4f7f2;--surface:#fff;--text:#253126;--muted:#6f7b70;--line:#dde6dc;--green:#2f6c3d;--soft:#e9f4e9;--shadow:0 10px 28px rgba(33,66,38,.08)}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Yu Gothic UI",Meiryo,sans-serif;background:var(--bg);color:var(--text)}button,input,select{font:inherit}.app{min-height:100vh}.side{position:fixed;inset:0 auto 0 0;width:220px;background:#234a2e;color:#fff;padding:22px 16px;z-index:20}.brand{font-weight:900;font-size:18px;margin-bottom:24px}.brand small{display:block;font-size:11px;opacity:.7;margin-top:4px}.nav{display:grid;gap:7px}.nav button{border:0;background:transparent;color:#dfeae1;text-align:left;padding:12px;border-radius:12px;font-weight:700}.nav button.active,.nav button:hover{background:rgba(255,255,255,.13);color:#fff}.main{margin-left:220px;padding:0 28px 50px}.top{height:86px;display:flex;align-items:center;justify-content:space-between}.top h1{margin:0;font-size:26px}.tag{font-size:11px;color:var(--green);font-weight:800}.screen{display:none}.screen.active{display:block}.hero{background:linear-gradient(130deg,#315f3d,#4a8556);color:#fff;padding:26px;border-radius:22px;display:flex;justify-content:space-between;align-items:end;gap:16px;box-shadow:var(--shadow)}.hero h2{margin:9px 0 5px}.hero p{margin:0;opacity:.85}.btn{border:0;border-radius:12px;padding:11px 15px;font-weight:800;cursor:pointer}.btn.primary{background:#fff;color:#285d37}.btn.secondary{background:var(--green);color:#fff}.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}.card,.panel{background:var(--surface);border:1px solid var(--line);border-radius:17px;box-shadow:var(--shadow)}.card{padding:17px}.card span{display:block;color:var(--muted);font-size:12px}.card strong{font-size:29px;display:inline-block;margin-top:6px}.card small{margin-left:4px;color:var(--muted)}.panel{padding:18px}.panel h3{margin:0 0 4px}.panel p{margin:0;color:var(--muted);font-size:12px}.toolbar{display:grid;grid-template-columns:180px 1fr auto;gap:10px;align-items:end;margin-bottom:12px}.field label{display:block;font-size:11px;color:var(--muted);margin:0 0 5px}.field input,.field select{width:100%;border:1px solid var(--line);background:#fff;border-radius:11px;padding:10px}.summary{display:flex;gap:8px;overflow:auto;margin:10px 0 14px}.summary span{white-space:nowrap;background:var(--soft);padding:8px 11px;border-radius:999px;font-size:12px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:13px}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse}th,td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;font-size:13px}th{font-size:11px;color:var(--muted)}tbody tr{cursor:pointer}tbody tr:hover,tbody tr.selected{background:#f0f6ef}.person strong,.person small{display:block}.person small{color:var(--muted);font-size:10px;margin-top:3px}.pill{display:inline-block;padding:5px 8px;border-radius:999px;background:var(--soft);font-size:11px}.drawer{position:sticky;top:18px;min-height:420px}.drawer h3{font-size:22px;margin:8px 0}.detail-empty{color:var(--muted);font-size:13px;padding-top:12px}.detail dl{margin:0}.detail div.row{display:grid;grid-template-columns:90px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}.detail dt{color:var(--muted);font-size:11px}.detail dd{margin:0;font-size:13px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.actions button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px;font-weight:800;color:var(--green)}.mobile-list{display:none}.settings{display:grid;grid-template-columns:1fr 1fr;gap:12px}.setting{background:#fff;border:1px solid var(--line);border-radius:15px;padding:17px;text-align:left}.mobile-nav{display:none}
+@media(max-width:980px){.cards{grid-template-columns:1fr 1fr}.layout{grid-template-columns:1fr 290px}}
+@media(max-width:760px){body{padding-bottom:70px}.side{display:none}.main{margin-left:0;padding:0 12px 24px}.top{height:68px;position:sticky;top:0;background:rgba(244,247,242,.95);backdrop-filter:blur(10px);z-index:10}.top h1{font-size:21px}.hero{display:block;padding:19px;border-radius:17px}.hero h2{font-size:20px}.hero p{font-size:12px;line-height:1.6}.hero .btn{width:100%;margin-top:14px}.cards{gap:8px;margin:10px 0}.card{padding:13px}.card strong{font-size:24px}.toolbar{grid-template-columns:1fr 1fr}.toolbar .search{grid-column:1/-1}.toolbar .btn{grid-column:1/-1}.layout{display:block}.table-wrap{display:none}.mobile-list{display:grid;gap:8px}.mobile-card{display:grid;grid-template-columns:42px 1fr auto;gap:10px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}.initial{width:40px;height:40px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-weight:900;color:var(--green)}.mobile-card strong,.mobile-card small{display:block}.mobile-card small{font-size:10px;color:var(--muted);margin-top:3px}.mobile-card .meta{text-align:right;font-size:10px;color:var(--muted)}.drawer{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:40;border-radius:22px 22px 0 0;max-height:82vh;overflow:auto;transform:translateY(105%);transition:.2s;box-shadow:0 -12px 40px rgba(0,0,0,.18)}.drawer.open{transform:none}.settings{grid-template-columns:1fr}.mobile-nav{display:grid;grid-template-columns:repeat(4,1fr);position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);border-top:1px solid var(--line);z-index:30;padding:7px 8px calc(7px + env(safe-area-inset-bottom))}.mobile-nav button{border:0;background:transparent;color:#758176;display:grid;place-items:center;gap:2px}.mobile-nav button.active{color:var(--green);font-weight:900}.mobile-nav small{font-size:9px}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side">
+  <div class="brand">よいおやさい<small>受付管理 V2 / PoC v0.1</small></div>
+  <nav class="nav">
+    <button class="active" data-screen="home">⌂ ホーム</button>
+    <button data-screen="regist">☷ 申込管理</button>
+    <button data-screen="schedule">▣ 開催日管理</button>
+    <button data-screen="settings">⚙ 設定</button>
+  </nav>
+</aside>
+<main class="main">
+  <header class="top"><div><div class="tag">RESPONSIVE POC</div><h1 id="title">ホーム</h1></div><button class="btn">管理者</button></header>
+
+  <section class="screen active" id="screen-home">
+    <div class="hero"><div><span class="pill">次回開催</span><h2>10月11日（日） 群馬・渋川</h2><p>受付状況と参加者構成をすぐ確認できます。</p></div><button class="btn primary" data-jump="regist">申込一覧を見る</button></div>
+    <div class="cards">
+      <div class="card"><span>参加予定</span><strong>28</strong><small>名 / 定員35</small></div>
+      <div class="card"><span>初参加</span><strong>9</strong><small>名</small></div>
+      <div class="card"><span>リピーター</span><strong>19</strong><small>名</small></div>
+      <div class="card"><span>集合場所</span><strong>18 / 10</strong><small>和光市 / 現地</small></div>
+    </div>
+    <div class="panel"><h3>直近の申込</h3><p>サンプルデータです。実在の個人情報は使用していません。</p><div id="recent"></div></div>
+  </section>
+
+  <section class="screen" id="screen-regist">
+    <div class="toolbar panel">
+      <div class="field"><label>開催日</label><select><option>2026/10/11（日）</option><option>2026/09/27（日）</option></select></div>
+      <div class="field search"><label>参加者検索</label><input id="search" type="search" placeholder="名前・フリガナ・メール"></div>
+      <button class="btn secondary" id="import">新規申込取込</button>
+    </div>
+    <div class="summary"><span>参加予定 <b>28</b></span><span>男性 <b>13</b></span><span>女性 <b>15</b></span><span>初参加 <b>9</b></span><span>長靴 <b>2</b></span></div>
+    <div class="layout">
+      <div class="panel">
+        <h3>申込一覧</h3><p>PCは表、スマホはカード表示です。</p>
+        <div class="table-wrap"><table><thead><tr><th>No.</th><th>申込日時</th><th>集合</th><th>参加者</th><th>性別/年齢</th><th>回数</th></tr></thead><tbody id="tbody"></tbody></table></div>
+        <div class="mobile-list" id="mobile-list"></div>
+      </div>
+      <aside class="panel drawer" id="drawer"><button class="btn" id="close">× 閉じる</button><div id="detail" class="detail-empty">参加者を選択してください。</div></aside>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-schedule">
+    <div class="panel"><h3>開催日管理</h3><p>PoCでは画面構成のみ確認します。</p><div class="settings" style="margin-top:14px">
+      <button class="setting"><strong>2026/10/11（日）</strong><br><small>群馬県渋川市 / 28名 / 受付中</small></button>
+      <button class="setting"><strong>2026/10/25（日）</strong><br><small>群馬県渋川市 / 7名 / 受付中</small></button>
+    </div></div>
+  </section>
+
+  <section class="screen" id="screen-settings">
+    <div class="settings">
+      <button class="setting"><strong>メンバー管理</strong><br><small>利用者・権限</small></button>
+      <button class="setting"><strong>TOPメッセージ</strong><br><small>お知らせ編集</small></button>
+      <button class="setting"><strong>QR表示</strong><br><small>関連サイトQR</small></button>
+      <button class="setting"><strong>ログイン・セキュリティ</strong><br><small>Google認証・セッション</small></button>
+    </div>
+  </section>
+</main>
+<nav class="mobile-nav">
+  <button class="active" data-screen="home">⌂<small>ホーム</small></button>
+  <button data-screen="regist">☷<small>申込</small></button>
+  <button data-screen="schedule">▣<small>開催日</small></button>
+  <button data-screen="settings">⚙<small>設定</small></button>
+</nav>
+</div>
+<script>
+const people=[
+{id:1,name:'山田 花子',kana:'ヤマダ ハナコ',initial:'山',requested:'09/28 09:12',point:'和光市',sex:'女性',age:42,visits:1,birth:'1984/05/14',email:'hanako.yamada@example.jp',tel:'090-1111-2233',address:'埼玉県和光市（サンプル）',note:'初参加です。よろしくお願いします。'},
+{id:2,name:'佐藤 健太',kana:'サトウ ケンタ',initial:'佐',requested:'09/27 21:40',point:'現地',sex:'男性',age:51,visits:7,birth:'1975/02/03',email:'kenta.sato@example.jp',tel:'080-2222-3344',address:'群馬県渋川市（サンプル）',note:'長靴レンタル希望。'},
+{id:3,name:'鈴木 美咲',kana:'スズキ ミサキ',initial:'鈴',requested:'09/27 15:08',point:'和光市',sex:'女性',age:34,visits:2,birth:'1992/08/20',email:'misaki.suzuki@example.jp',tel:'090-3333-4455',address:'東京都練馬区（サンプル）',note:''},
+{id:4,name:'高橋 直樹',kana:'タカハシ ナオキ',initial:'高',requested:'09/26 18:31',point:'和光市',sex:'男性',age:47,visits:4,birth:'1979/01/26',email:'naoki.takahashi@example.jp',tel:'070-4444-5566',address:'埼玉県朝霞市（サンプル）',note:'作業用手袋を持参します。'}
+];
+const titles={home:'ホーム',regist:'申込管理',schedule:'開催日管理',settings:'設定'};
+const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
+function show(name){$$('.screen').forEach(x=>x.classList.remove('active'));$('#screen-'+name).classList.add('active');$('#title').textContent=titles[name];$$('[data-screen]').forEach(b=>b.classList.toggle('active',b.dataset.screen===name));scrollTo(0,0)}
+$$('[data-screen]').forEach(b=>b.onclick=()=>show(b.dataset.screen));$$('[data-jump]').forEach(b=>b.onclick=()=>show(b.dataset.jump));
+function render(list=people){
+ $('#tbody').innerHTML=list.map((p,i)=>`<tr data-id="${p.id}"><td>${i+1}</td><td>${p.requested}</td><td><span class="pill">${p.point}</span></td><td class="person"><strong>${p.name}</strong><small>${p.kana}</small></td><td>${p.sex} / ${p.age}</td><td>${p.visits}回</td></tr>`).join('');
+ $('#mobile-list').innerHTML=list.map(p=>`<div class="mobile-card" data-id="${p.id}"><div class="initial">${p.initial}</div><div><strong>${p.name}</strong><small>${p.point}集合 ・ ${p.sex} ${p.age}歳</small></div><div class="meta">${p.visits}回目<br>${p.requested}</div></div>`).join('');
+ $$('[data-id]').forEach(x=>x.onclick=()=>select(Number(x.dataset.id)));
+}
+function select(id){const p=people.find(x=>x.id===id);if(!p)return;$('#detail').className='detail';$('#detail').innerHTML=`<h3>${p.name}</h3><dl><div class="row"><dt>フリガナ</dt><dd>${p.kana}</dd></div><div class="row"><dt>性別/年齢</dt><dd>${p.sex} / ${p.age}歳</dd></div><div class="row"><dt>生年月日</dt><dd>${p.birth}</dd></div><div class="row"><dt>参加回数</dt><dd>${p.visits}回</dd></div><div class="row"><dt>メール</dt><dd>${p.email}</dd></div><div class="row"><dt>電話</dt><dd>${p.tel}</dd></div><div class="row"><dt>住所</dt><dd>${p.address}</dd></div><div class="row"><dt>メッセージ</dt><dd>${p.note||'―'}</dd></div></dl><div class="actions"><button>編集</button><button>メール</button><button>参加履歴</button><button>不参加</button></div>`;$('#drawer').classList.add('open')}
+$('#close').onclick=()=>$('#drawer').classList.remove('open');
+$('#search').oninput=e=>{const q=e.target.value.toLowerCase();render(people.filter(p=>(p.name+p.kana+p.email).toLowerCase().includes(q)))};
+$('#import').onclick=()=>alert('PoC: メールから新規申込を取り込む操作を想定しています。');
+$('#recent').innerHTML=people.slice(0,3).map(p=>`<p style="padding:10px 0;border-bottom:1px solid var(--line)"><strong>${p.name}</strong>　${p.point}集合　${p.requested}</p>`).join('');
+render();
+</script>
+</body>
+</html>
