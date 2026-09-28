@@ -89,7 +89,7 @@ main{max-width:1280px;margin:auto;padding:18px 18px 44px}
       <div class="brandcopy">
         <div class="eyebrow">AUTOAI OPERATION CONTROL</div>
         <h1>QR商品出品支援</h1>
-        <div class="version">Phaser 4 PoC / Operation Control Center v0.4</div>
+        <div class="version">Phaser 4 PoC / QR Worker Illustration Buttons v0.5</div>
       </div>
     </div>
     <div class="header-actions">
@@ -105,7 +105,7 @@ main{max-width:1280px;margin:auto;padding:18px 18px 44px}
       <div class="mission-kicker">CURRENT MISSION</div>
       <div class="mission-line">
         <div class="mission-title">商品出品オペレーション</div>
-        <div class="mission-desc">施設を選択して、QR発行から商品管理までの工程を進めます。</div>
+        <div class="mission-desc">QR顔ピクトグラム作業員を選択して、QR発行から商品管理までの工程を進めます。</div>
       </div>
     </div>
     <div class="hud-chips">
@@ -118,7 +118,7 @@ main{max-width:1280px;margin:auto;padding:18px 18px 44px}
   <section class="control-shell" aria-label="オペレーション・コントロールセンター">
     <div class="canvas-wrap">
       <div id="game" aria-label="Phaser 4 オペレーションマップ"></div>
-      <div class="engine-badge">REAL-TIME OPERATION MAP</div>
+      <div class="engine-badge">QR WORKER OPERATION MAP</div>
       <div class="fallback" id="fallback">
         <h2>オペレーションメニュー</h2>
         <div class="fallback-grid">
@@ -131,7 +131,7 @@ main{max-width:1280px;margin:auto;padding:18px 18px 44px}
       </div>
     </div>
     <div class="help">
-      <div><strong>操作:</strong> 施設にカーソルを合わせて選択。利用可能な施設はクリックで画面へ移動します。</div>
+      <div><strong>操作:</strong> 各業務ボタンのQR顔作業員イラストにカーソルを合わせて選択。利用可能なボタンはクリックで画面へ移動します。</div>
       <div>ゲーム演出はナビゲーション部分のみ。実データ入力は各業務画面で行います。</div>
     </div>
   </section>
@@ -164,27 +164,27 @@ if (!window.Phaser) {
     {
       no:'01', short:'QR発行', name:'QRコード発行',
       sub:'IDENTIFICATION STATION', status:'READY', active:true,
-      link:'./qr-generator.html', icon:'QR', x:.15, y:.31
+      link:'./qr-generator.html', x:.15, y:.31, type:'printer'
     },
     {
       no:'02', short:'画像UPLOAD', name:'商品画像アップロード',
       sub:'CAPTURE BAY', status:'READY', active:true,
-      link:'./upload.html', icon:'UP', x:.34, y:.62
+      link:'./upload.html', x:.34, y:.62, type:'upload'
     },
     {
       no:'03', short:'AI解析', name:'AIデータ加工',
       sub:'AI ANALYSIS CORE', status:'LOCKED', active:false,
-      icon:'AI', x:.55, y:.31
+      x:.55, y:.31, type:'ai'
     },
     {
       no:'04', short:'DATA取込', name:'商品データ取込',
       sub:'DATA GATE', status:'LOCKED', active:false,
-      icon:'DB', x:.74, y:.62
+      x:.74, y:.62, type:'import'
     },
     {
       no:'05', short:'商品一覧', name:'商品一覧',
       sub:'INVENTORY HUB', status:'LOCKED', active:false,
-      icon:'BOX', x:.88, y:.31
+      x:.88, y:.31, type:'inventory'
     }
   ];
 
@@ -231,7 +231,7 @@ if (!window.Phaser) {
       this.add.text(55,52,'OPERATION NETWORK',{
         fontFamily:'"Noto Sans JP", sans-serif',fontSize:'14px',fontStyle:'bold',color:'#247fcc',letterSpacing:1
       });
-      this.add.text(55,76,'出品工程をステージとして選択してください',{
+      this.add.text(55,76,'QR顔ワーカーが各業務を実行します',{
         fontFamily:'"Noto Sans JP", sans-serif',fontSize:'24px',fontStyle:'bold',color:'#17263a'
       });
 
@@ -284,47 +284,41 @@ if (!window.Phaser) {
       container.alpha=0;
       container.y += 24;
 
-      const shadow=this.add.rectangle(5,8,210,142,0x1f3650,.08);
-      shadow.setRounded?.(18);
-
-      const outer=this.add.rectangle(0,0,210,142,0xffffff,.97)
+      const shadow=this.add.rectangle(5,8,220,150,0x1f3650,.08);
+      const outer=this.add.rectangle(0,0,220,150,0xffffff,.97)
         .setStrokeStyle(2, sector.active ? 0x9fdff0 : 0xd9e2ea, 1);
-      const topLine=this.add.rectangle(0,-68,208,6,sector.active ? 0x1bc3ed : 0xc5d0db,1);
+      const topLine=this.add.rectangle(0,-72,218,6,sector.active ? 0x1bc3ed : 0xc5d0db,1);
+      const artBg=this.add.rectangle(38,8,98,108, sector.active ? 0xf3fdff : 0xf5f7fa, 1)
+        .setStrokeStyle(1, sector.active ? 0xd2eff7 : 0xe2e8ee, 1)
+        .setAngle(-2);
 
-      const halo=this.add.circle(-70,-29,28,sector.active ? 0x1bc3ed : 0x91a1b3, .10);
-      const iconBg=this.add.circle(-70,-29,21,sector.active ? 0xe9fbff : 0xf0f3f6,1)
-        .setStrokeStyle(1,sector.active ? 0xa8e8f4 : 0xd7dfe6,1);
-      const icon=this.add.text(-70,-29,sector.icon,{
-        fontFamily:'Arial, sans-serif',fontSize:sector.icon.length>2?'11px':'13px',fontStyle:'bold',
-        color:sector.active?'#1789bd':'#718096'
-      }).setOrigin(.5);
-
-      const no=this.add.text(-89,-61,'SECTOR '+sector.no,{
+      const no=this.add.text(-94,-65,'SECTOR '+sector.no,{
         fontFamily:'Arial, sans-serif',fontSize:'9px',fontStyle:'bold',color:'#7b8b9d',letterSpacing:1
       });
-      const title=this.add.text(-36,-47,sector.short,{
+      const title=this.add.text(-94,-45,sector.short,{
         fontFamily:'"Noto Sans JP", sans-serif',fontSize:'17px',fontStyle:'bold',color:'#17263a'
       });
-      const sub=this.add.text(-36,-20,sector.sub,{
+      const sub=this.add.text(-94,-19,sector.sub,{
         fontFamily:'Arial, sans-serif',fontSize:'8px',fontStyle:'bold',color:'#7f90a3',letterSpacing:.5
       });
 
-      const badgeBg=this.add.rectangle(-49,30,96,25,sector.active?0xeafaf5:0xf2f4f7,1)
+      const badgeBg=this.add.rectangle(-45,34,96,25,sector.active?0xeafaf5:0xf2f4f7,1)
         .setStrokeStyle(1,sector.active?0xbbeada:0xdbe2e8,1);
-      const badgeDot=this.add.circle(-84,30,4,sector.active?0x19c895:0x98a6b4,1);
-      const badge=this.add.text(-74,22,sector.status,{
+      const badgeDot=this.add.circle(-80,34,4,sector.active?0x19c895:0x98a6b4,1);
+      const badge=this.add.text(-70,26,sector.status,{
         fontFamily:'Arial, sans-serif',fontSize:'9px',fontStyle:'bold',color:sector.active?'#158260':'#7a8795'
       });
-      const action=this.add.text(28,22,sector.active?'OPEN  →':'COMING SOON',{
+      const action=this.add.text(28,26,sector.active?'OPEN  →':'COMING SOON',{
         fontFamily:'Arial, sans-serif',fontSize:'9px',fontStyle:'bold',color:sector.active?'#267fe0':'#98a4b0'
       });
 
-      const hit=this.add.rectangle(0,0,210,142,0xffffff,0.001).setInteractive({useHandCursor:true});
+      const worker = this.drawWorkerIllustration(sector, 48, 2);
+      const hit=this.add.rectangle(0,0,220,150,0xffffff,0.001).setInteractive({useHandCursor:true});
 
-      container.add([shadow,outer,topLine,halo,iconBg,icon,no,title,sub,badgeBg,badgeDot,badge,action,hit]);
+      container.add([shadow,outer,topLine,artBg,no,title,sub,badgeBg,badgeDot,badge,action,worker,hit]);
 
       if(sector.active && !reducedMotion){
-        this.tweens.add({targets:halo,scale:{from:1,to:1.36},alpha:{from:.12,to:.025},duration:1200,yoyo:true,repeat:-1,delay:index*180});
+        this.tweens.add({targets:worker,y:{from:2,to:0},duration:780,yoyo:true,repeat:-1,ease:'Sine.easeInOut',delay:index*120});
       }
 
       hit.on('pointerover',()=>{
@@ -332,7 +326,6 @@ if (!window.Phaser) {
         this.children.bringToTop(container);
         this.tweens.add({targets:container,scaleX:1.045,scaleY:1.045,y:y-5,duration:120,ease:'Quad.easeOut'});
         outer.setStrokeStyle(2,sector.active?0x29c8ec:0xb8c7d5,1);
-        halo.setFillStyle(sector.active?0x1bc3ed:0x91a1b3,.18);
         this.showSectorDetail(sector);
       });
 
@@ -340,7 +333,6 @@ if (!window.Phaser) {
         if(this.selected===sector.no)this.selected=null;
         this.tweens.add({targets:container,scaleX:1,scaleY:1,y:y,duration:120,ease:'Quad.easeOut'});
         outer.setStrokeStyle(2,sector.active?0x9fdff0:0xd9e2ea,1);
-        halo.setFillStyle(sector.active?0x1bc3ed:0x91a1b3,.10);
         this.clearSectorDetail();
       });
 
@@ -357,7 +349,160 @@ if (!window.Phaser) {
         this.activateSector(sector,container);
       });
 
-      this.nodes.push({container,sector,outer,halo,x,y});
+      this.nodes.push({container,sector,outer,x,y});
+    }
+
+    drawWorkerIllustration(sector, ox, oy){
+      const c = this.add.container(ox,oy);
+      const active = sector.active;
+      const line = active ? 0x78d8ef : 0xc9d3dc;
+      const fill = active ? 0xffffff : 0xf3f5f7;
+      const accent = active ? 0x18bfee : 0x97a8b7;
+      const accent2 = active ? 0x19c895 : 0xa4b4c2;
+      const dark = active ? 0x1b3450 : 0x6f7f8f;
+
+      const panelGlow = this.add.circle(16, 4, 42, active ? 0x1bc3ed : 0xbfcad5, .08);
+      c.add(panelGlow);
+
+      const body = this.add.graphics();
+      body.lineStyle(3, line, 1);
+      body.fillStyle(fill,1);
+      body.fillRoundedRect(-6,18,32,38,10);
+      body.strokeRoundedRect(-6,18,32,38,10);
+      body.fillStyle(active ? 0xeaf9ff : 0xf2f4f7,1);
+      body.fillCircle(10,10,14);
+      body.strokeCircle(10,10,14);
+      body.fillStyle(dark,1);
+      const qr = [
+        [-1,-1],[4,-1],[9,-1],[4,4],[9,4],[14,4],[14,9],[-1,9],[9,9],
+        [-1,14],[4,14],[14,14],[4,19],[9,19]
+      ];
+      qr.forEach(([qx,qy])=>body.fillRect(qx,qy,4,4));
+      body.lineBetween(-4,29,-20,38);
+      body.lineBetween(26,29,43,24);
+      body.lineBetween(4,56,-6,74);
+      body.lineBetween(16,56,24,74);
+      c.add(body);
+
+      if(sector.type === 'printer'){
+        const printer = this.add.graphics();
+        printer.lineStyle(2, line, 1);
+        printer.fillStyle(0xffffff,1);
+        printer.fillRoundedRect(44,18,34,24,6);
+        printer.strokeRoundedRect(44,18,34,24,6);
+        printer.fillStyle(active ? 0xeefbff : 0xf3f5f7,1);
+        printer.fillRect(48,22,26,8);
+        printer.strokeRect(48,22,26,8);
+        printer.fillStyle(accent,1);
+        printer.fillRect(52,42,18,14);
+        printer.strokeRect(52,42,18,14);
+        printer.lineBetween(34,30,46,28);
+
+        const card = this.add.graphics();
+        card.lineStyle(2, line, 1);
+        card.fillStyle(0xffffff,1);
+        card.fillRoundedRect(58,50,20,15,3);
+        card.strokeRoundedRect(58,50,20,15,3);
+        card.fillStyle(dark,1);
+        [[61,53],[66,53],[71,53],[61,58],[71,58],[66,63]].forEach(([px,py])=>card.fillRect(px,py,3,3));
+        c.add([printer,card]);
+      }
+
+      if(sector.type === 'upload'){
+        const phone = this.add.graphics();
+        phone.lineStyle(2, line,1);
+        phone.fillStyle(0xffffff,1);
+        phone.fillRoundedRect(45,18,20,34,5);
+        phone.strokeRoundedRect(45,18,20,34,5);
+        phone.fillStyle(active ? 0xeef9ff : 0xf3f5f7,1);
+        phone.fillRect(49,23,12,19);
+        phone.strokeRect(49,23,12,19);
+        phone.fillStyle(accent,1);
+        phone.fillCircle(55,46,2);
+        phone.lineBetween(34,29,45,29);
+
+        const cloud = this.add.graphics();
+        cloud.lineStyle(2, line,1);
+        cloud.fillStyle(active ? 0xf2fdff : 0xf6f8fa,1);
+        cloud.fillCircle(84,24,8);
+        cloud.fillCircle(93,20,10);
+        cloud.fillCircle(104,25,8);
+        cloud.fillRect(84,24,20,10);
+        cloud.strokeCircle(84,24,8);
+        cloud.strokeCircle(93,20,10);
+        cloud.strokeCircle(104,25,8);
+        cloud.strokeRect(84,24,20,10);
+        const arrow = this.add.graphics();
+        arrow.lineStyle(3, accent2,1);
+        arrow.lineBetween(93,54,93,34);
+        arrow.lineBetween(93,34,86,41);
+        arrow.lineBetween(93,34,100,41);
+        c.add([phone,cloud,arrow]);
+      }
+
+      if(sector.type === 'ai'){
+        const monitor = this.add.graphics();
+        monitor.lineStyle(2, line,1);
+        monitor.fillStyle(0xffffff,1);
+        monitor.fillRoundedRect(41,15,42,28,6);
+        monitor.strokeRoundedRect(41,15,42,28,6);
+        monitor.lineBetween(62,43,62,51);
+        monitor.lineBetween(52,51,72,51);
+        monitor.fillStyle(accent,1);
+        monitor.fillCircle(52,24,2.5);
+        monitor.fillCircle(62,29,2.5);
+        monitor.fillCircle(72,24,2.5);
+        monitor.lineStyle(2, accent,1);
+        monitor.lineBetween(52,24,62,29);
+        monitor.lineBetween(62,29,72,24);
+        const spark = this.add.text(90,16,'✦',{fontSize:'14px',color:active ? '#19c895' : '#9ba8b4'});
+        c.add([monitor,spark]);
+      }
+
+      if(sector.type === 'import'){
+        const db = this.add.graphics();
+        db.lineStyle(2, line,1);
+        db.fillStyle(0xffffff,1);
+        db.fillEllipse(62,18,30,10);
+        db.fillRect(47,18,30,22);
+        db.fillEllipse(62,40,30,10);
+        db.strokeEllipse(62,18,30,10);
+        db.strokeRect(47,18,30,22);
+        db.strokeEllipse(62,40,30,10);
+        const gate = this.add.graphics();
+        gate.lineStyle(2, accent2,1);
+        gate.strokeRect(89,18,18,28);
+        gate.lineStyle(3, accent,1);
+        gate.lineBetween(77,31,88,31);
+        gate.lineBetween(88,31,82,25);
+        gate.lineBetween(88,31,82,37);
+        c.add([db,gate]);
+      }
+
+      if(sector.type === 'inventory'){
+        const board = this.add.graphics();
+        board.lineStyle(2, line,1);
+        board.fillStyle(0xffffff,1);
+        board.fillRoundedRect(44,14,50,40,6);
+        board.strokeRoundedRect(44,14,50,40,6);
+        board.lineBetween(60,22,60,46);
+        board.lineBetween(77,22,77,46);
+        board.lineBetween(48,30,90,30);
+        board.lineBetween(48,38,90,38);
+        board.fillStyle(accent2,1);
+        board.fillRect(49,23,8,5);
+        board.fillRect(66,31,8,5);
+        board.fillRect(83,39,8,5);
+        const box = this.add.graphics();
+        box.lineStyle(2, accent,1);
+        box.strokeRect(95,47,14,11);
+        box.lineBetween(95,47,102,42);
+        box.lineBetween(109,47,102,42);
+        box.lineBetween(102,42,102,53);
+        c.add([board,box]);
+      }
+
+      return c;
     }
 
     showSectorDetail(sector){
