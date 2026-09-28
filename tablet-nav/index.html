@@ -179,7 +179,7 @@ function onPosition(p){
   }else if(followMode){
     map.panTo(current,{animate:false});
   }
-  setStatus('GPS受信中：精度 約'+acc+'m'+(acc>100?'（精度が低めです）':'')+(followMode?' ・ 地図追従中':' ・ 地図追従停止'));
+  setStatus('GPS受信中：精度 約'+acc+'m'+(acc>60?'（GPS精度低下）':'')+(followMode?' ・ 地図追従中':' ・ 地図追従停止'));
 }
 function startGps(){
   if(!navigator.geolocation){clearMotion('未対応');setStatus('このブラウザでは位置情報を利用できません。');return}
