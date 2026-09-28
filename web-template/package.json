@@ -1,0 +1,8 @@
+{
+  "name": "p008-web-template",
+  "private": true,
+  "version": "0.1.0",
+  "devDependencies": {
+    "wrangler": "4.135.0"
+  }
+}
