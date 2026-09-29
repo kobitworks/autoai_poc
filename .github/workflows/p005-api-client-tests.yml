@@ -1,0 +1,41 @@
+name: P005 PoC API Client Tests
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "monolink/api-client.js"
+      - "monolink/api-client.test.js"
+      - ".github/workflows/p005-api-client-tests.yml"
+  pull_request:
+    paths:
+      - "monolink/api-client.js"
+      - "monolink/api-client.test.js"
+      - ".github/workflows/p005-api-client-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  api-client-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Syntax check
+        run: node --check monolink/api-client.js
+      - name: Unit tests
+        run: node --test monolink/api-client.test.js
+      - name: Guard against client-side capability persistence
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -nE 'localStorage|sessionStorage|document\.cookie' monolink/api-client.js; then
+            echo "Persistent browser storage/cookie access is not allowed in the API adapter." >&2
+            exit 1
+          fi
