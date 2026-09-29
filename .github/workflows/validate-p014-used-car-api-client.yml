@@ -42,7 +42,7 @@ jobs:
 
       - name: Run tests
         shell: bash
-        run: node --test used-car/api-client.test.cjs
+        run: node --test used-car/api-client.test.cjs used-car/data-adapter.test.cjs
 
       - name: Confirm PoC remains disconnected by default
         shell: bash
