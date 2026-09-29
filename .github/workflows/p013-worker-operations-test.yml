@@ -35,9 +35,13 @@ jobs:
         run: |
           node --check qr-listing/worker/p013-operations.mjs
           node --check qr-listing/worker/p013-operations.test.mjs
+          node --check qr-listing/worker/p013-operation-manifest.test.mjs
 
       - name: Run P013 operation tests
         run: node qr-listing/worker/p013-operations.test.mjs
+
+      - name: Run P013 manifest consistency tests
+        run: node qr-listing/worker/p013-operation-manifest.test.mjs
 
       - name: Guard deployment boundary
         shell: bash
