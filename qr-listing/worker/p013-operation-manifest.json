@@ -1,0 +1,47 @@
+{
+  "manifest_version": 1,
+  "project_id": "P013",
+  "worker_api_version": "v1",
+  "default_deny": true,
+  "environment_bound_at_deploy": true,
+  "operations": [
+    {
+      "operation_id": "p013.product.get",
+      "kind": "query",
+      "resource": "p013.product",
+      "action": "read"
+    },
+    {
+      "operation_id": "p013.product.list",
+      "kind": "query",
+      "resource": "p013.product",
+      "action": "read"
+    },
+    {
+      "operation_id": "p013.product.create",
+      "kind": "command",
+      "resource": "p013.product",
+      "action": "create"
+    },
+    {
+      "operation_id": "p013.product.update_status",
+      "kind": "command",
+      "resource": "p013.product",
+      "action": "update"
+    }
+  ],
+  "permissions": [
+    {
+      "resource": "p013.product",
+      "action": "read"
+    },
+    {
+      "resource": "p013.product",
+      "action": "create"
+    },
+    {
+      "resource": "p013.product",
+      "action": "update"
+    }
+  ]
+}
