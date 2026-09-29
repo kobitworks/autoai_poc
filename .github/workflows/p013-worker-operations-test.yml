@@ -7,6 +7,12 @@ on:
     paths:
       - "qr-listing/worker/**"
       - ".github/workflows/p013-worker-operations-test.yml"
+  pull_request:
+    branches:
+      - develop
+    paths:
+      - "qr-listing/worker/**"
+      - ".github/workflows/p013-worker-operations-test.yml"
   workflow_dispatch:
 
 permissions:
