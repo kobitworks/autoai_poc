@@ -6,6 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = ROOT / "wrangler.p008.template.jsonc"
 WORKFLOW = ROOT.parent / ".github" / "workflows" / "p008-cloudflare-provision-preview.yml"
+PROVISION = ROOT / "scripts" / "provision_p008_cloudflare.py"
 
 def load_jsonc(path: Path):
     text = path.read_text(encoding="utf-8")
@@ -61,6 +62,17 @@ required_snippets = [
 for snippet in required_snippets:
     require(snippet in workflow, f"provision workflow contract missing: {snippet}")
 
+provision = PROVISION.read_text(encoding="utf-8")
+ownership_snippets = [
+    "autoai-{PROJECT_ID.lower()}-{environment}-owned-v1",
+    "R2 bucket exists without P008 ownership marker",
+    "rollback_new_bucket",
+    "R2 bucket ownership marker failed; newly created empty bucket rolled back",
+]
+for snippet in ownership_snippets:
+    require(snippet in provision, f"R2 ownership safety contract missing: {snippet}")
+require("cloudflare-resources.json" not in provision, "stale file-based R2 ownership contract detected")
+
 print(json.dumps({
     "ok": True,
     "worker_name": cfg["name"],
@@ -68,4 +80,5 @@ print(json.dumps({
     "preview_d1": preview_d1[0]["database_name"],
     "preview_r2": preview_r2[0]["bucket_name"],
     "provision_workflow_contract": "ok",
+    "r2_ownership_safety_contract": "ok",
 }, ensure_ascii=False, indent=2))
