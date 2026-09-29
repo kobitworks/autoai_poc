@@ -1,0 +1,94 @@
+name: P008 preview static validation
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "web-template/wrangler.p008.template.jsonc"
+      - "web-template/src/worker.js"
+      - "web-template/scripts/validate_p008_preview_static.py"
+      - "web-template/scripts/test_preview_worker.mjs"
+      - ".github/workflows/p008-cloudflare-provision-preview.yml"
+      - ".github/workflows/p008-preview-static-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  static-preview-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validate Preview contract
+        working-directory: web-template
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/validate_p008_preview_static.py
+
+      - name: Test Worker with mock D1 and R2 bindings
+        working-directory: web-template
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/test_preview_worker.mjs
+
+      - name: Install Wrangler locally
+        working-directory: web-template
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm install --no-audit --no-fund
+
+      - name: Render non-secret test Wrangler config
+        working-directory: web-template
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("wrangler.p008.template.jsonc")
+          text=p.read_text()
+          placeholder="__D1_DATABASE_ID__"
+          if text.count(placeholder) != 2:
+              raise SystemExit("expected exactly two D1 placeholders")
+          text=text.replace(placeholder, "00000000-0000-0000-0000-000000000000")
+          Path("wrangler.p008.static-test.jsonc").write_text(text)
+          PY
+
+      - name: Wrangler local dry-run bundle
+        working-directory: web-template
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf .wrangler-static-dry-run
+          npx wrangler deploy \
+            --dry-run \
+            --config wrangler.p008.static-test.jsonc \
+            --outdir .wrangler-static-dry-run
+          test -d .wrangler-static-dry-run
+          test -n "$(find .wrangler-static-dry-run -type f -print -quit)"
+
+      - name: Summary
+        shell: bash
+        run: |
+          {
+            echo "## P008 preview static validation"
+            echo
+            echo "- Cloudflare API called: no"
+            echo "- Cloudflare resources changed: no"
+            echo "- Worker /health D1/R2 mock binding test: PASS"
+            echo "- Wrangler config contract: PASS"
+            echo "- Wrangler deploy --dry-run: PASS"
+            echo "- Provision Workflow executed: no"
+          } >> "$GITHUB_STEP_SUMMARY"
