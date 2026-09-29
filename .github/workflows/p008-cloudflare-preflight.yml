@@ -1,4 +1,5 @@
 name: P008 Cloudflare preflight
+# WEB-012 read-only readiness probe 2026-09-30
 
 on:
   workflow_dispatch:
