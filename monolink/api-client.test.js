@@ -11,7 +11,7 @@ function errorPayload(status,code,message){
   return {ok:false,status,async json(){return {ok:false,request_id:'req-err',error:{code,message,retry_after_seconds:null}};}};
 }
 
-test('base URL未設定では通信しない',async()=>{
+test('does not send requests when base URL is missing',async()=>{
   let calls=0;
   const client=createMonolinkApiClient({fetchImpl:async()=>{calls++;return okPayload();}});
   assert.equal(client.isConfigured(),false);
@@ -22,7 +22,7 @@ test('base URL未設定では通信しない',async()=>{
   assert.equal(calls,0);
 });
 
-test('Access queryは通常route・credential include・共通headerを使う',async()=>{
+test('Access query uses authenticated route and credentials',async()=>{
   const calls=[];
   const client=createMonolinkApiClient({
     baseUrl:'https://api.example.test/',
@@ -38,7 +38,7 @@ test('Access queryは通常route・credential include・共通headerを使う',a
   assert.deepEqual(JSON.parse(calls[0].init.body),{input:{item_id:'i1'}});
 });
 
-test('commandは明示Idempotency-Keyなしでは送信しない',async()=>{
+test('command requires explicit Idempotency-Key before fetch',async()=>{
   let calls=0;
   const client=createMonolinkApiClient({
     baseUrl:'https://api.example.test',
@@ -51,7 +51,7 @@ test('commandは明示Idempotency-Keyなしでは送信しない',async()=>{
   assert.equal(calls,0);
 });
 
-test('public commandはpublic route・credentials omit・Idempotency-Keyを使う',async()=>{
+test('public command uses public route without Access credentials',async()=>{
   const calls=[];
   const client=createMonolinkApiClient({
     baseUrl:'https://api.example.test',
@@ -68,7 +68,7 @@ test('public commandはpublic route・credentials omit・Idempotency-Keyを使�
   assert.equal(calls[0].init.headers['X-AutoAI-Capability'],undefined);
 });
 
-test('capability queryはtokenをheaderだけに置きURLへ含めない',async()=>{
+test('capability query keeps token in header and out of URL',async()=>{
   const calls=[];
   const capability='fcap_super_secret_value';
   const client=createMonolinkApiClient({
@@ -86,7 +86,7 @@ test('capability queryはtokenをheaderだけに置きURLへ含めない',async(
   assert.equal(calls[0].init.credentials,'omit');
 });
 
-test('capability commandはcapabilityとIdempotency-Keyを同時に要求する',async()=>{
+test('capability command requires capability and idempotency together',async()=>{
   const calls=[];
   const client=createMonolinkApiClient({
     baseUrl:'https://api.example.test',
@@ -94,14 +94,14 @@ test('capability commandはcapabilityとIdempotency-Keyを同時に要求する'
   });
   await client.capabilityCommand(
     'monolink.finder.message.send',
-    {found_report_id:'frp_12345678',body:'駅で見つけました'},
+    {found_report_id:'frp_12345678',body:'Found near the station'},
     {capability:'fcap_1234567890abcdef',idempotencyKey:'message-send-0001'}
   );
   assert.equal(calls[0].init.headers['X-AutoAI-Capability'],'fcap_1234567890abcdef');
   assert.equal(calls[0].init.headers['Idempotency-Key'],'message-send-0001');
 });
 
-test('capability欠落時は通信前に401相当エラー',async()=>{
+test('missing capability fails before fetch',async()=>{
   let calls=0;
   const client=createMonolinkApiClient({
     baseUrl:'https://api.example.test',
@@ -114,7 +114,7 @@ test('capability欠落時は通信前に401相当エラー',async()=>{
   assert.equal(calls,0);
 });
 
-test('API error payloadをstatus/code/requestIdへ写像する',async()=>{
+test('API error payload maps status code and request id',async()=>{
   const client=createMonolinkApiClient({
     baseUrl:'https://api.example.test',
     fetchImpl:async()=>errorPayload(409,'IDEMPOTENCY_CONFLICT','conflict')
@@ -132,7 +132,7 @@ test('API error payloadをstatus/code/requestIdへ写像する',async()=>{
   );
 });
 
-test('public queryとAccess commandのrouteを混同しない',async()=>{
+test('public query and Access command keep routes separated',async()=>{
   const calls=[];
   const client=createMonolinkApiClient({
     baseUrl:'https://api.example.test',
@@ -151,7 +151,7 @@ test('public queryとAccess commandのrouteを混同しない',async()=>{
   assert.equal(calls[1].init.headers['Idempotency-Key'],'lost-open-0001');
 });
 
-test('operation idにpath注入文字を許可しない',async()=>{
+test('operation id rejects path injection characters',async()=>{
   let calls=0;
   const client=createMonolinkApiClient({
     baseUrl:'https://api.example.test',
