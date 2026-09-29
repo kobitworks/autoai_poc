@@ -9,6 +9,8 @@ on:
       - "web-template/src/worker.js"
       - "web-template/scripts/validate_p008_preview_static.py"
       - "web-template/scripts/test_preview_worker.mjs"
+      - "web-template/scripts/provision_p008_cloudflare.py"
+      - "web-template/scripts/test_provision_p008_cloudflare.py"
       - ".github/workflows/p008-cloudflare-provision-preview.yml"
       - ".github/workflows/p008-preview-static-validation.yml"
   workflow_dispatch:
@@ -42,6 +44,13 @@ jobs:
         run: |
           set -euo pipefail
           node scripts/test_preview_worker.mjs
+
+      - name: Test R2 ownership retry safety
+        working-directory: web-template
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m unittest scripts/test_provision_p008_cloudflare.py
 
       - name: Install Wrangler locally
         working-directory: web-template
@@ -88,6 +97,8 @@ jobs:
             echo "- Cloudflare API called: no"
             echo "- Cloudflare resources changed: no"
             echo "- Worker /health D1/R2 mock binding test: PASS"
+            echo "- R2 ownership retry-safety tests: PASS"
+            echo "- R2 ownership static contract: PASS"
             echo "- Wrangler config contract: PASS"
             echo "- Wrangler deploy --dry-run: PASS"
             echo "- Provision Workflow executed: no"
