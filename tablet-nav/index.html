@@ -99,6 +99,10 @@ function headingLabel(deg){
   const labels=['北','北東','東','南東','南','南西','西','北西'];
   return labels[Math.round(deg/45)%8];
 }
+function accuracyMeters(c){
+  const v=c&&c.accuracy;
+  return typeof v==='number'&&Number.isFinite(v)&&v>=0?v:null;
+}
 function clearMotion(reason='測位待ち'){
   speedEl.textContent='--';
   speedSourceEl.textContent=reason;
@@ -118,7 +122,7 @@ function updateMotion(c,timestamp){
   const now={
     lat:c.latitude,
     lon:c.longitude,
-    accuracy:Number.isFinite(c.accuracy)?c.accuracy:9999,
+    accuracy:accuracyMeters(c)??9999,
     time:timestamp||Date.now()
   };
 
@@ -185,12 +189,20 @@ function onPosition(p){
   lastPositionTimestamp=positionTimestamp;
   gpsFault=false;
   const c=p.coords;
+  const accuracy=accuracyMeters(c);
   current=[c.latitude,c.longitude];
-  const acc=Math.round(c.accuracy||0);
   if(currentMarker) currentMarker.setLatLng(current);
   else currentMarker=L.marker(current).addTo(map).bindPopup('現在地');
-  if(accuracyCircle) accuracyCircle.setLatLng(current).setRadius(c.accuracy||0);
-  else accuracyCircle=L.circle(current,{radius:c.accuracy||0,weight:1,fillOpacity:.08}).addTo(map);
+  if(accuracy===null){
+    if(accuracyCircle){
+      map.removeLayer(accuracyCircle);
+      accuracyCircle=null;
+    }
+  }else if(accuracyCircle){
+    accuracyCircle.setLatLng(current).setRadius(accuracy);
+  }else{
+    accuracyCircle=L.circle(current,{radius:accuracy,weight:1,fillOpacity:.08}).addTo(map);
+  }
 
   updateMotion(c,positionTimestamp);
   if(firstFix){
@@ -199,7 +211,9 @@ function onPosition(p){
   }else if(followMode){
     map.panTo(current,{animate:false});
   }
-  setStatus('GPS受信中：精度 約'+acc+'m'+(acc>60?'（GPS精度低下）':'')+(followMode?' ・ 地図追従中':' ・ 地図追従停止'));
+  const accuracyText=accuracy===null?'不明':'約'+Math.round(accuracy)+'m';
+  const accuracyLow=accuracy===null||accuracy>60;
+  setStatus('GPS受信中：精度 '+accuracyText+(accuracyLow?'（GPS精度低下）':'')+(followMode?' ・ 地図追従中':' ・ 地図追従停止'));
 }
 function startGps(){
   if(document.visibilityState!=='visible'){
