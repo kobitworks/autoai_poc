@@ -1,0 +1,35 @@
+name: Validate P014 used-car DB migration
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "used-car/db/**"
+      - ".github/workflows/validate-p014-used-car-db.yml"
+  pull_request:
+    branches:
+      - develop
+      - main
+    paths:
+      - "used-car/db/**"
+      - ".github/workflows/validate-p014-used-car-db.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sqlite-migration-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+
+      - name: Validate P014 initial migration
+        run: python3 used-car/db/validate_migration.py
