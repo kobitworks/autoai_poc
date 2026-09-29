@@ -133,18 +133,14 @@ button,input,select,textarea{font:inherit} button{cursor:pointer}
 <div class="formgrid" id="modalFields"></div><div class="actions"><button class="secondary" onclick="closeModal()">キャンセル</button><button class="primary" onclick="saveMock()">仮登録</button></div>
 </div></div>
 
+<script src="./api-client.js"></script>
+<script src="./data-adapter.js"></script>
 <script>
 const navItems=[['dashboard','ダッシュボード'],['customers','顧客管理'],['vehicles','車両管理'],['inspection','車検予定'],['records','整備・修理履歴'],['documents','写真・書類']];
-const customers=[
- {name:'山田 太郎',phone:'090-1234-5678',area:'埼玉県さいたま市',cars:2,vehicle:'プリウス / アクア'},
- {name:'佐藤 美咲',phone:'080-2233-4455',area:'埼玉県川越市',cars:1,vehicle:'N-BOX'},
- {name:'鈴木 一郎',phone:'090-7777-1212',area:'埼玉県熊谷市',cars:1,vehicle:'エブリイ'}
-];
-const vehicles={
- v1:{title:'トヨタ プリウス',sub:'山田 太郎 / 大宮 330 あ 12-34',badge:'車検まで22日',owner:'山田 太郎',phone:'090-1234-5678',address:'埼玉県さいたま市',info:[['メーカー','トヨタ'],['車名','プリウス'],['年式','2020年'],['車台番号','ZVW51-1234567'],['走行距離','42,300 km'],['販売日','2025/10/15'],['販売価格','1,680,000円'],['車検満了','2026/10/18'],['担当','田中']],events:[['2026/09/10','エンジンオイル交換','42,300km / 8,800円'],['2026/07/03','右ドア板金修理','40,980km / 52,800円'],['2026/03/10','タイヤ4本交換','38,420km / 64,000円']],docs:[['📄','車検証','車検証_プリウス.jpg'],['🚗','車両写真','外観写真 6枚'],['🧾','修理記録','手書き修理メモ 2枚']]},
- v2:{title:'ホンダ N-BOX',sub:'佐藤 美咲 / 川越 580 う 56-78',badge:'車検まで57日',owner:'佐藤 美咲',phone:'080-2233-4455',address:'埼玉県川越市',info:[['メーカー','ホンダ'],['車名','N-BOX'],['年式','2021年'],['車台番号','JF3-9876543'],['走行距離','31,850 km'],['販売日','2025/06/08'],['販売価格','1,390,000円'],['車検満了','2026/11/22'],['担当','田中']],events:[['2026/08/22','12か月点検','31,500km / 16,500円'],['2026/05/11','エアコンフィルター交換','29,100km / 5,500円']],docs:[['📄','車検証','車検証_NBOX.jpg'],['🚗','車両写真','外観写真 4枚']]},
- v3:{title:'スズキ エブリイ',sub:'鈴木 一郎 / 熊谷 480 か 90-12',badge:'車検まで73日',owner:'鈴木 一郎',phone:'090-7777-1212',address:'埼玉県熊谷市',info:[['メーカー','スズキ'],['車名','エブリイ'],['年式','2019年'],['車台番号','DA17V-456789'],['走行距離','68,210 km'],['販売日','2024/11/02'],['販売価格','980,000円'],['車検満了','2026/12/08'],['担当','佐々木']],events:[['2026/06/14','ブレーキパッド交換','64,900km / 28,600円'],['2026/02/18','オイル・エレメント交換','61,200km / 9,900円']],docs:[['📄','車検証','車検証_エブリイ.jpg'],['🚗','車両写真','外観写真 5枚'],['🧾','整備記録','整備記録写真 3枚']]}
-};
+const dataAdapter=UsedCarData.createAdapter({mode:'mock'});
+const initialData=dataAdapter.mockSnapshot();
+const customers=initialData.customers;
+const vehicles=initialData.vehicles;
 let currentView='dashboard',vehicleReturn='vehicles';
 function buildNav(){for(const target of ['nav','mobileNav']){const el=document.getElementById(target);el.innerHTML='';navItems.forEach(([id,label])=>{const b=document.createElement('button');b.textContent=label;b.dataset.view=id;b.onclick=()=>showView(id);el.appendChild(b);});}syncNav();}
 function syncNav(){document.querySelectorAll('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===currentView));}
