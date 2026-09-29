@@ -90,3 +90,5 @@ test('api command preserves caller supplied Idempotency-Key', async () => {
 test('unsupported data mode is rejected immediately', () => {
   assert.throws(() => data.createAdapter({ mode: 'direct-d1' }), /mock or api/);
 });
+
+// CAR-021 CI validation marker.
