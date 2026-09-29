@@ -77,7 +77,7 @@ const map=L.map('map',{zoomControl:true}).setView([36.2,138.2],6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
 
 let current=null,currentMarker=null,accuracyCircle=null,destMarker=null,routeLine=null,watchId=null,firstFix=true;
-let followMode=true,lastFix=null,gpsFault=false;
+let followMode=true,lastFix=null,gpsFault=false,gpsGeneration=0;
 function setStatus(s){statusEl.textContent=s}
 
 function toRad(v){return v*Math.PI/180}
@@ -104,6 +104,14 @@ function clearMotion(reason='測位待ち'){
   speedSourceEl.textContent=reason;
   headingEl.textContent='--';
   headingDetailEl.textContent=reason;
+}
+function stopGpsWatch(){
+  gpsGeneration++;
+  if(watchId!==null){
+    navigator.geolocation.clearWatch(watchId);
+    watchId=null;
+  }
+  lastFix=null;
 }
 function updateMotion(c,timestamp){
   const now={
@@ -159,9 +167,8 @@ function gpsError(e){
   if(document.visibilityState!=='visible') return;
   gpsFault=true;
   lastFix=null;
-  if(e&&e.code===1&&watchId!==null){
-    navigator.geolocation.clearWatch(watchId);
-    watchId=null;
+  if(e&&e.code===1){
+    stopGpsWatch();
   }
   const msg=e&&e.code===1?'位置情報が拒否されています。ブラウザ設定でこのサイトの位置情報を「許可」にしてください。':
             e&&e.code===2?'現在地を取得できません。GPS/Wi-Fi/モバイル通信を確認してください。':
@@ -192,17 +199,21 @@ function onPosition(p){
 }
 function startGps(){
   if(!navigator.geolocation){clearMotion('未対応');setStatus('このブラウザでは位置情報を利用できません。');return}
-  if(watchId!==null) navigator.geolocation.clearWatch(watchId);
+  stopGpsWatch();
+  const generation=gpsGeneration;
   firstFix=true;
   followMode=true;
-  lastFix=null;
   clearMotion();
   setStatus('GPSを取得しています…');
-  watchId=navigator.geolocation.watchPosition(onPosition,gpsError,{
-    enableHighAccuracy:true,
-    timeout:20000,
-    maximumAge:1000
-  });
+  watchId=navigator.geolocation.watchPosition(
+    p=>{if(generation===gpsGeneration) onPosition(p)},
+    e=>{if(generation===gpsGeneration) gpsError(e)},
+    {
+      enableHighAccuracy:true,
+      timeout:20000,
+      maximumAge:1000
+    }
+  );
 }
 function recenter(){
   followMode=true;
@@ -270,11 +281,7 @@ document.getElementById('voice').onclick=()=>{
 };
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='hidden'){
-    if(watchId!==null){
-      navigator.geolocation.clearWatch(watchId);
-      watchId=null;
-    }
-    lastFix=null;
+    stopGpsWatch();
     clearMotion('一時停止');
     setStatus('画面非表示のためGPS測位を一時停止しました。');
     return;
@@ -282,11 +289,7 @@ document.addEventListener('visibilitychange',()=>{
   startGps();
 });
 window.addEventListener('beforeunload',()=>{
-  if(watchId!==null){
-    navigator.geolocation.clearWatch(watchId);
-    watchId=null;
-  }
-  lastFix=null;
+  stopGpsWatch();
 });
 startGps();
 </script>
