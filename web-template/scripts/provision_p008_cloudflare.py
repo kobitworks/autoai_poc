@@ -9,7 +9,6 @@ PROJECT_ID="P008"
 PROJECT_NAME="Webシステム自動構築"
 D1_NAME="p008-web-template-production"
 CONTROL_NAME="p016-db-management-production"
-OWNERSHIP_TABLE="_autoai_resource_ownership"
 R2_NAMES={
   "staging":"p008-web-template-files-staging",
   "production":"p008-web-template-files-production",
@@ -37,9 +36,6 @@ def req(method,url,payload=None):
 
 def sqlq(v):
     return "'" + str(v).replace("'","''") + "'"
-
-def utcnow():
-    return datetime.now(timezone.utc).isoformat().replace("+00:00","Z")
 
 def d1_find(name):
     q=urllib.parse.urlencode({"name":name,"page":1,"per_page":10})
@@ -82,7 +78,7 @@ def provision_d1():
       created=True
     ok=d1_query(target["uuid"],"SELECT 1 AS ok;")
     if not ok or int(ok[0]["ok"])!=1: raise RuntimeError("P008 D1 read check failed")
-    now=utcnow()
+    now=datetime.now(timezone.utc).isoformat().replace("+00:00","Z")
     sql="\n".join([
       "INSERT INTO projects (project_id,project_name,status,created_at,updated_at) "
       f"VALUES ({sqlq(PROJECT_ID)},{sqlq(PROJECT_NAME)},'active',{sqlq(now)},{sqlq(now)}) "
@@ -104,64 +100,6 @@ def provision_d1():
     return {"database_name":D1_NAME,"database_uuid":target["uuid"],"created":created,
             "catalog_registered":True,"schema_version":int(verify[0]["schema_version"])}
 
-def ensure_ownership_table(d1_uuid):
-    d1_query(d1_uuid,f"""
-CREATE TABLE IF NOT EXISTS {OWNERSHIP_TABLE} (
-  resource_type TEXT NOT NULL,
-  environment TEXT NOT NULL,
-  project_id TEXT NOT NULL,
-  resource_name TEXT NOT NULL,
-  status TEXT NOT NULL CHECK(status IN ('reserved','active')),
-  created_at TEXT NOT NULL,
-  updated_at TEXT NOT NULL,
-  PRIMARY KEY(resource_type, environment)
-);""".strip())
-
-def ownership_get(d1_uuid,resource_type,environment):
-    rows=d1_query(d1_uuid,
-      f"SELECT resource_type,environment,project_id,resource_name,status,created_at,updated_at "
-      f"FROM {OWNERSHIP_TABLE} WHERE resource_type={sqlq(resource_type)} AND environment={sqlq(environment)};")
-    if len(rows)>1:
-      raise RuntimeError(f"multiple ownership rows: {resource_type}/{environment}")
-    return rows[0] if rows else None
-
-def validate_owner(row,environment,name):
-    if not row:
-      return
-    if row.get("project_id")!=PROJECT_ID or row.get("resource_name")!=name:
-      raise RuntimeError(f"ownership drift for R2 {environment}: expected {PROJECT_ID}/{name}, got {row}")
-    if row.get("status") not in ("reserved","active"):
-      raise RuntimeError(f"invalid ownership status for R2 {environment}: {row.get('status')}")
-
-def ownership_reserve(d1_uuid,environment,name):
-    current=ownership_get(d1_uuid,"r2",environment)
-    if current:
-      validate_owner(current,environment,name)
-      return current
-    now=utcnow()
-    d1_query(d1_uuid,
-      f"INSERT INTO {OWNERSHIP_TABLE} "
-      "(resource_type,environment,project_id,resource_name,status,created_at,updated_at) "
-      f"VALUES ('r2',{sqlq(environment)},{sqlq(PROJECT_ID)},{sqlq(name)},'reserved',{sqlq(now)},{sqlq(now)}) "
-      "ON CONFLICT(resource_type,environment) DO NOTHING;")
-    current=ownership_get(d1_uuid,"r2",environment)
-    if not current:
-      raise RuntimeError(f"failed to persist R2 ownership reservation: {environment}/{name}")
-    validate_owner(current,environment,name)
-    return current
-
-def ownership_activate(d1_uuid,environment,name):
-    now=utcnow()
-    d1_query(d1_uuid,
-      f"UPDATE {OWNERSHIP_TABLE} SET status='active',updated_at={sqlq(now)} "
-      f"WHERE resource_type='r2' AND environment={sqlq(environment)} "
-      f"AND project_id={sqlq(PROJECT_ID)} AND resource_name={sqlq(name)};")
-    current=ownership_get(d1_uuid,"r2",environment)
-    if not current or current.get("status")!="active":
-      raise RuntimeError(f"failed to activate R2 ownership record: {environment}/{name}")
-    validate_owner(current,environment,name)
-    return current
-
 def r2_find(name):
     q=urllib.parse.urlencode({"name_contains":name,"order":"name","direction":"asc","per_page":1000})
     result=req("GET",f"{API}/accounts/{ACCOUNT}/r2/buckets?{q}") or {}
@@ -177,50 +115,78 @@ def verify_private(name):
     enabled=[x.get("domain") for x in (custom.get("domains") or []) if x.get("enabled")]
     if enabled: raise RuntimeError(f"custom public domain enabled for {name}: {enabled}")
 
-def cors_rules(origins):
-    return [{"id":"autoai-browser-object-access","allowed":{
+def ownership_rule_id(environment):
+    return f"autoai-{PROJECT_ID.lower()}-{environment}-owned-v1"
+
+def cors_rules(environment,origins):
+    return [{"id":ownership_rule_id(environment),"allowed":{
       "origins":origins,
       "methods":["GET","HEAD","PUT"],
       "headers":["Content-Type","If-Match","If-None-Match","x-amz-content-sha256","x-amz-checksum-sha256"]
     },"exposeHeaders":["ETag"],"maxAgeSeconds":3600}]
 
-def provision_r2(d1_uuid):
-    ensure_ownership_table(d1_uuid)
+def get_cors(name):
+    safe=urllib.parse.quote(name,safe="")
+    return req("GET",f"{API}/accounts/{ACCOUNT}/r2/buckets/{safe}/cors") or {}
+
+def has_ownership_marker(name,environment):
+    expected=ownership_rule_id(environment)
+    rules=get_cors(name).get("rules") or []
+    matches=[x for x in rules if x.get("id")==expected]
+    if len(matches)>1:
+      raise RuntimeError(f"duplicate P008 R2 ownership marker: {name}")
+    return len(matches)==1
+
+def put_managed_cors(name,environment):
+    safe=urllib.parse.quote(name,safe="")
+    rules=cors_rules(environment,ORIGINS[environment])
+    req("PUT",f"{API}/accounts/{ACCOUNT}/r2/buckets/{safe}/cors",{"rules":rules})
+    if not has_ownership_marker(name,environment):
+      raise RuntimeError(f"R2 ownership marker verification failed: {name}")
+
+def rollback_new_bucket(name):
+    safe=urllib.parse.quote(name,safe="")
+    req("DELETE",f"{API}/accounts/{ACCOUNT}/r2/buckets/{safe}")
+
+def create_owned_bucket(name,environment):
+    created=req("POST",f"{API}/accounts/{ACCOUNT}/r2/buckets",{
+      "name":name,"locationHint":"apac","storageClass":"Standard"
+    })
+    if not created or created.get("name")!=name:
+      raise RuntimeError(f"R2 create response mismatch: {name}")
+    try:
+      put_managed_cors(name,environment)
+    except Exception as marker_error:
+      try:
+        rollback_new_bucket(name)
+      except Exception as rollback_error:
+        raise RuntimeError(
+          f"R2 bucket created but ownership marker failed and rollback also failed: {name}; "
+          f"marker={marker_error}; rollback={rollback_error}"
+        ) from marker_error
+      raise RuntimeError(
+        f"R2 bucket ownership marker failed; newly created empty bucket rolled back: {name}; "
+        f"marker={marker_error}"
+      ) from marker_error
+    return created
+
+def provision_r2():
     out={}
     for env,name in R2_NAMES.items():
       existing=r2_find(name)
-      owner=ownership_get(d1_uuid,"r2",env)
-      validate_owner(owner,env,name)
-
-      if existing and not owner:
-        raise RuntimeError(f"R2 bucket exists without P008 ownership record: {name}")
-
-      if not owner:
-        if existing:
-          raise RuntimeError(f"R2 ownership state inconsistent: {name}")
-        owner=ownership_reserve(d1_uuid,env,name)
-
       created=False
-      if not existing:
-        if owner.get("status")=="active":
-          raise RuntimeError(f"owned R2 bucket is missing; refusing silent recreation: {name}")
-        existing=req("POST",f"{API}/accounts/{ACCOUNT}/r2/buckets",{
-          "name":name,"locationHint":"apac","storageClass":"Standard"
-        })
-        if not existing or existing.get("name")!=name:
-          raise RuntimeError(f"R2 create response mismatch: {name}")
+      if existing:
+        if not has_ownership_marker(name,env):
+          raise RuntimeError(f"R2 bucket exists without P008 ownership marker: {name}")
+      else:
+        existing=create_owned_bucket(name,env)
         created=True
 
       verify_private(name)
-      safe=urllib.parse.quote(name,safe="")
-      rules=cors_rules(ORIGINS[env])
-      req("PUT",f"{API}/accounts/{ACCOUNT}/r2/buckets/{safe}/cors",{"rules":rules})
-      actual=req("GET",f"{API}/accounts/{ACCOUNT}/r2/buckets/{safe}/cors") or {}
-      if not actual.get("rules"): raise RuntimeError(f"R2 CORS verification failed: {name}")
-      owner=ownership_activate(d1_uuid,env,name)
+      put_managed_cors(name,env)
       out[env]={"bucket_name":name,"created":created,"private_verified":True,
                 "cors_verified":True,"allowed_origins":ORIGINS[env],
-                "ownership_status":owner["status"]}
+                "ownership_marker":ownership_rule_id(env)}
     return out
 
 def main():
@@ -229,7 +195,7 @@ def main():
       "project_id":PROJECT_ID,
       "system_name":PROJECT_NAME,
       "d1":d1,
-      "r2":provision_r2(d1["database_uuid"]),
+      "r2":provision_r2(),
       "destructive_operations":False,
       "production_worker_deployed":False,
     }
