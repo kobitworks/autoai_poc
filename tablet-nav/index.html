@@ -198,6 +198,12 @@ function onPosition(p){
   setStatus('GPS受信中：精度 約'+acc+'m'+(acc>60?'（GPS精度低下）':'')+(followMode?' ・ 地図追従中':' ・ 地図追従停止'));
 }
 function startGps(){
+  if(document.visibilityState!=='visible'){
+    stopGpsWatch();
+    clearMotion('一時停止');
+    setStatus('画面非表示のためGPS測位を開始しません。');
+    return;
+  }
   if(!navigator.geolocation){clearMotion('未対応');setStatus('このブラウザでは位置情報を利用できません。');return}
   stopGpsWatch();
   const generation=gpsGeneration;
