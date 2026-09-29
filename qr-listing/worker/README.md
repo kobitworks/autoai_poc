@@ -30,3 +30,7 @@ P016共通Worker runtimeの `handler({db,input,principal,requestId})` 契約に�
 5. R2はQR-013でstaging/production bucketが利用可能になってから接続。
 
 QR-018ではCloudflare設定変更、Worker deploy、D1/R2書込、permission登録、本番データ投入を行いません。
+
+## CI
+
+`P013 Worker Operations Test` で Node 22 の syntax check、project-scope operation単体テスト、deploy境界guardを実行する。
