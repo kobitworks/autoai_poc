@@ -77,7 +77,7 @@ const map=L.map('map',{zoomControl:true}).setView([36.2,138.2],6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
 
 let current=null,currentMarker=null,accuracyCircle=null,destMarker=null,routeLine=null,watchId=null,firstFix=true;
-let followMode=true,lastFix=null;
+let followMode=true,lastFix=null,gpsFault=false;
 function setStatus(s){statusEl.textContent=s}
 
 function toRad(v){return v*Math.PI/180}
@@ -156,6 +156,12 @@ function updateMotion(c,timestamp){
   lastFix=now;
 }
 function gpsError(e){
+  gpsFault=true;
+  lastFix=null;
+  if(e&&e.code===1&&watchId!==null){
+    navigator.geolocation.clearWatch(watchId);
+    watchId=null;
+  }
   const msg=e&&e.code===1?'位置情報が拒否されています。ブラウザ設定でこのサイトの位置情報を「許可」にしてください。':
             e&&e.code===2?'現在地を取得できません。GPS/Wi-Fi/モバイル通信を確認してください。':
             e&&e.code===3?'GPS取得がタイムアウトしました。屋外で「現在地へ」を押してください。':
@@ -164,6 +170,7 @@ function gpsError(e){
   setStatus(msg);
 }
 function onPosition(p){
+  gpsFault=false;
   const c=p.coords;
   current=[c.latitude,c.longitude];
   const acc=Math.round(c.accuracy||0);
@@ -197,8 +204,12 @@ function startGps(){
 }
 function recenter(){
   followMode=true;
-  if(current){map.setView(current,16);setStatus('現在地を中心に戻しました。地図追従を再開します。')}
-  else startGps();
+  if(current) map.setView(current,16);
+  if(!current||gpsFault||watchId===null){
+    startGps();
+    return;
+  }
+  setStatus('現在地を中心に戻しました。地図追従を再開します。');
 }
 
 async function searchDest(){
