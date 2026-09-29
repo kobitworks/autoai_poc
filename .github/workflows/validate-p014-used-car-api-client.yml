@@ -7,6 +7,9 @@ on:
     paths:
       - "used-car/api-client.js"
       - "used-car/api-client.test.cjs"
+      - "used-car/data-adapter.js"
+      - "used-car/data-adapter.test.cjs"
+      - "used-car/index.html"
       - ".github/workflows/validate-p014-used-car-api-client.yml"
   pull_request:
     branches:
@@ -15,6 +18,9 @@ on:
     paths:
       - "used-car/api-client.js"
       - "used-car/api-client.test.cjs"
+      - "used-car/data-adapter.js"
+      - "used-car/data-adapter.test.cjs"
+      - "used-car/index.html"
       - ".github/workflows/validate-p014-used-car-api-client.yml"
   workflow_dispatch:
 
@@ -42,5 +48,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ! grep -q "api-client.js" used-car/index.html
+          grep -q '<script src="./api-client.js"></script>' used-car/index.html
+          grep -q '<script src="./data-adapter.js"></script>' used-car/index.html
+          grep -q "UsedCarData.createAdapter({mode:'mock'})" used-car/index.html
           ! grep -q "https://.*workers.dev" used-car/index.html
