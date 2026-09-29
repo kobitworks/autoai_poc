@@ -132,6 +132,25 @@ test('API error payloadをstatus/code/requestIdへ写像する',async()=>{
   );
 });
 
+test('public queryとAccess commandのrouteを混同しない',async()=>{
+  const calls=[];
+  const client=createMonolinkApiClient({
+    baseUrl:'https://api.example.test',
+    fetchImpl:async(url,init)=>{calls.push({url,init});return okPayload();}
+  });
+  await client.publicQuery('monolink.public.item.resolve',{public_token:'abcdefghijklmnop'});
+  await client.command(
+    'monolink.lost.open',
+    {item_id:'i1',expected_state_version:1},
+    {idempotencyKey:'lost-open-0001'}
+  );
+  assert.equal(calls[0].url,'https://api.example.test/v1/public/queries/monolink.public.item.resolve');
+  assert.equal(calls[0].init.credentials,'omit');
+  assert.equal(calls[1].url,'https://api.example.test/v1/commands/monolink.lost.open');
+  assert.equal(calls[1].init.credentials,'include');
+  assert.equal(calls[1].init.headers['Idempotency-Key'],'lost-open-0001');
+});
+
 test('operation idにpath注入文字を許可しない',async()=>{
   let calls=0;
   const client=createMonolinkApiClient({
