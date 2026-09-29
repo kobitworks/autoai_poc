@@ -41,3 +41,18 @@ QR-014の権限登録は、registryやREADMEから手入力で転記せず、こ
 5. R2はQR-013でstaging/production bucketが利用可能になってから接続。
 
 QR-018ではCloudflare設定変更、Worker deploy、D1/R2書込、permission登録、本番データ投入を行いません。
+
+
+## R2 object key policy
+
+QR-021で `p013-object-key.mjs` を追加し、画像原本のobject key生成規約をコード正本化する。
+
+- 形式: `original/{yyyy}/{mm}/product-image/{image_id}/{object_id}-{safe_filename}`
+- keyへ商品名・ブランド・QRコード・住所・メール等を入れない
+- image_id / object_id はpath separatorや `..` を許可しない
+- filenameはNFKC正規化、制御文字とpathを拒否し、unsafe記号を縮約する
+- filenameはUTF-8 120 bytes以下へ拡張子を保持して縮約する
+- 同一入力からは同一keyを生成する
+- `validateOriginalObjectKey()` で生成済みkeyを再検証できる
+
+QR-021ではR2/D1への書込やWorker deployは行わない。QR-014/015で本helperを利用して実R2接続する。
