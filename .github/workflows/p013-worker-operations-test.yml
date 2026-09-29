@@ -1,0 +1,43 @@
+name: P013 Worker Operations Test
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "qr-listing/worker/**"
+      - ".github/workflows/p013-worker-operations-test.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Syntax check
+        run: |
+          node --check qr-listing/worker/p013-operations.mjs
+          node --check qr-listing/worker/p013-operations.test.mjs
+
+      - name: Run P013 operation tests
+        run: node qr-listing/worker/p013-operations.test.mjs
+
+      - name: Guard deployment boundary
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e qr-listing/worker/wrangler.toml
+          ! grep -R "CLOUDFLARE_API_TOKEN" qr-listing/worker
+          grep -q "additionalProperties: false" qr-listing/worker/p013-operations.mjs
+          grep -q "state_version=?" qr-listing/worker/p013-operations.mjs
