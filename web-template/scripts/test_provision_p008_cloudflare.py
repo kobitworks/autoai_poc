@@ -21,72 +21,57 @@ class OwnershipTests(unittest.TestCase):
             ORIGINS={"staging":["https://kobitworks.github.io"]},
         )
 
-    def test_existing_unowned_bucket_is_refused(self):
-        with self.single_env(),              mock.patch.object(m,"ensure_ownership_table"),              mock.patch.object(m,"r2_find",return_value={"name":"p008-test-bucket"}),              mock.patch.object(m,"ownership_get",return_value=None):
-            with self.assertRaisesRegex(RuntimeError,"without P008 ownership record"):
-                m.provision_r2("d1-test")
+    def test_existing_unmarked_bucket_is_refused(self):
+        with self.single_env(),              mock.patch.object(m,"r2_find",return_value={"name":"p008-test-bucket"}),              mock.patch.object(m,"has_ownership_marker",return_value=False):
+            with self.assertRaisesRegex(RuntimeError,"without P008 ownership marker"):
+                m.provision_r2()
 
-    def test_new_bucket_reserves_before_create_and_activates(self):
+    def test_new_bucket_gets_marker_before_normal_validation(self):
         events=[]
-        def reserve(*args):
-            events.append("reserve")
-            return {"project_id":"P008","resource_name":"p008-test-bucket","status":"reserved"}
+        def create(name,env):
+            events.append("create-owned")
+            return {"name":name}
+        with self.single_env(),              mock.patch.object(m,"r2_find",return_value=None),              mock.patch.object(m,"create_owned_bucket",side_effect=create),              mock.patch.object(m,"verify_private",side_effect=lambda name: events.append("private")),              mock.patch.object(m,"put_managed_cors",side_effect=lambda name,env: events.append("cors-refresh")):
+            out=m.provision_r2()
+        self.assertEqual(events[0],"create-owned")
+        self.assertIn("private",events)
+        self.assertTrue(out["staging"]["created"])
+        self.assertEqual(out["staging"]["ownership_marker"],"autoai-p008-staging-owned-v1")
+
+    def test_marked_existing_bucket_resumes_without_create(self):
+        with self.single_env(),              mock.patch.object(m,"r2_find",return_value={"name":"p008-test-bucket"}),              mock.patch.object(m,"has_ownership_marker",return_value=True),              mock.patch.object(m,"create_owned_bucket") as create,              mock.patch.object(m,"verify_private"),              mock.patch.object(m,"put_managed_cors"):
+            out=m.provision_r2()
+        create.assert_not_called()
+        self.assertFalse(out["staging"]["created"])
+
+    def test_marker_failure_rolls_back_new_empty_bucket(self):
+        events=[]
         def request(method,url,payload=None):
             if method=="POST" and url.endswith("/r2/buckets"):
                 events.append("create")
                 return {"name":"p008-test-bucket"}
-            if method=="PUT":
-                events.append("cors-put")
-                return {}
-            if method=="GET" and url.endswith("/cors"):
-                events.append("cors-get")
-                return {"rules":[{"id":"ok"}]}
             raise AssertionError((method,url))
-        def activate(*args):
-            events.append("activate")
-            return {"project_id":"P008","resource_name":"p008-test-bucket","status":"active"}
+        with mock.patch.object(m,"req",side_effect=request),              mock.patch.object(m,"put_managed_cors",side_effect=RuntimeError("marker failed")),              mock.patch.object(m,"rollback_new_bucket",side_effect=lambda name: events.append("rollback")):
+            with self.assertRaisesRegex(RuntimeError,"rolled back"):
+                m.create_owned_bucket("p008-test-bucket","staging")
+        self.assertEqual(events,["create","rollback"])
 
-        with self.single_env(),              mock.patch.object(m,"ensure_ownership_table"),              mock.patch.object(m,"r2_find",return_value=None),              mock.patch.object(m,"ownership_get",return_value=None),              mock.patch.object(m,"ownership_reserve",side_effect=reserve),              mock.patch.object(m,"ownership_activate",side_effect=activate),              mock.patch.object(m,"verify_private",side_effect=lambda name: events.append("private")),              mock.patch.object(m,"req",side_effect=request):
-            out=m.provision_r2("d1-test")
-
-        self.assertLess(events.index("reserve"),events.index("create"))
-        self.assertEqual(events[-1],"activate")
-        self.assertEqual(out["staging"]["ownership_status"],"active")
-        self.assertTrue(out["staging"]["created"])
-
-    def test_reserved_existing_bucket_resumes_without_create(self):
-        owner={"project_id":"P008","resource_name":"p008-test-bucket","status":"reserved"}
-        calls=[]
+    def test_marker_and_rollback_failure_is_explicit(self):
         def request(method,url,payload=None):
-            calls.append(method)
-            if method=="PUT": return {}
-            if method=="GET" and url.endswith("/cors"): return {"rules":[{"id":"ok"}]}
+            if method=="POST" and url.endswith("/r2/buckets"):
+                return {"name":"p008-test-bucket"}
             raise AssertionError((method,url))
-        with self.single_env(),              mock.patch.object(m,"ensure_ownership_table"),              mock.patch.object(m,"r2_find",return_value={"name":"p008-test-bucket"}),              mock.patch.object(m,"ownership_get",return_value=owner),              mock.patch.object(m,"ownership_reserve") as reserve,              mock.patch.object(m,"ownership_activate",return_value={**owner,"status":"active"}),              mock.patch.object(m,"verify_private"),              mock.patch.object(m,"req",side_effect=request):
-            out=m.provision_r2("d1-test")
-        reserve.assert_not_called()
-        self.assertNotIn("POST",calls)
-        self.assertFalse(out["staging"]["created"])
+        with mock.patch.object(m,"req",side_effect=request),              mock.patch.object(m,"put_managed_cors",side_effect=RuntimeError("marker failed")),              mock.patch.object(m,"rollback_new_bucket",side_effect=RuntimeError("delete failed")):
+            with self.assertRaisesRegex(RuntimeError,"rollback also failed"):
+                m.create_owned_bucket("p008-test-bucket","staging")
 
-    def test_active_missing_bucket_is_not_silently_recreated(self):
-        owner={"project_id":"P008","resource_name":"p008-test-bucket","status":"active"}
-        with self.single_env(),              mock.patch.object(m,"ensure_ownership_table"),              mock.patch.object(m,"r2_find",return_value=None),              mock.patch.object(m,"ownership_get",return_value=owner):
-            with self.assertRaisesRegex(RuntimeError,"refusing silent recreation"):
-                m.provision_r2("d1-test")
-
-    def test_owner_identity_mismatch_is_refused(self):
-        owner={"project_id":"OTHER","resource_name":"p008-test-bucket","status":"reserved"}
-        with self.assertRaisesRegex(RuntimeError,"ownership drift"):
-            m.validate_owner(owner,"staging","p008-test-bucket")
-
-    def test_reservation_is_persisted_as_reserved_state(self):
-        row={"project_id":"P008","resource_name":"p008-test-bucket","status":"reserved"}
-        with mock.patch.object(m,"ownership_get",side_effect=[None,row]),              mock.patch.object(m,"d1_query",return_value=[]) as query:
-            got=m.ownership_reserve("d1-test","staging","p008-test-bucket")
-        self.assertEqual(got["status"],"reserved")
-        sql=query.call_args.args[1]
-        self.assertIn("INSERT INTO _autoai_resource_ownership",sql)
-        self.assertIn("'reserved'",sql)
+    def test_ownership_marker_is_project_and_environment_specific(self):
+        self.assertEqual(m.ownership_rule_id("staging"),"autoai-p008-staging-owned-v1")
+        self.assertEqual(m.ownership_rule_id("production"),"autoai-p008-production-owned-v1")
+        staging=m.cors_rules("staging",["https://kobitworks.github.io"])
+        production=m.cors_rules("production",["https://kobitworks.github.io"])
+        self.assertNotEqual(staging[0]["id"],production[0]["id"])
+        self.assertEqual(staging[0]["allowed"]["methods"],["GET","HEAD","PUT"])
 
 if __name__=="__main__":
     unittest.main()
