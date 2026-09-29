@@ -6,15 +6,17 @@ P016「DB管理基盤」の標準に従う、モノリンクの業務D1設計で
 - Migration正本: `monolink/db/migrations/`
 - 初期Migration: `0001_initial_schema.sql`
 - DB変更は既存Migrationを編集せず、`0002_...` 以降を追加する
-- stagingへ先に適用・検証し、成功後にproductionへ同一Migrationを適用する
-- D1の作成・P016管理台帳登録はMONO-013でDBM-004標準Workflowを使用する
-- Migration適用とWorker API接続はMONO-014で実施する
+- 開発・Migration検証はローカルSQLite / CIを先行し、常設staging D1は使用しない
+- Cloudflare上の業務D1はproduction単一DBとし、D1の作成・P016管理台帳登録はP016標準Workflowを使用する
+- production D1へMigrationを適用する前にGitHub正本・schema version・復元可能性を確認する
+- Migration適用とWorker API接続はP016共通標準に従い、実顧客データ・本番個人情報の投入や本番公開は別途人間確認とする
 
 ## P016標準との整合
-- 1システムにつきstaging / productionの2環境
+- 1システムにつきCloudflare D1はproductionの1DBのみを標準とし、新規staging D1は作成しない
+- 開発・Migration検証はローカルSQLite / CI / 必要に応じた一時テスト環境で行い、常設staging D1を前提にしない
 - GitHub上のMigrationをDB変更履歴の正本とする
 - GitHub Pages等の静的フロントエンドからD1へ直接接続しない
-- P016共通Worker APIを1プロジェクト×1環境で展開する
+- P016共通Worker APIはP005 production D1へ固定bindingし、environmentを保持する場合はproduction固定とする
 - Workerからrequestでproject / environment / databaseを自由選択させない
 - prepared statement + bind、default-deny認可、監査、CORS、Rate Limit、command冪等性を使用する
 - Cloudflare管理Secretをブラウザへ配布しない
@@ -96,9 +98,26 @@ OFFERED中はcurrent_manager_user_id、contact_route_user_idを贈与元のま�
 ## R2
 MONO-012時点のコア要件では写真・PDF等のバイナリ保存は必須ではないためR2は作成しない。今後、物品写真・証明書類などが要件化された場合のみ、P016 R2標準に従う追加Migration/タスクでメタデータ連携を追加する。
 
-## MONO-013への引継ぎ
+## 現行Cloudflare / P016状態
 - project_id: `P005`
-- system_name: `Monolink` を候補とする
-- DBM-004 `provision-project-databases.yml` を利用
-- 新規D1はschema version 0で作成
-- MONO-014で `0001_initial_schema.sql` をstagingに適用・smoke test後、同一ファイルをproductionへ適用する
+- system_name: `モノリンク`
+- production D1: `p005-sys-c2e7efaf-production`
+- database_uuid: `40e51209-752a-46f9-bd0e-472027694b93`
+- schema_version: `1`
+- 適用済みMigration: `0001_initial_schema.sql`
+- legacy staging D1: 作成していない
+- P016管理台帳: production D1を登録済み
+- P005業務operation: P016共通Worker runtimeへproject-scope実装済み（MONO-017）
+- Cloudflare Access issuer / AUD: 未確定
+- P005 production Worker deploy: 未実施
+- business permissions登録: 未実施
+- MONO-014: Access情報確定待ちのため要確認
+- MONO-015: MONO-014依存のため未着手
+
+## 実行順序
+1. schema / Migration変更はGitHub正本へ追加し、ローカルSQLite / CIで検証する
+2. production D1変更前にschema versionと必要なバックアップ・復元点を確認する
+3. P016標準経路でproduction D1へMigrationを適用し、P016管理台帳を更新する
+4. 共通Worker APIをproduction D1へ固定bindingし、認証・default-deny認可・監査・CORS・Rate Limit・command冪等性を維持する
+5. GitHub Pages PoCはWorker API経由で接続し、D1へ直接接続しない
+6. 実顧客データ、本番個人情報、本番公開、課金を伴う変更はproject_rule / 上位ルールに従って人間確認する
