@@ -291,6 +291,7 @@ bucket名はP016 Workflowが実際に導出した値を正本とし、手作業�
 - QRコード、商品名、ブランド、住所、メール等をkeyへ入れない。
 - object_idをR2識別の正本にする。
 - safe_filenameは表示補助。
+- 生成・検証のコード正本は `qr-listing/worker/p013-object-key.mjs` とし、path traversal/制御文字/過長名をWorker入力境界で拒否・縮約する。
 - bucketは非公開。
 - 通常はWorker R2 bindingを使用する。
 - Browser直接転送が必要な場合のみWorkerが短期Presigned PUT/GETを発行する。
