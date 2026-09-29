@@ -41,3 +41,5 @@ QR-014の権限登録は、registryやREADMEから手入力で転記せず、こ
 5. R2はQR-013でstaging/production bucketが利用可能になってから接続。
 
 QR-018ではCloudflare設定変更、Worker deploy、D1/R2書込、permission登録、本番データ投入を行いません。
+
+<!-- QR-020 CI verification branch only; no production behavior change. -->
