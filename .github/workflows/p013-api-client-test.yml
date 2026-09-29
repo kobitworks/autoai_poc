@@ -1,0 +1,49 @@
+name: P013 API client contract tests
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "qr-listing/worker/p013-api-client.mjs"
+      - "qr-listing/worker/p013-api-client.test.mjs"
+      - ".github/workflows/p013-api-client-test.yml"
+  pull_request:
+    branches:
+      - develop
+      - main
+    paths:
+      - "qr-listing/worker/p013-api-client.mjs"
+      - "qr-listing/worker/p013-api-client.test.mjs"
+      - ".github/workflows/p013-api-client-test.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Syntax check
+        run: node --check qr-listing/worker/p013-api-client.mjs
+
+      - name: Contract tests
+        run: node qr-listing/worker/p013-api-client.test.mjs
+
+      - name: Deploy and secret boundary guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          target=qr-listing/worker/p013-api-client.mjs
+          ! grep -E 'CLOUDFLARE_API_TOKEN|ACCESS_AUD|wrangler[[:space:]]+deploy|api\.cloudflare\.com' "$target"
+          grep -F 'X-AutoAI-Request' "$target"
+          grep -F 'credentials' "$target"
+          grep -F 'Idempotency-Key' "$target"
