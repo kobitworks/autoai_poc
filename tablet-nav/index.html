@@ -156,6 +156,7 @@ function updateMotion(c,timestamp){
   lastFix=now;
 }
 function gpsError(e){
+  if(document.visibilityState!=='visible') return;
   gpsFault=true;
   lastFix=null;
   if(e&&e.code===1&&watchId!==null){
@@ -170,6 +171,7 @@ function gpsError(e){
   setStatus(msg);
 }
 function onPosition(p){
+  if(document.visibilityState!=='visible') return;
   gpsFault=false;
   const c=p.coords;
   current=[c.latitude,c.longitude];
@@ -266,8 +268,26 @@ document.getElementById('voice').onclick=()=>{
   r.onerror=()=>setStatus('音声入力に失敗しました。');
   r.start();
 };
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&watchId===null)startGps()});
-window.addEventListener('beforeunload',()=>{if(watchId!==null)navigator.geolocation.clearWatch(watchId)});
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden'){
+    if(watchId!==null){
+      navigator.geolocation.clearWatch(watchId);
+      watchId=null;
+    }
+    lastFix=null;
+    clearMotion('一時停止');
+    setStatus('画面非表示のためGPS測位を一時停止しました。');
+    return;
+  }
+  startGps();
+});
+window.addEventListener('beforeunload',()=>{
+  if(watchId!==null){
+    navigator.geolocation.clearWatch(watchId);
+    watchId=null;
+  }
+  lastFix=null;
+});
 startGps();
 </script>
 </body>
