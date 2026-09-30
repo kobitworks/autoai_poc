@@ -82,3 +82,4 @@ print(json.dumps({
     "provision_workflow_contract": "ok",
     "r2_ownership_safety_contract": "ok",
 }, ensure_ascii=False, indent=2))
+# WEB-015 PR-only static CI smoke marker; validation logic unchanged.
