@@ -38,6 +38,8 @@ jobs:
           node --check qr-listing/worker/p013-operation-manifest.test.mjs
           node --check qr-listing/worker/p013-object-key.mjs
           node --check qr-listing/worker/p013-object-key.test.mjs
+          node --check qr-listing/worker/p013-upload-contract.mjs
+          node --check qr-listing/worker/p013-upload-contract.test.mjs
 
       - name: Run P013 operation tests
         run: node qr-listing/worker/p013-operations.test.mjs
@@ -47,6 +49,9 @@ jobs:
 
       - name: Run P013 object key tests
         run: node qr-listing/worker/p013-object-key.test.mjs
+
+      - name: Run P013 upload contract tests
+        run: node qr-listing/worker/p013-upload-contract.test.mjs
 
       - name: Guard deployment boundary
         shell: bash
