@@ -56,3 +56,20 @@ QR-021で `p013-object-key.mjs` を追加し、画像原本のobject key生成�
 - `validateOriginalObjectKey()` で生成済みkeyを再検証できる
 
 QR-021ではR2/D1への書込やWorker deployは行わない。QR-014/015で本helperを利用して実R2接続する。
+
+
+## Image upload contract
+
+QR-022で `p013-upload-contract.mjs` を追加し、R2へ実際に接続する前の画像upload入力境界をコード正本化する。
+
+- 必須項目: `image_id`, `object_id`, `original_filename`, `content_type`, `content_length`, `sha256`, `object_key`
+- 未知フィールドと必須欠落を拒否する
+- 許可MIME: JPEG / PNG / WebP / HEIC / HEIF
+- 1画像のPoC上限: 25 MiB
+- SHA-256は64桁hexを必須とし、小文字へ正規化する
+- filenameはQR-021の `safeFilename()` を再利用し、path/control文字を拒否する
+- `object_key` はQR-021の検証を通したうえで、descriptorの `image_id` / `object_id` / 正規化filenameと一致する場合だけ受理する
+- upload先bucket、署名URL、R2 credential、Access AUD等は本contractへ含めない
+
+QR-022ではR2 bucket存在確認、Presigned URL発行、実upload、D1/R2書込、Worker deploy、permission登録を行わない。
+QR-014/015で実接続する際は、本contractをWorker入力境界として再利用し、保存完了時にsize/checksumを実R2結果と再照合する。
