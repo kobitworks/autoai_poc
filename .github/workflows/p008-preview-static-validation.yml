@@ -13,6 +13,18 @@ on:
       - "web-template/scripts/test_provision_p008_cloudflare.py"
       - ".github/workflows/p008-cloudflare-provision-preview.yml"
       - ".github/workflows/p008-preview-static-validation.yml"
+  pull_request:
+    branches:
+      - develop
+    paths:
+      - "web-template/wrangler.p008.template.jsonc"
+      - "web-template/src/worker.js"
+      - "web-template/scripts/validate_p008_preview_static.py"
+      - "web-template/scripts/test_preview_worker.mjs"
+      - "web-template/scripts/provision_p008_cloudflare.py"
+      - "web-template/scripts/test_provision_p008_cloudflare.py"
+      - ".github/workflows/p008-cloudflare-provision-preview.yml"
+      - ".github/workflows/p008-preview-static-validation.yml"
   workflow_dispatch:
 
 permissions:
