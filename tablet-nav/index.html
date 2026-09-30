@@ -77,7 +77,7 @@ const map=L.map('map',{zoomControl:true}).setView([36.2,138.2],6);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
 
 let current=null,currentMarker=null,accuracyCircle=null,destMarker=null,routeLine=null,watchId=null,firstFix=true;
-let followMode=true,lastFix=null,gpsFault=false,gpsGeneration=0,lastPositionTimestamp=null;
+let followMode=true,lastFix=null,gpsFault=false,gpsGeneration=0,lastPositionTimestamp=null,currentFixUsable=false;
 function setStatus(s){statusEl.textContent=s}
 
 function toRad(v){return v*Math.PI/180}
@@ -110,6 +110,7 @@ function clearMotion(reason='測位待ち'){
   headingDetailEl.textContent=reason;
 }
 function stopGpsWatch(){
+  currentFixUsable=false;
   gpsGeneration++;
   if(watchId!==null){
     navigator.geolocation.clearWatch(watchId);
@@ -171,6 +172,7 @@ function updateMotion(c,timestamp){
 function gpsError(e){
   if(document.visibilityState!=='visible') return;
   gpsFault=true;
+  currentFixUsable=false;
   lastFix=null;
   if(e&&e.code===1){
     stopGpsWatch();
@@ -188,6 +190,7 @@ function onPosition(p){
   if(lastPositionTimestamp!==null&&positionTimestamp<=lastPositionTimestamp) return;
   lastPositionTimestamp=positionTimestamp;
   gpsFault=false;
+  currentFixUsable=true;
   const c=p.coords;
   const accuracy=accuracyMeters(c);
   current=[c.latitude,c.longitude];
@@ -241,11 +244,11 @@ function startGps(){
 }
 function recenter(){
   followMode=true;
-  if(current) map.setView(current,16);
-  if(!current||gpsFault||watchId===null){
+  if(!current||!currentFixUsable||gpsFault||watchId===null){
     startGps();
     return;
   }
+  map.setView(current,16);
   setStatus('現在地を中心に戻しました。地図追従を再開します。');
 }
 
@@ -261,8 +264,8 @@ async function searchDest(){
     else destMarker=L.marker(d).addTo(map).bindPopup(data[0].display_name);
     destMarker.openPopup();
     destEl.textContent=data[0].display_name;
-    if(current) await drawRoute(current,d);
-    else {map.setView(d,15);setStatus('目的地を表示しました。GPS取得後に経路表示できます。')}
+    if(current&&currentFixUsable) await drawRoute(current,d);
+    else {map.setView(d,15);setStatus('目的地を表示しました。最新GPS取得後に経路表示できます。')}
   }catch(e){setStatus('検索に失敗しました。通信状態を確認してください。')}
 }
 async function drawRoute(a,b){
@@ -292,7 +295,8 @@ map.on('dragstart',()=>{
 map.on('click',async e=>{
   if(destMarker) destMarker.setLatLng(e.latlng); else destMarker=L.marker(e.latlng).addTo(map);
   destEl.textContent='地図で指定した地点';
-  if(current) await drawRoute(current,[e.latlng.lat,e.latlng.lng]);
+  if(current&&currentFixUsable) await drawRoute(current,[e.latlng.lat,e.latlng.lng]);
+  else setStatus('目的地を設定しました。最新GPS取得後に経路表示できます。');
 });
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 document.getElementById('voice').onclick=()=>{
