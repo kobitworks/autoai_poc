@@ -20,7 +20,7 @@ function securityHeaders(contentType = "text/html; charset=utf-8") {
   return {
     "content-type": contentType,
     "cache-control": "no-store",
-    "content-security-policy": "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
+    "content-security-policy": "default-src 'none'; style-src 'self' 'unsafe-inline' https://unpkg.com; script-src 'self' https://unpkg.com; img-src data: https://*.tile.openstreetmap.org; form-action 'self'; base-uri 'none'; frame-ancestors 'none'",
     "referrer-policy": "no-referrer",
     "x-content-type-options": "nosniff",
     "x-frame-options": "DENY",
@@ -172,12 +172,50 @@ function redirect(location, status = 302, cookies = []) {
   return new Response(null, { status, headers });
 }
 
+function renderMapScript() {
+  return `(() => {
+    const element = document.getElementById("map");
+    if (!element || typeof L === "undefined") return;
+
+    const latitude = Number(element.dataset.lat || "35.681236");
+    const longitude = Number(element.dataset.lng || "139.767125");
+    const zoom = Number(element.dataset.zoom || "13");
+    const map = L.map(element, { zoomControl: true }).setView([latitude, longitude], zoom);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(map);
+
+    L.marker([latitude, longitude])
+      .addTo(map)
+      .bindPopup("PoC初期表示地点");
+
+    window.addEventListener("resize", () => map.invalidateSize());
+  })();`;
+}
+
 function renderHtml(user, authConfigured) {
   const authPanel = !authConfigured
     ? `<section class="card warn"><h2>OAuth設定待ち</h2><p>GitHub OAuth App のClient ID / Client Secretを安全な実行環境へ設定するとログイン確認を開始できます。</p></section>`
     : user
       ? `<section class="card"><h2>ログイン済み</h2><p>GitHub: <strong>@${escapeHtml(user.login)}</strong></p><p class="muted">識別子: github:${escapeHtml(user.id)}</p><form method="post" action="/auth/logout"><button type="submit">ログアウト</button></form></section>`
       : `<section class="card"><h2>ソーシャルログイン</h2><p>GitHubアカウントでログインできます。このPoCはメールアドレスを要求・保存しません。</p><a class="button" href="/auth/login">GitHubでログイン</a></section>`;
+
+  const mapPanel = user
+    ? `<section class="card">
+        <h2>地図</h2>
+        <p>Leafletで表示するPoC地図です。初期地点は固定で、位置情報は取得・保存しません。</p>
+        <div id="map" role="region" aria-label="Leaflet地図" data-lat="35.681236" data-lng="139.767125" data-zoom="13"></div>
+        <p class="muted">地図データ: © OpenStreetMap contributors。ドラッグで移動、＋/－またはホイールでズームできます。</p>
+      </section>`
+    : "";
+
+  const leafletAssets = user
+    ? `<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynxR3eX5QJvzm4ISwqfn3QtpHfA=" crossorigin="">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="" defer></script>
+  <script src="/map.js" defer></script>`
+    : "";
 
   return `<!doctype html>
 <html lang="ja">
@@ -186,6 +224,7 @@ function renderHtml(user, authConfigured) {
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
   <title>P008 Social Login Preview</title>
+  ${leafletAssets}
   <style>
     body{font-family:system-ui,sans-serif;margin:0;background:#f6f7f9;color:#1f2937}
     main{max-width:760px;margin:48px auto;padding:28px;background:#fff;border:1px solid #e5e7eb;border-radius:16px}
@@ -194,6 +233,9 @@ function renderHtml(user, authConfigured) {
     .muted{color:#6b7280}
     .button,button{display:inline-block;border:0;border-radius:8px;padding:10px 16px;background:#111827;color:#fff;text-decoration:none;font:inherit;cursor:pointer}
     code{background:#f3f4f6;padding:.15em .35em;border-radius:4px}
+    #map{height:420px;min-height:280px;border:1px solid #d1d5db;border-radius:12px;overflow:hidden}
+    .leaflet-container{font:inherit}
+    @media (max-width:640px){main{margin:16px;padding:20px}#map{height:55vh;min-height:300px}}
   </style>
 </head>
 <body>
@@ -201,6 +243,7 @@ function renderHtml(user, authConfigured) {
     <h1>P008 Free Preview</h1>
     <p>Cloudflare Workers Preview + D1 の完全無料PoCです。R2は使用しません。</p>
     ${authPanel}
+    ${mapPanel}
     <p class="muted">認証状態は署名付きHttpOnly Cookieで保持し、ユーザー情報をD1へ保存しません。</p>
   </main>
 </body>
@@ -328,6 +371,11 @@ export default {
           error: error instanceof Error ? error.message : "unknown error",
         }, 500);
       }
+    }
+
+    if (url.pathname === "/map.js") {
+      if (request.method !== "GET") return json({ ok: false, error: "method_not_allowed" }, 405);
+      return new Response(renderMapScript(), { headers: securityHeaders("application/javascript; charset=utf-8") });
     }
 
     if (url.pathname === "/auth/login") return startGithubLogin(request, env);
