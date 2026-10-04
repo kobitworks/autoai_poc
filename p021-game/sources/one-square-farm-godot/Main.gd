@@ -66,7 +66,7 @@ func _build_ui() -> void:
     margin.add_child(root)
 
     var title := Label.new()
-    title.text = "GAME-G001  |  1マス農園"
+    title.text = "GAME-G001  |  1マス農園  |  修正版 v2"
     title.add_theme_font_size_override("font_size",30)
     root.add_child(title)
 
