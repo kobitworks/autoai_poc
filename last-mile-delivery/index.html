@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>地域配送コントロール PoC</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17212b;background:#f3f6f8}
+*{box-sizing:border-box} body{margin:0}.app{max-width:1180px;margin:auto;padding:18px}
+header{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+h1{font-size:22px;margin:0}.sub{color:#60707d;font-size:13px}.tabs,.role{display:flex;gap:8px;flex-wrap:wrap}
+button,select{border:1px solid #d5dde3;background:white;border-radius:10px;padding:10px 12px;cursor:pointer}
+button.primary{background:#0aa6a6;color:white;border-color:#0aa6a6}.active{outline:2px solid #00a99d}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}
+.card{background:white;border:1px solid #e0e6ea;border-radius:14px;padding:14px;box-shadow:0 2px 7px #00000008}
+.kpi b{display:block;font-size:26px}.layout{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+.list{display:grid;gap:10px}.shipment{border:1px solid #dce4e8;border-radius:12px;padding:12px}
+.shipment h3{margin:0 0 6px;font-size:16px}.meta{font-size:12px;color:#667782}.pill{display:inline-block;border-radius:999px;padding:3px 8px;background:#e8f7f5;font-size:12px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.privacy{background:#fff7df;border-left:4px solid #e3aa26;padding:9px;border-radius:8px;margin-top:8px;font-size:13px}
+#map{height:390px;border-radius:12px}.audit{max-height:240px;overflow:auto;font-size:12px}.hidden{display:none}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:8px;border-bottom:1px solid #edf0f2;text-align:left}
+@media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}#map{height:300px}}
+</style>
+</head>
+<body><div class="app">
+<header><div><h1>地域配送コントロール PoC</h1><div class="sub">P011 / サンプルデータのみ・実個人情報なし・DB未接続</div></div>
+<div class="role"><button id="managerBtn" class="active">配送管理者</button><button id="driverBtn">ドライバー</button></div></header>
+<div class="grid">
+<div class="card kpi"><span>未割当</span><b id="kUnassigned">0</b></div>
+<div class="card kpi"><span>配送中</span><b id="kActive">0</b></div>
+<div class="card kpi"><span>完了</span><b id="kDone">0</b></div>
+<div class="card kpi"><span>アクセス失効</span><b id="kRevoked">0</b></div>
+</div>
+<div class="layout">
+<section class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="font-size:18px">配送案件</h2><button id="resetBtn">サンプル初期化</button></div><div id="shipments" class="list"></div></section>
+<section class="card"><h2 style="font-size:18px">配送順・地図</h2><div id="map"></div><p class="sub">位置はPoC用の疑似現在地です。GPS生軌跡は保存しません。</p></section>
+</div>
+<section class="card" style="margin-top:14px"><h2 style="font-size:18px">監査ログ（個人情報を複製しない）</h2><div id="audit" class="audit"></div></section>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const seed=[
+{id:'SHP-001',label:'通常配送',area:'北橘エリア',addr:'北橘町 サンプル1-2-3',hint:'青い門の建物',driver:'D-01',status:'assigned',seq:1,lat:36.48,lng:139.05},
+{id:'SHP-002',label:'担当変更',area:'赤城エリア',addr:'赤城町 サンプル4-5-6',hint:'玄関前置配不可',driver:'',status:'requested',seq:2,lat:36.51,lng:139.04},
+{id:'SHP-003',label:'不在再配達',area:'渋川エリア',addr:'渋川 サンプル7-8-9',hint:'不在時は持戻り',driver:'D-01',status:'absent',seq:3,lat:36.49,lng:139.00},
+{id:'SHP-004',label:'Break-glass検証',area:'伊香保エリア',addr:'伊香保町 サンプル10-11',hint:'緊急時のみ詳細開示',driver:'D-02',status:'delivered',seq:4,lat:36.50,lng:138.92}
+];
+let role='manager', data=structuredClone(seed), audit=[];
+const statusName={requested:'依頼受付',assigned:'割当済',picked_up:'集荷済',en_route:'配送中',arrived:'到着',delivered:'配達完了',absent:'不在',reassignment_pending:'再割当待ち',canceled:'キャンセル'};
+const map=L.map('map').setView([36.49,139.02],11);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
+let marks=[];
+function canView(s){return role==='manager'||(s.driver==='D-01'&&!['delivered','canceled'].includes(s.status))}
+function addAudit(action,id){audit.unshift({at:new Date().toLocaleTimeString('ja-JP'),action,id,role});renderAudit()}
+function transition(s,next){s.status=next;if(['delivered','canceled'].includes(next)) addAudit('配送先アクセス失効',s.id);else addAudit('状態変更: '+statusName[next],s.id);render()}
+function assign(s){s.driver='D-01';s.status='assigned';addAudit('D-01へ割当',s.id);render()}
+function render(){
+document.getElementById('kUnassigned').textContent=data.filter(x=>!x.driver&&!['delivered','canceled'].includes(x.status)).length;
+document.getElementById('kActive').textContent=data.filter(x=>['assigned','picked_up','en_route','arrived','absent'].includes(x.status)).length;
+document.getElementById('kDone').textContent=data.filter(x=>x.status==='delivered').length;
+document.getElementById('kRevoked').textContent=data.filter(x=>['delivered','canceled'].includes(x.status)).length;
+const list=role==='driver'?data.filter(x=>x.driver==='D-01'):data;
+shipments.innerHTML='';
+list.sort((a,b)=>a.seq-b.seq).forEach(s=>{
+ const d=document.createElement('div');d.className='shipment';
+ const visible=canView(s);
+ d.innerHTML='<h3>'+s.seq+'. '+s.id+' / '+s.label+'</h3><span class="pill">'+statusName[s.status]+'</span> <span class="meta">担当 '+(s.driver||'未割当')+'</span>'+
+ '<div class="privacy">'+(visible?'配送先: '+s.addr+'<br>補足: '+s.hint:'配送先詳細: アクセス不可（担当外または完了済み）')+'</div><div class="actions"></div>';
+ const a=d.querySelector('.actions');
+ if(role==='manager'&&!s.driver&&!['delivered','canceled'].includes(s.status)){const b=document.createElement('button');b.textContent='D-01へ割当';b.onclick=()=>assign(s);a.appendChild(b)}
+ if(role==='driver'&&s.driver==='D-01'){
+   const flow={assigned:'picked_up',picked_up:'en_route',en_route:'arrived',arrived:'delivered',absent:'en_route'};
+   if(flow[s.status]){const b=document.createElement('button');b.className='primary';b.textContent=statusName[flow[s.status]]+'へ';b.onclick=()=>transition(s,flow[s.status]);a.appendChild(b)}
+   if(!['delivered','canceled'].includes(s.status)){const b=document.createElement('button');b.textContent='不在';b.onclick=()=>transition(s,'absent');a.appendChild(b)}
+ }
+ shipments.appendChild(d)
+});
+marks.forEach(m=>map.removeLayer(m));marks=[];
+data.forEach(s=>{const m=L.marker([s.lat,s.lng]).addTo(map).bindPopup(s.id+' / '+statusName[s.status]);marks.push(m)});
+const me=L.circleMarker([36.485,139.025],{radius:8}).addTo(map).bindPopup('D-01 疑似現在地');marks.push(me);
+}
+function renderAudit(){auditEl=document.getElementById('audit');auditEl.innerHTML=audit.length?'<table><tr><th>時刻</th><th>案件</th><th>操作</th><th>役割</th></tr>'+audit.map(x=>'<tr><td>'+x.at+'</td><td>'+x.id+'</td><td>'+x.action+'</td><td>'+x.role+'</td></tr>').join('')+'</table>':'<p class="sub">操作すると監査イベントが表示されます。</p>'}
+managerBtn.onclick=()=>{role='manager';managerBtn.classList.add('active');driverBtn.classList.remove('active');addAudit('役割切替','SYSTEM');render()}
+driverBtn.onclick=()=>{role='driver';driverBtn.classList.add('active');managerBtn.classList.remove('active');addAudit('役割切替','SYSTEM');render()}
+resetBtn.onclick=()=>{data=structuredClone(seed);audit=[];render();renderAudit()}
+render();renderAudit();
+</script></body></html>
