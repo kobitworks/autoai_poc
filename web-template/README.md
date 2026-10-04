@@ -30,6 +30,22 @@ PoC段階ではCloudflareのリソースを一律には作成しません。
 P008の現在の検証対象はWorkers Preview + D1です。R2 bindingやR2 APIは使用しません。
 本番化時に別のCloudflareサービスが必要になった場合は、費用・無料枠・停止条件を改めて確認し、人間承認後に構成します。
 
+## P008 GitHub OAuth
+WEB-004ではGitHub OAuthによるソーシャルログインを採用します。
+
+- OAuth AppのClient Secretはソースコード・Google Drive・Slackへ保存しない
+- OAuthのstateは短命・Secure・HttpOnly・SameSite=Lax Cookieで検証する
+- ログイン後はGitHubの数値IDとlogin名だけを署名付きSecure/HttpOnly Cookieへ保持する
+- メールアドレスのOAuth scopeは要求しない
+- ユーザー識別情報はD1へ保存しない
+- ログアウトはセッションCookieを失効させる
+- 未設定時は `/auth/login` がfail-closedで `503 auth_not_configured` を返す
+
+現在のPreview callback URL:
+`https://develop-p008-web-template.shinozaki-ed1.workers.dev/auth/callback`
+
+実ログイン検証を開始するには、GitHub OAuth Appを作成し、上記callback URLを設定したうえでClient ID / Client Secretを秘密情報管理へ登録する必要があります。秘密値をIssue、Drive、Slack、コミットへ記載しないでください。
+
 ## 原則
 - ソースコードの正本はGitHub
 - 秘密情報はコミットしない
