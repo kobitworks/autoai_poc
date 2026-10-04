@@ -7,12 +7,12 @@ GitHub正本はこの `used-car/db/` 配下とし、実D1を直接変更してMi
 
 - D1: **1システムにつき production 1個**。常設staging D1は新規作成しない。
 - Migration検証: SQLite/CI等で先に実施し、production D1への適用は後続タスクで行う。
-- R2: ファイル混在防止のため **staging / production の2bucket**。
-- Browser → D1直接接続は禁止。Worker API経由で業務操作する。
+- PoCファイル保存: **R2は使用しない**。車両写真・車検証・修理記録等のファイル本体は、モック、GitHub上の静的ファイル、LocalStorage / IndexedDB等のブラウザローカル保存で代替する。
+- Browser → D1直接接続は禁止。D1を利用する業務操作はWorker API経由とする。
 - Cloudflare API Token / S3 Secret等をブラウザやGitへ平文保存しない。
 - 破壊的Migration、実顧客データ投入、本番公開は人間確認対象。
 
-P016側の現行標準は develop ブランチの production単一D1 / R2 2bucket 方針を基準とする。CAR-009では実Cloudflareリソース作成は行わず、CAR-012以降へ引き継ぐ。
+P016側のD1標準は develop ブランチの production単一D1方針を基準とする。PoCの費用0円ルール（runner_rule.md v1.34.0 §29）を優先し、R2はPoCではProvisioning・binding・権限追加・subscription有効化を行わない。CAR-009時点のR2設計記録は将来の本番検討用の履歴として残し、PoC実装要件からは除外する。
 
 ## 2. 初期Migration
 
@@ -43,7 +43,7 @@ P016側の現行標準は develop ブランチの production単一D1 / R2 2bucke
 - メモ
 - ACTIVE / INACTIVE / DELETED
 
-電話番号や住所等のPIIはR2 object keyへ含めない。
+電話番号や住所等のPIIは外部ストレージ識別子やファイル名へ含めない。
 
 ### vehicles
 
@@ -149,9 +149,9 @@ P016側の現行標準は develop ブランチの production単一D1 / R2 2bucke
 
 ### storage_objects / storage_object_events
 
-P016 DBM-007のR2メタデータ標準を取り込む。
+CAR-009で将来の外部オブジェクトストレージ連携を見据えて定義したメタデータ領域。PoCではR2へ接続せず、これらのテーブルを「実ファイルがR2へ永続保存済み」という意味では使用しない。
 
-- bucket / object key
+- storage provider / object key等の将来連携用メタデータ
 - environment
 - entity type / entity id
 - media role
@@ -159,7 +159,7 @@ P016 DBM-007のR2メタデータ標準を取り込む。
 - status
 - upload/download/delete等の監査イベント
 
-R2 object keyを業務テーブルへ直接散在させず、`storage_objects.object_id` を参照する。
+PoCのファイル本体はモック・静的ファイル・LocalStorage / IndexedDB等で代替し、外部ストレージ連携が本番要件として承認された場合だけ、このメタデータ境界を再利用する。
 
 ### vehicle_documents
 
@@ -204,35 +204,26 @@ CAR-011のAI/OCRでは、抽出候補を即確定値にせず、人が確認し�
 - 整備: 車両+実施日、顧客+実施日、種別+実施日
 - 走行距離: 車両+記録日
 - 書類: 車両+種別+status、車検、整備
-- R2 metadata: entity、status、request_id
+- storage metadata（将来連携用）: entity、status、request_id
 
 検索ニーズが固まる前に過剰なindexを増やさない。
 
-## 6. R2オブジェクト設計
+## 6. PoCファイル保存設計（R2不使用）
 
-P016標準に従い、R2はstaging / productionを分離する。
+PoCではCloudflare R2を使用しない。
 
-想定bucket:
-- staging: P016 Provisioning Workflowが生成するP014用files-staging
-- production: P016 Provisioning Workflowが生成するP014用files-production
-
-bucket名はP016 Provisioning Workflowの導出値を正本とし、手作業で別名bucketを増やさない。
-
-標準object key:
-
-`{media_role}/{yyyy}/{mm}/vehicle/{vehicle_id}/{object_id}-{safe_filename}`
-
-例:
-- 車両写真: `original/2026/09/vehicle/VEH-.../{object_id}-front.jpg`
-- 車検証: `document/2026/09/vehicle/VEH-.../{object_id}-registration.jpg`
-- 修理記録: `document/2026/09/vehicle/VEH-.../{object_id}-repair-note.jpg`
+採用する無料代替:
+- 画面確認用のモックデータ / 静的ファイル
+- 端末内だけで保持できる LocalStorage / IndexedDB
+- GitHub Pagesで配布する検証用静的アセット（実顧客情報を含めない）
 
 ルール:
-- 氏名、住所、電話、メール、登録番号等のPII/識別情報をobject keyへ埋め込まない。
-- `object_id` を識別正本とし、filenameは表示補助。
-- browser DELETEは禁止。
-- bucketは非公開。
-- Browserから直接転送が必要な場合だけ、Workerが短期Presigned URLを発行する。
+- R2 subscriptionの有効化、bucket作成、R2 binding追加、R2用API Token権限追加を行わない。
+- PoC画面で選択した車両写真・車検証・修理記録は、実運用の永続保存済みデータとして扱わない。
+- 実顧客情報・個人情報をPoCのGitHub静的ファイルへ配置しない。
+- ブラウザローカル保存を使う場合も、PoC用の架空・検証データだけを対象とする。
+- 将来、本番でオブジェクトストレージが必要になった場合は、本番要件と費用を再評価し、ユーザーの明示承認後に別タスクとして設計する。
+- CAR-009で残したstorage_objects / vehicle_documents等のスキーマは、将来の保存方式差し替え口として保持するが、PoCでR2利用を意味しない。
 
 ## 7. 保持・削除方針
 
@@ -240,8 +231,8 @@ bucket名はP016 Provisioning Workflowの導出値を正本とし、手作業で
 
 - 顧客: soft delete可能な構造を用意し、最終保持期間は本番前に業務・法務確認する。
 - 販売、車検、整備履歴: 監査・顧客対応上必要な履歴として上書き削除を避け、保持期間は本番前に確定する。
-- R2: P016標準の `delete_pending -> object delete -> deleted` を使用する。
-- production bucket一括削除、保持期間短縮、lifecycle自動削除は人間確認対象。
+- PoCファイル: モック・静的ファイル・ブラウザローカル保存の範囲に限定する。外部オブジェクトストレージの削除ライフサイクルはPoC対象外とする。
+- 将来の外部オブジェクトストレージ導入、保持期間短縮、lifecycle自動削除は人間確認対象。
 - 実顧客データをPoCへ投入しない。
 
 現時点で特定年数を法定保存期間として断定しない。
@@ -252,7 +243,7 @@ bucket名はP016 Provisioning Workflowの導出値を正本とし、手作業で
 2. 初期は `0001_initial_schema.sql`。
 3. 変更は `0002_...`, `0003_...` の連番追加とし、過去Migrationを書き換えない。
 4. SQLite/CIで構文・FK・index・基本CRUDを検証する。
-5. CAR-012でproduction D1とR2をP016標準でProvisioningする。
+5. CAR-012で既存production D1のP016管理台帳登録・読取状態を確認し、PoC構成からR2依存を除外する。
 6. CAR-013でMigrationを事前検証後、production D1へ適用しschema version / Migration履歴をP016管理台帳へ記録する。
 7. 破壊的変更はproduction適用前にバックアップと人間確認を行う。
 
@@ -263,7 +254,7 @@ bucket名はP016 Provisioning Workflowの導出値を正本とし、手作業で
 - project_id: P014
 - system: 中古車販売・車両整備管理
 - D1: P016 production単一D1標準
-- R2: staging / production 2bucket標準
+- PoCファイル保存: R2不使用。モック / 静的ファイル / LocalStorage / IndexedDB等で代替
 - schema version initial: 0（Provisioning時）→ CAR-013でMigration適用後1
 - initial migration: `used-car/db/migrations/0001_initial_schema.sql`
 
@@ -277,11 +268,11 @@ P016共通Worker APIで、顧客・車両・車検・整備・書類メタデー
 
 ### CAR-015
 
-Worker API経由でD1/R2の保存・再読込・権限拒否・監査をsmoke testする。
+Worker API経由のD1保存・再読込・権限拒否・監査をsmoke testし、ファイル本体はPoC用の無料代替保存で確認する。R2は使用しない。
 
 ## 10. CAR-009の完了範囲
 
-本タスクではDB/R2**設計とMigration正本の確定のみ**を行う。
+本タスクではDB設計とMigration正本の確定を行う。CAR-009当時のR2設計は将来検討用の履歴として残るが、現行PoCではrunner_rule.md v1.34.0 §29によりR2不使用とする。
 
 実施しない:
 - Cloudflare D1作成
