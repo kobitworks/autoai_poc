@@ -1,1 +1,228 @@
-<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>QR・バーコード探索PoC</title><style>body{font-family:system-ui,sans-serif;margin:0;background:#111;color:#fff}main{max-width:860px;margin:auto;padding:16px}.back{display:inline-block;color:#9ecbff;text-decoration:none;margin-bottom:12px;font-size:16px}h1{margin:0 0 4px}.version{font-size:14px;color:#bbb;margin-bottom:14px}input,button{font-size:18px;padding:12px;margin:4px 0;box-sizing:border-box}input{width:100%}.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}.actions button{margin:0}.camera{position:relative;width:100%;margin-top:12px;background:#000;overflow:hidden}video{display:block;width:100%;max-height:60vh;background:#000}.marker{position:absolute;display:none;border:4px solid #38ff72;background:rgba(56,255,114,.18);box-shadow:0 0 18px #38ff72;pointer-events:none;z-index:2;border-radius:6px}.status{padding:12px;margin-top:12px;background:#333;border-radius:8px;min-height:1.5em}</style><script src="https://unpkg.com/@zxing/browser@0.1.5/umd/zxing-browser.min.js"></script></head><body><main><a class="back" href="../">← PoC一覧へ戻る</a><h1>QR・バーコード探索PoC</h1><div class="version">Version 0.4</div><label>探すコード</label><input id="target" value="4901880816445" type="text" autocomplete="off" autocapitalize="none" spellcheck="false"><div class="actions"><button id="start">カメラ開始</button><button id="stop">停止</button><button id="readTarget">探すコード読込</button><button id="showTest">テスト画面表示</button></div><div id="camera" class="camera"><video id="video" autoplay playsinline muted></video><div id="marker" class="marker"></div></div><div id="status" class="status">待機中</div></main><script>const v=document.querySelector('#video'),s=document.querySelector('#status'),m=document.querySelector('#marker'),t=document.querySelector('#target');let controls=null,reader=null,lastHit='',lastSeen='',lastSeenAt=0,scanMode='search';function normalizeForMatch(value){return String(value??'').trim().replace(/^https?:\/\//i,'')}function isMatch(value,target){const a=normalizeForMatch(value),b=normalizeForMatch(target);return !!b&&a===b}function hideMarker(){m.style.display='none'}function showMarker(result){const pts=result&&result.getResultPoints?result.getResultPoints():[];if(!pts||!pts.length||!v.videoWidth||!v.videoHeight){hideMarker();return}const xs=pts.map(p=>p.getX()),ys=pts.map(p=>p.getY());let minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);const padX=Math.max(24,(maxX-minX)*.35),padY=Math.max(24,(maxY-minY)*.6);minX=Math.max(0,minX-padX);maxX=Math.min(v.videoWidth,maxX+padX);minY=Math.max(0,minY-padY);maxY=Math.min(v.videoHeight,maxY+padY);const scale=Math.min(v.clientWidth/v.videoWidth,v.clientHeight/v.videoHeight),drawW=v.videoWidth*scale,drawH=v.videoHeight*scale,offX=(v.clientWidth-drawW)/2,offY=(v.clientHeight-drawH)/2;m.style.left=(offX+minX*scale)+'px';m.style.top=(offY+minY*scale)+'px';m.style.width=Math.max(28,(maxX-minX)*scale)+'px';m.style.height=Math.max(28,(maxY-minY)*scale)+'px';m.style.display='block'}async function startCamera(mode){stop(false);scanMode=mode;if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia){s.textContent='このブラウザではカメラを利用できません。';return}if(!window.ZXingBrowser){s.textContent='読取ライブラリの読み込みに失敗しました。再読み込みしてください。';return}try{reader=new ZXingBrowser.BrowserMultiFormatReader();s.textContent=mode==='target'?'探すコードを読み取ってください…':'カメラを起動しています…';controls=await reader.decodeFromConstraints({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}},v,(result,error)=>{if(!result)return;const value=result.getText();if(scanMode==='target'){const normalized=normalizeForMatch(value);t.value=normalized;s.textContent='探すコードに反映しました: '+normalized;setTimeout(()=>stop(false),0);return}const target=t.value,matched=isMatch(value,target),now=Date.now();if(value!==lastSeen||now-lastSeenAt>700){s.textContent=(matched?'一致しました: ':'検出: ')+value;lastSeen=value;lastSeenAt=now}if(matched){showMarker(result);if(lastHit!==value&&navigator.vibrate)navigator.vibrate([120,60,120]);lastHit=value}else{hideMarker();lastHit=''}});if(mode==='search')s.textContent='探索中…'}catch(e){s.textContent='カメラ開始エラー: '+(e&&e.message?e.message:e)}}function start(){startCamera('search')}function readTarget(){startCamera('target')}function stop(show=true){if(controls){controls.stop();controls=null}hideMarker();lastHit='';lastSeen='';lastSeenAt=0;if(show)s.textContent='停止しました'}document.querySelector('#start').onclick=start;document.querySelector('#stop').onclick=()=>stop(true);document.querySelector('#readTarget').onclick=readTarget;document.querySelector('#showTest').onclick=()=>window.open('./test.html','_blank','noopener');window.addEventListener('resize',hideMarker);</script></body></html>
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>QR現物探索PoC</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;margin:0;background:#0b1116;color:#fff}
+main{max-width:960px;margin:auto;padding:16px}
+.back{display:inline-block;color:#8fd7ff;text-decoration:none;margin-bottom:10px}
+h1{margin:0 0 4px;font-size:clamp(24px,5vw,34px)}
+.version{font-size:13px;color:#9ca8b3;margin-bottom:14px}
+.panel{background:#151e26;border:1px solid #26333e;border-radius:14px;padding:14px}
+label{display:block;font-weight:700;margin-bottom:6px}
+input,button{font:inherit}
+input{width:100%;padding:12px;border-radius:10px;border:1px solid #3a4a56;background:#0d141a;color:#fff;font-size:18px}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+button{border:0;border-radius:10px;padding:11px 14px;font-weight:700;cursor:pointer}
+.primary{background:#18c98b;color:#041b12}
+.secondary{background:#253440;color:#fff}
+.danger{background:#5a2730;color:#fff}
+.camera{position:relative;width:100%;margin-top:12px;background:#000;border-radius:14px;overflow:hidden;min-height:240px}
+video{display:block;width:100%;max-height:68vh;object-fit:contain;background:#000}
+.overlay{position:absolute;inset:0;pointer-events:none}
+.box{position:absolute;border:3px solid #36d8ff;background:rgba(54,216,255,.10);border-radius:8px;box-shadow:0 0 0 1px #001 inset}
+.box.target{border:5px solid #45ff7a;background:rgba(69,255,122,.16);box-shadow:0 0 26px rgba(69,255,122,.85)}
+.box span{position:absolute;left:0;top:0;transform:translateY(-100%);max-width:260px;padding:4px 7px;background:#0b1116d9;border-radius:6px 6px 0 0;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.status{margin-top:12px;padding:12px;background:#151e26;border-radius:10px;min-height:48px;line-height:1.5}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.metric{background:#10181f;border-radius:9px;padding:9px;text-align:center}
+.metric b{display:block;font-size:18px}
+.hint{margin-top:10px;color:#a9b6c2;font-size:13px;line-height:1.55}
+.found{color:#62ff91;font-weight:800}
+@media(max-width:560px){.metrics{grid-template-columns:1fr 1fr}.actions button{flex:1 1 42%}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/zxing-wasm@3.1.4/dist/iife/reader/index.js"></script>
+</head>
+<body>
+<main>
+<a class="back" href="../">← PoC一覧へ戻る</a>
+<h1>QR現物探索PoC</h1>
+<div class="version">Version 0.5 / zxing-wasm 3.1.4 / 端末内処理</div>
+
+<section class="panel">
+  <label for="target">探すQRコード</label>
+  <input id="target" value="QRX-TEST-0001" autocomplete="off" autocapitalize="none" spellcheck="false">
+  <div class="actions">
+    <button class="primary" id="start">探索開始</button>
+    <button class="secondary" id="readTarget">探すコード読込</button>
+    <button class="danger" id="stop">停止</button>
+    <button class="secondary" id="showTest">テスト画面</button>
+  </div>
+
+  <div class="camera" id="camera">
+    <video id="video" autoplay playsinline muted></video>
+    <div class="overlay" id="overlay"></div>
+  </div>
+
+  <div class="status" id="status">待機中。探索コードを指定して「探索開始」を押してください。</div>
+  <div class="metrics">
+    <div class="metric"><b id="count">0</b><span>同時検出</span></div>
+    <div class="metric"><b id="decode">-</b><span>decode ms</span></div>
+    <div class="metric"><b id="fps">-</b><span>scan / sec</span></div>
+  </div>
+  <div class="hint">カメラ映像は外部サーバーへ送信・保存しません。QR認識はブラウザ内のWebAssemblyで処理します。初期PoCはQRコードのみを対象にします。</div>
+</section>
+</main>
+
+<script>
+const video=document.getElementById('video');
+const overlay=document.getElementById('overlay');
+const camera=document.getElementById('camera');
+const statusEl=document.getElementById('status');
+const targetEl=document.getElementById('target');
+const countEl=document.getElementById('count');
+const decodeEl=document.getElementById('decode');
+const fpsEl=document.getElementById('fps');
+const canvas=document.createElement('canvas');
+const ctx=canvas.getContext('2d',{willReadFrequently:true});
+
+let stream=null;
+let running=false;
+let busy=false;
+let mode='search';
+let timer=null;
+let scans=0;
+let fpsStarted=0;
+let lastFound='';
+
+function norm(v){return String(v??'').trim()}
+function stop(showMessage=true){
+  running=false;
+  busy=false;
+  if(timer){clearTimeout(timer);timer=null}
+  if(stream){stream.getTracks().forEach(t=>t.stop());stream=null}
+  video.srcObject=null;
+  overlay.replaceChildren();
+  countEl.textContent='0'; decodeEl.textContent='-'; fpsEl.textContent='-';
+  if(showMessage) statusEl.textContent='停止しました。';
+}
+async function start(selectedMode){
+  stop(false);
+  mode=selectedMode;
+  if(!navigator.mediaDevices?.getUserMedia){
+    statusEl.textContent='このブラウザではカメラを利用できません。HTTPS環境で開いてください。'; return;
+  }
+  if(!window.ZXingWASM?.readBarcodes){
+    statusEl.textContent='QR認識ライブラリの読み込みに失敗しました。'; return;
+  }
+  try{
+    statusEl.textContent=mode==='target'?'探すコード用QRを1つ映してください。':'カメラを起動しています…';
+    stream=await navigator.mediaDevices.getUserMedia({audio:false,video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}}});
+    video.srcObject=stream;
+    await video.play();
+    running=true; scans=0; fpsStarted=performance.now(); lastFound='';
+    schedule(0);
+  }catch(e){
+    statusEl.textContent='カメラ開始エラー: '+(e?.message||e);
+  }
+}
+function schedule(delay=180){
+  if(!running)return;
+  timer=setTimeout(scan,delay);
+}
+async function scan(){
+  if(!running||busy||video.readyState<2){schedule();return}
+  busy=true;
+  const vw=video.videoWidth, vh=video.videoHeight;
+  const maxW=960, scale=Math.min(1,maxW/vw);
+  canvas.width=Math.max(1,Math.round(vw*scale));
+  canvas.height=Math.max(1,Math.round(vh*scale));
+  ctx.drawImage(video,0,0,canvas.width,canvas.height);
+  const image=ctx.getImageData(0,0,canvas.width,canvas.height);
+  const started=performance.now();
+  try{
+    const results=await ZXingWASM.readBarcodes(image,{
+      formats:['QRCode'],
+      tryHarder:true,
+      tryRotate:true,
+      tryInvert:true,
+      tryDownscale:true,
+      maxNumberOfSymbols:30
+    });
+    const valid=(results||[]).filter(r=>r&&r.isValid!==false&&!r.error&&r.text);
+    const elapsed=performance.now()-started;
+    scans++;
+    decodeEl.textContent=elapsed.toFixed(0);
+    countEl.textContent=String(valid.length);
+    const seconds=(performance.now()-fpsStarted)/1000;
+    fpsEl.textContent=seconds>0?(scans/seconds).toFixed(1):'-';
+
+    if(mode==='target'&&valid.length){
+      if(valid.length===1){
+        targetEl.value=norm(valid[0].text);
+        statusEl.textContent='探すコードに反映しました: '+norm(valid[0].text);
+        setTimeout(()=>stop(false),50);
+      }else{
+        render(valid);
+        statusEl.textContent='複数QRを検出しました。探すコード読込では1つだけ映してください。';
+      }
+    }else{
+      render(valid);
+      const target=norm(targetEl.value);
+      const hits=valid.filter(r=>norm(r.text)===target);
+      if(hits.length){
+        statusEl.innerHTML='<span class="found">対象を発見しました</span>：'+escapeHtml(target)+'（'+hits.length+'件）';
+        if(lastFound!==target&&navigator.vibrate) navigator.vibrate([120,60,120]);
+        lastFound=target;
+      }else if(valid.length){
+        statusEl.textContent=valid.length+'個のQRを検出中。対象「'+target+'」はまだ見つかっていません。';
+        lastFound='';
+      }else{
+        statusEl.textContent='探索中… QRコードをカメラに映してください。';
+        lastFound='';
+      }
+    }
+  }catch(e){
+    statusEl.textContent='認識エラー: '+(e?.message||e);
+  }finally{
+    busy=false;
+    schedule();
+  }
+}
+function render(results){
+  overlay.replaceChildren();
+  const rect=video.getBoundingClientRect();
+  if(!video.videoWidth||!video.videoHeight||!rect.width||!rect.height)return;
+  const drawScale=Math.min(rect.width/video.videoWidth,rect.height/video.videoHeight);
+  const drawW=video.videoWidth*drawScale, drawH=video.videoHeight*drawScale;
+  const offX=(rect.width-drawW)/2, offY=(rect.height-drawH)/2;
+  const sourceScale=canvas.width/video.videoWidth;
+  const target=norm(targetEl.value);
+
+  for(const r of results){
+    const p=r.position;
+    if(!p)continue;
+    const pts=[p.topLeft,p.topRight,p.bottomRight,p.bottomLeft].filter(Boolean);
+    if(!pts.length)continue;
+    const xs=pts.map(q=>q.x/sourceScale), ys=pts.map(q=>q.y/sourceScale);
+    const minX=Math.max(0,Math.min(...xs)), maxX=Math.min(video.videoWidth,Math.max(...xs));
+    const minY=Math.max(0,Math.min(...ys)), maxY=Math.min(video.videoHeight,Math.max(...ys));
+    const box=document.createElement('div');
+    const match=norm(r.text)===target;
+    box.className='box'+(match?' target':'');
+    box.style.left=(offX+minX*drawScale)+'px';
+    box.style.top=(offY+minY*drawScale)+'px';
+    box.style.width=Math.max(28,(maxX-minX)*drawScale)+'px';
+    box.style.height=Math.max(28,(maxY-minY)*drawScale)+'px';
+    const label=document.createElement('span');
+    label.textContent=(match?'対象: ':'QR: ')+norm(r.text);
+    box.appendChild(label);
+    overlay.appendChild(box);
+  }
+}
+function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+
+document.getElementById('start').addEventListener('click',()=>start('search'));
+document.getElementById('readTarget').addEventListener('click',()=>start('target'));
+document.getElementById('stop').addEventListener('click',()=>stop(true));
+document.getElementById('showTest').addEventListener('click',()=>window.open('./test.html','_blank','noopener'));
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&running)stop(true)});
+window.addEventListener('beforeunload',()=>stop(false));
+window.addEventListener('resize',()=>overlay.replaceChildren());
+</script>
+</body>
+</html>
