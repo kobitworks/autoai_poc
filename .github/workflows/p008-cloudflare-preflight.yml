@@ -67,6 +67,11 @@ jobs:
             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
             -H "Content-Type: application/json")"
           if [ "${code}" -lt 200 ] || [ "${code}" -ge 300 ]; then
+            if [ "${{ github.event_name }}" = "pull_request" ]; then
+              echo "::warning::Cloudflare subscription verification is BLOCKED (HTTP ${code}). Billing Read permission is required before deployment; PR code validation may continue."
+              echo "PREFLIGHT_ZERO_COST_STATUS=BLOCKED_BILLING_READ" >> "$GITHUB_ENV"
+              exit 0
+            fi
             echo "::error::Unable to verify Cloudflare subscriptions (HTTP ${code}). Billing Read permission is required for the zero-cost safety gate."
             jq -c '{success,errors}' "${body}" || true
             exit 1
@@ -86,6 +91,7 @@ jobs:
               raise SystemExit("Paid/billable Workers subscription detected: "+json.dumps(bad))
           print("WORKERS_FREE_ONLY=true")
           PY
+          echo "PREFLIGHT_ZERO_COST_STATUS=VERIFIED_FREE_ONLY" >> "$GITHUB_ENV"
 
       - name: Summary
         shell: bash
@@ -95,7 +101,7 @@ jobs:
             echo
             echo "- account token: active"
             echo "- account access: ok"
-            echo "- Workers paid subscription: not active"
+            echo "- zero-cost verification: ${PREFLIGHT_ZERO_COST_STATUS:-UNKNOWN}"
             echo "- R2 API check: not used"
             echo "- resource changes: none"
             echo "- billing changes: none"
