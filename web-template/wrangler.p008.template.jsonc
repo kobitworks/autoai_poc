@@ -7,7 +7,8 @@
   "preview_urls": true,
   "vars": {
     "ENVIRONMENT": "production",
-    "DB_WRITE_ENABLED": "false"
+    "DB_WRITE_ENABLED": "false",
+    "FILE_STORAGE_MODE": "none"
   },
   "d1_databases": [
     {
@@ -16,28 +17,17 @@
       "database_id": "__D1_DATABASE_ID__"
     }
   ],
-  "r2_buckets": [
-    {
-      "binding": "FILES",
-      "bucket_name": "p008-web-template-files-production"
-    }
-  ],
   "previews": {
     "vars": {
       "ENVIRONMENT": "preview",
-      "DB_WRITE_ENABLED": "false"
+      "DB_WRITE_ENABLED": "false",
+      "FILE_STORAGE_MODE": "local-only"
     },
     "d1_databases": [
       {
         "binding": "DB",
         "database_name": "p008-web-template-production",
         "database_id": "__D1_DATABASE_ID__"
-      }
-    ],
-    "r2_buckets": [
-      {
-        "binding": "FILES",
-        "bucket_name": "p008-web-template-files-staging"
       }
     ]
   }

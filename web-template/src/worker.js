@@ -4,7 +4,7 @@ const HTML = `<!doctype html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <title>P008 Cloudflare Preview</title>
+  <title>P008 Free Preview</title>
   <style>
     body{font-family:system-ui,sans-serif;margin:0;background:#f6f7f9;color:#1f2937}
     main{max-width:760px;margin:48px auto;padding:28px;background:#fff;border:1px solid #e5e7eb;border-radius:16px}
@@ -13,9 +13,10 @@ const HTML = `<!doctype html>
 </head>
 <body>
   <main>
-    <h1>P008 Cloudflare Preview</h1>
-    <p>Workers Preview / D1 / R2 binding の疎通確認用です。</p>
-    <p>このPreviewではD1への書込みを行いません。<code>/health</code> でbinding状態を確認できます。</p>
+    <h1>P008 Free Preview</h1>
+    <p>Cloudflare Workers Preview + D1 の完全無料PoC疎通確認用です。</p>
+    <p>R2は使用しません。ファイル保存が必要なPoCは静的ファイル、モック、LocalStorage / IndexedDB等で代替します。</p>
+    <p>このPreviewではD1への書込みを行いません。<code>/health</code> でD1 binding状態を確認できます。</p>
   </main>
 </body>
 </html>`;
@@ -37,19 +38,20 @@ export default {
     if (url.pathname === "/health") {
       try {
         const d1 = await env.DB.prepare("SELECT 1 AS ok").first();
-        const r2 = await env.FILES.list({ limit: 1 });
         return json({
           ok: d1?.ok === 1,
           environment: env.ENVIRONMENT || "unknown",
           db_write_enabled: env.DB_WRITE_ENABLED === "true",
           d1_read: d1?.ok === 1,
-          r2_read: Array.isArray(r2?.objects),
-          r2_sample_count: r2?.objects?.length ?? 0,
+          file_storage_mode: env.FILE_STORAGE_MODE || "none",
+          r2_enabled: false,
+          zero_cost_guard: true,
         });
       } catch (error) {
         return json({
           ok: false,
           environment: env.ENVIRONMENT || "unknown",
+          r2_enabled: false,
           error: error instanceof Error ? error.message : "unknown error",
         }, 500);
       }

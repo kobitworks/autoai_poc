@@ -12,13 +12,27 @@
 - `develop` → `main` の反映は人間承認後にChatGPT / AIが実行する
 - `main` 更新後のCloudflare本番デプロイは自動化する
 
+## P008の完全無料PoC
+P008「Webシステム自動構築」のPoCは、費用が発生しない構成を必須とします。
+
+- Cloudflare WorkersはWorkers Freeのみを使用する
+- D1はWorkers Freeに含まれる無料範囲のみを使用する
+- Workers Paidなどの課金契約が有効な場合はPreviewデプロイ前に安全停止する
+- 課金プランへの変更、契約追加、課金設定変更は自動実行しない
+- R2はPoCでは使用しない
+- ファイル保存が必要なPoCは、GitHub上の静的ファイル、モックデータ、ブラウザのLocalStorage / IndexedDB等で代替する
+- 無料枠を超えた場合は有料化せず、サービス側のFreeプラン制限により停止・失敗することを許容する
+
 ## Cloudflare
-PoC段階ではCloudflare Workers / D1 / R2を一律には作成しません。
-バックエンド、永続化、認証等がPoCに必要な場合のみ、必要最小限のリソースを利用します。
-本番化時には、専用リポジトリとCloudflareを接続し、本番で必要なWorkers / D1 / R2 / Secrets / bindingsを構築します。
+PoC段階ではCloudflareのリソースを一律には作成しません。
+バックエンド、永続化、認証等がPoCに必要な場合のみ、無料で利用できる必要最小限のリソースを使用します。
+
+P008の現在の検証対象はWorkers Preview + D1です。R2 bindingやR2 APIは使用しません。
+本番化時に別のCloudflareサービスが必要になった場合は、費用・無料枠・停止条件を改めて確認し、人間承認後に構成します。
 
 ## 原則
 - ソースコードの正本はGitHub
 - 秘密情報はコミットしない
 - Google Driveには仕様・タスク・判断記録を保持する
 - 本番反映は人間承認を必須とする
+- PoCで従量課金へ自動移行する構成を採用しない

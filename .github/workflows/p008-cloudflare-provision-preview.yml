@@ -1,5 +1,4 @@
-name: P008 provision Cloudflare preview
-# WEB-003 retry 2026-09-29T02:28:46+09:00
+name: P008 provision free Cloudflare preview
 
 on:
   workflow_dispatch:
@@ -34,38 +33,44 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          curl -fsS "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/tokens/verify"             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"             -H "Content-Type: application/json"             | jq -e '.success == true and .result.status == "active"' >/dev/null
-          curl -fsS "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}"             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"             -H "Content-Type: application/json"             | jq -e '.success == true' >/dev/null
+          curl -fsS "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/tokens/verify" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            | jq -e '.success == true and .result.status == "active"' >/dev/null
+          curl -fsS "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            | jq -e '.success == true' >/dev/null
 
-      - name: Verify P008 D1 partial state
-        shell: bash
-        run: |
-          set -euo pipefail
-          p008_json="$(curl -fsS "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/d1/database?name=p008-web-template-production&per_page=10"             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"             -H "Content-Type: application/json")"
-          p008_uuid="$(printf '%s' "$p008_json" | jq -er '[.result[] | select(.name == "p008-web-template-production")] | if length == 1 then .[0].uuid else error("P008 D1 missing or duplicated") end')"
-
-          control_json="$(curl -fsS "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/d1/database?name=p016-db-management-production&per_page=10"             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"             -H "Content-Type: application/json")"
-          control_uuid="$(printf '%s' "$control_json" | jq -er '[.result[] | select(.name == "p016-db-management-production")] | if length == 1 then .[0].uuid else error("P016 control D1 missing or duplicated") end')"
-
-          body="$(jq -n --arg sql "SELECT d.database_name,d.database_uuid,sv.version AS schema_version FROM databases d LEFT JOIN schema_versions sv ON sv.database_id=d.id WHERE d.project_id='P008' AND d.environment='production';" '{sql:$sql}')"
-          catalog_json="$(curl -fsS "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/d1/database/${control_uuid}/query"             -X POST             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"             -H "Content-Type: application/json"             --data "$body")"
-          catalog_uuid="$(printf '%s' "$catalog_json" | jq -er '.result[0].results | if length == 1 then .[0].database_uuid else error("P008 catalog row missing or duplicated") end')"
-          schema_version="$(printf '%s' "$catalog_json" | jq -er '.result[0].results[0].schema_version')"
-          test "$catalog_uuid" = "$p008_uuid"
-          echo "P008_D1_STATE=exists,catalog_registered=true,schema_version=${schema_version}"
-
-      - name: Check R2 subscription readiness
+      - name: Verify zero-cost Workers subscription
         shell: bash
         run: |
           set -euo pipefail
           body="$(mktemp)"
-          code="$(curl -sS -o "$body" -w "%{http_code}"             "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/r2/buckets?per_page=1"             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}"             -H "Content-Type: application/json")"
-          if [ "$code" = "403" ] && jq -e '.errors[]? | select(.code == 10042)' "$body" >/dev/null; then
-            echo "::error::Cloudflare R2 is not enabled for this account. Enable R2 in Dashboard > Storage & databases > R2 > Overview before rerunning."
+          code="$(curl -sS -o "${body}" -w "%{http_code}" \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/subscriptions" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json")"
+          if [ "${code}" -lt 200 ] || [ "${code}" -ge 300 ]; then
+            echo "::error::Unable to verify Cloudflare subscriptions (HTTP ${code}). Billing Read permission is required before a P008 Preview can be deployed."
+            jq -c '{success,errors}' "${body}" || true
             exit 1
           fi
-          test "$code" -ge 200 -a "$code" -lt 300
-          jq -e '.success == true' "$body" >/dev/null
+          jq -e '.success == true' "${body}" >/dev/null
+          python3 - "${body}" <<'PY'
+          import json, sys
+          data=json.load(open(sys.argv[1], encoding="utf-8"))
+          active={"trial","provisioned","paid","awaitingpayment"}
+          bad=[]
+          for s in data.get("result", []):
+              rate=str((s.get("rate_plan") or {}).get("id") or "").upper()
+              state=str(s.get("state") or "").lower()
+              if "WORKERS" in rate and "FREE" not in rate and state in active:
+                  bad.append({"rate_plan":rate,"state":s.get("state")})
+          if bad:
+              raise SystemExit("Paid/billable Workers subscription detected: "+json.dumps(bad))
+          print("WORKERS_FREE_ONLY=true")
+          PY
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -76,16 +81,18 @@ jobs:
         working-directory: web-template
         run: npm install --no-audit --no-fund
 
-      - name: Provision D1 and R2 safely
+      - name: Provision D1 safely without R2
         working-directory: web-template
         shell: bash
         run: |
           set -euo pipefail
           python3 scripts/provision_p008_cloudflare.py | tee p008-resources.json
           jq -e '
-            .d1.catalog_registered == true
-            and .r2.staging.private_verified == true
-            and .r2.production.private_verified == true
+            .workers_free_guard.checked == true
+            and .workers_free_guard.paid_workers_subscription == false
+            and .d1.catalog_registered == true
+            and .r2_enabled == false
+            and .billing_changes == false
             and .production_worker_deployed == false
           ' p008-resources.json >/dev/null
 
@@ -100,11 +107,13 @@ jobs:
           data=json.loads(Path("p008-resources.json").read_text())
           d1=data["d1"]["database_uuid"]
           text=Path("wrangler.p008.template.jsonc").read_text()
-          if "__D1_DATABASE_ID__" not in text:
-              raise SystemExit("D1 placeholder missing")
+          if text.count("__D1_DATABASE_ID__") != 2:
+              raise SystemExit("expected two D1 placeholders")
           text=text.replace("__D1_DATABASE_ID__", d1)
           if "__D1_DATABASE_ID__" in text:
               raise SystemExit("D1 placeholder was not fully replaced")
+          if "r2_buckets" in text:
+              raise SystemExit("R2 binding detected")
           Path("wrangler.p008.generated.jsonc").write_text(text)
           PY
 
@@ -113,7 +122,12 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npx wrangler preview             --name develop             --config wrangler.p008.generated.jsonc             --ignore-base-config             --json             > preview.json
+          npx wrangler preview \
+            --name develop \
+            --config wrangler.p008.generated.jsonc \
+            --ignore-base-config \
+            --json \
+            > preview.json
           cat preview.json
 
       - name: Extract Preview URL
@@ -122,13 +136,13 @@ jobs:
         run: |
           set -euo pipefail
           preview_url="$(jq -er '.preview.urls[0]' preview.json)"
-          case "$preview_url" in
+          case "${preview_url}" in
             https://*.workers.dev|https://*.workers.dev/*) ;;
-            *) echo "::error::Unexpected Preview URL: $preview_url"; exit 1 ;;
+            *) echo "::error::Unexpected Preview URL: ${preview_url}"; exit 1 ;;
           esac
-          printf '%s\n' "$preview_url" | tee preview-url.txt
+          printf '%s\n' "${preview_url}" | tee preview-url.txt
 
-      - name: Probe Preview and bindings
+      - name: Probe Preview and D1 binding
         working-directory: web-template
         shell: bash
         run: |
@@ -142,7 +156,9 @@ jobs:
                 and .environment == "preview"
                 and .db_write_enabled == false
                 and .d1_read == true
-                and .r2_read == true
+                and .file_storage_mode == "local-only"
+                and .r2_enabled == false
+                and .zero_cost_guard == true
               ' health.json >/dev/null; then
                 ok=1
                 break
@@ -150,7 +166,7 @@ jobs:
             fi
             sleep 3
           done
-          test "$ok" -eq 1
+          test "${ok}" -eq 1
           curl -fsSI "${url}/" | head -n 1 | grep -Eq " 200( |$)"
 
       - name: Build non-secret summary
@@ -181,7 +197,7 @@ jobs:
       - name: Upload provisioning evidence
         uses: actions/upload-artifact@v4
         with:
-          name: p008-cloudflare-provision-summary
+          name: p008-cloudflare-free-preview-summary
           path: |
             web-template/p008-cloudflare-summary.json
             web-template/preview.json

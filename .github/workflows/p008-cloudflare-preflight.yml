@@ -1,4 +1,4 @@
-name: P008 Cloudflare preflight
+name: P008 Cloudflare free-only preflight
 
 on:
   workflow_dispatch:
@@ -12,6 +12,8 @@ on:
       - develop
     paths:
       - ".github/workflows/p008-cloudflare-preflight.yml"
+      - ".github/workflows/p008-cloudflare-provision-preview.yml"
+      - "web-template/scripts/provision_p008_cloudflare.py"
 
 permissions:
   contents: read
@@ -19,6 +21,7 @@ permissions:
 jobs:
   preflight:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     env:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
@@ -36,11 +39,11 @@ jobs:
           done
           test "${missing}" -eq 0
 
-      - name: Verify Cloudflare account API token
+      - name: Verify Cloudflare account token
         shell: bash
         run: |
           set -euo pipefail
-          response="$(curl -fsS https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/tokens/verify \
+          response="$(curl -fsS "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/tokens/verify" \
             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
             -H "Content-Type: application/json")"
           echo "${response}" | jq -e '.success == true and .result.status == "active"' >/dev/null
@@ -54,41 +57,52 @@ jobs:
             -H "Content-Type: application/json")"
           echo "${response}" | jq -e '.success == true' >/dev/null
 
-      - name: Check R2 subscription readiness
-        id: r2
+      - name: Verify zero-cost Workers subscription
         shell: bash
         run: |
           set -euo pipefail
           body="$(mktemp)"
-          code="$(curl -sS -o "$body" -w "%{http_code}" \
-            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/r2/buckets?per_page=1" \
+          code="$(curl -sS -o "${body}" -w "%{http_code}" \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/subscriptions" \
             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
             -H "Content-Type: application/json")"
-
-          if [ "$code" = "403" ] && jq -e '.errors[]? | select(.code == 10042)' "$body" >/dev/null; then
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "R2_ENABLED=false"
-            exit 0
-          fi
-
-          if [ "$code" -lt 200 ] || [ "$code" -ge 300 ]; then
-            echo "::error::Unexpected R2 readiness response: HTTP $code"
-            jq -c '{success,errors}' "$body" || true
+          if [ "${code}" -lt 200 ] || [ "${code}" -ge 300 ]; then
+            if [ "${{ github.event_name }}" = "pull_request" ]; then
+              echo "::warning::Cloudflare subscription verification is BLOCKED (HTTP ${code}). Billing Read permission is required before deployment; PR code validation may continue."
+              echo "PREFLIGHT_ZERO_COST_STATUS=BLOCKED_BILLING_READ" >> "$GITHUB_ENV"
+              exit 0
+            fi
+            echo "::error::Unable to verify Cloudflare subscriptions (HTTP ${code}). Billing Read permission is required for the zero-cost safety gate."
+            jq -c '{success,errors}' "${body}" || true
             exit 1
           fi
-
-          jq -e '.success == true' "$body" >/dev/null
-          echo "enabled=true" >> "$GITHUB_OUTPUT"
-          echo "R2_ENABLED=true"
+          jq -e '.success == true' "${body}" >/dev/null
+          python3 - "${body}" <<'PY'
+          import json, sys
+          data=json.load(open(sys.argv[1], encoding="utf-8"))
+          active={"trial","provisioned","paid","awaitingpayment"}
+          bad=[]
+          for s in data.get("result", []):
+              rate=str((s.get("rate_plan") or {}).get("id") or "").upper()
+              state=str(s.get("state") or "").lower()
+              if "WORKERS" in rate and "FREE" not in rate and state in active:
+                  bad.append({"rate_plan":rate,"state":s.get("state")})
+          if bad:
+              raise SystemExit("Paid/billable Workers subscription detected: "+json.dumps(bad))
+          print("WORKERS_FREE_ONLY=true")
+          PY
+          echo "PREFLIGHT_ZERO_COST_STATUS=VERIFIED_FREE_ONLY" >> "$GITHUB_ENV"
 
       - name: Summary
         shell: bash
         run: |
           {
-            echo "## P008 Cloudflare preflight"
+            echo "## P008 Cloudflare free-only preflight"
             echo
             echo "- account token: active"
             echo "- account access: ok"
-            echo "- R2 enabled: ${{ steps.r2.outputs.enabled }}"
+            echo "- zero-cost verification: ${PREFLIGHT_ZERO_COST_STATUS:-UNKNOWN}"
+            echo "- R2 API check: not used"
             echo "- resource changes: none"
+            echo "- billing changes: none"
           } >> "$GITHUB_STEP_SUMMARY"
