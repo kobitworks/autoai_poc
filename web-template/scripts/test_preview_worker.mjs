@@ -43,8 +43,9 @@ function goodEnv() {
     goodEnv(),
   );
   assert.equal(response.status, 200);
-  assert.match(await response.text(), /P008 Free Preview/);
-  assert.match(await response.text(), /R2は使用しません/);
+  const html = await response.text();
+  assert.match(html, /P008 Free Preview/);
+  assert.match(html, /R2は使用しません/);
 }
 
 {
