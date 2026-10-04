@@ -1,9 +1,10 @@
 extends Control
 
+const FONT_PATH := "res://fonts/NotoSansJP.ttf"
 const CROPS := {
-    "radish": {"name":"ラディッシュ","emoji":"🥕","seed":8,"days":3.0,"sell":24},
-    "lettuce": {"name":"レタス","emoji":"🥬","seed":12,"days":4.0,"sell":38},
-    "tomato": {"name":"トマト","emoji":"🍅","seed":18,"days":5.0,"sell":58}
+    "radish": {"name":"ラディッシュ","mark":"根","seed":8,"days":3.0,"sell":24},
+    "lettuce": {"name":"レタス","mark":"菜","seed":12,"days":4.0,"sell":38},
+    "tomato": {"name":"トマト","mark":"実","seed":18,"days":5.0,"sell":58}
 }
 
 var day := 1
@@ -26,9 +27,30 @@ var harvest_btn: Button
 var next_btn: Button
 
 func _ready() -> void:
+    _setup_theme()
     _build_ui()
     _log("1マス農園へようこそ。")
     _refresh()
+
+func _setup_theme() -> void:
+    var ui_theme := Theme.new()
+    var jp_font: Font = load(FONT_PATH) as Font
+    if jp_font != null:
+        ui_theme.default_font = jp_font
+    else:
+        push_warning("Japanese font was not found: " + FONT_PATH)
+
+    ui_theme.default_font_size = 18
+    ui_theme.set_color("font_color", "Label", Color8(31, 56, 43))
+    ui_theme.set_color("font_color", "Button", Color8(24, 48, 36))
+    ui_theme.set_color("font_hover_color", "Button", Color8(14, 82, 50))
+    ui_theme.set_color("font_pressed_color", "Button", Color8(14, 82, 50))
+    ui_theme.set_color("font_disabled_color", "Button", Color8(108, 119, 111))
+    ui_theme.set_color("font_color", "OptionButton", Color8(24, 48, 36))
+    ui_theme.set_color("font_hover_color", "OptionButton", Color8(14, 82, 50))
+    ui_theme.set_color("font_pressed_color", "OptionButton", Color8(14, 82, 50))
+    ui_theme.set_color("font_disabled_color", "OptionButton", Color8(108, 119, 111))
+    theme = ui_theme
 
 func _build_ui() -> void:
     var margin := MarginContainer.new()
@@ -65,7 +87,7 @@ func _build_ui() -> void:
     plot.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     plot.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
     plot.custom_minimum_size = Vector2(420,330)
-    plot.add_theme_font_size_override("font_size",116)
+    plot.add_theme_font_size_override("font_size",92)
     left.add_child(plot)
 
     growth = Label.new()
@@ -85,10 +107,10 @@ func _build_ui() -> void:
     chooser.item_selected.connect(_choose)
     right.add_child(chooser)
 
-    plant_btn = _button("🌱 植える",_plant)
-    water_btn = _button("💧 水やり",_water)
-    compost_btn = _button("🪱 土づくり -5G",_compost)
-    harvest_btn = _button("🧺 収穫",_harvest)
+    plant_btn = _button("植える",_plant)
+    water_btn = _button("水やり",_water)
+    compost_btn = _button("土づくり -5G",_compost)
+    harvest_btn = _button("収穫",_harvest)
     next_btn = _button("日を進める →",_next_day)
     right.add_child(plant_btn)
     right.add_child(water_btn)
@@ -155,7 +177,8 @@ func _next_day() -> void:
     if not crop.is_empty():
         var hydrated := bool(crop.watered)
         crop.growth = float(crop.growth) + (1.0 if hydrated else 0.42) * (1.0 if soil >= 60 else 0.8)
-        if not hydrated: crop.health = max(35,int(crop.health)-14)
+        if not hydrated:
+            crop.health = max(35,int(crop.health)-14)
         crop.watered = false
         soil = max(10,soil - 6)
     day += 1
@@ -165,12 +188,17 @@ func _next_day() -> void:
 func _refresh() -> void:
     stats.text = "DAY %d / 15    所持金 %dG    水 %d/5    土 %d" % [day,coins,water_stock,soil]
     if crop.is_empty():
-        plot.text = "🟫"
+        plot.text = "土"
         growth.text = "空きマス — 作物を選んで植えよう"
     else:
         var d:Dictionary = CROPS[crop.key]
         var ratio := minf(1.0,float(crop.growth)/float(d.days))
-        plot.text = d.emoji if ratio >= 1.0 else ("🌱" if ratio < 0.35 else "🌿")
+        if ratio >= 1.0:
+            plot.text = d.mark
+        elif ratio < 0.35:
+            plot.text = "芽"
+        else:
+            plot.text = "葉"
         growth.text = "%s  成長 %d%%  元気 %d%%" % [d.name,roundi(ratio*100.0),int(crop.health)]
     chooser.disabled = not crop.is_empty()
     plant_btn.disabled = not crop.is_empty()

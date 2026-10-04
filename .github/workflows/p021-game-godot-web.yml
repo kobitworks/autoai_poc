@@ -27,6 +27,12 @@ jobs:
         run: |
           mkdir -p ~/.local/share/godot/export_templates/
           cp -a /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+      - name: Bundle Japanese font
+        working-directory: p021-game/sources/one-square-farm-godot
+        run: |
+          mkdir -p fonts
+          wget -q -O fonts/NotoSansJP.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/NotoSansJP%5Bwght%5D.ttf"
+          test -s fonts/NotoSansJP.ttf
       - name: Export GAME-G001 for Web
         working-directory: p021-game/sources/one-square-farm-godot
         run: |
