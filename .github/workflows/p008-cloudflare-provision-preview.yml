@@ -1,4 +1,5 @@
 name: P008 provision free Cloudflare preview
+# AutoAI retry marker: WEB-003 after Billing Read grant on 2026-10-04
 
 on:
   workflow_dispatch:
