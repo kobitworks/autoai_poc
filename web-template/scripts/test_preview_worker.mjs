@@ -11,16 +11,11 @@ function goodEnv() {
   return {
     ENVIRONMENT: "preview",
     DB_WRITE_ENABLED: "false",
+    FILE_STORAGE_MODE: "local-only",
     DB: {
       prepare(sql) {
         assert.equal(sql, "SELECT 1 AS ok");
         return { first: async () => ({ ok: 1 }) };
-      },
-    },
-    FILES: {
-      list: async ({ limit }) => {
-        assert.equal(limit, 1);
-        return { objects: [] };
       },
     },
   };
@@ -35,8 +30,9 @@ function goodEnv() {
     environment: "preview",
     db_write_enabled: false,
     d1_read: true,
-    r2_read: true,
-    r2_sample_count: 0,
+    file_storage_mode: "local-only",
+    r2_enabled: false,
+    zero_cost_guard: true,
   });
   assert.equal(response.headers.get("cache-control"), "no-store");
 }
@@ -47,7 +43,8 @@ function goodEnv() {
     goodEnv(),
   );
   assert.equal(response.status, 200);
-  assert.match(await response.text(), /P008 Cloudflare Preview/);
+  assert.match(await response.text(), /P008 Free Preview/);
+  assert.match(await response.text(), /R2は使用しません/);
 }
 
 {
@@ -72,20 +69,20 @@ function goodEnv() {
 
 {
   const env = goodEnv();
-  env.FILES.list = async () => {
-    throw new Error("mock-r2-failure");
-  };
+  env.DB.prepare = () => ({ first: async () => { throw new Error("mock-d1-failure"); } });
   const response = await worker.fetch(new Request("https://preview.test/health"), env);
   assert.equal(response.status, 500);
   const body = await response.json();
   assert.equal(body.ok, false);
   assert.equal(body.environment, "preview");
-  assert.match(body.error, /mock-r2-failure/);
+  assert.equal(body.r2_enabled, false);
+  assert.match(body.error, /mock-d1-failure/);
 }
 
 console.log(JSON.stringify({
   ok: true,
   tests: 5,
-  health_binding_mock: "pass",
+  health_binding_mock: "d1-only-pass",
   preview_read_only: true,
+  r2_binding_present: false,
 }, null, 2));
