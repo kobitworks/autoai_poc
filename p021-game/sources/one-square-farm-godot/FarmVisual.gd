@@ -23,7 +23,7 @@ func set_farm_state(crop_state: Dictionary, weather: String, soil_value: int, pr
     queue_redraw()
 
 func splash_water() -> void:
-    water_fx = 1.1
+    water_fx = 1.8
 
 func harvest_burst() -> void:
     harvest_fx = 1.3
@@ -194,13 +194,27 @@ func _draw_effects(w: float, h: float) -> void:
     var center := Vector2(w * 0.5, h * 0.62)
 
     if water_fx > 0.0:
-        var p := 1.0 - water_fx / 1.1
-        for i in range(12):
-            var a := -PI * 0.85 + float(i) / 11.0 * PI * 0.7
-            var origin := Vector2(w * 0.72, h * 0.42)
-            var dist := 55.0 + p * 115.0 + float(i % 3) * 9.0
-            var pos := origin + Vector2(cos(a), sin(a)) * dist
-            draw_circle(pos, 4.5, Color8(71, 159, 226, int(220.0 * (1.0 - p * 0.6))))
+        var p := 1.0 - water_fx / 1.8
+        var origin := Vector2(w * 0.78, h * 0.37)
+        var target := Vector2(w * 0.52, h * 0.64)
+
+        # Watering can silhouette.
+        draw_rect(Rect2(origin + Vector2(-24, -14), Vector2(42, 28)), Color8(70, 133, 164))
+        draw_circle(origin + Vector2(22, 0), 12.0, Color8(70, 133, 164))
+        draw_line(origin + Vector2(-20, -10), origin + Vector2(-33, -24), Color8(70, 133, 164), 7.0)
+
+        # Animated water stream from the can toward the crop.
+        for i in range(16):
+            var phase := fmod(p * 1.7 + float(i) / 16.0, 1.0)
+            var pos := origin.lerp(target, phase)
+            pos.y -= sin(phase * PI) * 24.0
+            draw_circle(pos, 4.0 + 1.5 * sin(phase * PI), Color8(74, 169, 232, 235))
+
+        # Splash around the soil makes the action readable even on a small screen.
+        for j in range(7):
+            var a := float(j) / 7.0 * PI
+            var splash := target + Vector2(cos(a) * (12.0 + p * 18.0), -sin(a) * (7.0 + p * 14.0))
+            draw_circle(splash, 3.5, Color8(94, 184, 238, int(230.0 * (1.0 - p * 0.45))))
 
     if harvest_fx > 0.0:
         var p2 := 1.0 - harvest_fx / 1.3
