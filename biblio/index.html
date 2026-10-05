@@ -72,11 +72,16 @@ dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(10
 <script>
 const SESSION_KEY='biblio_poc_session_v1';
 const PROGRESS_KEY='biblio_poc_progress_v1';
+const API_BASE=(window.BIBLIO_API_BASE||'').replace(/\/$/,'');
+function serverEnabled(){return !!API_BASE}
+function apiHeaders(idempotencyKey=''){const h={'Content-Type':'application/json'};if(idempotencyKey)h['Idempotency-Key']=idempotencyKey;if(state?.auth?.user?.email)h['X-PoC-User']=state.auth.user.email;if(state?.auth?.user?.role)h['X-PoC-Role']=state.auth.user.role;return h}
+async function apiRequest(path,options={}){const r=await fetch(API_BASE+path,{method:options.method||'GET',headers:apiHeaders(options.idempotencyKey||''),body:options.body?JSON.stringify(options.body):undefined});const j=await r.json().catch(()=>({error:'INVALID_JSON'}));if(!r.ok)throw new Error(j.error||('HTTP_'+r.status));return j}
+
 const STORY_SCENES=Object.freeze({
  'scene-1':{chapter:1,scene:1,title:'街角のはじまり',body:['店先の古い時計は、街の時間から少しだけ遅れていた。','通りの先に、誰かが残した小さな印が見える。'],nextSceneKey:'scene-2',nextLabel:'手がかりを確かめる'},
  'scene-2':{chapter:1,scene:2,title:'交差点の小さな違和感',body:['印のそばには、青い壁を示す短いメモが残されていた。','次の手がかりは、ここから数分歩いた「青い壁の広場」にあるらしい。'],nextScreen:'U04',nextLabel:'目的地を確認する'}
 });
-const state={screen:'U01',book:'walk-shibuya',locationResult:null,locationReached:false,location:{status:'idle',result:null,reason:'',permission:'unknown',message:'',attempts:0,lastAttemptAt:0},complete:false,completion:{status:'idle',error:'',record:null,lastRequestKey:''},selectedNext:null,resumeNotice:'',story:null,storyAdvance:{status:'idle',error:'',notice:'',mode:'success',lastRequestKey:''},start:{status:'idle',error:'',mode:'success'},ops:{status:'idle',error:'',result:'',version:'v2026.10-poc'},auth:{status:'logged_out',user:null,error:'',restored:false},books:[
+const state={screen:'U01',book:'walk-shibuya',locationResult:null,locationReached:false,location:{status:'idle',result:null,reason:'',permission:'unknown',message:'',attempts:0,lastAttemptAt:0},complete:false,completion:{status:'idle',error:'',record:null,lastRequestKey:''},server:{progressId:null,bookVersion:null,mode:API_BASE?'php-api':'mock'},selectedNext:null,resumeNotice:'',story:null,storyAdvance:{status:'idle',error:'',notice:'',mode:'success',lastRequestKey:''},start:{status:'idle',error:'',mode:'success'},ops:{status:'idle',error:'',result:'',version:'v2026.10-poc'},auth:{status:'logged_out',user:null,error:'',restored:false},books:[
  {key:'walk-shibuya',title:'街角ミステリー',region:'渋谷',time:'45分',desc:'街を歩きながら手がかりを集める短編Book。',safety:'移動時は画面を見続けず、安全な場所で操作してください。',available:true,unavailableReason:'',pub:'LIVE',cls:''},
  {key:'river-story',title:'川辺の記憶',region:'清澄白河',time:'35分',desc:'水辺の風景をめぐる物語。',safety:'川沿いでは足元と周囲を確認し、安全な場所でのみ画面を操作してください。',available:true,unavailableReason:'',pub:'TEST',cls:'c2'},
  {key:'old-town',title:'古い商店街の手紙',region:'谷中',time:'50分',desc:'商店街に残された手紙を追うBook。',safety:'通行の妨げにならない場所で立ち止まって操作してください。',available:false,unavailableReason:'現在公開を停止しています。',pub:'STOP',cls:'c3'}
@@ -108,12 +113,13 @@ function setResumeMock(enabled){state.progressRecords=enabled?[{bookKey:'walk-sh
 function startAvailability(bookKey){const book=state.books.find(x=>x.key===bookKey);if(!book)return{allowed:false,reason:'Book情報を確認できません。',resume:false};if(!book.available)return{allowed:false,reason:book.unavailableReason||'現在、このBookは開始できません。',resume:false};const progress=latestProgress(bookKey);if(progress)return{allowed:false,reason:'このBookは進行中です。「つづきから」を利用してください。',resume:true};return{allowed:true,reason:'このBookは開始できます。',resume:false}}
 function setStartMockMode(mode){state.start.mode=mode;state.start.status='idle';state.start.error='';render()}
 function setStoryMockMode(mode){state.storyAdvance.mode=mode;state.storyAdvance.error='';state.storyAdvance.notice='';render()}
-function advanceStory(){
+async function advanceStory(){
  if(state.storyAdvance.status==='saving')return;
  const current=state.story||latestProgress(state.book);if(!current)return;
  const scene=sceneData(current.sceneKey);if(!scene.nextSceneKey){if(scene.nextScreen)go(scene.nextScreen);return}
  const next=sceneData(scene.nextSceneKey),requestKey=state.book+':'+current.sceneKey+'>'+next.sceneKey;
  state.storyAdvance.status='saving';state.storyAdvance.error='';state.storyAdvance.notice='';render();
+ if(serverEnabled()&&state.server.progressId){try{const res=await apiRequest('/api/v1/progress/'+encodeURIComponent(state.server.progressId)+'/advance',{method:'POST',idempotencyKey:requestKey,body:{from_scene_key:current.sceneKey}});const nextProgress={bookKey:state.book,chapter:next.chapter,scene:next.scene,sceneKey:res.scene_key||next.sceneKey,sceneTitle:sceneData(res.scene_key||next.sceneKey).title,updatedAt:new Date().toISOString(),resumable:true};upsertProgress(nextProgress);applyAuthoritativeProgress(nextProgress,'PHP APIで進捗を保存しました。');render();return}catch(e){state.storyAdvance.status='idle';state.storyAdvance.error='進捗を保存できませんでした。'+e.message;render();return}}
  setTimeout(()=>{
   if(state.storyAdvance.mode==='error'){state.storyAdvance.status='idle';state.storyAdvance.error='進捗を保存できませんでした。通信状態を確認して、もう一度お試しください。';render();return}
   const serverCurrent=latestProgress(state.book);
@@ -124,12 +130,13 @@ function advanceStory(){
   applyAuthoritativeProgress(latestProgress(state.book)||nextProgress,'進捗を保存しました。');render();
  },300)
 }
-function startBook(bookKey){if(state.start.status==='starting')return;const visible=startAvailability(bookKey);if(!visible.allowed){state.start.status='blocked';state.start.error=visible.reason;render();return}state.start.status='starting';state.start.error='';render();setTimeout(()=>{const book=state.books.find(x=>x.key===bookKey);if(state.start.mode==='error'){state.start.status='error';state.start.error='Bookを開始できませんでした。通信状態を確認して、もう一度お試しください。';render();return}if(state.start.mode==='blocked'||!book||!book.available){state.start.status='blocked';state.start.error='現在、このBookは開始できません。'+(book?.unavailableReason?' 開始できない理由: '+book.unavailableReason:' サーバー側の最新状態を確認してください。');render();return}const progress={bookKey:book.key,chapter:1,scene:1,sceneKey:'scene-1',sceneTitle:'街角のはじまり',updatedAt:new Date().toISOString(),resumable:true};upsertProgress(progress);state.book=book.key;state.story={chapter:progress.chapter,scene:progress.scene,sceneKey:progress.sceneKey,title:progress.sceneTitle};state.storyAdvance={status:'idle',error:'',notice:'',mode:'success',lastRequestKey:''};state.start={status:'idle',error:'',mode:'success'};state.screen='U03';history.replaceState({s:'U03'},'','#U03');render()},300)}
+function applyStartedBook(book,serverRes=null){const progress={bookKey:book.key,chapter:1,scene:1,sceneKey:'scene-1',sceneTitle:'街角のはじまり',updatedAt:new Date().toISOString(),resumable:true};upsertProgress(progress);state.book=book.key;state.server.progressId=serverRes?.progress_id||state.server.progressId;state.server.bookVersion=serverRes?.book_version||null;state.story={chapter:progress.chapter,scene:progress.scene,sceneKey:progress.sceneKey,title:progress.sceneTitle};state.storyAdvance={status:'idle',error:'',notice:'',mode:'success',lastRequestKey:''};state.start={status:'idle',error:'',mode:'success'};state.screen='U03';history.replaceState({s:'U03'},'','#U03');render()}
+async function startBook(bookKey){if(state.start.status==='starting')return;const visible=startAvailability(bookKey);if(!visible.allowed){state.start.status='blocked';state.start.error=visible.reason;render();return}state.start.status='starting';state.start.error='';render();const book=state.books.find(x=>x.key===bookKey);if(serverEnabled()){try{const res=await apiRequest('/api/v1/books/'+encodeURIComponent(bookKey)+'/start',{method:'POST',idempotencyKey:'start:'+bookKey,body:{start_context:{kind:state.complete?'NEXT_BOOK':'NORMAL'}}});applyStartedBook(book,res);return}catch(e){state.start.status='error';state.start.error='Bookを開始できませんでした。'+e.message;render();return}}setTimeout(()=>{if(state.start.mode==='error'){state.start.status='error';state.start.error='Bookを開始できませんでした。通信状態を確認して、もう一度お試しください。';render();return}if(state.start.mode==='blocked'||!book||!book.available){state.start.status='blocked';state.start.error='現在、このBookは開始できません。'+(book?.unavailableReason?' 開始できない理由: '+book.unavailableReason:' サーバー側の最新状態を確認してください。');render();return}applyStartedBook(book)},300)}
 function hasOpsRole(){return state.auth.status==='logged_in'&&state.auth.user?.role==='operator'}
 function openOps(){if(!hasOpsRole()){state.auth.error='公開管理には運用権限が必要です。';state.screen='U01';history.replaceState({s:'U01'},'','#U01');render();return}go('O01')}
 function go(s){if(s!=='LOGIN'&&state.auth.status!=='logged_in'){state.screen='LOGIN';state.auth.error='ログインが必要です。';history.replaceState({s:'LOGIN'},'','#LOGIN');render();return}if(s==='O01'&&!hasOpsRole()){state.auth.error='公開管理には運用権限が必要です。';state.screen='U01';history.replaceState({s:'U01'},'','#U01');render();return}if(s==='U05'&&state.screen!=='U05')resetLocationCheck();state.screen=s;history.replaceState({s},'', '#'+s);render()}
 function btn(t,a,c=''){return '<button class="btn '+c+'" onclick="'+a+'">'+t+'</button>'}
-function page(body){return '<div class="paper">'+body+'<div class="dev">画面・遷移確認用PoCです。公開・進行・位置到達・Completeは本番確定処理ではありません。</div></div>'}
+function page(body){return '<div class="paper">'+body+'<div class="dev">実行モード: '+(serverEnabled()?'PHP API / MySQL':'GitHub Pages mock')+'。Clientは表示/入力、確定判定はServer権威境界へ接続します。</div></div>'}
 function renderNav(){
  const isLogin=state.screen==='LOGIN';
  document.body.classList.toggle('login-mode',isLogin);
@@ -254,9 +261,10 @@ function checkCurrentPosition(){
  loc.status='checking';loc.result=null;loc.reason='';loc.message='到着を確認しています…';loc.attempts+=1;loc.lastAttemptAt=now;render();
  navigator.geolocation.getCurrentPosition(onLocationSuccess,onLocationError,{enableHighAccuracy:true,maximumAge:0,timeout:LOCATION_RULES.timeoutMs});
 }
-function onLocationSuccess(position){
+async function onLocationSuccess(position){
  if(state.screen!=='U05')return;
  const sample={lat:Number(position.coords.latitude),lon:Number(position.coords.longitude),accuracy:Number(position.coords.accuracy),capturedAt:Number(position.timestamp)};
+ if(serverEnabled()&&state.server.progressId){try{const res=await apiRequest('/api/v1/progress/'+encodeURIComponent(state.server.progressId)+'/location-checks',{method:'POST',idempotencyKey:'location:'+state.server.progressId+':'+state.location.attempts,body:{latitude:sample.lat,longitude:sample.lon,accuracy_m:sample.accuracy,position_age_ms:Math.max(0,Date.now()-sample.capturedAt)}});applyLocationResult(res.result,res.reason,res.result==='ARRIVED'?'PHP APIで到着を確認しました。':'PHP APIの判定結果を反映しました。');return}catch(e){applyLocationResult('LOCATION_UNAVAILABLE','API_ERROR','位置判定APIを利用できませんでした。');return}}
  const result=mockAuthoritativeLocationApi(sample);
  applyLocationResult(result.result,result.reason,result.message);
 }
@@ -308,16 +316,11 @@ function continueAfterArrival(){
 }
 function locationMock(r){setLocationReviewResult(r)}
 function retryLocationFromSafety(){state.location.status='idle';state.location.result=null;state.location.reason='';state.location.message='';state.locationResult=null;state.locationReached=false;go('U05')}
-function alternativeProgress(){state.locationReached=false;state.locationResult='ALTERNATIVE';state.location.status='result';state.location.result='ALTERNATIVE';state.location.reason='ALTERNATIVE_PROGRESS';state.location.message='位置到達は成立していません。安全上の代替進行を選択しました。';state.storyAdvance.notice='代替進行を選択しました。location_reached=false のままStoryへ戻ります。';go('U03')}
+async function alternativeProgress(){if(serverEnabled()&&state.server.progressId){try{await apiRequest('/api/v1/progress/'+encodeURIComponent(state.server.progressId)+'/location-alternative-requests',{method:'POST',idempotencyKey:'alt:'+state.server.progressId,body:{reason:state.location.reason||'CLIENT_LOCATION_FAILURE'}})}catch(e){state.location.message='代替進行APIを確定できませんでした。';render();return}}state.locationReached=false;state.locationResult='ALTERNATIVE';state.location.status='result';state.location.result='ALTERNATIVE';state.location.reason='ALTERNATIVE_PROGRESS';state.location.message='位置到達は成立していません。安全上の代替進行を選択しました。';state.storyAdvance.notice='代替進行を選択しました。location_reached=false のままStoryへ戻ります。';go('U03')}
 function interruptBook(){state.locationReached=false;state.storyAdvance.notice='';go('U01')}
-function mockAuthoritativeCompleteApi(bookKey,requestKey){
- // PoCではServer権威のBook Complete API境界を模擬する。同一Bookの再送は同じCompleteを返す。
- if(!mockAuthoritativeCompleteApi.records)mockAuthoritativeCompleteApi.records={};
- const existing=mockAuthoritativeCompleteApi.records[bookKey];
- if(existing)return Promise.resolve({ok:true,record:existing,idempotentReplay:true});
- const record={bookKey,completeId:'CMP-'+bookKey.toUpperCase(),completedAt:new Date().toISOString(),requestKey};
- mockAuthoritativeCompleteApi.records[bookKey]=record;
- return Promise.resolve({ok:true,record,idempotentReplay:false});
+async function mockAuthoritativeCompleteApi(bookKey,requestKey){
+ if(serverEnabled()&&state.server.progressId){const res=await apiRequest('/api/v1/progress/'+encodeURIComponent(state.server.progressId)+'/complete',{method:'POST',idempotencyKey:requestKey,body:{}});return{ok:true,record:{bookKey,completeId:res.complete_id,completedAt:res.completed_at||new Date().toISOString(),requestKey},idempotentReplay:!!res.reused}}
+ if(!mockAuthoritativeCompleteApi.records)mockAuthoritativeCompleteApi.records={};const existing=mockAuthoritativeCompleteApi.records[bookKey];if(existing)return{ok:true,record:existing,idempotentReplay:true};const record={bookKey,completeId:'CMP-'+bookKey.toUpperCase(),completedAt:new Date().toISOString(),requestKey};mockAuthoritativeCompleteApi.records[bookKey]=record;return{ok:true,record,idempotentReplay:false};
 }
 function requestBookComplete(){
  if(state.completion.status==='saving'||state.completion.status==='confirmed')return;
@@ -331,11 +334,11 @@ function requestBookComplete(){
  }).catch(()=>{state.completion.status='error';state.completion.error='Book Completeを確定できませんでした。通信状態を確認して再度お試しください。';state.complete=false;render();});
 }
 function previewNextBook(key){const completedBookKey=state.completion.record?.bookKey||state.book;const x=state.books.find(v=>v.key===key&&v.key!==completedBookKey&&v.available);if(!x)return;state.selectedNext=key;go('U10')}
-function confirmNextBookSelection(){const key=state.selectedNext,completedBookKey=state.completion.record?.bookKey||state.book,x=state.books.find(v=>v.key===key&&v.key!==completedBookKey&&v.available);if(!x){go('U09');return}state.book=key;state.selectedNext=null;state.story=null;state.storyAdvance={status:'idle',error:'',notice:'',mode:'success',lastRequestKey:''};state.start={status:'idle',error:'',mode:'success'};state.locationResult=null;state.locationReached=false;state.location={status:'idle',result:null,reason:'',permission:state.location.permission||'unknown',message:'',attempts:0,lastAttemptAt:0};go('U02')}
+async function confirmNextBookSelection(){const key=state.selectedNext,completedBookKey=state.completion.record?.bookKey||state.book,x=state.books.find(v=>v.key===key&&v.key!==completedBookKey&&v.available);if(!x){go('U09');return}if(serverEnabled()&&state.server.progressId){try{await apiRequest('/api/v1/progress/'+encodeURIComponent(state.server.progressId)+'/next-book-selection',{method:'POST',idempotencyKey:'next:'+state.server.progressId,body:{book_key:key}})}catch(e){state.resumeNotice='次Book選択を確定できませんでした。';go('U09');return}}state.book=key;state.selectedNext=null;state.story=null;state.storyAdvance={status:'idle',error:'',notice:'',mode:'success',lastRequestKey:''};state.start={status:'idle',error:'',mode:'success'};state.locationResult=null;state.locationReached=false;state.location={status:'idle',result:null,reason:'',permission:state.location.permission||'unknown',message:'',attempts:0,lastAttemptAt:0};go('U02')}
 function selectNext(key){previewNextBook(key)}
 let pending=null;const dlg=document.getElementById('confirm');
 function opsConfirm(a){if(!hasOpsRole())return;pending={action:a,bookKey:state.book};document.getElementById('confirmText').textContent=a==='LIVE'?'この版を本公開します。よろしいですか？':a==='STOP'?'このBookの公開を停止します。よろしいですか？':a==='TEST'?'この版をTest公開します。よろしいですか？':'公開対象の版を差し替えます。よろしいですか？';dlg.showModal()}
-function mockAuthoritativePublishApi(bookKey,action){if(!hasOpsRole())return Promise.resolve({ok:false,error:'FORBIDDEN'});const book=state.books.find(x=>x.key===bookKey);if(!book)return Promise.resolve({ok:false,error:'BOOK_NOT_FOUND'});if(action==='REPLACE')return Promise.resolve({ok:true,bookKey,action,version:'v2026.10-poc-r2',pub:book.pub});if(!['TEST','LIVE','STOP'].includes(action))return Promise.resolve({ok:false,error:'INVALID_ACTION'});return Promise.resolve({ok:true,bookKey,action,version:state.ops.version,pub:action});}
+async function mockAuthoritativePublishApi(bookKey,action){if(!hasOpsRole())return{ok:false,error:'FORBIDDEN'};const book=state.books.find(x=>x.key===bookKey);if(!book)return{ok:false,error:'BOOK_NOT_FOUND'};if(serverEnabled()){const res=await apiRequest('/api/v1/ops/books/'+encodeURIComponent(bookKey)+'/publication',{method:'POST',idempotencyKey:'publish:'+bookKey+':'+action,body:{action,version_key:action==='REPLACE'?'v2026.10-poc-r2':state.ops.version}});return{ok:true,bookKey,action,version:res.version_key||state.ops.version,pub:res.publication_state||book.pub}}if(action==='REPLACE')return{ok:true,bookKey,action,version:'v2026.10-poc-r2',pub:book.pub};if(!['TEST','LIVE','STOP'].includes(action))return{ok:false,error:'INVALID_ACTION'};return{ok:true,bookKey,action,version:state.ops.version,pub:action}}
 function executeOpsAction(req){state.ops.status='saving';state.ops.error='';state.ops.result='';render();mockAuthoritativePublishApi(req.bookKey,req.action).then(res=>{if(!res.ok)throw new Error(res.error||'publish failed');const book=state.books.find(x=>x.key===res.bookKey);if(!book)throw new Error('book missing');if(res.action==='REPLACE')state.ops.version=res.version;else book.pub=res.pub;state.ops.status='idle';state.ops.result=(res.action==='REPLACE'?'版差し替え':'公開状態変更')+'が完了しました。 '+book.title+' / '+(res.action==='REPLACE'?res.version:res.pub);render()}).catch(()=>{state.ops.status='idle';state.ops.error='公開操作を確定できませんでした。権限または通信状態を確認してください。';render()})}
 document.getElementById('cancelDlg').onclick=()=>{pending=null;dlg.close()}
 document.getElementById('okDlg').onclick=()=>{const req=pending;pending=null;dlg.close();if(req)executeOpsAction(req)}
