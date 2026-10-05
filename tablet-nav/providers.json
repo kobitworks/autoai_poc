@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "geocoder": {
+    "name": "OpenStreetMap Nominatim public API",
+    "searchBase": "https://nominatim.openstreetmap.org/search",
+    "minIntervalMs": 1100
+  },
+  "route": {
+    "name": "Project OSRM demo server",
+    "routeBase": "https://router.project-osrm.org/route/v1/driving",
+    "minIntervalMs": 1100
+  },
+  "usage": {
+    "mode": "low-volume non-commercial PoC",
+    "autocomplete": false,
+    "note": "Public demo services only. Keep explicit user-triggered requests at <= 1 request/second per client and replace providers before production/commercial use."
+  }
+}
