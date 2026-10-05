@@ -36,7 +36,7 @@ button{font:inherit}.app-header{position:fixed;inset:0 0 auto 0;height:100px;z-i
 #leafletMap .leaflet-tile{max-width:none!important;max-height:none!important}
 .map-overlay{position:absolute;z-index:500;left:50%;bottom:12px;transform:translateX(-50%);width:min(94%,540px);pointer-events:none}
 .map-status{background:#ffffffec;border:1px solid #b9c9cc;border-radius:7px;box-shadow:0 2px 8px #0003;padding:8px 10px;font-size:12px;line-height:1.45;pointer-events:auto}
-.map-status strong{display:block;color:#123f6b}.map-status .actions{margin-top:6px}.map-status .btn{min-height:32px;padding:6px 10px}
+.map-status strong{display:block;color:#123f6b}.map-status .actions{margin-top:6px}.map-status .btn{min-height:32px;padding:6px 10px}.map-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px;color:#46565a}.map-legend-item{display:inline-flex;align-items:center;gap:4px}.map-legend-dot{width:9px;height:9px;border-radius:50%;background:#176fa6;display:inline-block}.map-legend-dot.friend{background:#7469b6}.map-text-alt{margin-top:5px;color:#41535a}.map-current{font-weight:700;color:#5c6870}
 .map-pin{width:24px;height:24px;border-radius:50% 50% 50% 0;background:#176fa6;border:3px solid #fff;box-shadow:0 1px 4px #0005;transform:rotate(-45deg)}.map-pin.friend{background:#7469b6}.leaflet-control-attribution{font-size:9px}
 .ops-grid{display:grid;grid-template-columns:280px 1fr;gap:12px}.ops-list button{display:block;width:100%;text-align:left;padding:9px;margin:5px 0;background:white;border:1px solid #bbb;border-radius:4px}
 .banner{position:fixed;left:0;right:0;bottom:64px;height:54px;background:#e4f3f3;z-index:30;display:grid;place-items:center;border-top:1px solid #c6dcdc}.adbox{width:min(640px,86vw);height:50px;border:1px solid #bbb;background:#fff;display:grid;grid-template-columns:1.1fr 1fr 1.1fr 1fr 1.2fr;color:#444;font-size:9px;overflow:hidden}.adcell{display:grid;place-items:center;border-right:1px solid #ddd;text-align:center;padding:2px}.adcell strong{color:#c40000;font-size:13px}.adcell.rakuten{color:#bf0000;font-size:18px;font-weight:800}
@@ -71,7 +71,12 @@ dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(10
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js?v=20261005-1153"></script>
 <script>
 const SESSION_KEY='biblio_poc_session_v1';
-const state={screen:'U01',book:'walk-shibuya',locationResult:null,complete:false,selectedNext:null,resumeNotice:'',story:null,start:{status:'idle',error:'',mode:'success'},auth:{status:'logged_out',user:null,error:'',restored:false},books:[
+const PROGRESS_KEY='biblio_poc_progress_v1';
+const STORY_SCENES=Object.freeze({
+ 'scene-1':{chapter:1,scene:1,title:'街角のはじまり',body:['店先の古い時計は、街の時間から少しだけ遅れていた。','通りの先に、誰かが残した小さな印が見える。'],nextSceneKey:'scene-2',nextLabel:'手がかりを確かめる'},
+ 'scene-2':{chapter:1,scene:2,title:'交差点の小さな違和感',body:['印のそばには、青い壁を示す短いメモが残されていた。','次の手がかりは、ここから数分歩いた「青い壁の広場」にあるらしい。'],nextScreen:'U04',nextLabel:'目的地を確認する'}
+});
+const state={screen:'U01',book:'walk-shibuya',locationResult:null,complete:false,selectedNext:null,resumeNotice:'',story:null,storyAdvance:{status:'idle',error:'',notice:'',mode:'success',lastRequestKey:''},start:{status:'idle',error:'',mode:'success'},auth:{status:'logged_out',user:null,error:'',restored:false},books:[
  {key:'walk-shibuya',title:'街角ミステリー',region:'渋谷',time:'45分',desc:'街を歩きながら手がかりを集める短編Book。',safety:'移動時は画面を見続けず、安全な場所で操作してください。',available:true,unavailableReason:'',pub:'LIVE',cls:''},
  {key:'river-story',title:'川辺の記憶',region:'清澄白河',time:'35分',desc:'水辺の風景をめぐる物語。',safety:'川沿いでは足元と周囲を確認し、安全な場所でのみ画面を操作してください。',available:true,unavailableReason:'',pub:'TEST',cls:'c2'},
  {key:'old-town',title:'古い商店街の手紙',region:'谷中',time:'50分',desc:'商店街に残された手紙を追うBook。',safety:'通行の妨げにならない場所で立ち止まって操作してください。',available:false,unavailableReason:'現在公開を停止しています。',pub:'STOP',cls:'c3'}
@@ -92,12 +97,34 @@ const reviewMode=new URLSearchParams(location.search).get('review')==='1';
 document.body.classList.toggle('review-mode',reviewMode);
 function b(){return state.books.find(x=>x.key===state.book)||state.books[0]}
 function latestProgress(bookKey){return state.progressRecords.filter(x=>x.bookKey===bookKey&&x.resumable).sort((a,b)=>Date.parse(b.updatedAt)-Date.parse(a.updatedAt))[0]||null}
+function persistProgress(){localStorage.setItem(PROGRESS_KEY,JSON.stringify(state.progressRecords))}
+function restoreProgress(){try{const raw=localStorage.getItem(PROGRESS_KEY);if(!raw)return false;const parsed=JSON.parse(raw);if(!Array.isArray(parsed))throw new Error('invalid progress');state.progressRecords=parsed.filter(x=>x&&x.bookKey&&x.sceneKey&&x.resumable!==false);return true}catch(e){localStorage.removeItem(PROGRESS_KEY);return false}}
+function upsertProgress(progress){state.progressRecords=state.progressRecords.filter(x=>x.bookKey!==progress.bookKey);state.progressRecords.push(progress);persistProgress();return progress}
+function sceneData(sceneKey){return STORY_SCENES[sceneKey]||STORY_SCENES['scene-1']}
+function applyAuthoritativeProgress(progress,notice=''){state.book=progress.bookKey;state.story={chapter:progress.chapter,scene:progress.scene,sceneKey:progress.sceneKey,title:progress.sceneTitle};state.storyAdvance.status='idle';state.storyAdvance.error='';state.storyAdvance.notice=notice}
 function latestResumeCandidate(){return state.books.map(book=>({book,progress:latestProgress(book.key)})).filter(x=>x.book.available&&x.progress).sort((a,b)=>Date.parse(b.progress.updatedAt)-Date.parse(a.progress.updatedAt))[0]||null}
 function resumeBook(bookKey){const book=state.books.find(x=>x.key===bookKey),progress=latestProgress(bookKey);if(!book||!book.available||!progress){state.resumeNotice='再開できる進行データがありません。Book一覧から選び直してください。';state.screen='U01';history.replaceState({s:'U01'},'','#U01');render();return}state.book=book.key;state.story={chapter:progress.chapter,scene:progress.scene,sceneKey:progress.sceneKey,title:progress.sceneTitle};state.resumeNotice='';state.screen='U03';history.replaceState({s:'U03'},'','#U03');render()}
-function setResumeMock(enabled){state.progressRecords=enabled?[{bookKey:'walk-shibuya',chapter:1,scene:1,sceneKey:'scene-1',sceneTitle:'街角のはじまり',updatedAt:'2026-10-05T08:00:00+09:00',resumable:true},{bookKey:'walk-shibuya',chapter:1,scene:2,sceneKey:'scene-2',sceneTitle:'交差点の小さな違和感',updatedAt:'2026-10-05T10:30:00+09:00',resumable:true}]:[];state.resumeNotice='';state.screen='U01';history.replaceState({s:'U01'},'','#U01');render()}
+function setResumeMock(enabled){state.progressRecords=enabled?[{bookKey:'walk-shibuya',chapter:1,scene:2,sceneKey:'scene-2',sceneTitle:'交差点の小さな違和感',updatedAt:new Date().toISOString(),resumable:true}]:[];persistProgress();state.resumeNotice='';state.screen='U01';history.replaceState({s:'U01'},'','#U01');render()}
 function startAvailability(bookKey){const book=state.books.find(x=>x.key===bookKey);if(!book)return{allowed:false,reason:'Book情報を確認できません。',resume:false};if(!book.available)return{allowed:false,reason:book.unavailableReason||'現在、このBookは開始できません。',resume:false};const progress=latestProgress(bookKey);if(progress)return{allowed:false,reason:'このBookは進行中です。「つづきから」を利用してください。',resume:true};return{allowed:true,reason:'このBookは開始できます。',resume:false}}
 function setStartMockMode(mode){state.start.mode=mode;state.start.status='idle';state.start.error='';render()}
-function startBook(bookKey){if(state.start.status==='starting')return;const visible=startAvailability(bookKey);if(!visible.allowed){state.start.status='blocked';state.start.error=visible.reason;render();return}state.start.status='starting';state.start.error='';render();setTimeout(()=>{const book=state.books.find(x=>x.key===bookKey);if(state.start.mode==='error'){state.start.status='error';state.start.error='Bookを開始できませんでした。通信状態を確認して、もう一度お試しください。';render();return}if(state.start.mode==='blocked'||!book||!book.available){state.start.status='blocked';state.start.error='現在、このBookは開始できません。'+(book?.unavailableReason?' 開始できない理由: '+book.unavailableReason:' サーバー側の最新状態を確認してください。');render();return}const progress={bookKey:book.key,chapter:1,scene:1,sceneKey:'scene-1',sceneTitle:'街角のはじまり',updatedAt:new Date().toISOString(),resumable:true};state.progressRecords=state.progressRecords.filter(x=>x.bookKey!==book.key);state.progressRecords.push(progress);state.book=book.key;state.story={chapter:progress.chapter,scene:progress.scene,sceneKey:progress.sceneKey,title:progress.sceneTitle};state.start={status:'idle',error:'',mode:'success'};state.screen='U03';history.replaceState({s:'U03'},'','#U03');render()},300)}
+function setStoryMockMode(mode){state.storyAdvance.mode=mode;state.storyAdvance.error='';state.storyAdvance.notice='';render()}
+function advanceStory(){
+ if(state.storyAdvance.status==='saving')return;
+ const current=state.story||latestProgress(state.book);if(!current)return;
+ const scene=sceneData(current.sceneKey);if(!scene.nextSceneKey){if(scene.nextScreen)go(scene.nextScreen);return}
+ const next=sceneData(scene.nextSceneKey),requestKey=state.book+':'+current.sceneKey+'>'+next.sceneKey;
+ state.storyAdvance.status='saving';state.storyAdvance.error='';state.storyAdvance.notice='';render();
+ setTimeout(()=>{
+  if(state.storyAdvance.mode==='error'){state.storyAdvance.status='idle';state.storyAdvance.error='進捗を保存できませんでした。通信状態を確認して、もう一度お試しください。';render();return}
+  const serverCurrent=latestProgress(state.book);
+  if(state.storyAdvance.mode==='conflict'&&serverCurrent&&serverCurrent.sceneKey===current.sceneKey){const serverProgress={bookKey:state.book,chapter:next.chapter,scene:next.scene,sceneKey:next.sceneKey,sceneTitle:next.title,updatedAt:new Date().toISOString(),resumable:true};upsertProgress(serverProgress);applyAuthoritativeProgress(serverProgress,'別の操作で進捗が更新されていたため、サーバー側の最新Sceneを反映しました。');state.storyAdvance.mode='success';render();return}
+  if(serverCurrent&&serverCurrent.sceneKey!==current.sceneKey){applyAuthoritativeProgress(serverCurrent,'進捗の競合を検出したため、サーバー側の最新Sceneを反映しました。');render();return}
+  const nextProgress={bookKey:state.book,chapter:next.chapter,scene:next.scene,sceneKey:next.sceneKey,sceneTitle:next.title,updatedAt:new Date().toISOString(),resumable:true};
+  if(state.storyAdvance.lastRequestKey!==requestKey){upsertProgress(nextProgress);state.storyAdvance.lastRequestKey=requestKey}
+  applyAuthoritativeProgress(latestProgress(state.book)||nextProgress,'進捗を保存しました。');render();
+ },300)
+}
+function startBook(bookKey){if(state.start.status==='starting')return;const visible=startAvailability(bookKey);if(!visible.allowed){state.start.status='blocked';state.start.error=visible.reason;render();return}state.start.status='starting';state.start.error='';render();setTimeout(()=>{const book=state.books.find(x=>x.key===bookKey);if(state.start.mode==='error'){state.start.status='error';state.start.error='Bookを開始できませんでした。通信状態を確認して、もう一度お試しください。';render();return}if(state.start.mode==='blocked'||!book||!book.available){state.start.status='blocked';state.start.error='現在、このBookは開始できません。'+(book?.unavailableReason?' 開始できない理由: '+book.unavailableReason:' サーバー側の最新状態を確認してください。');render();return}const progress={bookKey:book.key,chapter:1,scene:1,sceneKey:'scene-1',sceneTitle:'街角のはじまり',updatedAt:new Date().toISOString(),resumable:true};upsertProgress(progress);state.book=book.key;state.story={chapter:progress.chapter,scene:progress.scene,sceneKey:progress.sceneKey,title:progress.sceneTitle};state.storyAdvance={status:'idle',error:'',notice:'',mode:'success',lastRequestKey:''};state.start={status:'idle',error:'',mode:'success'};state.screen='U03';history.replaceState({s:'U03'},'','#U03');render()},300)}
 function go(s){if(s!=='LOGIN'&&state.auth.status!=='logged_in'){state.screen='LOGIN';state.auth.error='ログインが必要です。';history.replaceState({s:'LOGIN'},'','#LOGIN');render();return}state.screen=s;history.replaceState({s},'', '#'+s);render()}
 function btn(t,a,c=''){return '<button class="btn '+c+'" onclick="'+a+'">'+t+'</button>'}
 function page(body){return '<div class="paper">'+body+'<div class="dev">画面・遷移確認用PoCです。公開・進行・位置到達・Completeは本番確定処理ではありません。</div></div>'}
@@ -130,10 +157,12 @@ function render(){
   const primary=availability.resume?btn('つづきから',"resumeBook('"+book.key+"')"):(availability.allowed?'<button class="btn" onclick="startBook(\''+book.key+'\')" '+(starting?'disabled':'')+'>'+(starting?'開始可否を確認中…':'このBookを始める')+'</button>':'<button class="btn" disabled>現在開始できません</button>');
   app.innerHTML=page('<h2>'+book.title+'</h2><div class="panel"><strong>あらすじ</strong><p>'+book.desc+'</p></div><div class="panel"><div class="fact"><span>地域</span><strong>'+(book.region||'地域情報を確認中です。')+'</strong></div><div class="fact"><span>想定時間</span><strong>'+book.time+'</strong></div></div><div class="notice warn"><strong>安全上の注意</strong><br>'+book.safety+'</div>'+availabilityPanel+(state.start.error?'<div class="notice danger" role="alert">'+state.start.error+'</div>':'')+'<div class="actions">'+btn('Book一覧へ戻る',"go('U01')",'secondary')+primary+'</div>'+(reviewMode?'<div class="panel"><strong>Start API mock確認</strong><p class="muted">画面表示後もStart時にサーバー側で開始可否を再確認します。</p><div class="actions">'+btn('API成功',"setStartMockMode('success')",'secondary')+btn('APIエラー',"setStartMockMode('error')",'secondary')+btn('直前に開始不可',"setStartMockMode('blocked')",'secondary')+'</div><p class="muted">現在のmock: '+state.start.mode+'</p></div>':''));
  }else if(state.screen==='U03'){
-  const story=state.story||{chapter:1,scene:1,sceneKey:'scene-1',title:'街角のはじまり'};
-  app.innerHTML=page('<p class="muted">'+book.title+' / Chapter '+story.chapter+' / Scene '+story.scene+'</p><h2>'+story.title+'</h2><div class="story"><p>店先の古い時計は、街の時間から少しだけ遅れていた。</p><p>次の手がかりは、ここから数分歩いた「青い壁の広場」にあるらしい。</p></div><div class="notice warn"><strong>移動前に確認</strong><br>歩きながら画面を見続けず、安全な場所で操作してください。</div><div class="actions">'+btn('目的地を確認する',"go('U04')")+btn('中断してBookへ',"go('U01')",'secondary')+'</div>');
+  const progress=latestProgress(book.key),story=state.story||progress||{chapter:1,scene:1,sceneKey:'scene-1',title:'街角のはじまり'},scene=sceneData(story.sceneKey),saving=state.storyAdvance.status==='saving';
+  if(!state.story||state.story.sceneKey!==story.sceneKey)state.story={chapter:story.chapter,scene:story.scene,sceneKey:story.sceneKey,title:story.sceneTitle||story.title||scene.title};
+  const nextAction=scene.nextSceneKey?'<button class="btn" onclick="advanceStory()" '+(saving?'disabled':'')+'>'+(saving?'進捗を保存中…':scene.nextLabel)+'</button>':btn(scene.nextLabel||'次へ',"go('"+(scene.nextScreen||'U04')+"')");
+  app.innerHTML=page('<p class="muted">'+book.title+' / Chapter '+scene.chapter+' / Scene '+scene.scene+'</p><h2>'+scene.title+'</h2><div class="story">'+scene.body.map(x=>'<p>'+x+'</p>').join('')+'</div><div class="panel"><div class="fact"><span>進捗状態</span><strong>'+(saving?'保存中':'保存済み')+'</strong></div><div class="fact"><span>再開地点</span><strong>Chapter '+scene.chapter+' / Scene '+scene.scene+'</strong></div></div>'+(state.storyAdvance.notice?'<div class="notice" role="status">'+state.storyAdvance.notice+'</div>':'')+(state.storyAdvance.error?'<div class="notice danger" role="alert">'+state.storyAdvance.error+'</div>':'')+'<div class="notice warn"><strong>移動前に確認</strong><br>歩きながら画面を見続けず、安全な場所で操作してください。</div><div class="actions">'+nextAction+btn('中断してBookへ',"go('U01')",'secondary')+'</div>'+(reviewMode?'<div class="panel"><strong>Story Progress API mock確認</strong><p class="muted">Scene確定はAPI相当の応答後だけ反映します。保存中はボタンを無効化し、同じrequestの二重反映を防ぎます。</p><div class="actions">'+btn('API成功',"setStoryMockMode('success')",'secondary')+btn('APIエラー',"setStoryMockMode('error')",'secondary')+btn('競合を試す',"setStoryMockMode('conflict')",'secondary')+'</div><p class="muted">現在のmock: '+state.storyAdvance.mode+' / localStorage: '+PROGRESS_KEY+'</p></div>':'') );
  }else if(state.screen==='U04'){
-  app.innerHTML='<div class="map-screen"><div id="leafletMap" class="map" role="application" aria-label="Biblio Map。目的地と周辺マーカーを表示します"></div><div class="map-overlay"><div class="map-status"><strong>目的地：青い壁の広場</strong><span>渋谷エリアのサンプル地点を表示中。地図を見ながら歩かず、安全な場所で確認してください。</span><div class="actions">'+btn('現在地を確認',"go('U05')",'secondary')+'</div></div></div></div>';setTimeout(initLeafletMap,0);
+  app.innerHTML='<div class="map-screen"><div id="leafletMap" class="map" role="application" aria-label="Biblio Map。目的地の青い壁の広場と周辺マーカーを表示します。ズーム操作ができます。"></div><div class="map-overlay"><div class="map-status" aria-label="地図情報のテキスト代替"><strong>目的地：青い壁の広場</strong><div class="map-text-alt">渋谷エリアのサンプル地点。周辺マーカーは Mobian A / Mobian B。地図を見ながら歩かず、安全な場所で確認してください。</div><div class="map-current">現在地：未取得（到着確認時のみ取得）</div><div class="map-legend" aria-label="マーカー凡例"><span class="map-legend-item"><i class="map-legend-dot"></i>目的地</span><span class="map-legend-item"><i class="map-legend-dot friend"></i>周辺マーカー</span></div><div class="actions">'+btn('目的地を中央に',"focusMapTarget()",'secondary')+btn('現在地を確認',"go('U05')",'secondary')+'</div></div></div></div>';setTimeout(initLeafletMap,0);
  }else if(state.screen==='U05'){
   app.innerHTML=page('<h2>到着を確認</h2><div class="notice"><strong>位置情報を使う理由</strong><br>この目的地に到着したか確認するため、今だけ端末の位置情報を利用します。</div><p>位置情報は到着確認に必要なときだけ取得します。PoCでは実位置情報は取得しません。</p><div class="actions">'+btn('到着として確認',"locationMock('ARRIVED')")+btn('まだ到着していない',"locationMock('NOT_ARRIVED')",'secondary')+btn('判定不能を試す',"locationMock('INDETERMINATE')",'secondary')+'</div>');
  }else if(state.screen==='U06'){
@@ -151,6 +180,8 @@ function render(){
  }
 }
 let leafletMapInstance=null;
+const MAP_TARGET=[35.65952,139.70055];
+function focusMapTarget(){if(leafletMapInstance)leafletMapInstance.setView(MAP_TARGET,16,{animate:true})}
 function mapMarkerIcon(kind='target'){
  const cls=kind==='friend'?'map-pin friend':'map-pin';
  return L.divIcon({className:'',html:'<div class="'+cls+'"></div>',iconSize:[24,24],iconAnchor:[12,24],popupAnchor:[0,-24]});
@@ -159,12 +190,12 @@ function initLeafletMap(){
  const el=document.getElementById('leafletMap');
  if(!el||typeof L==='undefined')return;
  if(leafletMapInstance){leafletMapInstance.remove();leafletMapInstance=null}
- const target=[35.65952,139.70055];
- leafletMapInstance=L.map(el,{zoomControl:true,attributionControl:true}).setView(target,16);
+ const target=MAP_TARGET;
+ leafletMapInstance=L.map(el,{zoomControl:true,attributionControl:true,minZoom:3,maxZoom:19}).setView(target,16);
  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(leafletMapInstance);
- L.marker(target,{icon:mapMarkerIcon('target')}).addTo(leafletMapInstance).bindPopup('<strong>青い壁の広場</strong><br>物語上の目的地（PoC）').openPopup();
- L.marker([35.66018,139.69898],{icon:mapMarkerIcon('friend')}).addTo(leafletMapInstance).bindPopup('Mobian A');
- L.marker([35.65858,139.70173],{icon:mapMarkerIcon('friend')}).addTo(leafletMapInstance).bindPopup('Mobian B');
+ L.marker(target,{icon:mapMarkerIcon('target'),title:'目的地：青い壁の広場'}).addTo(leafletMapInstance).bindPopup('<strong>青い壁の広場</strong><br>物語上の目的地（PoC）').openPopup();
+ L.marker([35.66018,139.69898],{icon:mapMarkerIcon('friend'),title:'周辺マーカー：Mobian A'}).addTo(leafletMapInstance).bindPopup('Mobian A');
+ L.marker([35.65858,139.70173],{icon:mapMarkerIcon('friend'),title:'周辺マーカー：Mobian B'}).addTo(leafletMapInstance).bindPopup('Mobian B');
  L.control.scale({imperial:false,position:'bottomleft'}).addTo(leafletMapInstance);
  const refreshMapSize=()=>{if(leafletMapInstance){leafletMapInstance.invalidateSize({pan:false});}};
  requestAnimationFrame(refreshMapSize);
@@ -189,6 +220,7 @@ function opsConfirm(a){pending=a;document.getElementById('confirmText').textCont
 document.getElementById('cancelDlg').onclick=()=>{pending=null;dlg.close()}
 document.getElementById('okDlg').onclick=()=>{if(pending&&pending!=='REPLACE')b().pub=pending;pending=null;dlg.close();render()}
 window.addEventListener('popstate',e=>{if(e.state?.s){state.screen=e.state.s;render()}})
+restoreProgress();
 const restored=restoreSessionMock();
 const requested=location.hash&&labels[location.hash.slice(1)]?location.hash.slice(1):null;
 if(restored)state.screen=requested&&requested!=='LOGIN'?requested:'U04';
