@@ -89,7 +89,7 @@ main{max-width:1280px;margin:auto;padding:18px 18px 44px}
       <div class="brandcopy">
         <div class="eyebrow">AUTOAI OPERATION CONTROL</div>
         <h1>QR商品出品支援</h1>
-        <div class="version">Phaser 4 PoC / Game Button Set v0.7.0</div>
+        <div class="version">Phaser 4 PoC / Game Button Set v0.8.0</div>
       </div>
     </div>
     <div class="header-actions">
@@ -109,7 +109,7 @@ main{max-width:1280px;margin:auto;padding:18px 18px 44px}
       </div>
     </div>
     <div class="hud-chips">
-      <div class="chip">ACTIVE <strong>2 / 5</strong></div>
+      <div class="chip">ACTIVE <strong>4 / 5</strong></div>
       <div class="chip">ENGINE <strong>PHASER 4.2.1</strong></div>
       <div class="chip">MODE <strong>PoC</strong></div>
     </div>
@@ -124,7 +124,7 @@ main{max-width:1280px;margin:auto;padding:18px 18px 44px}
         <div class="fallback-grid">
           <a href="./qr-generator.html">01 QRコード発行</a>
           <a href="./upload.html">02 商品画像アップロード</a>
-          <button type="button" data-fallback="商品画像AI解析">03 商品画像AI解析</button>
+          <a href="./ai-analysis.html">03 商品画像AI解析</a>
           <button type="button" data-fallback="商品データ取込">04 商品データ取込</button>
           <a href="./products.html">05 商品一覧</a>
         </div>
@@ -173,8 +173,8 @@ if (!window.Phaser) {
     },
     {
       no:'03', short:'商品画像AI解析', name:'商品画像AI解析',
-      sub:'AI ANALYSIS CORE', status:'LOCKED', active:false,
-      x:.55, y:.31, type:'ai'
+      sub:'AI ANALYSIS CORE', status:'READY', active:true,
+      link:'./ai-analysis.html', x:.55, y:.31, type:'ai'
     },
     {
       no:'04', short:'商品データ取込', name:'商品データ取込',
@@ -247,7 +247,7 @@ if (!window.Phaser) {
       const t1 = this.add.text(-68,-14,'SYSTEM ONLINE',{
         fontFamily:'"Noto Sans JP", sans-serif',fontSize:'11px',fontStyle:'bold',color:'#197d62'
       });
-      const t2 = this.add.text(-68,6,'2 sectors available',{
+      const t2 = this.add.text(-68,6,'4 sectors available',{
         fontFamily:'"Noto Sans JP", sans-serif',fontSize:'9px',color:'#7b8999'
       });
       status.add([panel,dot,t1,t2]);
@@ -272,7 +272,7 @@ if (!window.Phaser) {
         line.strokePath();
 
         const progress = this.add.graphics();
-        progress.lineStyle(3, i<1 ? 0x20bdea : 0x8ca4b8, i<1 ? .95 : .35);
+        progress.lineStyle(3, i<2 ? 0x20bdea : 0x8ca4b8, i<2 ? .95 : .35);
         progress.beginPath();
         progress.moveTo(ax,ay);
         progress.lineTo(cx,ay);
