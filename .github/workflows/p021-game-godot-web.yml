@@ -31,6 +31,8 @@ jobs:
         run: |
           mkdir -p ~/.local/share/godot/export_templates/
           cp -a /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+      - name: Run GAME-G001 mobile UI contract tests
+        run: python3 p021-game/sources/one-square-farm-godot/tests/test_mobile_ui.py
       - name: Bundle Japanese font
         working-directory: p021-game/sources/one-square-farm-godot
         run: |
