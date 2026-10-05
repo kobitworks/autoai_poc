@@ -45,15 +45,34 @@ var harvest_btn: Button
 var pause_btn: Button
 var speed_btn: Button
 var visual: Control
+var main_grid: GridContainer
+var side_panel_ref: PanelContainer
+var farm_panel_ref: PanelContainer
 var intro_layer: ColorRect
 var result_layer: ColorRect
 var result_text: Label
+
+func _notification(what: int) -> void:
+    if what == NOTIFICATION_RESIZED and is_inside_tree():
+        _apply_responsive_layout()
+
+func _apply_responsive_layout() -> void:
+    if main_grid == null:
+        return
+    var is_portrait := size.y > size.x
+    main_grid.columns = 1 if is_portrait else 2
+    if side_panel_ref != null:
+        side_panel_ref.custom_minimum_size = Vector2(0, 0) if is_portrait else Vector2(315, 0)
+    if visual != null:
+        visual.custom_minimum_size = Vector2(0, 360) if is_portrait else Vector2(540, 360)
+    queue_redraw()
 
 func _ready() -> void:
     paused = true
     _setup_theme()
     _build_ui()
     _build_intro()
+    _apply_responsive_layout()
     _log("準備完了。15日間で150G以上を目指しましょう。")
     _refresh()
 
@@ -183,19 +202,22 @@ func _build_ui() -> void:
     timer_bar.custom_minimum_size = Vector2(300, 18)
     timer_row.add_child(timer_bar)
 
-    var main := HBoxContainer.new()
-    main.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    main.add_theme_constant_override("separation", 12)
-    root.add_child(main)
+    main_grid = GridContainer.new()
+    main_grid.columns = 2
+    main_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    main_grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    main_grid.add_theme_constant_override("h_separation", 12)
+    main_grid.add_theme_constant_override("v_separation", 12)
+    root.add_child(main_grid)
 
-    var farm_panel := PanelContainer.new()
-    farm_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    farm_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    main.add_child(farm_panel)
+    farm_panel_ref = PanelContainer.new()
+    farm_panel_ref.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    farm_panel_ref.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    main_grid.add_child(farm_panel_ref)
 
     var farm_box := VBoxContainer.new()
     farm_box.add_theme_constant_override("separation", 8)
-    farm_panel.add_child(farm_box)
+    farm_panel_ref.add_child(farm_box)
 
     visual = FARM_VISUAL.new()
     visual.custom_minimum_size = Vector2(540, 360)
@@ -208,13 +230,14 @@ func _build_ui() -> void:
     growth.add_theme_font_size_override("font_size", 16)
     farm_box.add_child(growth)
 
-    var side_panel := PanelContainer.new()
-    side_panel.custom_minimum_size = Vector2(315, 0)
-    main.add_child(side_panel)
+    side_panel_ref = PanelContainer.new()
+    side_panel_ref.custom_minimum_size = Vector2(315, 0)
+    side_panel_ref.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    main_grid.add_child(side_panel_ref)
 
     var side := VBoxContainer.new()
     side.add_theme_constant_override("separation", 8)
-    side_panel.add_child(side)
+    side_panel_ref.add_child(side)
 
     var choose_title := Label.new()
     choose_title.text = "種を選ぶ"
