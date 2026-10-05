@@ -17,6 +17,18 @@ const WEATHERS := [
     {"key":"rain","name":"雨"}
 ]
 
+const SFX_PATHS := {
+    "select": "res://audio/select_001.ogg",
+    "plant": "res://audio/click_001.ogg",
+    "water": "res://audio/click_002.ogg",
+    "compost": "res://audio/click_003.ogg",
+    "harvest": "res://audio/confirmation_001.ogg",
+    "success": "res://audio/confirmation_004.ogg",
+    "error": "res://audio/error_001.ogg"
+}
+const AUDIO_LEVELS := [1.0, 0.7, 0.4, 0.0]
+const AUDIO_SETTINGS_PATH := "user://audio_settings.cfg"
+
 var day := 1
 var coins := 60
 var water_stock := 3
@@ -54,6 +66,9 @@ var content_root: VBoxContainer
 var intro_layer: ColorRect
 var result_layer: ColorRect
 var result_text: Label
+var audio_btn: Button
+var sfx_player: AudioStreamPlayer
+var audio_level_index := 1
 
 func _notification(what: int) -> void:
     if what == NOTIFICATION_RESIZED and is_inside_tree():
@@ -74,6 +89,8 @@ func _apply_responsive_layout() -> void:
 
 func _ready() -> void:
     paused = true
+    _load_audio_settings()
+    _setup_audio_player()
     _setup_theme()
     _build_ui()
     _build_intro()
@@ -193,11 +210,15 @@ func _build_ui() -> void:
     header.add_child(controls)
 
     pause_btn = _button("一時停止", _toggle_pause)
-    pause_btn.custom_minimum_size = Vector2(118, 58)
+    pause_btn.custom_minimum_size = Vector2(104, 58)
     speed_btn = _button("速度 ×1", _cycle_speed)
-    speed_btn.custom_minimum_size = Vector2(112, 58)
+    speed_btn.custom_minimum_size = Vector2(96, 58)
+    audio_btn = _button("", _cycle_audio_level)
+    audio_btn.custom_minimum_size = Vector2(96, 58)
     controls.add_child(pause_btn)
     controls.add_child(speed_btn)
+    controls.add_child(audio_btn)
+    _update_audio_button()
 
     stats_grid = GridContainer.new()
     stats_grid.columns = 5
@@ -360,10 +381,56 @@ func _button(text_value: String, callback: Callable) -> Button:
     b.pressed.connect(callback)
     return b
 
+func _setup_audio_player() -> void:
+    sfx_player = AudioStreamPlayer.new()
+    add_child(sfx_player)
+
+func _load_audio_settings() -> void:
+    var config := ConfigFile.new()
+    if config.load(AUDIO_SETTINGS_PATH) == OK:
+        var saved_index := int(config.get_value("audio", "level_index", 1))
+        audio_level_index = clampi(saved_index, 0, AUDIO_LEVELS.size() - 1)
+
+func _save_audio_settings() -> void:
+    var config := ConfigFile.new()
+    config.set_value("audio", "level_index", audio_level_index)
+    config.save(AUDIO_SETTINGS_PATH)
+
+func _audio_gain() -> float:
+    return float(AUDIO_LEVELS[audio_level_index])
+
+func _update_audio_button() -> void:
+    if audio_btn == null:
+        return
+    var percent := roundi(_audio_gain() * 100.0)
+    audio_btn.text = "音 ミュート" if percent == 0 else "音 %d%%" % percent
+
+func _cycle_audio_level() -> void:
+    audio_level_index = (audio_level_index + 1) % AUDIO_LEVELS.size()
+    _save_audio_settings()
+    _update_audio_button()
+    if _audio_gain() > 0.0:
+        _play_sfx("select")
+
+func _play_sfx(key: String) -> void:
+    if sfx_player == null or _audio_gain() <= 0.0 or not SFX_PATHS.has(key):
+        return
+    var path := str(SFX_PATHS[key])
+    if not ResourceLoader.exists(path):
+        return
+    var stream := load(path) as AudioStream
+    if stream == null:
+        return
+    sfx_player.stop()
+    sfx_player.stream = stream
+    sfx_player.volume_db = linear_to_db(_audio_gain())
+    sfx_player.play()
+
 func _choose_crop(key: String) -> void:
     if ended or not crop.is_empty() or not CROPS.has(key):
         return
     selected = key
+    _play_sfx("select")
     _log("%sの種を選びました。" % CROPS[selected].name)
 
 func _plant() -> void:
@@ -371,11 +438,13 @@ func _plant() -> void:
         return
     var data: Dictionary = CROPS[selected]
     if coins < int(data.seed):
+        _play_sfx("error")
         _log("種を買うお金が足りません。")
         return
     coins -= int(data.seed)
     crop = {"key": selected, "growth": 0.0, "watered": false, "health": 100}
     visual.plant_pop()
+    _play_sfx("plant")
     _log("%sを植えました。" % data.name)
 
 func _water() -> void:
@@ -384,20 +453,24 @@ func _water() -> void:
     water_stock -= 1
     crop.watered = true
     visual.splash_water()
+    _play_sfx("water")
     _log("水やりをしました。")
 
 func _compost() -> void:
     if ended:
         return
     if coins < 5:
+        _play_sfx("error")
         _log("土づくり用の5Gが足りません。")
         return
     if soil >= 100:
+        _play_sfx("error")
         _log("土はすでに最高の状態です。")
         return
     coins -= 5
     soil = min(100, soil + 24)
     visual.soil_burst()
+    _play_sfx("compost")
     _log("土づくりをしました。")
 
 func _harvest() -> void:
@@ -405,6 +478,7 @@ func _harvest() -> void:
         return
     var data: Dictionary = CROPS[crop.key]
     if float(crop.growth) < float(data.days):
+        _play_sfx("error")
         _log("まだ収穫には早いです。")
         return
     var revenue := roundi(float(data.sell) * maxf(0.55, float(crop.health) / 100.0) * (1.1 if soil >= 70 else 1.0))
@@ -413,6 +487,7 @@ func _harvest() -> void:
     crop = {}
     soil = max(10, soil - 8)
     visual.harvest_burst()
+    _play_sfx("harvest")
     _log("収穫成功！ +%dG" % revenue)
 
 func _toggle_pause() -> void:
@@ -420,6 +495,7 @@ func _toggle_pause() -> void:
         return
     paused = not paused
     pause_btn.text = "再開" if paused else "一時停止"
+    _play_sfx("select")
     _log("時間を一時停止しました。" if paused else "時間を再開しました。")
 
 func _cycle_speed() -> void:
@@ -430,6 +506,7 @@ func _cycle_speed() -> void:
     else:
         speed = 1.0
     speed_btn.text = "速度 ×%d" % int(speed)
+    _play_sfx("select")
     _log("時間速度を×%dに変更しました。" % int(speed))
 
 func _advance_day() -> void:
@@ -473,6 +550,7 @@ func _finish_game() -> void:
     paused = true
     day_time = 0.0
     var result := "農園、大成功！" if coins >= 150 else "15日間終了！"
+    _play_sfx("success" if coins >= 150 else "error")
     _log("%s 最終資金 %dG / 収穫 %d回" % [result, coins, harvests])
     _show_result(result)
     pause_btn.disabled = true
@@ -595,10 +673,13 @@ func _build_intro() -> void:
     box.add_child(credit)
 
 func _start_game() -> void:
+    if started:
+        return
     started = true
     paused = false
     if intro_layer != null:
         intro_layer.hide()
+    _play_sfx("success")
     _log("農園スタート！")
 
 func _show_result(result: String) -> void:
