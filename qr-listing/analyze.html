@@ -38,7 +38,7 @@ button:disabled{opacity:.45;cursor:not-allowed}.primary{background:var(--a);colo
 </head>
 <body>
 <div class="w">
-  <div class="top"><a href="./upload.html">← 商品画像アップロード</a><span class="tag">PoC / QR-005</span></div>
+  <div class="top"><a href="./upload.html">← 商品画像アップロード</a><span class="tag">PoC / QR-005 + QR-006</span></div>
   <h1>QRを読み取り、<br>商品単位にまとめる。</h1>
   <p class="lead">写真内の管理QRを解析し、同一商品コードの写真を1グループにまとめます。未検出・複数QR・形式不正は自動確定せず、画像ごとに手動補正できます。</p>
 
@@ -74,10 +74,10 @@ button:disabled{opacity:.45;cursor:not-allowed}.primary{background:var(--a);colo
     <div class="tools">
       <b>商品グループ</b>
       <select id="channel"><option value="mercari">メルカリ</option><option value="generic">汎用EC</option></select>
-      <button id="draft" class="secondary">商品情報フォームを作成</button>
+      <button id="draft" class="secondary">商品情報フォームを作成</button>\n      <a class="btn secondary" href="./products.html">商品一覧を開く</a>
     </div>
     <div id="groups"></div>
-    <p class="note">QR解析・例外判定・手動補正・商品ID別グルーピング・仮想リネーム・ZIP生成はPoCとして動作します。画像と解析結果はブラウザ内IndexedDBに保持し、D1/R2への永続化は後続タスクで実装します。</p>
+    <p class="note">QR解析・例外判定・手動補正・商品ID別グルーピング・仮想リネーム・ZIP生成はPoCとして動作します。商品単位のメタデータ・処理状態・写真Blobはブラウザ内IndexedDBに保持します。写真は外部送信せず、D1/R2は使用しません。</p>
   </section>
 </div>
 
@@ -131,7 +131,7 @@ async function saveDecision(item,patch){
   var updated=await AutoAIStore.updateImage(item.id,patch);
   var index=images.findIndex(function(x){return x.id===item.id});
   if(index>=0)images[index]=updated;
-  build();
+  await build();
   renderImages();
 }
 async function applyManual(item,value){
@@ -164,14 +164,15 @@ async function load(){
   q('#status').textContent=images.length+'枚を読み込みました。QR解析を実行してください。';
   q('#bar').style.width='0%';
 }
-function build(){
+async function build(){
   var grouped=QRCore.groupImages(images);
   groups=grouped.groups;unresolved=grouped.unresolved;
   q('#mImages').textContent=String(images.length);
   q('#mGroups').textContent=String(Object.keys(groups).length);
   q('#mUnresolved').textContent=String(unresolved.length);
   q('#mMulti').textContent=String(images.filter(function(x){return x.status==='multi'}).length);
-  renderGroups();
+  await AutoAIStore.syncProducts(groups,current);
+  await renderGroups();
 }
 function renderImages(){
   var box=q('#images');box.innerHTML='';
@@ -211,10 +212,10 @@ async function renderGroups(){
   for(var ci=0;ci<codes.length;ci++){
     var code=codes[ci],arr=groups[code],product=await AutoAIStore.getProduct(code),d=document.createElement('div');d.className='group';
     var list=arr.map(function(x){return '<li>'+esc(x.virtualName)+' ← '+esc(x.originalName)+'</li>'}).join('');
-    var form='';
-    if(product)form='<div class="form">'+field('商品名','title',product.title)+field('カテゴリ','category',product.category)+field('ブランド','brand',product.brand)+field('状態','condition',product.condition)+field('価格','price',product.price)+field('在庫','stock',product.stock)+field('商品説明','description',product.description,true)+field('チャネル固有情報','channelMemo',product.channelMemo,true)+'</div><div class="tools" style="margin-top:8px"><button class="tiny save">保存</button><button class="tiny json">JSON</button></div>';
+    var form='',formReady=!!(product&&(product.formReady||Object.prototype.hasOwnProperty.call(product,'title')));
+    if(formReady)form='<div class="form">'+field('商品名','title',product.title)+field('カテゴリ','category',product.category)+field('ブランド','brand',product.brand)+field('状態','condition',product.condition)+field('価格','price',product.price)+field('在庫','stock',product.stock)+field('商品説明','description',product.description,true)+field('チャネル固有情報','channelMemo',product.channelMemo,true)+'</div><div class="tools" style="margin-top:8px"><button class="tiny save">保存</button><button class="tiny json">JSON</button></div>';
     d.innerHTML='<h3>'+esc(code)+' <span class="status">'+arr.length+'枚</span></h3><ul class="files">'+list+'</ul>'+(arr.length>1?'<div class="group-note">同じQRのため '+arr.length+'枚を同一商品として統合しています。</div>':'')+form;
-    if(product){
+    if(formReady){
       d.querySelector('.save').onclick=(function(div,c,a){return async function(){await AutoAIStore.putProduct(readProduct(div,c,a));q('#status').textContent=c+' を保存しました。'}})(d,code,arr);
       d.querySelector('.json').onclick=(function(div,c,a){return function(){download(new Blob([JSON.stringify(readProduct(div,c,a),null,2)],{type:'application/json'}),c+'.json')}})(d,code,arr);
     }
@@ -241,7 +242,7 @@ q('#scan').onclick=async function(){
       q('#bar').style.width=((i+1)/images.length*100)+'%';
       q('#status').textContent='QR解析 '+(i+1)+' / '+images.length;
     }
-    build();renderImages();
+    await build();renderImages();
     q('#status').textContent='解析完了。商品 '+Object.keys(groups).length+'件 / 未確定 '+unresolved.length+'枚。未確定画像は手動補正してください。';
   }finally{q('#scan').disabled=false}
 };
@@ -249,7 +250,7 @@ q('#draft').onclick=async function(){
   var codes=Object.keys(groups);
   for(var i=0;i<codes.length;i++){
     var code=codes[i],old=await AutoAIStore.getProduct(code);
-    if(!old)await AutoAIStore.putProduct({code:code,channel:q('#channel').value,imageCount:groups[code].length,files:groups[code].map(function(x){return x.virtualName}),title:'',category:'',brand:'',condition:'',price:'',stock:1,description:'管理コード: '+code+'\n画像: '+groups[code].length+'枚',channelMemo:q('#channel').value==='mercari'?'配送負担・配送方法・発送元・発送までの日数を設定':'チャネル固有項目を設定'});
+    if(!old||!Object.prototype.hasOwnProperty.call(old,'title'))await AutoAIStore.putProduct({code:code,formReady:true,channel:q('#channel').value,imageCount:groups[code].length,files:groups[code].map(function(x){return x.virtualName}),title:'',category:'',brand:'',condition:'',price:'',stock:1,description:'管理コード: '+code+'\n画像: '+groups[code].length+'枚',channelMemo:q('#channel').value==='mercari'?'配送負担・配送方法・発送元・発送までの日数を設定':'チャネル固有項目を設定'});
   }
   await renderGroups();q('#status').textContent='確定済み '+codes.length+'商品の商品情報フォームを作成しました。';
 };
