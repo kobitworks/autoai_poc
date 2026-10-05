@@ -481,7 +481,13 @@ func _build_ui() -> void:
 	var layer := CanvasLayer.new()
 	add_child(layer)
 
+	var ui_theme := Theme.new()
+	if ResourceLoader.exists("res://fonts/NotoSansJP.ttf"):
+		ui_theme.default_font = load("res://fonts/NotoSansJP.ttf") as Font
+	ui_theme.default_font_size = 14
+
 	var top_panel := PanelContainer.new()
+	top_panel.theme = ui_theme
 	top_panel.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	top_panel.offset_left = 12
 	top_panel.offset_top = 10
@@ -511,6 +517,7 @@ func _build_ui() -> void:
 	top.add_child(month_label)
 
 	var mission_panel := PanelContainer.new()
+	mission_panel.theme = ui_theme
 	mission_panel.position = Vector2(12, 86)
 	mission_panel.size = Vector2(260, 108)
 	mission_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.06, 0.09, 0.16, 0.88), 16))
@@ -523,6 +530,7 @@ func _build_ui() -> void:
 	mission_panel.add_child(mission_label)
 
 	var camera_panel := HBoxContainer.new()
+	camera_panel.theme = ui_theme
 	camera_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	camera_panel.position = Vector2(-194, 86)
 	camera_panel.size = Vector2(182, 44)
@@ -540,6 +548,7 @@ func _build_ui() -> void:
 		camera_panel.add_child(b)
 
 	help_label = Label.new()
+	help_label.theme = ui_theme
 	help_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	help_label.position = Vector2(-270, -108)
 	help_label.size = Vector2(540, 40)
@@ -550,6 +559,7 @@ func _build_ui() -> void:
 	layer.add_child(help_label)
 
 	var dock_panel := PanelContainer.new()
+	dock_panel.theme = ui_theme
 	dock_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	dock_panel.position = Vector2(-385, -82)
 	dock_panel.size = Vector2(770, 72)
@@ -583,6 +593,7 @@ func _build_ui() -> void:
 	dock.add_child(save_button)
 
 	toast_label = Label.new()
+	toast_label.theme = ui_theme
 	toast_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
 	toast_label.position = Vector2(-190, 84)
 	toast_label.size = Vector2(380, 44)
