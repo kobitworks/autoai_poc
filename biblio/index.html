@@ -78,11 +78,15 @@ function go(s){state.screen=s;history.replaceState({s},'', '#'+s);render()}
 function btn(t,a,c=''){return '<button class="btn '+c+'" onclick="'+a+'">'+t+'</button>'}
 function page(body){return '<div class="paper">'+body+'<div class="dev">画面・遷移確認用PoCです。公開・進行・位置到達・Completeは本番確定処理ではありません。</div></div>'}
 function renderNav(){
- document.body.classList.toggle('login-mode',state.screen==='LOGIN');
- const map={LOGIN:[],U01:['ALL','Spot','Mobian'],U02:['ALL','Spot','Mobian'],U03:['ALL','Spot','Mobian'],U04:['ALL','Spot','Mobian'],U05:['ALL','Spot','Mobian'],U06:['ALL','Spot','Mobian'],U08:['ALL','Spot','Mobian'],U09:['ALL','Spot','Mobian'],U10:['ALL','Spot','Mobian'],O01:['Publication','Version']};
- subnav.innerHTML=(map[state.screen]||[]).map((x,i)=>'<button class="'+(i===0?'active':'')+'">'+x+'</button>').join('');
+ const isLogin=state.screen==='LOGIN';
+ document.body.classList.toggle('login-mode',isLogin);
+ app.classList.toggle('map-mode',state.screen==='U04');
+ const tabs=state.screen==='O01'?['Publication','Version']:(isLogin?[]:LEGACY_UI_BASELINE.tabs);
+ subnav.innerHTML=tabs.map((x,i)=>'<button class="'+(i===0?'active':'')+'" type="button">'+x+'</button>').join('');
  title.textContent=labels[state.screen]||'Biblio';
- jump.innerHTML=Object.keys(labels).map(k=>'<button onclick="go(\''+k+'\')">'+k+' '+labels[k]+'</button>').join('');
+ if(reviewMode){
+  jump.innerHTML=Object.keys(labels).map(k=>'<button onclick="go(\''+k+'\')">'+k+' '+labels[k]+'</button>').join('');
+ }
  document.querySelectorAll('.bottomnav button').forEach(x=>x.classList.remove('current'));
  const menu=state.screen==='U04'||state.screen==='U05'||state.screen==='U06'?'map':state.screen==='O01'?'config':state.screen==='U09'||state.screen==='U10'?'info':'book';
  const el=document.querySelector('.bottomnav [data-menu="'+menu+'"]');if(el)el.classList.add('current');
