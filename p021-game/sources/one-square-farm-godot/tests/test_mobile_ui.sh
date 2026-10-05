@@ -17,6 +17,9 @@ if [ -n "$height" ] && [ "$height" -ge 800 ]; then pass "phone-first viewport he
 
 if grep -q 'ScrollContainer.new()' "$MAIN"; then pass "portrait content is scrollable"; else fail_msg "Main.gd must create a ScrollContainer"; fi
 if grep -q 'vertical_scroll_mode' "$MAIN"; then pass "vertical scroll mode is configured"; else fail_msg "Main.gd must configure vertical_scroll_mode"; fi
+if grep -q 'intro_scroll = ScrollContainer.new()' "$MAIN" && grep -q 'intro_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO' "$MAIN"; then pass "intro screen has independent vertical scrolling"; else fail_msg "intro screen must be vertically scrollable"; fi
+if grep -q 'intro_challenge_grid.columns = 1 if is_portrait else 3' "$MAIN"; then pass "intro challenges reflow for landscape"; else fail_msg "intro challenge grid must reflow in landscape"; fi
+if grep -q 'compact_landscape := not is_portrait and size.y <= 500.0' "$MAIN"; then pass "compact phone landscape layout is defined"; else fail_msg "compact phone landscape layout contract missing"; fi
 if grep -q 'OptionButton.new()' "$MAIN"; then fail_msg "crop selector must not use OptionButton"; else pass "crop selector avoids dropdown"; fi
 if grep -q 'crop_buttons' "$MAIN" && grep -q '_choose_crop' "$MAIN"; then pass "crop selector uses large crop buttons"; else fail_msg "crop_buttons/_choose_crop contract missing"; fi
 if grep -q 'stats_grid = GridContainer.new()' "$MAIN" && grep -q 'stats_labels' "$MAIN"; then pass "status uses readable cards"; else fail_msg "stats card grid contract missing"; fi
