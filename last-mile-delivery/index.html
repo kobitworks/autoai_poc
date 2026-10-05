@@ -45,15 +45,19 @@ const seed=[
 {id:'SHP-003',label:'不在再配達',area:'渋川エリア',addr:'渋川 サンプル7-8-9',hint:'不在時は持戻り',driver:'D-01',status:'absent',seq:3,lat:36.49,lng:139.00},
 {id:'SHP-004',label:'Break-glass検証',area:'伊香保エリア',addr:'伊香保町 サンプル10-11',hint:'緊急時のみ詳細開示',driver:'D-02',status:'delivered',seq:4,lat:36.50,lng:138.92}
 ];
-let role='manager', data=structuredClone(seed), audit=[];
+let role='manager', data=structuredClone(seed), audit=[], breakGlass=new Set();
 const statusName={requested:'依頼受付',assigned:'割当済',picked_up:'集荷済',en_route:'配送中',arrived:'到着',delivered:'配達完了',absent:'不在',reassignment_pending:'再割当待ち',canceled:'キャンセル'};
 const map=L.map('map').setView([36.49,139.02],11);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
 let marks=[];
-function canView(s){return role==='manager'||(s.driver==='D-01'&&!['delivered','canceled'].includes(s.status))}
+function isRevoked(s){return ['delivered','canceled'].includes(s.status)}
+function canView(s){return (role==='manager'&&!isRevoked(s))||(role==='driver'&&s.driver==='D-01'&&!isRevoked(s))||(role==='manager'&&breakGlass.has(s.id))}
 function addAudit(action,id){audit.unshift({at:new Date().toLocaleTimeString('ja-JP'),action,id,role});renderAudit()}
-function transition(s,next){s.status=next;if(['delivered','canceled'].includes(next)) addAudit('配送先アクセス失効',s.id);else addAudit('状態変更: '+statusName[next],s.id);render()}
-function assign(s){s.driver='D-01';s.status='assigned';addAudit('D-01へ割当',s.id);render()}
+function transition(s,next){s.status=next;if(isRevoked(s)){breakGlass.delete(s.id);addAudit('配送先アクセス失効',s.id)}else addAudit('状態変更: '+statusName[next],s.id);render()}
+function assign(s,driver){s.driver=driver;s.status='assigned';breakGlass.delete(s.id);addAudit(driver+'へ割当',s.id);render()}
+function requestReassign(s){s.driver='';s.status='reassignment_pending';breakGlass.delete(s.id);addAudit('担当解除・再割当待ち',s.id);render()}
+function cancelShipment(s){transition(s,'canceled')}
+function toggleBreakGlass(s){if(role!=='manager'||!isRevoked(s))return;if(breakGlass.has(s.id)){breakGlass.delete(s.id);addAudit('Break-glass参照終了',s.id)}else{breakGlass.add(s.id);addAudit('Break-glass緊急参照開始',s.id)}render()}
 function render(){
 document.getElementById('kUnassigned').textContent=data.filter(x=>!x.driver&&!['delivered','canceled'].includes(x.status)).length;
 document.getElementById('kActive').textContent=data.filter(x=>['assigned','picked_up','en_route','arrived','absent'].includes(x.status)).length;
@@ -65,9 +69,20 @@ list.sort((a,b)=>a.seq-b.seq).forEach(s=>{
  const d=document.createElement('div');d.className='shipment';
  const visible=canView(s);
  d.innerHTML='<h3>'+s.seq+'. '+s.id+' / '+s.label+'</h3><span class="pill">'+statusName[s.status]+'</span> <span class="meta">担当 '+(s.driver||'未割当')+'</span>'+
- '<div class="privacy">'+(visible?'配送先: '+s.addr+'<br>補足: '+s.hint:'配送先詳細: アクセス不可（担当外または完了済み）')+'</div><div class="actions"></div>';
+ '<div class="privacy">'+(visible?'配送先: '+s.addr+'<br>補足: '+s.hint:'配送先詳細: アクセス不可（担当外・完了/キャンセル済みの通常参照不可）')+'</div><div class="actions"></div>';
  const a=d.querySelector('.actions');
- if(role==='manager'&&!s.driver&&!['delivered','canceled'].includes(s.status)){const b=document.createElement('button');b.textContent='D-01へ割当';b.onclick=()=>assign(s);a.appendChild(b)}
+ if(role==='manager'){
+   if(!isRevoked(s)){
+     if(!s.driver||s.status==='reassignment_pending'){
+       ['D-01','D-02'].forEach(driver=>{const b=document.createElement('button');b.textContent=driver+'へ割当';b.onclick=()=>assign(s,driver);a.appendChild(b)})
+     }else{
+       const rb=document.createElement('button');rb.textContent='担当変更';rb.onclick=()=>requestReassign(s);a.appendChild(rb)
+     }
+     const cb=document.createElement('button');cb.textContent='キャンセル';cb.onclick=()=>cancelShipment(s);a.appendChild(cb)
+   }else{
+     const bb=document.createElement('button');bb.textContent=breakGlass.has(s.id)?'緊急参照終了':'Break-glass緊急参照';bb.onclick=()=>toggleBreakGlass(s);a.appendChild(bb)
+   }
+ }
  if(role==='driver'&&s.driver==='D-01'){
    const flow={assigned:'picked_up',picked_up:'en_route',en_route:'arrived',arrived:'delivered',absent:'en_route'};
    if(flow[s.status]){const b=document.createElement('button');b.className='primary';b.textContent=statusName[flow[s.status]]+'へ';b.onclick=()=>transition(s,flow[s.status]);a.appendChild(b)}
@@ -81,7 +96,7 @@ const me=L.circleMarker([36.485,139.025],{radius:8}).addTo(map).bindPopup('D-01 
 }
 function renderAudit(){auditEl=document.getElementById('audit');auditEl.innerHTML=audit.length?'<table><tr><th>時刻</th><th>案件</th><th>操作</th><th>役割</th></tr>'+audit.map(x=>'<tr><td>'+x.at+'</td><td>'+x.id+'</td><td>'+x.action+'</td><td>'+x.role+'</td></tr>').join('')+'</table>':'<p class="sub">操作すると監査イベントが表示されます。</p>'}
 managerBtn.onclick=()=>{role='manager';managerBtn.classList.add('active');driverBtn.classList.remove('active');addAudit('役割切替','SYSTEM');render()}
-driverBtn.onclick=()=>{role='driver';driverBtn.classList.add('active');managerBtn.classList.remove('active');addAudit('役割切替','SYSTEM');render()}
-resetBtn.onclick=()=>{data=structuredClone(seed);audit=[];render();renderAudit()}
+driverBtn.onclick=()=>{role='driver';breakGlass.clear();driverBtn.classList.add('active');managerBtn.classList.remove('active');addAudit('役割切替 / Break-glass解除','SYSTEM');render()}
+resetBtn.onclick=()=>{data=structuredClone(seed);audit=[];breakGlass=new Set();render();renderAudit()}
 render();renderAudit();
 </script></body></html>
