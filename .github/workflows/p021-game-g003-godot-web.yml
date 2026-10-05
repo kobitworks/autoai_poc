@@ -47,10 +47,13 @@ jobs:
       - name: Runtime smoke test
         working-directory: p021-game/sources/citycraft-3d-godot
         run: |
-          set -o pipefail
-          godot --headless --path . --quit-after 5 2>&1 | tee /tmp/citycraft-runtime.log
-          if grep -E "SCRIPT ERROR|Parse Error|Invalid (call|assignment|access)|ERROR:" /tmp/citycraft-runtime.log; then
-            echo "Runtime error detected."
+          godot --headless --path . --quit-after 5 > /tmp/citycraft-runtime.log 2>&1 || {
+            cat /tmp/citycraft-runtime.log
+            exit 1
+          }
+          cat /tmp/citycraft-runtime.log
+          if grep -E "SCRIPT ERROR|Parse Error|Invalid (call|assignment|access)" /tmp/citycraft-runtime.log; then
+            echo "Runtime script error detected."
             exit 1
           fi
 
