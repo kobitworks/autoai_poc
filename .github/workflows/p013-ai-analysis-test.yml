@@ -1,0 +1,28 @@
+name: P013 QR-007 AI candidate tests
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'qr-listing/ai-analysis-core.js'
+      - 'qr-listing/ai-analysis-core.test.js'
+      - '.github/workflows/p013-ai-analysis-test.yml'
+  pull_request:
+    paths:
+      - 'qr-listing/ai-analysis-core.js'
+      - 'qr-listing/ai-analysis-core.test.js'
+      - '.github/workflows/p013-ai-analysis-test.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run QR-007 candidate core tests
+        run: node qr-listing/ai-analysis-core.test.js
