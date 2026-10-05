@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f4f7fb">
+<title>出品データ | QR商品出品支援</title>
+<style>
+:root{--bg:#f3f6fa;--card:#fff;--text:#172033;--muted:#667085;--line:#dfe6ee;--cyan:#0891b2;--cyan-soft:#ecfeff;--emerald:#059669;--emerald-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--bad:#be123c;--shadow:0 6px 22px rgba(15,23,42,.07)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,a{font:inherit}
+header{position:sticky;top:0;z-index:10;background:#fff;border-bottom:1px solid var(--line)}.head{max-width:1180px;margin:auto;padding:14px 16px;display:flex;align-items:center;gap:12px}.eyebrow{font-size:11px;font-weight:850;letter-spacing:.08em;color:var(--cyan)}h1{font-size:23px;margin:2px 0 0}.actions{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}.pill,.btn{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:999px;padding:9px 12px;text-decoration:none;font-weight:800;cursor:pointer}.btn.primary{border-color:#a5f3fc;background:var(--cyan-soft);color:#0e7490}.btn.good{border-color:#a7f3d0;background:var(--emerald-soft);color:#047857}
+main{max-width:1180px;margin:auto;padding:18px 16px 44px}.lead{color:var(--muted);line-height:1.7;margin:0 0 14px}.notice{border:1px solid #bae6fd;background:var(--cyan-soft);color:#155e75;border-radius:14px;padding:12px 14px;line-height:1.65;font-size:12px;margin-bottom:14px}.toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:14px}.toolbar input{flex:1;min-width:220px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:11px 12px}.status{font-size:12px;color:var(--muted)}
+.summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}.metric{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;box-shadow:var(--shadow)}.metric span{display:block;color:var(--muted);font-size:11px;margin-bottom:4px}.metric strong{font-size:22px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow)}.card-top{display:flex;align-items:flex-start;gap:10px}.code{font-size:12px;color:var(--muted);word-break:break-all}.title{font-size:18px;font-weight:850;margin-top:3px}.badge{margin-left:auto;white-space:nowrap;border-radius:999px;padding:5px 8px;background:var(--emerald-soft);color:#047857;font-size:10px;font-weight:850}.kv{display:grid;grid-template-columns:100px 1fr;gap:6px 10px;margin-top:13px;font-size:12px;line-height:1.55}.kv dt{color:var(--muted)}.kv dd{margin:0;min-width:0;word-break:break-word}.desc{margin-top:12px;padding:10px 11px;background:#f8fafc;border:1px solid var(--line);border-radius:12px;font-size:12px;line-height:1.65;white-space:pre-wrap}.card-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}.empty,.error{background:#fff;border:2px dashed #cbd5e1;border-radius:18px;padding:34px 18px;text-align:center;color:var(--muted)}.error{border-style:solid;border-color:#fecdd3;background:#fff1f2;color:#9f1239}.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(18px);background:#13283c;color:#fff;padding:10px 14px;border-radius:999px;font-size:11px;opacity:0;pointer-events:none;transition:.18s}.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+@media(max-width:820px){.grid{grid-template-columns:1fr}.summary{grid-template-columns:1fr 1fr}.summary .metric:last-child{grid-column:1/-1}}@media(max-width:520px){h1{font-size:20px}.head{align-items:flex-start}.actions{gap:5px}.pill{padding:8px 9px;font-size:12px}.summary{grid-template-columns:1fr}.summary .metric:last-child{grid-column:auto}.card{padding:13px}.kv{grid-template-columns:82px 1fr}}
+</style>
+<script src="./poc-store.js"></script>
+<script src="./listing-export-core.js"></script>
+</head>
+<body>
+<header><div class="head"><div><div class="eyebrow">GENERIC LISTING DATA</div><h1>出品データ</h1></div><div class="actions"><a class="pill" href="./products.html">商品一覧</a><a class="pill" href="./index.html">メニュー</a></div></div></header>
+<main>
+<p class="lead">人が確認・確定した商品情報だけを、外部サービスに依存しない汎用出品データへ変換します。</p>
+<div class="notice">PoC出力です。価格は推測せず未設定、数量は1、状態は draft として生成します。CSV/コピーはこのブラウザ内で生成し、外部サービスへの登録・送信は行いません。</div>
+<div class="summary"><div class="metric"><span>出品データ件数</span><strong id="count">0</strong></div><div class="metric"><span>価格未設定</span><strong id="noPrice">0</strong></div><div class="metric"><span>出力形式</span><strong style="font-size:16px">一覧 / JSON / CSV</strong></div></div>
+<div class="toolbar"><input id="search" type="search" placeholder="商品ID・商品名・ブランド等で絞り込み"><button id="copyAll" class="btn primary" type="button">全件JSONをコピー</button><button id="csv" class="btn good" type="button">CSVを保存</button><span id="state" class="status">読込中…</span></div>
+<div id="list"></div>
+</main>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<script>
+(function(){
+'use strict';
+var Core=window.AutoAIListingExportCore,$=function(id){return document.getElementById(id)},records=[],productMap={};
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function showToast(text){var el=$('toast');el.textContent=text;el.classList.add('show');clearTimeout(showToast.t);showToast.t=setTimeout(function(){el.classList.remove('show')},1700)}
+function filterRows(){var q=$('search').value.trim().toLowerCase();return records.filter(function(r){return !q||[r.product_code,r.title,r.brand,r.category,r.color,r.condition,r.features,r.description].join(' ').toLowerCase().indexOf(q)>=0})}
+async function copyText(text){
+  if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(text);return}
+  var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();var ok=document.execCommand('copy');ta.remove();if(!ok)throw new Error('COPY_FAILED');
+}
+function render(){
+  var rows=filterRows(),root=$('list');root.className='';root.innerHTML='';
+  if(!rows.length){root.innerHTML='<div class="empty">'+(records.length?'条件に一致する出品データはありません。':'確定済みの商品情報がありません。商品一覧からAI解析・確認画面を開き、商品情報を確定してください。')+'</div>';return}
+  var grid=document.createElement('div');grid.className='grid';
+  rows.forEach(function(r){
+    var p=productMap[r.product_code]||{},card=document.createElement('article');card.className='card';
+    card.innerHTML='<div class="card-top"><div><div class="code">'+esc(r.product_code)+'</div><div class="title">'+esc(r.title)+'</div></div><span class="badge">DRAFT</span></div>'+
+      '<dl class="kv"><dt>ブランド</dt><dd>'+esc(r.brand||'—')+'</dd><dt>カテゴリ</dt><dd>'+esc(r.category||'—')+'</dd><dt>色</dt><dd>'+esc(r.color||'—')+'</dd><dt>状態</dt><dd>'+esc(r.condition||'—')+'</dd><dt>特徴</dt><dd>'+esc(r.features||'—')+'</dd><dt>価格</dt><dd>未設定（推測しません）</dd><dt>数量</dt><dd>'+esc(r.quantity)+'</dd><dt>画像</dt><dd>'+esc(r.image_files||'—')+'</dd></dl>'+
+      '<div class="desc">'+esc(r.description||'説明文未入力')+'</div>'+
+      '<div class="card-actions"><button class="btn primary copy-one" type="button" data-code="'+esc(r.product_code)+'">JSONをコピー</button><a class="btn" href="./ai-analysis.html?product='+encodeURIComponent(r.product_code)+'">商品情報を確認・修正</a></div>';
+    grid.appendChild(card);
+  });
+  root.appendChild(grid);
+  root.querySelectorAll('.copy-one').forEach(function(btn){btn.addEventListener('click',async function(){try{var r=records.find(function(x){return x.product_code===btn.dataset.code});await copyText(Core.toCopyText(r));showToast('JSONをコピーしました')}catch(e){showToast('コピーできませんでした')}})});
+}
+async function load(){
+  try{
+    var products=await AutoAIStore.listProducts();productMap={};products.forEach(function(p){productMap[p.code]=p});
+    records=Core.buildListingRecords(products);
+    var wanted=new URLSearchParams(location.search).get('product');if(wanted)$('search').value=wanted;
+    $('count').textContent=String(records.length);$('noPrice').textContent=String(records.filter(function(x){return x.price===''}).length);
+    $('state').textContent='最終読込 '+new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit'});render();
+  }catch(e){$('state').textContent='読込エラー';$('list').className='error';$('list').textContent='ブラウザ内データを読み込めませんでした: '+(e&&e.message?e.message:e)}
+}
+$('search').addEventListener('input',render);
+$('copyAll').addEventListener('click',async function(){try{await copyText(JSON.stringify(filterRows(),null,2));showToast('表示中データをコピーしました')}catch(e){showToast('コピーできませんでした')}});
+$('csv').addEventListener('click',function(){var rows=filterRows();if(!rows.length){showToast('CSVに出力するデータがありません');return}var blob=new Blob(['\ufeff'+Core.toCsv(rows)],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='p013-listing-data-'+new Date().toISOString().slice(0,10)+'.csv';document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},0);showToast('CSVを生成しました')});
+if(!window.indexedDB){$('list').className='error';$('list').textContent='このブラウザではIndexedDBを利用できません。';$('state').textContent='利用不可'}else{load()}
+})();
+</script>
+</body>
+</html>
