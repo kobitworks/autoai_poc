@@ -27,7 +27,7 @@ button{padding:0 16px;background:#fff;font-weight:800;font-size:17px}
 button.primary{background:#1769e0;color:#fff;border-color:#1769e0}
 button.voice{background:#0b1220;color:#fff;border-color:#0b1220}
 button.danger{background:#fff3f2;color:#b42318;border-color:#fecdca}
-#status{font-size:13px;color:#667085;margin-top:6px;min-height:18px;line-height:1.35}
+#status{font-size:13px;color:#667085;margin-top:6px;min-height:18px;line-height:1.35}\n#providerNote{font-size:11px;color:#667085;margin-top:3px;line-height:1.35}
 #mapWrap{position:relative;width:100%;height:100%;min-height:0}
 #map{width:100%;height:100%}
 #driveHud{position:absolute;right:12px;top:12px;z-index:900;display:grid;grid-template-columns:repeat(2,minmax(112px,1fr));gap:8px;pointer-events:none}
@@ -48,7 +48,7 @@ button.danger{background:#fff3f2;color:#b42318;border-color:#fecdca}
 <body>
 <div id="app">
 <header>
-  <div class="topline"><a class="back" href="../">← PoC一覧へ戻る</a><span class="version">Version 0.4 / PWA</span></div>
+  <div class="topline"><a class="back" href="../">← PoC一覧へ戻る</a><span class="version">Version 0.5 / PWA</span></div>
   <h1>🚚 タブレットナビ PoC</h1>
   <div class="row">
     <input id="q" type="search" inputmode="search" placeholder="目的地を入力（例：渋川駅）" autocomplete="off">
@@ -57,7 +57,7 @@ button.danger{background:#fff3f2;color:#b42318;border-color:#fecdca}
     <button id="locate">現在地へ</button>
     <button id="stopNav" class="danger">案内終了</button>
   </div>
-  <div id="status">GPSを開始しています…</div>
+  <div id="status">GPSを開始しています…</div>\n  <div id="providerNote">検索: OpenStreetMap Nominatim / 経路: Project OSRM demo（低頻度・非商用PoC、各1req/s以下）</div>
 </header>
 <div id="mapWrap">
   <div id="map"></div>
@@ -80,6 +80,51 @@ button.danger{background:#fff3f2;color:#b42318;border-color:#fecdca}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const statusEl=document.getElementById('status'), q=document.getElementById('q');
+const DEFAULT_PROVIDERS={
+  geocoder:{
+    name:'OpenStreetMap Nominatim public API',
+    searchBase:'https://nominatim.openstreetmap.org/search',
+    minIntervalMs:1100
+  },
+  route:{
+    name:'Project OSRM demo server',
+    routeBase:'https://router.project-osrm.org/route/v1/driving',
+    minIntervalMs:1100
+  }
+};
+let providers=JSON.parse(JSON.stringify(DEFAULT_PROVIDERS));
+function validHttpsBase(v,fallback){
+  try{
+    const u=new URL(v);
+    return u.protocol==='https:'?u.toString().replace(/\/$/,''):fallback;
+  }catch(e){return fallback}
+}
+const providerConfigReady=(async()=>{
+  try{
+    const r=await fetch('./providers.json',{cache:'no-store'});
+    if(!r.ok) return;
+    const cfg=await r.json();
+    if(cfg&&cfg.geocoder){
+      providers.geocoder.searchBase=validHttpsBase(cfg.geocoder.searchBase,providers.geocoder.searchBase);
+      if(Number.isFinite(cfg.geocoder.minIntervalMs)) providers.geocoder.minIntervalMs=Math.max(1000,cfg.geocoder.minIntervalMs);
+      if(cfg.geocoder.name) providers.geocoder.name=String(cfg.geocoder.name);
+    }
+    if(cfg&&cfg.route){
+      providers.route.routeBase=validHttpsBase(cfg.route.routeBase,providers.route.routeBase);
+      if(Number.isFinite(cfg.route.minIntervalMs)) providers.route.minIntervalMs=Math.max(1000,cfg.route.minIntervalMs);
+      if(cfg.route.name) providers.route.name=String(cfg.route.name);
+    }
+  }catch(e){}
+})();
+const providerLastRequest={geocoder:0,route:0};
+async function waitProviderRateLimit(kind){
+  await providerConfigReady;
+  const cfg=providers[kind];
+  const now=Date.now();
+  const wait=Math.max(0,(providerLastRequest[kind]+cfg.minIntervalMs)-now);
+  if(wait>0) await new Promise(resolve=>setTimeout(resolve,wait));
+  providerLastRequest[kind]=Date.now();
+}
 const panel=document.getElementById('panel'), distEl=document.getElementById('distance'), durEl=document.getElementById('duration'), destEl=document.getElementById('dest');
 const speedEl=document.getElementById('speedValue'), speedSourceEl=document.getElementById('speedSource');
 const headingEl=document.getElementById('headingValue'), headingDetailEl=document.getElementById('headingDetail');
@@ -329,7 +374,7 @@ async function searchDest(){
   const text=q.value.trim(); if(!text){setStatus('目的地を入力してください');return}
   setStatus('目的地を検索しています…');
   try{
-    const u='https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=jp&accept-language=ja&q='+encodeURIComponent(text);
+    await waitProviderRateLimit('geocoder');\n    const u=providers.geocoder.searchBase+'?format=json&limit=1&countrycodes=jp&accept-language=ja&q='+encodeURIComponent(text);
     const r=await fetch(u); const data=await r.json();
     if(!data.length){setStatus('目的地が見つかりませんでした');return}
     const d=[+data[0].lat,+data[0].lon];
@@ -344,7 +389,7 @@ async function searchDest(){
 async function drawRoute(a,b){
   setStatus('ルートを計算しています…');
   try{
-    const u='https://router.project-osrm.org/route/v1/driving/'+a[1]+','+a[0]+';'+b[1]+','+b[0]+'?overview=full&geometries=geojson';
+    await waitProviderRateLimit('route');\n    const u=providers.route.routeBase+'/'+a[1]+','+a[0]+';'+b[1]+','+b[0]+'?overview=full&geometries=geojson';
     const r=await fetch(u); const data=await r.json();
     if(!data.routes||!data.routes.length) throw new Error();
     const route=data.routes[0], pts=route.geometry.coordinates.map(x=>[x[1],x[0]]);
