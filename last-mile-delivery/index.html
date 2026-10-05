@@ -17,6 +17,7 @@ button.primary{background:#0aa6a6;color:white;border-color:#0aa6a6}.active{outli
 .list{display:grid;gap:10px}.shipment{border:1px solid #dce4e8;border-radius:12px;padding:12px}
 .shipment h3{margin:0 0 6px;font-size:16px}.meta{font-size:12px;color:#667782}.pill{display:inline-block;border-radius:999px;padding:3px 8px;background:#e8f7f5;font-size:12px}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.privacy{background:#fff7df;border-left:4px solid #e3aa26;padding:9px;border-radius:8px;margin-top:8px;font-size:13px}
+.gpsbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:0 0 10px}.gpsstatus{font-size:12px;color:#52636f}
 #map{height:390px;border-radius:12px}.audit{max-height:240px;overflow:auto;font-size:12px}.hidden{display:none}
 table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:8px;border-bottom:1px solid #edf0f2;text-align:left}
 @media(max-width:760px){.grid{grid-template-columns:repeat(2,1fr)}.layout{grid-template-columns:1fr}#map{height:300px}}
@@ -33,7 +34,7 @@ table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:8px;borde
 </div>
 <div class="layout">
 <section class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="font-size:18px">配送案件</h2><button id="resetBtn">サンプル初期化</button></div><div id="shipments" class="list"></div></section>
-<section class="card"><h2 style="font-size:18px">配送順・地図</h2><div id="map"></div><p class="sub">位置はPoC用の疑似現在地です。GPS生軌跡は保存しません。</p></section>
+<section class="card"><h2 style="font-size:18px">配送順・地図</h2><div id="gpsControls" class="gpsbar hidden"><button id="gpsBtn" class="primary">GPS現在地を開始</button><span id="gpsStatus" class="gpsstatus">未開始（疑似現在地表示）</span></div><div id="map"></div><p class="sub">GPSはドライバーが明示的に開始した間だけ取得し、最新fixだけをメモリ保持します。生軌跡・端末永続保存は行いません。</p></section>
 </div>
 <section class="card" style="margin-top:14px"><h2 style="font-size:18px">監査ログ（個人情報を複製しない）</h2><div id="audit" class="audit"></div></section>
 </div>
@@ -45,15 +46,70 @@ const seed=[
 {id:'SHP-003',label:'不在再配達',area:'渋川エリア',addr:'渋川 サンプル7-8-9',hint:'不在時は持戻り',driver:'D-01',status:'absent',seq:3,lat:36.49,lng:139.00},
 {id:'SHP-004',label:'Break-glass検証',area:'伊香保エリア',addr:'伊香保町 サンプル10-11',hint:'緊急時のみ詳細開示',driver:'D-02',status:'delivered',seq:4,lat:36.50,lng:138.92}
 ];
-let role='manager', data=structuredClone(seed), audit=[];
+let role='manager', data=structuredClone(seed), audit=[], breakGlass=new Set();
+let gpsWatchId=null, gpsFix=null;
+const pseudoPosition={lat:36.485,lng:139.025};
+const gpsControlsEl=document.getElementById('gpsControls');
+const gpsBtnEl=document.getElementById('gpsBtn');
+const gpsStatusEl=document.getElementById('gpsStatus');
 const statusName={requested:'依頼受付',assigned:'割当済',picked_up:'集荷済',en_route:'配送中',arrived:'到着',delivered:'配達完了',absent:'不在',reassignment_pending:'再割当待ち',canceled:'キャンセル'};
 const map=L.map('map').setView([36.49,139.02],11);
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap contributors'}).addTo(map);
 let marks=[];
-function canView(s){return role==='manager'||(s.driver==='D-01'&&!['delivered','canceled'].includes(s.status))}
+function updateGpsUi(message){
+ gpsStatusEl.textContent=message;
+ gpsBtnEl.textContent=gpsWatchId===null?'GPS現在地を開始':'GPS取得を停止';
+}
+function renderMap(){
+ marks.forEach(m=>map.removeLayer(m));marks=[];
+ data.forEach(s=>{const m=L.marker([s.lat,s.lng]).addTo(map).bindPopup(s.id+' / '+statusName[s.status]);marks.push(m)});
+ const p=gpsFix||pseudoPosition;
+ const label=gpsFix?'D-01 GPS現在地'+(gpsFix.accuracy!==null?' / 精度 ±'+Math.round(gpsFix.accuracy)+'m':' / 精度不明'):'D-01 疑似現在地';
+ const me=L.circleMarker([p.lat,p.lng],{radius:8}).addTo(map).bindPopup(label);marks.push(me);
+ if(gpsFix&&gpsFix.accuracy!==null){
+   const ac=L.circle([p.lat,p.lng],{radius:gpsFix.accuracy,weight:1,fillOpacity:.06}).addTo(map);marks.push(ac);
+ }
+}
+function clearGpsWatch(message){
+ if(gpsWatchId!==null&&navigator.geolocation) navigator.geolocation.clearWatch(gpsWatchId);
+ gpsWatchId=null;gpsFix=null;updateGpsUi(message);
+}
+function stopGps(manual=true){
+ const wasActive=gpsWatchId!==null||gpsFix!==null;
+ clearGpsWatch(manual?'停止中（座標保持なし）':'停止中（再開にはボタン操作が必要）');
+ renderMap();
+ if(manual&&wasActive)addAudit('GPS取得停止','SYSTEM');
+}
+function startGps(){
+ if(role!=='driver')return;
+ if(!navigator.geolocation){gpsBtnEl.disabled=true;updateGpsUi('このブラウザはGeolocation非対応');return}
+ if(gpsWatchId!==null)return;
+ updateGpsUi('GPS許可待ち / 取得開始中');
+ gpsWatchId=navigator.geolocation.watchPosition(pos=>{
+   const lat=Number(pos.coords.latitude),lng=Number(pos.coords.longitude),rawAcc=Number(pos.coords.accuracy);
+   if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180){
+     updateGpsUi('GPS値が不正なため表示を更新していません');return;
+   }
+   const firstFix=gpsFix===null;
+   gpsFix={lat,lng,accuracy:Number.isFinite(rawAcc)&&rawAcc>=0?rawAcc:null,timestamp:Number(pos.timestamp)||Date.now()};
+   updateGpsUi('GPS取得中'+(gpsFix.accuracy!==null?' / 精度 ±'+Math.round(gpsFix.accuracy)+'m':' / 精度不明'));
+   renderMap();
+   if(firstFix){map.setView([lat,lng],16);addAudit('GPS現在地を取得','SYSTEM')}
+ },err=>{
+   const label=err&&err.code===1?'GPS権限が拒否されました':err&&err.code===2?'GPS現在地を取得できません':err&&err.code===3?'GPS取得がタイムアウトしました':'GPS取得エラー';
+   clearGpsWatch(label+' / 座標保持なし');renderMap();addAudit('GPS取得停止（'+label+'）','SYSTEM');
+ },{enableHighAccuracy:true,maximumAge:3000,timeout:15000});
+ updateGpsUi('GPS許可待ち / 取得開始中');
+ addAudit('GPS取得開始','SYSTEM');
+}
+function isRevoked(s){return ['delivered','canceled'].includes(s.status)}
+function canView(s){return (role==='manager'&&!isRevoked(s))||(role==='driver'&&s.driver==='D-01'&&!isRevoked(s))||(role==='manager'&&breakGlass.has(s.id))}
 function addAudit(action,id){audit.unshift({at:new Date().toLocaleTimeString('ja-JP'),action,id,role});renderAudit()}
-function transition(s,next){s.status=next;if(['delivered','canceled'].includes(next)) addAudit('配送先アクセス失効',s.id);else addAudit('状態変更: '+statusName[next],s.id);render()}
-function assign(s){s.driver='D-01';s.status='assigned';addAudit('D-01へ割当',s.id);render()}
+function transition(s,next){s.status=next;if(isRevoked(s)){breakGlass.delete(s.id);addAudit('配送先アクセス失効',s.id)}else addAudit('状態変更: '+statusName[next],s.id);render()}
+function assign(s,driver){s.driver=driver;s.status='assigned';breakGlass.delete(s.id);addAudit(driver+'へ割当',s.id);render()}
+function requestReassign(s){s.driver='';s.status='reassignment_pending';breakGlass.delete(s.id);addAudit('担当解除・再割当待ち',s.id);render()}
+function cancelShipment(s){transition(s,'canceled')}
+function toggleBreakGlass(s){if(role!=='manager'||!isRevoked(s))return;if(breakGlass.has(s.id)){breakGlass.delete(s.id);addAudit('Break-glass参照終了',s.id)}else{breakGlass.add(s.id);addAudit('Break-glass緊急参照開始',s.id)}render()}
 function render(){
 document.getElementById('kUnassigned').textContent=data.filter(x=>!x.driver&&!['delivered','canceled'].includes(x.status)).length;
 document.getElementById('kActive').textContent=data.filter(x=>['assigned','picked_up','en_route','arrived','absent'].includes(x.status)).length;
@@ -65,9 +121,20 @@ list.sort((a,b)=>a.seq-b.seq).forEach(s=>{
  const d=document.createElement('div');d.className='shipment';
  const visible=canView(s);
  d.innerHTML='<h3>'+s.seq+'. '+s.id+' / '+s.label+'</h3><span class="pill">'+statusName[s.status]+'</span> <span class="meta">担当 '+(s.driver||'未割当')+'</span>'+
- '<div class="privacy">'+(visible?'配送先: '+s.addr+'<br>補足: '+s.hint:'配送先詳細: アクセス不可（担当外または完了済み）')+'</div><div class="actions"></div>';
+ '<div class="privacy">'+(visible?'配送先: '+s.addr+'<br>補足: '+s.hint:'配送先詳細: アクセス不可（担当外・完了/キャンセル済みの通常参照不可）')+'</div><div class="actions"></div>';
  const a=d.querySelector('.actions');
- if(role==='manager'&&!s.driver&&!['delivered','canceled'].includes(s.status)){const b=document.createElement('button');b.textContent='D-01へ割当';b.onclick=()=>assign(s);a.appendChild(b)}
+ if(role==='manager'){
+   if(!isRevoked(s)){
+     if(!s.driver||s.status==='reassignment_pending'){
+       ['D-01','D-02'].forEach(driver=>{const b=document.createElement('button');b.textContent=driver+'へ割当';b.onclick=()=>assign(s,driver);a.appendChild(b)})
+     }else{
+       const rb=document.createElement('button');rb.textContent='担当変更';rb.onclick=()=>requestReassign(s);a.appendChild(rb)
+     }
+     const cb=document.createElement('button');cb.textContent='キャンセル';cb.onclick=()=>cancelShipment(s);a.appendChild(cb)
+   }else{
+     const bb=document.createElement('button');bb.textContent=breakGlass.has(s.id)?'緊急参照終了':'Break-glass緊急参照';bb.onclick=()=>toggleBreakGlass(s);a.appendChild(bb)
+   }
+ }
  if(role==='driver'&&s.driver==='D-01'){
    const flow={assigned:'picked_up',picked_up:'en_route',en_route:'arrived',arrived:'delivered',absent:'en_route'};
    if(flow[s.status]){const b=document.createElement('button');b.className='primary';b.textContent=statusName[flow[s.status]]+'へ';b.onclick=()=>transition(s,flow[s.status]);a.appendChild(b)}
@@ -75,13 +142,16 @@ list.sort((a,b)=>a.seq-b.seq).forEach(s=>{
  }
  shipments.appendChild(d)
 });
-marks.forEach(m=>map.removeLayer(m));marks=[];
-data.forEach(s=>{const m=L.marker([s.lat,s.lng]).addTo(map).bindPopup(s.id+' / '+statusName[s.status]);marks.push(m)});
-const me=L.circleMarker([36.485,139.025],{radius:8}).addTo(map).bindPopup('D-01 疑似現在地');marks.push(me);
+gpsControlsEl.classList.toggle('hidden',role!=='driver');
+renderMap();
 }
 function renderAudit(){auditEl=document.getElementById('audit');auditEl.innerHTML=audit.length?'<table><tr><th>時刻</th><th>案件</th><th>操作</th><th>役割</th></tr>'+audit.map(x=>'<tr><td>'+x.at+'</td><td>'+x.id+'</td><td>'+x.action+'</td><td>'+x.role+'</td></tr>').join('')+'</table>':'<p class="sub">操作すると監査イベントが表示されます。</p>'}
-managerBtn.onclick=()=>{role='manager';managerBtn.classList.add('active');driverBtn.classList.remove('active');addAudit('役割切替','SYSTEM');render()}
-driverBtn.onclick=()=>{role='driver';driverBtn.classList.add('active');managerBtn.classList.remove('active');addAudit('役割切替','SYSTEM');render()}
-resetBtn.onclick=()=>{data=structuredClone(seed);audit=[];render();renderAudit()}
+managerBtn.onclick=()=>{if(role==='driver')stopGps(false);role='manager';managerBtn.classList.add('active');driverBtn.classList.remove('active');addAudit('役割切替','SYSTEM');render()}
+driverBtn.onclick=()=>{role='driver';breakGlass.clear();driverBtn.classList.add('active');managerBtn.classList.remove('active');addAudit('役割切替 / Break-glass解除','SYSTEM');render()}
+gpsBtnEl.onclick=()=>{gpsWatchId===null?startGps():stopGps(true)}
+resetBtn.onclick=()=>{stopGps(false);data=structuredClone(seed);audit=[];breakGlass=new Set();render();renderAudit()}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState!=='visible'&&gpsWatchId!==null)stopGps(false)});
+window.addEventListener('beforeunload',()=>{if(gpsWatchId!==null&&navigator.geolocation)navigator.geolocation.clearWatch(gpsWatchId)});
+if(!navigator.geolocation){gpsBtnEl.disabled=true;updateGpsUi('このブラウザはGeolocation非対応')}
 render();renderAudit();
 </script></body></html>
