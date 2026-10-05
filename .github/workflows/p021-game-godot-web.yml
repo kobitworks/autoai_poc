@@ -34,15 +34,25 @@ jobs:
           mkdir -p fonts
           wget -q -O fonts/NotoSansJP.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/NotoSansJP%5Bwght%5D.ttf"
           test -s fonts/NotoSansJP.ttf
+      - name: Bundle Kenney Tiny Farm CC0 assets
+        working-directory: p021-game/sources/one-square-farm-godot
+        run: |
+          mkdir -p assets/kenney /tmp/kenney-tiny-farm
+          wget -q -O /tmp/kenney-tiny-farm.zip "https://kenney.nl/media/pages/assets/tiny-farm/dfded1ae3e-1782913588/kenney_tiny-farm.zip"
+          unzip -o /tmp/kenney-tiny-farm.zip -d /tmp/kenney-tiny-farm
+          cp /tmp/kenney-tiny-farm/Tilemap/tilemap_packed.png assets/kenney/tiny_farm.png
+          cp /tmp/kenney-tiny-farm/License.txt assets/kenney/License.txt
+          test -s assets/kenney/tiny_farm.png
+          test -s assets/kenney/License.txt
       - name: Export GAME-G001 for Web
         working-directory: p021-game/sources/one-square-farm-godot
         run: |
-          mkdir -p ../../games/one-square-farm-godot-v3
+          mkdir -p ../../games/one-square-farm-godot-v4
           godot --headless --editor --quit-after 2
-          godot --headless --export-release "Web" ../../games/one-square-farm-godot-v3/index.html
-          test -f ../../games/one-square-farm-godot-v3/index.html
-          test -f ../../games/one-square-farm-godot-v3/index.wasm
-          test -f ../../games/one-square-farm-godot-v3/index.pck
+          godot --headless --export-release "Web" ../../games/one-square-farm-godot-v4/index.html
+          test -f ../../games/one-square-farm-godot-v4/index.html
+          test -f ../../games/one-square-farm-godot-v4/index.wasm
+          test -f ../../games/one-square-farm-godot-v4/index.pck
       - name: Bundle Japanese font for GAME-G002
         working-directory: p021-game/sources/past-self-coop-godot
         run: |
@@ -63,7 +73,7 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add p021-game/games/one-square-farm-godot-v3/ p021-game/games/past-self-coop/
+          git add p021-game/games/one-square-farm-godot-v4/ p021-game/games/past-self-coop/
           if git diff --cached --quiet; then
             echo "No exported changes."
           else
