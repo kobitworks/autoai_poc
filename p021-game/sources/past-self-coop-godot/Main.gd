@@ -217,7 +217,7 @@ func _draw_hud() -> void:
 	draw_string(font, Vector2(682, 55), phase_text, HORIZONTAL_ALIGNMENT_LEFT, -1, 18, phase_color)
 
 	if phase == Phase.RECORDING:
-		var remain := max(0.0, RECORD_SECONDS - record_elapsed)
+		var remain: float = maxf(0.0, RECORD_SECONDS - record_elapsed)
 		draw_string(font, Vector2(515, 55), "残り %.1f 秒" % remain, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("#f6d6da"))
 		draw_rect(Rect2(515, 67, 125, 7), Color("#402833"), true)
 		draw_rect(Rect2(515, 67, 125.0 * (remain / RECORD_SECONDS), 7), Color("#ff6b79"), true)
