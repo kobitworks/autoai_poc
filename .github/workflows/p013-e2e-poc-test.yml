@@ -1,0 +1,46 @@
+name: P013 QR-011 E2E PoC contract
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'qr-listing/index.html'
+      - 'qr-listing/upload.html'
+      - 'qr-listing/analyze.html'
+      - 'qr-listing/products.html'
+      - 'qr-listing/ai-analysis.html'
+      - 'qr-listing/listing-export.html'
+      - 'qr-listing/qr-grouping-core.js'
+      - 'qr-listing/ai-analysis-core.js'
+      - 'qr-listing/product-confirmation-core.js'
+      - 'qr-listing/listing-export-core.js'
+      - 'qr-listing/e2e-poc-contract.test.js'
+      - '.github/workflows/p013-e2e-poc-test.yml'
+  pull_request:
+    paths:
+      - 'qr-listing/index.html'
+      - 'qr-listing/upload.html'
+      - 'qr-listing/analyze.html'
+      - 'qr-listing/products.html'
+      - 'qr-listing/ai-analysis.html'
+      - 'qr-listing/listing-export.html'
+      - 'qr-listing/qr-grouping-core.js'
+      - 'qr-listing/ai-analysis-core.js'
+      - 'qr-listing/product-confirmation-core.js'
+      - 'qr-listing/listing-export-core.js'
+      - 'qr-listing/e2e-poc-contract.test.js'
+      - '.github/workflows/p013-e2e-poc-test.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  e2e-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify QR-011 end-to-end PoC contract
+        run: node qr-listing/e2e-poc-contract.test.js
