@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0f172a">
+<title>CityCraft 3D | 街づくりシミュレーション</title>
+<style>
+:root{
+  --bg:#08111f;--panel:rgba(15,23,42,.88);--line:rgba(255,255,255,.12);
+  --text:#f8fafc;--muted:#94a3b8;--cyan:#22d3ee;--emerald:#34d399;
+  --danger:#fb7185;--amber:#fbbf24;--shadow:0 18px 50px rgba(0,0,0,.34)
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif;color:var(--text)}
+button{font:inherit}
+#app{position:fixed;inset:0;overflow:hidden;background:linear-gradient(180deg,#8bd5ff 0%,#c6efff 45%,#daf7e8 100%)}
+#viewport{position:absolute;inset:0;touch-action:none}
+#viewport canvas{display:block;width:100%;height:100%;outline:none}
+.topbar{position:absolute;top:0;left:0;right:0;z-index:10;display:flex;gap:10px;align-items:center;padding:max(10px,env(safe-area-inset-top)) 12px 10px;pointer-events:none}
+.brand,.stat,.mission,.tool-help,.camera-tools,.toast{backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow)}
+.brand{display:flex;align-items:center;gap:10px;border-radius:16px;padding:10px 13px;min-width:0}
+.brand-mark{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(135deg,var(--cyan),var(--emerald));color:#04111a;font-weight:900}
+.brand-title{font-weight:800;line-height:1.05;letter-spacing:.01em}
+.brand-sub{font-size:11px;color:var(--muted);margin-top:3px}
+.stats{display:flex;gap:8px;margin-left:auto;min-width:0}
+.stat{border-radius:14px;padding:8px 11px;min-width:82px}
+.stat-label{font-size:10px;text-transform:uppercase;color:var(--muted);letter-spacing:.06em}
+.stat-value{margin-top:2px;font-weight:800;font-size:15px;white-space:nowrap}
+.stat-value.good{color:#86efac}.stat-value.warn{color:#fde68a}
+.mission{position:absolute;left:12px;top:86px;z-index:9;border-radius:16px;padding:12px;width:min(250px,42vw);pointer-events:none}
+.mission-title{font-weight:800;font-size:13px;margin-bottom:7px}
+.mission-row{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:12px;color:#dbeafe}
+.dot{width:8px;height:8px;border-radius:50%;background:#64748b;box-shadow:0 0 0 3px rgba(255,255,255,.04)}
+.dot.done{background:var(--emerald);box-shadow:0 0 10px rgba(52,211,153,.7)}
+.progress{height:5px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;margin-top:8px}
+.progress>span{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--emerald));width:0;transition:width .35s}
+.camera-tools{position:absolute;right:12px;top:86px;z-index:12;border-radius:16px;padding:6px;display:flex;gap:5px}
+.icon-btn{border:0;color:#e2e8f0;background:transparent;width:38px;height:38px;border-radius:11px;display:grid;place-items:center;font-weight:900;cursor:pointer}
+.icon-btn:hover,.icon-btn:active{background:rgba(255,255,255,.09)}
+.tool-help{position:absolute;bottom:114px;left:50%;transform:translateX(-50%);z-index:10;border-radius:999px;padding:8px 13px;color:#dbeafe;font-size:12px;pointer-events:none;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis}
+.dock-wrap{position:absolute;z-index:14;left:0;right:0;bottom:0;padding:8px 10px max(10px,env(safe-area-inset-bottom));pointer-events:none}
+.dock{pointer-events:auto;margin:auto;width:min(760px,100%);display:grid;grid-template-columns:repeat(5,1fr) 88px;gap:7px;background:rgba(15,23,42,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid var(--line);box-shadow:var(--shadow);border-radius:20px;padding:8px}
+.tool{border:1px solid transparent;background:rgba(255,255,255,.055);color:#e2e8f0;border-radius:14px;min-height:64px;padding:7px 5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;position:relative}
+.tool:hover{background:rgba(255,255,255,.085)}
+.tool.active{background:linear-gradient(180deg,rgba(34,211,238,.22),rgba(52,211,153,.16));border-color:rgba(34,211,238,.65);box-shadow:inset 0 0 0 1px rgba(255,255,255,.05)}
+.tool.danger.active{background:rgba(251,113,133,.18);border-color:rgba(251,113,133,.72)}
+.tool-icon{font-size:22px;line-height:1}.tool-name{font-size:11px;font-weight:800}.tool-cost{font-size:9px;color:var(--muted)}
+.menu-btn{border:0;background:rgba(255,255,255,.08);color:white;border-radius:14px;cursor:pointer;font-weight:800}
+.menu-btn:active{transform:scale(.98)}
+.toast{position:absolute;left:50%;top:82px;transform:translate(-50%,-16px);z-index:30;border-radius:14px;padding:10px 14px;font-size:13px;opacity:0;pointer-events:none;transition:.25s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.modal{position:fixed;inset:0;z-index:50;background:rgba(2,6,23,.56);display:none;align-items:center;justify-content:center;padding:18px;backdrop-filter:blur(8px)}
+.modal.open{display:flex}
+.card{width:min(440px,100%);background:#0f172a;border:1px solid rgba(255,255,255,.12);border-radius:24px;padding:22px;box-shadow:0 28px 80px rgba(0,0,0,.5)}
+.card h2{margin:0 0 6px;font-size:22px}.card p{margin:0;color:#94a3b8;line-height:1.6;font-size:13px}
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}
+.action{border:1px solid rgba(255,255,255,.1);border-radius:14px;background:rgba(255,255,255,.06);color:#f8fafc;padding:12px;cursor:pointer;font-weight:800}
+.action.primary{background:linear-gradient(135deg,#0ea5e9,#10b981);border:0}.action.danger{color:#fecdd3;border-color:rgba(251,113,133,.35)}
+.legend{margin-top:16px;border-top:1px solid rgba(255,255,255,.08);padding-top:13px;font-size:12px;color:#cbd5e1;line-height:1.7}
+@media(max-width:720px){
+  .brand{padding:8px 10px}.brand-sub{display:none}
+  .stats{gap:5px;overflow:hidden}.stat{min-width:66px;padding:7px 8px}.stat:nth-child(4){display:none}
+  .mission{top:76px;width:min(220px,58vw);padding:10px}
+  .camera-tools{top:76px}
+  .dock{grid-template-columns:repeat(5,1fr) 64px;gap:5px;padding:6px;border-radius:17px}
+  .tool{min-height:59px}.tool-icon{font-size:20px}.tool-cost{font-size:8px}.menu-btn{font-size:11px}
+  .tool-help{bottom:96px}
+}
+@media(max-width:480px){
+  .brand-title{font-size:13px}.brand-mark{width:30px;height:30px}
+  .stat{min-width:58px}.stat-label{font-size:9px}.stat-value{font-size:13px}
+  .mission{font-size:11px}.mission-row{font-size:10px}
+  .tool-name{font-size:9px}.tool-icon{font-size:18px}.tool-cost{display:none}
+}
+@media(orientation:landscape) and (max-height:520px){
+  .topbar{padding-top:max(6px,env(safe-area-inset-top))}
+  .mission{top:66px;width:210px}.camera-tools{top:66px}
+  .dock-wrap{padding-bottom:max(6px,env(safe-area-inset-bottom))}
+  .dock{width:min(680px,78vw)}.tool{min-height:52px}
+  .tool-help{bottom:78px}
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="viewport"></div>
+
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">C3</div>
+      <div><div class="brand-title">CityCraft 3D</div><div class="brand-sub">街を育てる、小さな都市経営</div></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">資金</div><div class="stat-value" id="money">¥0</div></div>
+      <div class="stat"><div class="stat-label">人口</div><div class="stat-value" id="population">0人</div></div>
+      <div class="stat"><div class="stat-label">満足度</div><div class="stat-value" id="happiness">0%</div></div>
+      <div class="stat"><div class="stat-label">月</div><div class="stat-value" id="month">1</div></div>
+    </div>
+  </div>
+
+  <div class="mission">
+    <div class="mission-title">市長ミッション <span id="levelText" style="float:right;color:#67e8f9">Lv.1</span></div>
+    <div class="mission-row"><span class="dot" id="m1dot"></span><span>人口 60人</span></div>
+    <div class="mission-row"><span class="dot" id="m2dot"></span><span>商業施設 2軒</span></div>
+    <div class="mission-row"><span class="dot" id="m3dot"></span><span>満足度 75%</span></div>
+    <div class="progress"><span id="missionProgress"></span></div>
+  </div>
+
+  <div class="camera-tools">
+    <button class="icon-btn" id="rotateLeft" aria-label="左回転">↶</button>
+    <button class="icon-btn" id="zoomIn" aria-label="拡大">＋</button>
+    <button class="icon-btn" id="zoomOut" aria-label="縮小">−</button>
+    <button class="icon-btn" id="rotateRight" aria-label="右回転">↷</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+  <div class="tool-help" id="toolHelp">道路を選択中：タイルをタップして道路を伸ばそう</div>
+
+  <div class="dock-wrap">
+    <div class="dock">
+      <button class="tool active" data-tool="road"><span class="tool-icon">═</span><span class="tool-name">道路</span><span class="tool-cost">¥200</span></button>
+      <button class="tool" data-tool="home"><span class="tool-icon">⌂</span><span class="tool-name">住宅</span><span class="tool-cost">¥1,200</span></button>
+      <button class="tool" data-tool="shop"><span class="tool-icon">▥</span><span class="tool-name">商業</span><span class="tool-cost">¥2,200</span></button>
+      <button class="tool" data-tool="park"><span class="tool-icon">♣</span><span class="tool-name">公園</span><span class="tool-cost">¥800</span></button>
+      <button class="tool danger" data-tool="bulldoze"><span class="tool-icon">×</span><span class="tool-name">撤去</span><span class="tool-cost">25%還元</span></button>
+      <button class="menu-btn" id="menuBtn">MENU</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="menuModal">
+  <div class="card">
+    <h2>CityCraft 3D</h2>
+    <p>道路で街をつなぎ、住宅・商業・公園のバランスを取りながら人口と満足度を伸ばします。</p>
+    <div class="menu-grid">
+      <button class="action primary" id="resumeBtn">ゲームに戻る</button>
+      <button class="action" id="saveBtn">保存する</button>
+      <button class="action" id="loadBtn">保存を読込</button>
+      <button class="action danger" id="resetBtn">最初から</button>
+    </div>
+    <div class="legend">
+      ・住宅は「市役所につながる道路」に接していると人口が増えます。<br>
+      ・商業施設は道路接続で収益を生みます。<br>
+      ・公園は周囲の住宅の満足度を上げます。<br>
+      ・画面右上で視点の回転／ズームができます。
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js";
+
+const viewport = document.getElementById("viewport");
+const renderer = new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:"high-performance"});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.8));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+viewport.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xc8ecf3, 17, 34);
+
+const camera = new THREE.OrthographicCamera(-8,8,8,-8,.1,100);
+let cameraAngle = Math.PI * .25;
+let cameraZoom = 1;
+const lookAt = new THREE.Vector3(0,0,0);
+
+const hemi = new THREE.HemisphereLight(0xe6f7ff,0x6b8b5a,2.0);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff,2.8);
+sun.position.set(9,15,6);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024,1024);
+sun.shadow.camera.left = -13; sun.shadow.camera.right = 13; sun.shadow.camera.top = 13; sun.shadow.camera.bottom = -13;
+scene.add(sun);
+
+const world = new THREE.Group();
+scene.add(world);
+const tileGroup = new THREE.Group();
+const objectGroup = new THREE.Group();
+world.add(tileGroup,objectGroup);
+
+const GRID = 11;
+const HALF = (GRID-1)/2;
+const tileMeshes = [];
+const map = Array.from({length:GRID},()=>Array(GRID).fill(null));
+const COSTS = {road:200,home:1200,shop:2200,park:800};
+const REFUND = .25;
+const colors = {
+  grass:0x86c978, grass2:0x79bd6d, road:0x65707d, roadLine:0xcbd5e1,
+  home:0xf5b971, homeSide:0xd88654, roof:0xc85d48,
+  shop:0x44c5d4, shopSide:0x2d8fa1, park:0x65c466, city:0xe5e7eb
+};
+
+let state = {money:18000,population:12,happiness:62,month:1,level:1,selectedTool:"road"};
+let populationFloat = 12;
+let selected = null;
+let toastTimer = null;
+let tickTimer = null;
+
+function mat(color,rough=.8,metal=.02){
+  return new THREE.MeshStandardMaterial({color,roughness:rough,metalness:metal});
+}
+function box(w,h,d,color){
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));
+  m.castShadow = true; m.receiveShadow = true;
+  return m;
+}
+function addGround(){
+  const base = box(GRID+5,.35,GRID+5,0x6ca65f);
+  base.position.y = -.31;
+  base.receiveShadow = true;
+  world.add(base);
+  for(let z=0;z<GRID;z++){
+    for(let x=0;x<GRID;x++){
+      const g = new THREE.Mesh(
+        new THREE.BoxGeometry(.96,.08,.96),
+        mat((x+z)%2===0?colors.grass:colors.grass2)
+      );
+      g.position.set(x-HALF,0,z-HALF);
+      g.receiveShadow = true;
+      g.userData = {kind:"tile",x,z};
+      tileGroup.add(g);
+      tileMeshes.push(g);
+    }
+  }
+}
+function makeTree(scale=1){
+  const g = new THREE.Group();
+  const trunk = box(.12,.52,.12,0x7b5635); trunk.position.y=.28; g.add(trunk);
+  const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(.38*scale,1),mat(0x3f9e5c));
+  crown.position.y=.72; crown.castShadow=true; g.add(crown);
+  return g;
+}
+function addScenery(){
+  const positions=[[-7,-6.2],[-6.4,-7],[-7,6.2],[6.4,-7],[6.8,6.4],[-5.8,6.8],[0,7],[7,-1.5]];
+  positions.forEach((p,i)=>{
+    const t=makeTree(.85+(i%3)*.15);t.position.set(p[0],0,p[1]);world.add(t);
+  });
+}
+function makeRoad(){
+  const g = new THREE.Group();
+  const slab = box(.94,.11,.94,colors.road); slab.position.y=.07; g.add(slab);
+  const line = box(.07,.012,.5,colors.roadLine); line.position.set(0,.134,0); g.add(line);
+  return g;
+}
+function makeHome(){
+  const g = new THREE.Group();
+  const foundation = box(.75,.12,.75,0xe7d3b4);foundation.position.y=.08;g.add(foundation);
+  const body = box(.66,.63,.62,colors.home);body.position.y=.44;g.add(body);
+  const roof = new THREE.Mesh(new THREE.ConeGeometry(.57,.42,4),mat(colors.roof));
+  roof.rotation.y=Math.PI/4;roof.position.y=.96;roof.castShadow=true;g.add(roof);
+  const door=box(.16,.3,.025,0x704d3a);door.position.set(0,.36,.326);g.add(door);
+  [-.2,.2].forEach(x=>{const w=box(.13,.13,.02,0xdff5ff);w.position.set(x,.57,.332);g.add(w)});
+  const bush=makeTree(.38);bush.scale.set(.5,.55,.5);bush.position.set(-.34,0,.34);g.add(bush);
+  return g;
+}
+function makeShop(){
+  const g=new THREE.Group();
+  const body=box(.78,.72,.7,colors.shop);body.position.y=.4;g.add(body);
+  const roof=box(.86,.08,.78,0xeffbfd);roof.position.y=.81;g.add(roof);
+  const glass=box(.55,.3,.02,0xc9f5ff);glass.position.set(0,.43,.361);g.add(glass);
+  const awning=box(.62,.08,.16,0xffe082);awning.position.set(0,.66,.42);g.add(awning);
+  const sign=box(.42,.16,.03,0x0f766e);sign.position.set(0,.92,.12);g.add(sign);
+  return g;
+}
+function makePark(){
+  const g=new THREE.Group();
+  const base=box(.9,.08,.9,0x55b962);base.position.y=.06;g.add(base);
+  const path=box(.18,.018,.88,0xd7c39f);path.position.y=.115;g.add(path);
+  const t1=makeTree(.72);t1.position.set(-.24,.08,-.18);g.add(t1);
+  const t2=makeTree(.58);t2.position.set(.25,.08,.2);g.add(t2);
+  const bench=box(.34,.09,.1,0x8b5e3c);bench.position.set(.24,.2,-.28);g.add(bench);
+  return g;
+}
+function makeCityHall(){
+  const g=new THREE.Group();
+  const base=box(.88,.14,.88,0xcbd5e1);base.position.y=.08;g.add(base);
+  const body=box(.72,.72,.68,0xf1f5f9);body.position.y=.5;g.add(body);
+  const roof=new THREE.Mesh(new THREE.ConeGeometry(.58,.35,4),mat(0x47627a));roof.rotation.y=Math.PI/4;roof.position.y=1.03;roof.castShadow=true;g.add(roof);
+  const door=box(.18,.34,.03,0x31506d);door.position.set(0,.42,.355);g.add(door);
+  const flagPole=box(.025,.6,.025,0xe2e8f0);flagPole.position.set(.26,1.43,0);g.add(flagPole);
+  const flag=box(.28,.16,.02,0x22d3ee);flag.position.set(.39,1.62,0);g.add(flag);
+  return g;
+}
+function spawn(type,x,z){
+  let obj;
+  if(type==="road") obj=makeRoad();
+  if(type==="home") obj=makeHome();
+  if(type==="shop") obj=makeShop();
+  if(type==="park") obj=makePark();
+  if(type==="city") obj=makeCityHall();
+  if(!obj) return;
+  obj.position.set(x-HALF,.07,z-HALF);
+  obj.userData={kind:"object",type,x,z};
+  objectGroup.add(obj);
+  map[z][x]={type,obj,cost:COSTS[type]||0};
+}
+function clearCell(x,z){
+  const cell=map[z][x]; if(!cell) return;
+  objectGroup.remove(cell.obj);
+  cell.obj.traverse(n=>{if(n.geometry)n.geometry.dispose();if(n.material)n.material.dispose()});
+  map[z][x]=null;
+}
+function seedCity(){
+  for(let z=0;z<GRID;z++)for(let x=0;x<GRID;x++)clearCell(x,z);
+  const c=Math.floor(GRID/2);
+  spawn("city",c,c);
+  [[c-1,c],[c+1,c],[c,c-1],[c,c+1],[c-2,c],[c+2,c],[c,c-2]].forEach(p=>spawn("road",p[0],p[1]));
+  spawn("home",c-1,c-1);spawn("home",c+1,c-1);spawn("shop",c+1,c+1);spawn("park",c-1,c+1);
+  state={money:18000,population:12,happiness:62,month:1,level:1,selectedTool:"road"};
+  populationFloat=12;
+  setTool("road");
+  evaluate(true);
+}
+function roadNetwork(){
+  const c=Math.floor(GRID/2), seen=new Set(), q=[];
+  const add=(x,z)=>{const k=x+","+z;if(x>=0&&z>=0&&x<GRID&&z<GRID&&!seen.has(k)&&map[z][x]?.type==="road"){seen.add(k);q.push([x,z])}};
+  add(c-1,c);add(c+1,c);add(c,c-1);add(c,c+1);
+  while(q.length){
+    const [x,z]=q.shift();
+    add(x+1,z);add(x-1,z);add(x,z+1);add(x,z-1);
+  }
+  return seen;
+}
+function connectedToRoad(x,z,net){
+  return [[1,0],[-1,0],[0,1],[0,-1]].some(d=>net.has((x+d[0])+","+(z+d[1])));
+}
+function counts(){
+  const out={road:0,home:0,shop:0,park:0,city:0,connectedHomes:0,connectedShops:0};
+  const net=roadNetwork();
+  for(let z=0;z<GRID;z++)for(let x=0;x<GRID;x++){
+    const t=map[z][x]?.type;if(!t)continue;out[t]++;
+    if(t==="home"&&connectedToRoad(x,z,net))out.connectedHomes++;
+    if(t==="shop"&&connectedToRoad(x,z,net))out.connectedShops++;
+  }
+  return out;
+}
+function parkInfluence(){
+  let score=0;
+  for(let z=0;z<GRID;z++)for(let x=0;x<GRID;x++){
+    if(map[z][x]?.type!=="home")continue;
+    for(let pz=0;pz<GRID;pz++)for(let px=0;px<GRID;px++){
+      if(map[pz][px]?.type==="park"&&Math.abs(px-x)+Math.abs(pz-z)<=3){score+=1;break}
+    }
+  }
+  return score;
+}
+function evaluate(silent=false){
+  const c=counts();
+  const maxPop=c.connectedHomes*18;
+  if(maxPop===0) populationFloat=Math.max(0,populationFloat-.8);
+  else if(populationFloat<maxPop) populationFloat=Math.min(maxPop,populationFloat+Math.max(.7,c.connectedHomes*.85));
+  else populationFloat=Math.max(maxPop,populationFloat-.5);
+  state.population=Math.round(populationFloat);
+
+  const disconnectedHomes=c.home-c.connectedHomes;
+  const jobs=c.connectedShops*28;
+  const jobPenalty=Math.max(0,state.population-jobs-24)*.18;
+  let happy=58 + parkInfluence()*3.5 + Math.min(c.connectedShops*2,10) - disconnectedHomes*8 - jobPenalty;
+  if(state.money<0) happy-=12;
+  state.happiness=Math.max(10,Math.min(99,Math.round(happy)));
+  state.level=state.population>=120?4:state.population>=70?3:state.population>=30?2:1;
+  updateHUD();
+  if(!silent)autoSave();
+}
+function monthlyTick(){
+  const c=counts();
+  const income=Math.round(state.population*16 + c.connectedShops*190);
+  const upkeep=c.road*9+c.home*18+c.shop*32+c.park*28+55;
+  state.money+=income-upkeep;
+  state.month+=1;
+  evaluate();
+  if(state.money<0)showToast("資金が赤字です。商業施設を道路につなげましょう。");
+  if(state.month%4===0&&state.population>0)showToast("月次収支 +¥"+Math.max(0,income-upkeep).toLocaleString());
+}
+function canPlace(x,z,type){
+  if(x<0||z<0||x>=GRID||z>=GRID)return false;
+  const cell=map[z][x];
+  if(type==="bulldoze")return !!cell&&cell.type!=="city";
+  return !cell;
+}
+function placeAt(x,z){
+  const type=state.selectedTool;
+  const cell=map[z][x];
+  if(type==="bulldoze"){
+    if(!cell||cell.type==="city"){showToast("ここは撤去できません");return}
+    const refund=Math.round((cell.cost||0)*REFUND);
+    clearCell(x,z);state.money+=refund;showToast("撤去しました +¥"+refund.toLocaleString());evaluate();return;
+  }
+  if(!canPlace(x,z,type)){showToast("空いている土地を選んでください");return}
+  const cost=COSTS[type];
+  if(state.money<cost){showToast("資金が足りません");return}
+  state.money-=cost;spawn(type,x,z);evaluate();
+  const label={road:"道路",home:"住宅",shop:"商業施設",park:"公園"}[type];
+  showToast(label+"を建設しました");
+}
+function updateHUD(){
+  document.getElementById("money").textContent=(state.money<0?"-":"")+"¥"+Math.abs(state.money).toLocaleString();
+  document.getElementById("money").className="stat-value "+(state.money<2500?"warn":"good");
+  document.getElementById("population").textContent=state.population.toLocaleString()+"人";
+  document.getElementById("happiness").textContent=state.happiness+"%";
+  document.getElementById("happiness").className="stat-value "+(state.happiness>=70?"good":state.happiness<45?"warn":"");
+  document.getElementById("month").textContent=state.month;
+  document.getElementById("levelText").textContent="Lv."+state.level;
+  const c=counts();
+  const done=[state.population>=60,c.shop>=2,state.happiness>=75];
+  ["m1dot","m2dot","m3dot"].forEach((id,i)=>document.getElementById(id).className="dot "+(done[i]?"done":""));
+  document.getElementById("missionProgress").style.width=(done.filter(Boolean).length/3*100)+"%";
+}
+function setTool(t){
+  state.selectedTool=t;
+  document.querySelectorAll(".tool").forEach(b=>b.classList.toggle("active",b.dataset.tool===t));
+  const h={
+    road:"道路を選択中：道路をつないで街の成長ルートを作ろう",
+    home:"住宅を選択中：道路沿いに建てると住民が増える",
+    shop:"商業を選択中：道路接続で毎月の収入が増える",
+    park:"公園を選択中：近くの住宅の満足度が上がる",
+    bulldoze:"撤去を選択中：建設費の25%が戻る"
+  };
+  document.getElementById("toolHelp").textContent=h[t];
+}
+function showToast(msg){
+  const el=document.getElementById("toast");el.textContent=msg;el.classList.add("show");
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),1800);
+}
+function serialize(){
+  const cells=[];
+  for(let z=0;z<GRID;z++)for(let x=0;x<GRID;x++)if(map[z][x])cells.push({x,z,type:map[z][x].type});
+  return {state:{...state},populationFloat,cells,version:1};
+}
+function autoSave(){localStorage.setItem("citycraft3d_save",JSON.stringify(serialize()))}
+function loadSave(show=true){
+  const raw=localStorage.getItem("citycraft3d_save");if(!raw){if(show)showToast("保存データがありません");return false}
+  try{
+    const data=JSON.parse(raw);
+    for(let z=0;z<GRID;z++)for(let x=0;x<GRID;x++)clearCell(x,z);
+    data.cells.forEach(c=>spawn(c.type,c.x,c.z));
+    state={...state,...data.state};populationFloat=data.populationFloat??state.population;
+    setTool(state.selectedTool||"road");evaluate(true);if(show)showToast("保存データを読み込みました");return true;
+  }catch(e){if(show)showToast("保存データを読み込めませんでした");return false}
+}
+
+const raycaster=new THREE.Raycaster();
+const pointer=new THREE.Vector2();
+const hover=new THREE.Mesh(new THREE.BoxGeometry(.98,.035,.98),new THREE.MeshBasicMaterial({color:0x22d3ee,transparent:true,opacity:.28,depthWrite:false}));
+hover.visible=false;hover.position.y=.17;world.add(hover);
+
+function pick(clientX,clientY,doPlace=false){
+  const rect=renderer.domElement.getBoundingClientRect();
+  pointer.x=((clientX-rect.left)/rect.width)*2-1;
+  pointer.y=-((clientY-rect.top)/rect.height)*2+1;
+  raycaster.setFromCamera(pointer,camera);
+  const hits=raycaster.intersectObjects(tileMeshes,false);
+  if(!hits.length){hover.visible=false;return}
+  const d=hits[0].object.userData;selected={x:d.x,z:d.z};hover.visible=true;
+  hover.position.set(d.x-HALF,.18,d.z-HALF);
+  hover.material.color.setHex(canPlace(d.x,d.z,state.selectedTool)?0x22d3ee:0xfb7185);
+  if(doPlace)placeAt(d.x,d.z);
+}
+let down=null,dragged=false;
+renderer.domElement.addEventListener("pointerdown",e=>{down={x:e.clientX,y:e.clientY};dragged=false});
+renderer.domElement.addEventListener("pointermove",e=>{
+  if(down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)>8)dragged=true;
+  if(!down)pick(e.clientX,e.clientY,false);
+});
+renderer.domElement.addEventListener("pointerup",e=>{if(!dragged)pick(e.clientX,e.clientY,true);down=null});
+renderer.domElement.addEventListener("pointerleave",()=>{down=null});
+
+function resize(){
+  const w=viewport.clientWidth,h=viewport.clientHeight;
+  renderer.setSize(w,h,false);
+  const aspect=w/h;
+  const view=8.2/cameraZoom;
+  camera.left=-view*aspect;camera.right=view*aspect;camera.top=view;camera.bottom=-view;camera.updateProjectionMatrix();
+  updateCamera();
+}
+function updateCamera(){
+  const r=13.5;
+  camera.position.set(Math.cos(cameraAngle)*r,11.5,Math.sin(cameraAngle)*r);
+  camera.lookAt(lookAt);
+}
+window.addEventListener("resize",resize);
+
+document.querySelectorAll(".tool").forEach(b=>b.addEventListener("click",()=>setTool(b.dataset.tool)));
+document.getElementById("rotateLeft").addEventListener("click",()=>{cameraAngle-=Math.PI/2;updateCamera()});
+document.getElementById("rotateRight").addEventListener("click",()=>{cameraAngle+=Math.PI/2;updateCamera()});
+document.getElementById("zoomIn").addEventListener("click",()=>{cameraZoom=Math.min(1.55,cameraZoom+.15);resize()});
+document.getElementById("zoomOut").addEventListener("click",()=>{cameraZoom=Math.max(.7,cameraZoom-.15);resize()});
+
+const modal=document.getElementById("menuModal");
+document.getElementById("menuBtn").addEventListener("click",()=>modal.classList.add("open"));
+document.getElementById("resumeBtn").addEventListener("click",()=>modal.classList.remove("open"));
+document.getElementById("saveBtn").addEventListener("click",()=>{autoSave();modal.classList.remove("open");showToast("街を保存しました")});
+document.getElementById("loadBtn").addEventListener("click",()=>{loadSave(true);modal.classList.remove("open")});
+document.getElementById("resetBtn").addEventListener("click",()=>{
+  if(confirm("街を最初から作り直しますか？")){localStorage.removeItem("citycraft3d_save");seedCity();autoSave();modal.classList.remove("open");showToast("新しい街を開始しました")}
+});
+
+addGround();addScenery();
+if(!loadSave(false)){seedCity();autoSave()}
+resize();
+tickTimer=setInterval(monthlyTick,5500);
+
+let last=performance.now();
+function animate(now){
+  requestAnimationFrame(animate);
+  const dt=Math.min((now-last)/1000,.05);last=now;
+  objectGroup.children.forEach(o=>{
+    if(o.userData.type==="park")o.rotation.y+=dt*.015;
+  });
+  renderer.render(scene,camera);
+}
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>
