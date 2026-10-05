@@ -6,8 +6,8 @@ config/name="1マス農園"
 run/main_scene="res://Main.tscn"
 
 [display]
-window/size/viewport_width=960
-window/size/viewport_height=640
+window/size/viewport_width=390
+window/size/viewport_height=844
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/handheld/orientation=0
