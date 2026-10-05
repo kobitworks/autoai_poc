@@ -85,7 +85,7 @@ function bytes(n){n=Number(n||0);if(!n)return '0 B';var u=['B','KB','MB','GB'],i
 function date(s){if(!s)return '—';var d=new Date(s);return isNaN(d.getTime())?s:d.toLocaleString('ja-JP',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}
 function cleanup(){objectUrls.forEach(function(x){URL.revokeObjectURL(x)});objectUrls=[]}
 function photoUrl(blob){var x=URL.createObjectURL(blob);objectUrls.push(x);return x}
-function searchText(p,imgs){var a=p.aiAnalysis&&p.aiAnalysis.fields?p.aiAnalysis.fields:{};return [p.code,p.title,p.category,p.brand,p.color,p.condition,p.status,p.processingState,a.title,a.brand,a.category,a.color,a.features].concat((imgs||[]).map(function(x){return x.originalName+' '+x.virtualName})).join(' ').toLowerCase()}
+function searchText(p,imgs){var a=p.aiAnalysis&&p.aiAnalysis.fields?p.aiAnalysis.fields:{},f=p.confirmedProduct&&p.confirmedProduct.fields?p.confirmedProduct.fields:{};return [p.code,p.title,p.category,p.brand,p.color,p.condition,p.status,p.processingState,a.title,a.brand,a.category,a.color,a.features,f.title,f.brand,f.category,f.color,f.condition,f.features].concat((imgs||[]).map(function(x){return x.originalName+' '+x.virtualName})).join(' ').toLowerCase()}
 
 async function load(){
   cleanup();
@@ -128,16 +128,18 @@ function render(){
     var batches=(p.batchIds&&p.batchIds.length?p.batchIds:[p.batchId]).filter(Boolean);
     var batch=batches[batches.length-1]||'';
     var process=p.processingState||p.status||'qr_grouped';
+    var confirmed=!!(p.confirmedProduct&&p.confirmedProduct.fields);
+    var displayFields=confirmed?p.confirmedProduct.fields:(p.aiAnalysis&&p.aiAnalysis.fields?p.aiAnalysis.fields:p);
     var photoHtml=imgs.map(function(x){
       return '<div class="photo"><img src="'+photoUrl(x.blob)+'" alt="'+esc(x.originalName)+'"><span title="'+esc(x.virtualName||x.originalName)+'">'+esc(x.virtualName||x.originalName)+'</span></div>';
     }).join('');
     card.innerHTML=
-      '<div class="card-top"><div><div class="code">'+esc(p.code)+'</div><div class="meta">'+imgs.length+'枚 / '+esc(process)+'<br>更新 '+esc(date(p.updatedAt))+'</div></div><span class="badge'+(imgs.length?'':' warn')+'">'+(imgs.length?'保存済':'写真なし')+'</span></div>'+
-      (p.title?'<div class="meta" style="margin-top:8px"><b>'+esc(p.title)+'</b>'+(p.brand?' / '+esc(p.brand):'')+'</div>':'')+
+      '<div class="card-top"><div><div class="code">'+esc(p.code)+'</div><div class="meta">'+imgs.length+'枚 / '+esc(process)+'<br>更新 '+esc(date(p.updatedAt))+'</div></div><span class="badge'+(imgs.length?'':' warn')+'">'+(confirmed?'商品情報確定済み':(imgs.length?'写真保存済':'写真なし'))+'</span></div>'+
+      (displayFields.title?'<div class="meta" style="margin-top:8px"><b>'+esc(displayFields.title)+'</b>'+(displayFields.brand?' / '+esc(displayFields.brand):'')+'</div>':'')+
       '<div class="photos">'+photoHtml+'</div>'+
       '<div class="card-actions">'+
       (batch?'<a class="btn" href="./analyze.html?batch='+encodeURIComponent(batch)+'">QR解析で確認</a>':'')+
-      (imgs.length?'<a class="btn ai" href="./ai-analysis.html?product='+encodeURIComponent(p.code)+'">AI解析・候補生成</a>':'')+
+      (imgs.length?'<a class="btn ai" href="./ai-analysis.html?product='+encodeURIComponent(p.code)+'">'+(confirmed?'商品情報を確認・修正':'AI解析・候補生成')+'</a>':'')+
       '<span class="detail">'+(batches.length?batches.length+'バッチ / ':'')+esc(p.storageMode||'indexeddb-poc')+'</span></div>';
     grid.appendChild(card);
   });
