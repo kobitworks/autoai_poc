@@ -145,6 +145,7 @@ function renderNav(){
  const loggedIn=state.auth.status==='logged_in';sessionChip.hidden=isLogin||!loggedIn;sessionChip.innerHTML=loggedIn?'Google mock: '+state.auth.user.email+(state.auth.restored?' / 復元済み':'')+' <button onclick="logoutMock()">ログアウト</button>':'';
 }
 function cover(x,idx){const p=latestProgress(x.key),availability=!x.available?'利用不可':p?'進行中':'利用可';return '<div class="book-card" tabindex="0" role="button" aria-label="'+x.title+' '+availability+'" onclick="state.book=\''+x.key+'\';go(\'U02\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){this.click()}"><div class="cover '+x.cls+'"><div class="cover-title">'+x.title+'</div><div class="cover-region">'+x.region+' / '+x.time+'</div></div><span class="status">'+availability+'</span>'+(x.key===state.book?'<span class="selected">選択中</span>':'')+'</div>'}
+function nextBookCover(x){return '<div class="book-card" tabindex="0" role="button" aria-label="次Book候補 '+x.title+'" onclick="previewNextBook(\''+x.key+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){this.click()}"><div class="cover '+x.cls+'"><div class="cover-title">'+x.title+'</div><div class="cover-region">'+x.region+' / '+x.time+'</div></div><span class="status">候補</span></div>'}
 function render(){
  renderNav();const book=b();
  if(state.screen==='LOGIN'){
@@ -182,11 +183,12 @@ function render(){
   if(cp.status!=='confirmed'||!state.complete){app.innerHTML=page('<h2>Book Complete確認</h2><div class="notice warn"><strong>完了情報を確認しています。</strong><br>Completeはサーバー相当の確認が取れた後だけ確定します。</div>'+(cp.error?'<div class="notice danger" role="alert">'+cp.error+'</div>':'')+'<div class="actions">'+btn(cp.status==='saving'?'確認中…':'完了を確認する',"requestBookComplete()",cp.status==='saving'?'secondary':'')+btn('Storyへ戻る',"go('U03')",'secondary')+'</div>');}
   else{app.innerHTML=page('<h1>Book Complete</h1><p><strong>'+book.title+'</strong> このBookを完走しました。</p><div class="panel"><div class="fact"><span>完了状態</span><strong>確定済み</strong></div><div class="fact"><span>Complete ID</span><strong>'+cp.record.completeId+'</strong></div><p class="muted">Completeは広告表示や次Book選択に依存せず、再送しても同じ完了として扱います。</p></div><div class="actions">'+btn('次のBookを見る',"go('U09')")+btn('Book一覧へ戻る',"go('U01')",'secondary')+'</div>');}
  }else if(state.screen==='U09'){
-  const next=state.books.filter(x=>x.key!==book.key&&x.available);
-  app.innerHTML=page('<h2>次のBook</h2><div class="book-container">'+next.map(cover).join('')+'</div><p class="muted">候補表示だけでは次Bookは確定しません。</p>');
+  if(!state.complete||state.completion.status!=='confirmed'){app.innerHTML=page('<h2>次のBook</h2><div class="notice warn">次Book候補はBook Complete確定後に表示します。</div><div class="actions">'+btn('Complete確認へ',"go('U08')")+'</div>');}
+  else{const completedBookKey=state.completion.record?.bookKey||book.key,next=state.books.filter(x=>x.key!==completedBookKey&&x.available);app.innerHTML=page('<h2>次のBook</h2><p>完走したBookとは別の候補を表示しています。</p><div class="book-container">'+next.map(nextBookCover).join('')+'</div><p class="muted">候補を見ただけでは次Bookは選択済みになりません。詳細を確認してから確定してください。</p><div class="actions">'+btn('Book一覧へ戻る',"go('U01')",'secondary')+'</div>');}
  }else if(state.screen==='U10'){
-  const x=state.books.find(v=>v.key===state.selectedNext)||state.books.find(v=>v.key!==book.key&&v.available);
-  app.innerHTML=page('<h2>次に読むBook</h2><div class="panel"><strong>'+x.title+'</strong><p>'+x.region+' / '+x.time+'</p><p>'+x.desc+'</p></div><div class="actions">'+btn('このBookを選ぶ',"selectNext('"+x.key+"')")+btn('候補へ',"go('U09')",'secondary')+'</div>');
+  const completedBookKey=state.completion.record?.bookKey||book.key,x=state.books.find(v=>v.key===state.selectedNext&&v.key!==completedBookKey&&v.available);
+  if(!x){app.innerHTML=page('<h2>次に読むBook</h2><div class="notice warn">確認する候補が選ばれていません。</div><div class="actions">'+btn('候補へ戻る',"go('U09')")+'</div>');}
+  else{app.innerHTML=page('<h2>次に読むBook</h2><div class="panel"><strong>'+x.title+'</strong><p>'+x.region+' / '+x.time+'</p><p>'+x.desc+'</p><div class="notice warn"><strong>開始前に確認</strong><br>'+x.safety+'</div></div><p class="muted">ここではまだBookは切り替わっていません。「このBookを選ぶ」で確定後、開始前確認画面へ進みます。</p><div class="actions">'+btn('このBookを選ぶ',"confirmNextBookSelection()")+btn('候補へ戻る',"go('U09')",'secondary')+'</div>');}
  }else if(state.screen==='O01'){
   app.innerHTML=page('<h2>公開管理</h2><p>一般利用画面とは分離した運用PoCです。</p><div class="ops-grid"><div class="panel ops-list">'+state.books.map(x=>'<button onclick="state.book=\''+x.key+'\';render()"><strong>'+x.title+'</strong><br><small>'+x.pub+'</small></button>').join('')+'</div><div class="panel"><h3>'+book.title+'</h3><div class="fact"><span>対象版</span><strong>v2026.10-poc</strong></div><div class="fact"><span>公開状態</span><strong>'+book.pub+'</strong></div><div class="actions">'+btn('Test公開',"opsConfirm('TEST')",'secondary')+btn('本公開',"opsConfirm('LIVE')")+btn('公開停止',"opsConfirm('STOP')",'danger')+btn('版を差し替え',"opsConfirm('REPLACE')",'secondary')+'</div></div></div>');
  }
@@ -325,7 +327,9 @@ function requestBookComplete(){
   state.progressRecords=state.progressRecords.map(x=>x.bookKey===bookKey?{...x,resumable:false}:x);persistProgress();render();
  }).catch(()=>{state.completion.status='error';state.completion.error='Book Completeを確定できませんでした。通信状態を確認して再度お試しください。';state.complete=false;render();});
 }
-function selectNext(key){state.book=key;state.selectedNext=null;go('U02')}
+function previewNextBook(key){const completedBookKey=state.completion.record?.bookKey||state.book;const x=state.books.find(v=>v.key===key&&v.key!==completedBookKey&&v.available);if(!x)return;state.selectedNext=key;go('U10')}
+function confirmNextBookSelection(){const key=state.selectedNext,completedBookKey=state.completion.record?.bookKey||state.book,x=state.books.find(v=>v.key===key&&v.key!==completedBookKey&&v.available);if(!x){go('U09');return}state.book=key;state.selectedNext=null;state.story=null;state.storyAdvance={status:'idle',error:'',notice:'',mode:'success',lastRequestKey:''};state.start={status:'idle',error:'',mode:'success'};state.locationResult=null;state.locationReached=false;state.location={status:'idle',result:null,reason:'',permission:state.location.permission||'unknown',message:'',attempts:0,lastAttemptAt:0};go('U02')}
+function selectNext(key){previewNextBook(key)}
 let pending=null;const dlg=document.getElementById('confirm');
 function opsConfirm(a){pending=a;document.getElementById('confirmText').textContent=a==='LIVE'?'この版を本公開します。よろしいですか？':a==='STOP'?'このBookの公開を停止します。よろしいですか？':a==='TEST'?'この版をTest公開します。よろしいですか？':'公開対象の版を差し替えます。よろしいですか？';dlg.showModal()}
 document.getElementById('cancelDlg').onclick=()=>{pending=null;dlg.close()}
