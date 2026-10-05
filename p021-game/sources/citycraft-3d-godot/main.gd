@@ -732,11 +732,13 @@ func _build_ui() -> void:
 
 	# First-view title/start overlay.
 	start_overlay = ColorRect.new()
+	start_overlay.theme = ui_theme
 	start_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
 	start_overlay.color = Color(0.01, 0.03, 0.06, 0.82)
 	layer.add_child(start_overlay)
 
 	start_card = PanelContainer.new()
+	start_card.theme = ui_theme
 	start_card.set_anchors_preset(Control.PRESET_CENTER, false)
 	start_card.add_theme_stylebox_override("panel", _panel_style(Color(0.035, 0.075, 0.13, 0.99), 28))
 	start_overlay.add_child(start_card)
@@ -780,6 +782,7 @@ func _build_ui() -> void:
 
 	# Short first-run tutorial.
 	tutorial_panel = PanelContainer.new()
+	tutorial_panel.theme = ui_theme
 	tutorial_panel.set_anchors_preset(Control.PRESET_CENTER, false)
 	tutorial_panel.add_theme_stylebox_override("panel", _accent_panel_style(Color("22d3ee")))
 	tutorial_panel.visible = false
@@ -809,6 +812,7 @@ func _build_ui() -> void:
 
 	# Mission-complete celebration.
 	mission_complete_panel = PanelContainer.new()
+	mission_complete_panel.theme = ui_theme
 	mission_complete_panel.set_anchors_preset(Control.PRESET_CENTER, false)
 	mission_complete_panel.add_theme_stylebox_override("panel", _accent_panel_style(Color("fbbf24")))
 	mission_complete_panel.visible = false
