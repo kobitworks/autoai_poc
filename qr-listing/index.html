@@ -109,7 +109,7 @@ main{max-width:1280px;margin:auto;padding:18px 18px 44px}
       </div>
     </div>
     <div class="hud-chips">
-      <div class="chip">ACTIVE <strong>4 / 5</strong></div>
+      <div class="chip">ACTIVE <strong>5 / 5</strong></div>
       <div class="chip">ENGINE <strong>PHASER 4.2.1</strong></div>
       <div class="chip">MODE <strong>PoC</strong></div>
     </div>
@@ -125,7 +125,7 @@ main{max-width:1280px;margin:auto;padding:18px 18px 44px}
           <a href="./qr-generator.html">01 QRコード発行</a>
           <a href="./upload.html">02 商品画像アップロード</a>
           <a href="./ai-analysis.html">03 商品画像AI解析</a>
-          <button type="button" data-fallback="商品データ取込">04 商品データ取込</button>
+          <a href="./listing-export.html">04 出品データ</a>
           <a href="./products.html">05 商品一覧</a>
         </div>
       </div>
@@ -177,9 +177,9 @@ if (!window.Phaser) {
       link:'./ai-analysis.html', x:.55, y:.31, type:'ai'
     },
     {
-      no:'04', short:'商品データ取込', name:'商品データ取込',
-      sub:'DATA GATE', status:'LOCKED', active:false,
-      x:.74, y:.62, type:'import'
+      no:'04', short:'出品データ', name:'出品データ',
+      sub:'LISTING DATA', status:'READY', active:true,
+      link:'./listing-export.html', x:.74, y:.62, type:'import'
     },
     {
       no:'05', short:'商品一覧', name:'商品一覧',
@@ -247,7 +247,7 @@ if (!window.Phaser) {
       const t1 = this.add.text(-68,-14,'SYSTEM ONLINE',{
         fontFamily:'"Noto Sans JP", sans-serif',fontSize:'11px',fontStyle:'bold',color:'#197d62'
       });
-      const t2 = this.add.text(-68,6,'4 sectors available',{
+      const t2 = this.add.text(-68,6,'5 sectors available',{
         fontFamily:'"Noto Sans JP", sans-serif',fontSize:'9px',color:'#7b8999'
       });
       status.add([panel,dot,t1,t2]);
