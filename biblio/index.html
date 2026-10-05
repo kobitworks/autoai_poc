@@ -11,25 +11,37 @@
 <nav class="routebar" aria-label="PoC画面ジャンプ" id="jump"></nav>
 <dialog id="confirm"><div class="dlg"><h3 id="confirmTitle">確認</h3><p id="confirmText"></p><div class="actions"><button class="btn secondary" id="cancelDlg">キャンセル</button><button class="btn primary" id="okDlg">実行</button></div></div></dialog>
 <script>
+const SESSION_KEY='biblio_poc_session_v1';
+const savedSession=(()=>{try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(e){return null}})();
 const state={
-  screen:'U01', book:'walk-shibuya', scene:'s1', locationResult:null,
+  screen:savedSession?'U01':'U00', book:'walk-shibuya', scene:'s1', locationResult:null,
   progress:true, complete:false, selectedNext:null,
+  session:savedSession,
   books:[
     {key:'walk-shibuya',title:'街角ミステリー',region:'渋谷',time:'45分',desc:'街を歩きながら手がかりを集める短編Book。',available:true,pub:'LIVE'},
     {key:'river-story',title:'川辺の記憶',region:'清澄白河',time:'35分',desc:'水辺の風景をめぐる物語。',available:true,pub:'TEST'},
     {key:'old-town',title:'古い商店街の手紙',region:'谷中',time:'50分',desc:'商店街に残された手紙を追うBook。',available:false,pub:'STOP'}
   ]
 };
-const label={U01:'U01 一覧',U02:'U02 詳細',U03:'U03 Story',U04:'U04 Map',U05:'U05 位置確認',U06:'U06 Safety',U08:'U08 Complete',U09:'U09 次Book',U10:'U10 選択',O01:'O01 公開管理'};
+const label={U00:'U00 ログイン',U01:'U01 一覧',U02:'U02 詳細',U03:'U03 Story',U04:'U04 Map',U05:'U05 位置確認',U06:'U06 Safety',U08:'U08 Complete',U09:'U09 次Book',U10:'U10 選択',O01:'O01 公開管理'};
 const app=document.getElementById('app'), jump=document.getElementById('jump');
 function b(){return state.books.find(x=>x.key===state.book)||state.books[0]}
-function go(s){state.screen=s;render();history.replaceState({s},'', '#'+s)}
-function shell(body,ops=false){return '<main class="shell '+(ops?'ops':'')+'"><div class="top"><div><div class="brand">Biblio</div><div class="muted">街歩きストーリー PoC</div></div><span class="badge">MOCK / 非本番</span></div>'+body+'<p class="dev">このPoCは画面・遷移確認用です。Book公開、進行、位置到達、Complete、公開操作をClientだけで確定する本実装ではありません。</p></main>'}
+function go(s){if(!state.session&&s!=='U00')s='U00';state.screen=s;render();history.replaceState({s},'', '#'+s)}
+function userTools(){
+  if(!state.session)return '<span class="badge">MOCK / 非本番</span>';
+  const initial=(state.session.name||'U').slice(0,1);
+  return '<div class="userbox"><span class="badge">MOCK / 非本番</span><span class="userpill"><span class="avatar">'+initial+'</span><span>'+state.session.name+'</span></span><button class="linkbtn" onclick="logout()">ログアウト</button></div>'
+}
+function shell(body,ops=false){return '<main class="shell '+(ops?'ops':'')+'"><div class="top"><div><div class="brand">Biblio</div><div class="muted">街歩きストーリー PoC</div></div>'+userTools()+'</div>'+body+'<p class="dev">このPoCは画面・遷移確認用です。Google認証は疑似ログイン、セッションはlocalStorageで復元します。本番OAuth・認可は未接続です。</p></main>'}
 function btn(text,action,cls='primary',dis=false){return '<button class="btn '+cls+'" onclick="'+action+'" '+(dis?'disabled':'')+'>'+text+'</button>'}
 function render(){
+ if(!state.session&&state.screen!=='U00')state.screen='U00';
  jump.innerHTML=Object.keys(label).map(k=>'<button class="'+(state.screen===k?'active':'')+'" onclick="go(\''+k+'\')">'+label[k]+'</button>').join('');
  const book=b();
- if(state.screen==='U01'){
+ if(state.screen==='U00'){
+   app.innerHTML=shell('<section class="card authcard"><div class="authlogo">📚</div><h1>Biblioへログイン</h1><p class="muted">Bookの進行状況を端末に保持して、次回も続きから利用できます。</p><div class="notice"><strong>PoC認証</strong><br>この画面ではGoogle OAuthの代わりにテストユーザーでログイン状態を再現します。</div><div class="actions" style="justify-content:center">'+
+   '<button class="googlebtn" onclick="loginMock()"><span class="googlemark">G</span> Googleでログイン</button></div></section>');
+ } else if(state.screen==='U01'){
    app.innerHTML=shell('<section class="card hero"><h1>物語を、街で読む。</h1><p>Bookを選び、安全な場所で操作しながら街をめぐります。</p></section>'+
    (state.progress?'<section class="card"><h2>つづきから</h2><p><strong>'+book.title+'</strong> — Scene 2まで進行中</p>'+btn('つづきから',"go('U03')")+'</section>':'')+
    '<h2>利用できるBook</h2><section class="books">'+state.books.map(x=>'<article class="card book"><div><h3>'+x.title+'</h3><p class="muted">'+x.region+' ・ 約'+x.time+'</p><p>'+x.desc+'</p></div>'+btn('このBookを見る',"state.book='"+x.key+"';go('U02')",'secondary')+'</article>').join('')+'</section>');
@@ -58,6 +70,14 @@ function render(){
    app.innerHTML=shell('<section class="card"><h1>公開管理</h1><p>一般利用画面とは分離された運用PoCです。操作はすべてmockです。</p></section><div class="opsgrid"><section class="card tablelike"><h2>Book一覧</h2>'+state.books.map(x=>'<button onclick="state.book=\''+x.key+'\';render()"><strong>'+x.title+'</strong><br><span class="state '+(x.pub==='LIVE'?'live':x.pub==='STOP'?'stop':'test')+'">'+x.pub+'</span></button>').join('')+'</section><section class="card"><h2>'+book.title+'</h2><div class="fact"><span>対象版</span><strong>v2026.10-poc</strong></div><div class="fact"><span>現在公開状態</span><strong>'+book.pub+'</strong></div><div class="actions">'+btn('Test公開',"opsConfirm('TEST')",'secondary')+btn('本公開',"opsConfirm('LIVE')")+btn('公開停止',"opsConfirm('STOP')",'danger')+btn('版を差し替え',"opsConfirm('REPLACE')",'ghost')+'</div></section></div>',true);
  }
 }
+function loginMock(){
+  state.session={provider:'google',userId:'poc-google-user-001',name:'テストユーザー',email:'test.user@example.com',loggedInAt:new Date().toISOString()};
+  localStorage.setItem(SESSION_KEY,JSON.stringify(state.session));
+  go('U01');
+}
+function logout(){
+  localStorage.removeItem(SESSION_KEY);state.session=null;state.screen='U00';render();history.replaceState({s:'U00'},'','#U00');
+}
 function mockStart(){setTimeout(()=>{state.progress=true;go('U03')},180)}
 function locationMock(r){state.locationResult=r;if(r==='ARRIVED'){setTimeout(()=>{state.complete=true;go('U08')},180)}else{go('U06')}}
 function alternativeProgress(){state.locationResult='ALTERNATIVE';alert('PoC: progression_mode=ALTERNATIVE / location_reached=false としてStoryへ戻ります。');go('U03')}
@@ -68,6 +88,7 @@ document.getElementById('cancelDlg').onclick=()=>{pending=null;dlg.close()}
 document.getElementById('okDlg').onclick=()=>{if(pending){if(pending!=='REPLACE')b().pub=pending;else alert('PoC: 差し替え候補版を選択した想定です。');pending=null;dlg.close();render()}}
 window.addEventListener('popstate',e=>{if(e.state&&e.state.s){state.screen=e.state.s;render()}})
 if(location.hash&&label[location.hash.slice(1)])state.screen=location.hash.slice(1);
+if(!state.session)state.screen='U00';
 render();
 </script>
 </body>
