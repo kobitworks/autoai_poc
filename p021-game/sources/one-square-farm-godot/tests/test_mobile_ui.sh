@@ -25,4 +25,12 @@ if grep -Eq 'custom_minimum_size[[:space:]]*=[[:space:]]*Vector2\(0,[[:space:]]*
 if grep -q 'help.add_theme_font_size_override("font_size", 15)' "$MAIN"; then pass "help text is readable"; else fail_msg "help font size must be 15"; fi
 if grep -q 'log_view.add_theme_font_size_override("font_size", 15)' "$MAIN"; then pass "log text is readable"; else fail_msg "log font size must be 15"; fi
 
+PORTAL="p021-game/index.html"
+REDIRECT="p021-game/games/one-square-farm-godot/index.html"
+EXPORT="p021-game/games/one-square-farm-godot-v5/index.html"
+
+if grep -q 'games/one-square-farm-godot-v5/' "$PORTAL"; then pass "portal points to v5"; else fail_msg "portal must point to v5"; fi
+if grep -q '../one-square-farm-godot-v5/' "$REDIRECT"; then pass "stable URL redirects to v5"; else fail_msg "stable URL must redirect to v5"; fi
+if [ -s "$EXPORT" ]; then pass "v5 Web export exists"; else fail_msg "v5 Web export index is missing"; fi
+
 exit "$fail"
