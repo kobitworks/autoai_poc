@@ -585,10 +585,10 @@ func _build_ui() -> void:
 	population_label = _stat_label()
 	happiness_label = _stat_label()
 	month_label = _stat_label()
-	stats_row.add_child(_stat_card(money_label, Color("fbbf24")))
-	stats_row.add_child(_stat_card(population_label, Color("38bdf8")))
-	stats_row.add_child(_stat_card(happiness_label, Color("34d399")))
-	stats_row.add_child(_stat_card(month_label, Color("a78bfa")))
+	stats_row.add_child(_stat_card("資金", money_label, Color("fbbf24")))
+	stats_row.add_child(_stat_card("人口", population_label, Color("38bdf8")))
+	stats_row.add_child(_stat_card("満足度", happiness_label, Color("34d399")))
+	stats_row.add_child(_stat_card("月", month_label, Color("a78bfa")))
 
 	# Compact progress card. It no longer occupies a large block of the playfield.
 	mission_panel = PanelContainer.new()
@@ -601,8 +601,9 @@ func _build_ui() -> void:
 	mission_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	mission_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	mission_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	mission_label.add_theme_color_override("font_color", Color.WHITE)
+	mission_label.add_theme_color_override("font_color", Color("f8fafc"))
 	mission_label.add_theme_font_size_override("font_size", 22)
+	mission_label.add_theme_constant_override("line_spacing", 8)
 	mission_panel.add_child(mission_label)
 
 	# Camera controls are kept away from the building bar.
@@ -612,10 +613,10 @@ func _build_ui() -> void:
 	camera_panel.add_theme_constant_override("separation", 8)
 	layer.add_child(camera_panel)
 	for spec in [
-		["↶", Callable(self, "_rotate_left")],
+		["左", Callable(self, "_rotate_left")],
 		["＋", Callable(self, "_zoom_in")],
 		["－", Callable(self, "_zoom_out")],
-		["↷", Callable(self, "_rotate_right")]
+		["右", Callable(self, "_rotate_right")]
 	]:
 		var b := Button.new()
 		b.text = spec[0]
@@ -632,13 +633,13 @@ func _build_ui() -> void:
 	help_panel = PanelContainer.new()
 	help_panel.theme = ui_theme
 	help_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	help_panel.add_theme_stylebox_override("panel", _accent_panel_style(Color("0ea5e9")))
+	help_panel.add_theme_stylebox_override("panel", _light_info_panel_style(Color("38bdf8")))
 	layer.add_child(help_panel)
 
 	help_label = Label.new()
 	help_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	help_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	help_label.add_theme_color_override("font_color", Color.WHITE)
+	help_label.add_theme_color_override("font_color", Color("0f172a"))
 	help_label.add_theme_font_size_override("font_size", 22)
 	help_panel.add_child(help_label)
 
@@ -646,7 +647,7 @@ func _build_ui() -> void:
 	dock_panel = PanelContainer.new()
 	dock_panel.theme = ui_theme
 	dock_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	dock_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.035, 0.075, 0.13, 0.98), 24))
+	dock_panel.add_theme_stylebox_override("panel", _light_dock_style())
 	layer.add_child(dock_panel)
 
 	dock_container = HBoxContainer.new()
@@ -655,11 +656,11 @@ func _build_ui() -> void:
 	dock_panel.add_child(dock_container)
 
 	var tools := [
-		["road", "道路\n¥200", Color("64748b")],
-		["home", "住宅\n¥1,200", Color("f59e0b")],
-		["shop", "商業\n¥2,200", Color("0ea5e9")],
-		["park", "公園\n¥800", Color("22c55e")],
-		["bulldoze", "撤去\n25%還元", Color("ef4444")]
+		["road", "道路\n¥200", Color("475569")],
+		["home", "住宅\n¥1,200", Color("b86b00")],
+		["shop", "商業\n¥2,200", Color("0369a1")],
+		["park", "公園\n¥800", Color("15803d")],
+		["bulldoze", "撤去\n25%還元", Color("b91c1c")]
 	]
 	for spec in tools:
 		var button := Button.new()
@@ -855,16 +856,31 @@ func _stat_label() -> Label:
 	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 22)
+	label.add_theme_font_size_override("font_size", 28)
 	label.add_theme_color_override("font_color", Color.WHITE)
 	return label
 
-func _stat_card(label: Label, accent: Color) -> PanelContainer:
+
+func _stat_card(title: String, value_label: Label, accent: Color) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	card.add_theme_stylebox_override("panel", _status_card_style(accent))
-	card.add_child(label)
+
+	var box := VBoxContainer.new()
+	box.alignment = BoxContainer.ALIGNMENT_CENTER
+	box.add_theme_constant_override("separation", 2)
+	card.add_child(box)
+
+	var caption := Label.new()
+	caption.text = title
+	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	caption.add_theme_font_size_override("font_size", 18)
+	caption.add_theme_color_override("font_color", Color("cbd5e1"))
+	box.add_child(caption)
+
+	box.add_child(value_label)
 	return card
+
 
 func _panel_style(color: Color, radius: int) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -885,25 +901,57 @@ func _panel_style(color: Color, radius: int) -> StyleBoxFlat:
 	return style
 
 func _status_card_style(accent: Color) -> StyleBoxFlat:
-	var style := _panel_style(Color(0.06, 0.12, 0.20, 0.98), 16)
-	style.border_width_left = 4
+	var style := _panel_style(Color(0.045, 0.085, 0.145, 0.97), 16)
+	style.border_width_left = 3
+	style.border_width_top = 1
+	style.border_width_right = 1
+	style.border_width_bottom = 1
 	style.border_color = accent
 	style.content_margin_top = 8
 	style.content_margin_bottom = 8
 	return style
 
+
 func _accent_panel_style(accent: Color) -> StyleBoxFlat:
-	var style := _panel_style(Color(0.035, 0.075, 0.13, 0.94), 18)
+	var style := _panel_style(Color(0.04, 0.09, 0.15, 0.91), 18)
+	style.border_width_left = 2
+	style.border_width_right = 2
+	style.border_width_top = 2
+	style.border_width_bottom = 2
+	style.border_color = accent
+	return style
+
+
+func _light_info_panel_style(accent: Color) -> StyleBoxFlat:
+	var style := _panel_style(Color(0.97, 0.985, 1.0, 0.94), 18)
 	style.border_width_left = 3
 	style.border_width_right = 3
 	style.border_width_top = 3
 	style.border_width_bottom = 3
 	style.border_color = accent
+	style.content_margin_left = 18
+	style.content_margin_right = 18
+	style.content_margin_top = 10
+	style.content_margin_bottom = 10
+	return style
+
+
+func _light_dock_style() -> StyleBoxFlat:
+	var style := _panel_style(Color(0.97, 0.985, 1.0, 0.92), 24)
+	style.border_width_left = 1
+	style.border_width_right = 1
+	style.border_width_top = 1
+	style.border_width_bottom = 1
+	style.border_color = Color(0.15, 0.23, 0.34, 0.22)
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 10
+	style.content_margin_bottom = 10
 	return style
 
 func _tool_button_style(color: Color, selected: bool) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
-	style.bg_color = color.darkened(0.18 if selected else 0.34)
+	style.bg_color = color.lightened(0.04) if selected else color
 	var radius := 18
 	style.corner_radius_top_left = radius
 	style.corner_radius_top_right = radius
@@ -914,7 +962,7 @@ func _tool_button_style(color: Color, selected: bool) -> StyleBoxFlat:
 	style.border_width_top = width
 	style.border_width_right = width
 	style.border_width_bottom = width
-	style.border_color = Color("67e8f9") if selected else color.lightened(0.18)
+	style.border_color = Color("67e8f9") if selected else color.lightened(0.30)
 	style.content_margin_left = 12
 	style.content_margin_right = 12
 	style.content_margin_top = 12
@@ -965,31 +1013,31 @@ func _apply_ui_layout() -> void:
 		mission_complete_panel.offset_bottom = 240
 
 		ui_theme.default_font_size = 30
-		title_label.add_theme_font_size_override("font_size", 42)
+		title_label.add_theme_font_size_override("font_size", 38)
 		for label in [money_label, population_label, happiness_label, month_label]:
-			label.add_theme_font_size_override("font_size", 34)
-		mission_label.add_theme_font_size_override("font_size", 30)
-		help_label.add_theme_font_size_override("font_size", 30)
+			label.add_theme_font_size_override("font_size", 40)
+		mission_label.add_theme_font_size_override("font_size", 29)
+		help_label.add_theme_font_size_override("font_size", 32)
 		toast_label.add_theme_font_size_override("font_size", 28)
 
 		top_panel.offset_left = 12
 		top_panel.offset_top = 12
 		top_panel.offset_right = -12
-		top_panel.offset_bottom = 224
+		top_panel.offset_bottom = 250
 		menu_button.custom_minimum_size = Vector2(190, 64)
 		menu_button.add_theme_font_size_override("font_size", 28)
 
 		mission_panel.set_anchors_preset(Control.PRESET_CENTER_TOP, false)
 		mission_panel.offset_left = -570
 		mission_panel.offset_right = 570
-		mission_panel.offset_top = 238
-		mission_panel.offset_bottom = 390
+		mission_panel.offset_top = 264
+		mission_panel.offset_bottom = 438
 
 		camera_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT, false)
 		camera_panel.offset_left = -90
 		camera_panel.offset_right = -16
-		camera_panel.offset_top = 370
-		camera_panel.offset_bottom = 730
+		camera_panel.offset_top = 452
+		camera_panel.offset_bottom = 812
 		for button in camera_buttons:
 			button.custom_minimum_size = Vector2(72, 72)
 			button.add_theme_font_size_override("font_size", 36)
@@ -997,8 +1045,8 @@ func _apply_ui_layout() -> void:
 		help_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM, false)
 		help_panel.offset_left = -560
 		help_panel.offset_right = 560
-		help_panel.offset_top = -304
-		help_panel.offset_bottom = -220
+		help_panel.offset_top = -318
+		help_panel.offset_bottom = -224
 
 		dock_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM, false)
 		dock_panel.offset_left = -620
@@ -1007,8 +1055,8 @@ func _apply_ui_layout() -> void:
 		dock_panel.offset_bottom = -16
 		for key in tool_buttons.keys():
 			var tool_button: Button = tool_buttons[key]
-			tool_button.custom_minimum_size = Vector2(232, 146)
-			tool_button.add_theme_font_size_override("font_size", 34)
+			tool_button.custom_minimum_size = Vector2(232, 152)
+			tool_button.add_theme_font_size_override("font_size", 38)
 
 		menu_panel.offset_left = -500
 		menu_panel.offset_right = -16
@@ -1040,9 +1088,9 @@ func _apply_ui_layout() -> void:
 		ui_theme.default_font_size = 20
 		title_label.add_theme_font_size_override("font_size", 30)
 		for label in [money_label, population_label, happiness_label, month_label]:
-			label.add_theme_font_size_override("font_size", 22)
-		mission_label.add_theme_font_size_override("font_size", 20)
-		help_label.add_theme_font_size_override("font_size", 20)
+			label.add_theme_font_size_override("font_size", 28)
+		mission_label.add_theme_font_size_override("font_size", 21)
+		help_label.add_theme_font_size_override("font_size", 22)
 		toast_label.add_theme_font_size_override("font_size", 20)
 
 		top_panel.offset_left = 16
@@ -1106,11 +1154,11 @@ func _set_tool(tool: String) -> void:
 		b.add_theme_stylebox_override("focus", _tool_button_style(color, active))
 
 	var help := {
-		"road": "道路を選択中　空いているマスをタップして道路をつなげます",
-		"home": "住宅を選択中　道路沿いに建てると人口が増えます",
-		"shop": "商業を選択中　道路につなぐと毎月の収入が増えます",
-		"park": "公園を選択中　周辺住宅の満足度を上げます",
-		"bulldoze": "撤去を選択中　撤去したい建物や道路をタップします"
+		"road": "道路：空いているマスをタップ",
+		"home": "住宅：道路のとなりに建てよう",
+		"shop": "商業：道路につないで収入アップ",
+		"park": "公園：住宅の近くで満足度アップ",
+		"bulldoze": "撤去：消したい建物をタップ"
 	}
 	if help_label:
 		help_label.text = help.get(tool, "")
@@ -1122,10 +1170,10 @@ func _update_hud() -> void:
 	if not money_label:
 		return
 
-	money_label.text = "資金\n%s¥%s" % ["-" if money < 0 else "", _comma(abs(money))]
-	population_label.text = "人口\n%s人" % _comma(population)
-	happiness_label.text = "満足度\n%d%%" % happiness
-	month_label.text = "月\n%d" % month
+	money_label.text = "%s¥%s" % ["-" if money < 0 else "", _comma(abs(money))]
+	population_label.text = "%s人" % _comma(population)
+	happiness_label.text = "%d%%" % happiness
+	month_label.text = "%d" % month
 
 	var c := _counts()
 	if mission_stage <= 3:
