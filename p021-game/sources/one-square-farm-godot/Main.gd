@@ -118,6 +118,13 @@ var challenge_buttons: Dictionary = {}
 var intro_summary: Label
 var intro_records: Label
 var intro_start_button: Button
+var intro_scroll: ScrollContainer
+var intro_panel: PanelContainer
+var intro_box: VBoxContainer
+var intro_challenge_grid: GridContainer
+var intro_title: Label
+var intro_rules: Label
+var intro_credit: Label
 var record_cache: Dictionary = {}
 var header_title: Label
 var header_subtitle: Label
@@ -138,6 +145,33 @@ func _apply_responsive_layout() -> void:
         side_panel_ref.custom_minimum_size = Vector2(0, 0) if is_portrait else Vector2(340, 0)
     if visual != null:
         visual.custom_minimum_size = Vector2(0, 320) if is_portrait else Vector2(540, 360)
+
+    var compact_landscape := not is_portrait and size.y <= 500.0
+    if intro_challenge_grid != null:
+        intro_challenge_grid.columns = 1 if is_portrait else 3
+    if intro_panel != null:
+        if is_portrait:
+            intro_panel.custom_minimum_size = Vector2(minf(420.0, maxf(350.0, size.x - 24.0)), 0)
+        else:
+            intro_panel.custom_minimum_size = Vector2(minf(760.0, maxf(620.0, size.x - 24.0)), 0)
+    if intro_box != null:
+        intro_box.add_theme_constant_override("separation", 7 if compact_landscape else 13)
+    if intro_title != null:
+        intro_title.add_theme_font_size_override("font_size", 28 if compact_landscape else 36)
+    if intro_summary != null:
+        intro_summary.add_theme_font_size_override("font_size", 14 if compact_landscape else 17)
+    if intro_records != null:
+        intro_records.add_theme_font_size_override("font_size", 12 if compact_landscape else 14)
+    if intro_rules != null:
+        intro_rules.add_theme_font_size_override("font_size", 11 if compact_landscape else 13)
+    if intro_credit != null:
+        intro_credit.add_theme_font_size_override("font_size", 10 if compact_landscape else 11)
+    if intro_start_button != null:
+        intro_start_button.custom_minimum_size = Vector2(0, 52 if compact_landscape else 58)
+    for raw_key in challenge_buttons.keys():
+        var mode_btn: Button = challenge_buttons[raw_key]
+        mode_btn.custom_minimum_size = Vector2(0, 56 if compact_landscape else 64)
+        mode_btn.add_theme_font_size_override("font_size", 14 if compact_landscape else 15)
     queue_redraw()
 
 func _ready() -> void:
@@ -816,48 +850,64 @@ func _build_intro() -> void:
     intro_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     add_child(intro_layer)
 
+    intro_scroll = ScrollContainer.new()
+    intro_scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    intro_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    intro_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+    intro_layer.add_child(intro_scroll)
+
+    var margin := MarginContainer.new()
+    margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    margin.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    margin.add_theme_constant_override("margin_left", 8)
+    margin.add_theme_constant_override("margin_right", 8)
+    margin.add_theme_constant_override("margin_top", 8)
+    margin.add_theme_constant_override("margin_bottom", 8)
+    intro_scroll.add_child(margin)
+
     var center := CenterContainer.new()
-    center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    intro_layer.add_child(center)
+    center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    center.size_flags_vertical = Control.SIZE_EXPAND_FILL
+    margin.add_child(center)
 
-    var panel := PanelContainer.new()
-    panel.custom_minimum_size = Vector2(350, 0)
-    center.add_child(panel)
+    intro_panel = PanelContainer.new()
+    intro_panel.custom_minimum_size = Vector2(350, 0)
+    center.add_child(intro_panel)
 
-    var box := VBoxContainer.new()
-    box.add_theme_constant_override("separation", 13)
-    panel.add_child(box)
+    intro_box = VBoxContainer.new()
+    intro_box.add_theme_constant_override("separation", 13)
+    intro_panel.add_child(intro_box)
 
     var eyebrow := Label.new()
     eyebrow.text = "GAME-G001 / FARM MANAGEMENT"
     eyebrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     eyebrow.add_theme_font_size_override("font_size", 13)
     eyebrow.add_theme_color_override("font_color", Color8(55, 122, 78))
-    box.add_child(eyebrow)
+    intro_box.add_child(eyebrow)
 
-    var title := Label.new()
-    title.text = "1マス農園"
-    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    title.add_theme_font_size_override("font_size", 36)
-    box.add_child(title)
+    intro_title = Label.new()
+    intro_title.text = "1マス農園"
+    intro_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    intro_title.add_theme_font_size_override("font_size", 36)
+    intro_box.add_child(title)
 
     intro_summary = Label.new()
     intro_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     intro_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     intro_summary.add_theme_font_size_override("font_size", 17)
-    box.add_child(intro_summary)
+    intro_box.add_child(intro_summary)
 
     var challenge_title := Label.new()
     challenge_title.text = "チャレンジを選ぶ"
     challenge_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     challenge_title.add_theme_font_size_override("font_size", 16)
     challenge_title.add_theme_color_override("font_color", Color8(55, 122, 78))
-    box.add_child(challenge_title)
+    intro_box.add_child(challenge_title)
 
-    var challenge_grid := GridContainer.new()
-    challenge_grid.columns = 1
-    challenge_grid.add_theme_constant_override("v_separation", 7)
-    box.add_child(challenge_grid)
+    intro_challenge_grid = GridContainer.new()
+    intro_challenge_grid.columns = 1
+    intro_challenge_grid.add_theme_constant_override("v_separation", 7)
+    intro_box.add_child(intro_challenge_grid)
 
     for key in ["standard", "sprint", "drought"]:
         var data: Dictionary = CHALLENGES[key]
@@ -867,7 +917,7 @@ func _build_intro() -> void:
         mode_btn.custom_minimum_size = Vector2(0, 64)
         mode_btn.add_theme_font_size_override("font_size", 15)
         mode_btn.pressed.connect(_choose_challenge.bind(key))
-        challenge_grid.add_child(mode_btn)
+        intro_challenge_grid.add_child(mode_btn)
         challenge_buttons[key] = mode_btn
 
     intro_records = Label.new()
@@ -875,26 +925,26 @@ func _build_intro() -> void:
     intro_records.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     intro_records.add_theme_font_size_override("font_size", 14)
     intro_records.add_theme_color_override("font_color", Color8(72, 94, 80))
-    box.add_child(intro_records)
+    intro_box.add_child(intro_records)
 
-    var rules := Label.new()
-    rules.text = "ラディッシュ：早い・安定 / レタス：バランス / トマト：遅い・高収益\n雨の日は水やり不要。土が弱ると成長が遅くなります。"
-    rules.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    rules.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    rules.add_theme_font_size_override("font_size", 13)
-    rules.add_theme_color_override("font_color", Color8(72, 94, 80))
-    box.add_child(rules)
+    intro_rules = Label.new()
+    intro_rules.text = "ラディッシュ：早い・安定 / レタス：バランス / トマト：遅い・高収益\n雨の日は水やり不要。土が弱ると成長が遅くなります。"
+    intro_rules.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    intro_rules.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    intro_rules.add_theme_font_size_override("font_size", 13)
+    intro_rules.add_theme_color_override("font_color", Color8(72, 94, 80))
+    intro_box.add_child(intro_rules)
 
     intro_start_button = _button("農園をはじめる", _start_game)
     intro_start_button.custom_minimum_size = Vector2(0, 58)
-    box.add_child(intro_start_button)
+    intro_box.add_child(intro_start_button)
 
-    var credit := Label.new()
-    credit.text = "Art: Kenney Tiny Farm (CC0) / Font: Noto Sans JP"
-    credit.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    credit.add_theme_font_size_override("font_size", 11)
-    credit.add_theme_color_override("font_color", Color8(92, 110, 98))
-    box.add_child(credit)
+    intro_credit = Label.new()
+    intro_credit.text = "Art: Kenney Tiny Farm (CC0) / Font: Noto Sans JP"
+    intro_credit.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    intro_credit.add_theme_font_size_override("font_size", 11)
+    intro_credit.add_theme_color_override("font_color", Color8(92, 110, 98))
+    intro_box.add_child(intro_credit)
 
 func _start_game() -> void:
     if started:
