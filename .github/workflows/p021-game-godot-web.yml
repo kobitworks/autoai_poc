@@ -87,3 +87,46 @@ jobs:
             git pull --rebase origin develop
             git push origin HEAD:develop
           fi
+
+  browser-responsive:
+    needs: export-web
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Serve exported GAME-G001 locally
+        run: |
+          python3 -m http.server 4173 --directory p021-game > /tmp/p021-game-http.log 2>&1 &
+          echo $! > /tmp/p021-game-http.pid
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:4173/games/one-square-farm-godot-v5/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/p021-game-http.log
+          exit 1
+      - name: Run four-viewport browser QA
+        run: node p021-game/sources/one-square-farm-godot/tests/test_responsive_browser.mjs
+      - name: Commit responsive QA evidence
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add p021-game/docs/qa/game-g001-responsive/
+          if git diff --cached --quiet; then
+            echo "No QA evidence changes."
+          else
+            git commit -m "P021: record GAME-G001 responsive browser QA"
+            git pull --rebase origin develop
+            git push origin HEAD:develop
+          fi
