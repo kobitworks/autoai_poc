@@ -14,7 +14,7 @@
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;font-family:"Yu Gothic Medium","游ゴシック Medium",YuGothic,"ヒラギノ角ゴ Pro W3",sans-serif;color:var(--ink);background:#e7f4f5}
 body.login-mode .app-header,body.login-mode .page-title,body.login-mode .bottomnav,body.login-mode .reviewbar{display:none}
 body.login-mode .main{top:0;bottom:54px;padding:0;background:#e7f4f5}
-body.login-mode .banner{bottom:0}
+body.login-mode .banner{bottom:0}.legacy-shell{display:contents}.main.map-mode{padding:0;overflow:hidden}
 button{font:inherit}.app-header{position:fixed;inset:0 0 auto 0;height:100px;z-index:30;background:var(--base);box-shadow:0 1px 4px #0002}
 .head-top{height:70px;padding:4px 8px;display:flex;align-items:center;justify-content:space-between;background:#d8eeee}
 .logo{display:flex;align-items:center;gap:0;color:#000}.logo-mark{width:60px;height:60px;border-radius:6px;background:#183b69;color:white;display:grid;place-items:center;font-family:Georgia,serif;font-size:0;box-shadow:1px 1px 3px #0004;position:relative;overflow:hidden}.logo-mark:before{content:"▯";position:absolute;left:6px;top:3px;font-size:47px;line-height:1;color:#f4f4f4;text-shadow:0 0 1px #333}.logo-mark:after{content:"Biblio";position:absolute;left:7px;bottom:5px;font-size:18px;line-height:1;color:#111;background:#fff8;padding:1px 2px;font-weight:800}.logo>span:last-child{display:none}.mode{display:flex;align-items:center;gap:8px}.book-mini{display:none}.mock{display:none}.mobian-world{min-width:170px;padding:7px 16px 6px;background:linear-gradient(#e7c47a,#f4dda5 45%,#d0a457);border:1px solid #a67c36;border-radius:3px;box-shadow:inset 0 0 9px #7f5f2a88,0 1px 2px #0002;color:#392713;font:700 25px/0.9 Georgia,serif;text-align:center;transform:skew(-1deg)}
@@ -30,7 +30,7 @@ button{font:inherit}.app-header{position:fixed;inset:0 0 auto 0;height:100px;z-i
 .ops-grid{display:grid;grid-template-columns:280px 1fr;gap:12px}.ops-list button{display:block;width:100%;text-align:left;padding:9px;margin:5px 0;background:white;border:1px solid #bbb;border-radius:4px}
 .banner{position:fixed;left:0;right:0;bottom:64px;height:54px;background:#e4f3f3;z-index:30;display:grid;place-items:center;border-top:1px solid #c6dcdc}.adbox{width:min(640px,86vw);height:50px;border:1px solid #bbb;background:#fff;display:grid;grid-template-columns:1.1fr 1fr 1.1fr 1fr 1.2fr;color:#444;font-size:9px;overflow:hidden}.adcell{display:grid;place-items:center;border-right:1px solid #ddd;text-align:center;padding:2px}.adcell strong{color:#c40000;font-size:13px}.adcell.rakuten{color:#bf0000;font-size:18px;font-weight:800}
 .bottomnav{position:fixed;left:0;right:0;bottom:0;height:64px;background:#d8eeee;z-index:31;border-top:1px solid #c4dddd;display:flex;justify-content:space-around;align-items:center}.bottomnav button{width:20%;height:100%;border:0;background:transparent;color:#00008a;font-weight:700;font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:3px 0 2px;gap:0}.bottomnav button.current{text-decoration:underline;color:#00008a}.navicon{width:38px;height:38px;object-fit:contain;display:block}.ico{font-size:24px}.info-wrap{position:relative}.badge70{position:absolute;right:-12px;top:-8px;background:#ff5e63;color:white;border-radius:999px;min-width:34px;height:34px;display:grid;place-items:center;font-size:13px;font-weight:700}
-.reviewbar{position:fixed;right:8px;top:137px;z-index:40}.reviewbar details{background:#fff;border:1px solid #aaa;border-radius:5px;box-shadow:0 2px 8px #0003}.reviewbar summary{cursor:pointer;padding:5px 8px;font-size:11px;color:#555}.review-buttons{max-width:260px;padding:6px;display:flex;flex-wrap:wrap;gap:4px}.review-buttons button{font-size:10px;padding:4px;background:#eef6f8;border:1px solid #9bb;color:#345;border-radius:3px}
+.reviewbar{display:none;position:fixed;right:8px;top:137px;z-index:40}body.review-mode .reviewbar{display:block}.reviewbar details{background:#fff;border:1px solid #aaa;border-radius:5px;box-shadow:0 2px 8px #0003}.reviewbar summary{cursor:pointer;padding:5px 8px;font-size:11px;color:#555}.review-buttons{max-width:260px;padding:6px;display:flex;flex-wrap:wrap;gap:4px}.review-buttons button{font-size:10px;padding:4px;background:#eef6f8;border:1px solid #9bb;color:#345;border-radius:3px}
 dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(100% - 30px));box-shadow:0 15px 45px #0006}dialog::backdrop{background:#0006}.dlg{padding:16px}
 .dev{font-size:11px;color:#687577;border-top:1px dotted #aaa;margin-top:14px;padding-top:8px}
 @media(min-width:768px){.app-header{height:140px}.desktop-nav{display:flex;height:40px;background:color-mix(in srgb,var(--main) 50%,white);align-items:center;gap:2px;padding:0 10px}.desktop-nav button{background:transparent;border:0;border-right:1px solid #777;padding:0 12px;font-size:17px;font-weight:800;color:var(--link)}.page-title{top:140px}.main{top:170px;bottom:64px}.banner{bottom:0;height:64px}.bottomnav{display:none}.book-card{width:125px;height:165px}.ops-grid{grid-template-columns:340px 1fr}}
@@ -38,7 +38,7 @@ dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(10
 .login-screen{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 26px 82px;text-align:center}.login-logo{display:flex;align-items:center;gap:0;font:700 54px/1 Georgia,serif;color:#000;margin-top:-80px;margin-bottom:44px}.login-logo-book{width:78px;height:72px;border-radius:7px;background:#183b69;color:#f4f4f4;display:grid;place-items:center;font-size:66px;line-height:1;margin-right:-3px;text-shadow:0 1px 2px #333}.login-copy{font-size:16px;line-height:1.55;max-width:560px;color:#333}.google-login{margin-top:28px;width:min(400px,82vw);height:54px;border:1.5px solid #444;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;gap:28px;font-size:18px}.gmark{font:800 30px Arial;color:#4285f4}.login-note{font-size:11px;color:#718080;margin-top:12px}
 </style>
 </head>
-<body>
+<body data-ui-baseline="biblio-v2-mobile-20261005">
 <header class="app-header">
   <div class="head-top"><div class="logo"><span class="logo-mark">B</span><span>Biblio</span></div><div class="mode"><div class="mobian-world">Mobian’s<br>World</div></div></div>
   <nav class="desktop-nav"><button onclick="go('U04')">Map</button><button onclick="go('U01')">List</button><button onclick="go('U01')">Book</button><button onclick="go('U09')">Info</button><button onclick="go('O01')">Config</button></nav>
@@ -64,6 +64,15 @@ const state={screen:'U01',book:'walk-shibuya',locationResult:null,progress:true,
 ]};
 const labels={LOGIN:'Login',U01:'Book',U02:'Book Detail',U03:'Story',U04:'Map',U05:'Location Check',U06:'Safety',U08:'Book Complete',U09:'Next Book',U10:'Book Select',O01:'Publication'};
 const app=document.getElementById('app'), jump=document.getElementById('jump'), subnav=document.getElementById('subnav'), title=document.getElementById('pageTitle');
+const LEGACY_UI_BASELINE=Object.freeze({
+ id:'biblio-v2-mobile-20261005',
+ tabs:['ALL','Spot','Mobian'],
+ bottomMenu:['Map','List','Book','Info','Config'],
+ shellParts:['header','tabs','page-title','content','banner','bottom-nav'],
+ mobileBreakpoint:767
+});
+const reviewMode=new URLSearchParams(location.search).get('review')==='1';
+document.body.classList.toggle('review-mode',reviewMode);
 function b(){return state.books.find(x=>x.key===state.book)||state.books[0]}
 function go(s){state.screen=s;history.replaceState({s},'', '#'+s);render()}
 function btn(t,a,c=''){return '<button class="btn '+c+'" onclick="'+a+'">'+t+'</button>'}
