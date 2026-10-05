@@ -5,13 +5,19 @@ on:
     branches:
       - develop
     paths:
+      - "monolink/index.html"
       - "monolink/api-client.js"
       - "monolink/api-client.test.js"
+      - "monolink/api-runtime.js"
+      - "monolink/api-runtime.test.js"
       - ".github/workflows/p005-api-client-tests.yml"
   pull_request:
     paths:
+      - "monolink/index.html"
       - "monolink/api-client.js"
       - "monolink/api-client.test.js"
+      - "monolink/api-runtime.js"
+      - "monolink/api-runtime.test.js"
       - ".github/workflows/p005-api-client-tests.yml"
   workflow_dispatch:
 
@@ -28,14 +34,31 @@ jobs:
         with:
           node-version: "24"
       - name: Syntax check
-        run: node --check monolink/api-client.js
+        run: |
+          node --check monolink/api-client.js
+          node --check monolink/api-runtime.js
       - name: Unit tests
-        run: node --test monolink/api-client.test.js
-      - name: Guard against client-side capability persistence
+        run: node --test monolink/api-client.test.js monolink/api-runtime.test.js
+      - name: Verify PoC runtime wiring
         shell: bash
         run: |
           set -euo pipefail
-          if grep -nE 'localStorage|sessionStorage|document\.cookie' monolink/api-client.js; then
-            echo "Persistent browser storage/cookie access is not allowed in the API adapter." >&2
+          grep -F '<script src="./api-client.js"></script>' monolink/index.html
+          grep -F '<script src="./api-runtime.js"></script>' monolink/index.html
+          grep -F 'window.MONOLINK_API_BASE_URL||""' monolink/index.html
+      - name: Guard against client-side secret persistence
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -nE 'localStorage|sessionStorage|document\.cookie' monolink/api-client.js monolink/api-runtime.js; then
+            echo "Persistent browser storage/cookie access is not allowed in the API boundary." >&2
+            exit 1
+          fi
+      - name: Guard against hard-coded Worker endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -nE 'workers\.dev|p005-sys-c2e7efaf-api-production' monolink/index.html monolink/api-runtime.js; then
+            echo "Runtime Worker endpoint must be supplied by configuration, not hard-coded in the PoC." >&2
             exit 1
           fi
