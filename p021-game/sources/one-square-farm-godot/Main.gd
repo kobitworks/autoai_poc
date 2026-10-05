@@ -29,6 +29,7 @@ var day_time := DAY_SECONDS
 var paused := false
 var speed := 1.0
 var ended := false
+var started := false
 var harvests := 0
 
 var stats: Label
@@ -44,15 +45,20 @@ var harvest_btn: Button
 var pause_btn: Button
 var speed_btn: Button
 var visual: Control
+var intro_layer: ColorRect
+var result_layer: ColorRect
+var result_text: Label
 
 func _ready() -> void:
+    paused = true
     _setup_theme()
     _build_ui()
-    _log("農園スタート。時間は自動で進みます。")
+    _build_intro()
+    _log("準備完了。15日間で150G以上を目指しましょう。")
     _refresh()
 
 func _process(delta: float) -> void:
-    if ended or paused:
+    if not started or ended or paused:
         return
     day_time -= delta * speed
     if day_time <= 0.0:
@@ -132,12 +138,12 @@ func _build_ui() -> void:
     header.add_child(title_box)
 
     var title := Label.new()
-    title.text = "GAME-G001  |  1マス農園"
+    title.text = "1マス農園  |  15日チャレンジ"
     title.add_theme_font_size_override("font_size", 28)
     title_box.add_child(title)
 
     var subtitle := Label.new()
-    subtitle.text = "Godot版 v3  •  時間自動進行  •  アニメ農園"
+    subtitle.text = "Kenney Tiny Farm × Godot 4.7.2  •  目標 150G"
     subtitle.add_theme_font_size_override("font_size", 13)
     subtitle.add_theme_color_override("font_color", Color8(74, 112, 89))
     title_box.add_child(subtitle)
@@ -222,9 +228,9 @@ func _build_ui() -> void:
     chooser.item_selected.connect(_choose)
     side.add_child(chooser)
 
-    plant_btn = _button("植える", _plant)
+    plant_btn = _button("種を植える", _plant)
     water_btn = _button("水やり", _water)
-    compost_btn = _button("土づくり　-5G", _compost)
+    compost_btn = _button("土を整える　-5G", _compost)
     harvest_btn = _button("収穫", _harvest)
     side.add_child(plant_btn)
     side.add_child(water_btn)
@@ -232,7 +238,7 @@ func _build_ui() -> void:
     side.add_child(harvest_btn)
 
     var help := Label.new()
-    help.text = "時間は止まりません。\n作物を見ながら、水・土・収穫を判断してください。"
+    help.text = "遊び方\n1. 種を選んで植える\n2. 水と土を管理する\n3. 育ったら収穫する\n\n15日終了時に150G以上で大成功！"
     help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     help.add_theme_font_size_override("font_size", 12)
     help.add_theme_color_override("font_color", Color8(92, 111, 99))
@@ -370,6 +376,7 @@ func _finish_game() -> void:
     day_time = 0.0
     var result := "農園、大成功！" if coins >= 150 else "15日間終了！"
     _log("%s 最終資金 %dG / 収穫 %d回" % [result, coins, harvests])
+    _show_result(result)
     pause_btn.disabled = true
     speed_btn.disabled = true
     plant_btn.disabled = true
@@ -421,3 +428,108 @@ func _log(message: String) -> void:
     if logs.size() > 30:
         logs.pop_front()
     _refresh()
+
+
+func _build_intro() -> void:
+    intro_layer = ColorRect.new()
+    intro_layer.color = Color(0.035, 0.075, 0.055, 0.94)
+    intro_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    add_child(intro_layer)
+
+    var center := CenterContainer.new()
+    center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    intro_layer.add_child(center)
+
+    var panel := PanelContainer.new()
+    panel.custom_minimum_size = Vector2(600, 390)
+    center.add_child(panel)
+
+    var box := VBoxContainer.new()
+    box.add_theme_constant_override("separation", 14)
+    panel.add_child(box)
+
+    var eyebrow := Label.new()
+    eyebrow.text = "GAME-G001 / FARM MANAGEMENT"
+    eyebrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    eyebrow.add_theme_font_size_override("font_size", 14)
+    eyebrow.add_theme_color_override("font_color", Color8(64, 137, 91))
+    box.add_child(eyebrow)
+
+    var title := Label.new()
+    title.text = "1マス農園"
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size", 42)
+    box.add_child(title)
+
+    var lead := Label.new()
+    lead.text = "たった1マスの畑を15日間経営。\n水・土・作物を見極めて、資金150G以上を目指そう。"
+    lead.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    lead.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    lead.add_theme_font_size_override("font_size", 18)
+    box.add_child(lead)
+
+    var rules := Label.new()
+    rules.text = "ラディッシュ：早い・安定　　レタス：バランス　　トマト：遅い・高収益\n雨の日は水やり不要。土が弱ると成長が遅くなります。"
+    rules.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    rules.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    rules.add_theme_font_size_override("font_size", 14)
+    rules.add_theme_color_override("font_color", Color8(80, 105, 90))
+    box.add_child(rules)
+
+    var start := _button("農園をはじめる", _start_game)
+    start.custom_minimum_size = Vector2(0, 58)
+    box.add_child(start)
+
+    var credit := Label.new()
+    credit.text = "Art: Kenney Tiny Farm (CC0) / Font: Noto Sans JP"
+    credit.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    credit.add_theme_font_size_override("font_size", 11)
+    credit.add_theme_color_override("font_color", Color8(104, 122, 110))
+    box.add_child(credit)
+
+func _start_game() -> void:
+    started = true
+    paused = false
+    if intro_layer != null:
+        intro_layer.hide()
+    _log("農園スタート！")
+
+func _show_result(result: String) -> void:
+    if result_layer != null:
+        return
+    result_layer = ColorRect.new()
+    result_layer.color = Color(0.025, 0.07, 0.05, 0.92)
+    result_layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    add_child(result_layer)
+
+    var center := CenterContainer.new()
+    center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    result_layer.add_child(center)
+
+    var panel := PanelContainer.new()
+    panel.custom_minimum_size = Vector2(560, 320)
+    center.add_child(panel)
+
+    var box := VBoxContainer.new()
+    box.add_theme_constant_override("separation", 15)
+    panel.add_child(box)
+
+    var title := Label.new()
+    title.text = result
+    title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    title.add_theme_font_size_override("font_size", 34)
+    box.add_child(title)
+
+    var grade := "S" if coins >= 220 else ("A" if coins >= 180 else ("B" if coins >= 150 else "C"))
+    result_text = Label.new()
+    result_text.text = "最終資金 %dG\n収穫 %d回\n農園ランク %s" % [coins, harvests, grade]
+    result_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    result_text.add_theme_font_size_override("font_size", 21)
+    box.add_child(result_text)
+
+    var again := _button("もう一度プレイ", _restart_game)
+    again.custom_minimum_size = Vector2(0, 54)
+    box.add_child(again)
+
+func _restart_game() -> void:
+    get_tree().reload_current_scene()
