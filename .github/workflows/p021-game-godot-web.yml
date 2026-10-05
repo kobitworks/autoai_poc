@@ -9,6 +9,10 @@ on:
       - '.github/workflows/p021-game-godot-web.yml'
   workflow_dispatch:
 
+concurrency:
+  group: p021-game-godot-web-develop
+  cancel-in-progress: true
+
 permissions:
   contents: write
 
@@ -78,5 +82,6 @@ jobs:
             echo "No exported changes."
           else
             git commit -m "P021: build Godot Web games"
+            git pull --rebase origin develop
             git push origin HEAD:develop
           fi
