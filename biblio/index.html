@@ -76,7 +76,7 @@ const STORY_SCENES=Object.freeze({
  'scene-1':{chapter:1,scene:1,title:'街角のはじまり',body:['店先の古い時計は、街の時間から少しだけ遅れていた。','通りの先に、誰かが残した小さな印が見える。'],nextSceneKey:'scene-2',nextLabel:'手がかりを確かめる'},
  'scene-2':{chapter:1,scene:2,title:'交差点の小さな違和感',body:['印のそばには、青い壁を示す短いメモが残されていた。','次の手がかりは、ここから数分歩いた「青い壁の広場」にあるらしい。'],nextScreen:'U04',nextLabel:'目的地を確認する'}
 });
-const state={screen:'U01',book:'walk-shibuya',locationResult:null,complete:false,selectedNext:null,resumeNotice:'',story:null,storyAdvance:{status:'idle',error:'',notice:'',mode:'success',lastRequestKey:''},start:{status:'idle',error:'',mode:'success'},auth:{status:'logged_out',user:null,error:'',restored:false},books:[
+const state={screen:'U01',book:'walk-shibuya',locationResult:null,location:{status:'idle',result:null,reason:'',permission:'unknown',message:'',attempts:0,lastAttemptAt:0},complete:false,selectedNext:null,resumeNotice:'',story:null,storyAdvance:{status:'idle',error:'',notice:'',mode:'success',lastRequestKey:''},start:{status:'idle',error:'',mode:'success'},auth:{status:'logged_out',user:null,error:'',restored:false},books:[
  {key:'walk-shibuya',title:'街角ミステリー',region:'渋谷',time:'45分',desc:'街を歩きながら手がかりを集める短編Book。',safety:'移動時は画面を見続けず、安全な場所で操作してください。',available:true,unavailableReason:'',pub:'LIVE',cls:''},
  {key:'river-story',title:'川辺の記憶',region:'清澄白河',time:'35分',desc:'水辺の風景をめぐる物語。',safety:'川沿いでは足元と周囲を確認し、安全な場所でのみ画面を操作してください。',available:true,unavailableReason:'',pub:'TEST',cls:'c2'},
  {key:'old-town',title:'古い商店街の手紙',region:'谷中',time:'50分',desc:'商店街に残された手紙を追うBook。',safety:'通行の妨げにならない場所で立ち止まって操作してください。',available:false,unavailableReason:'現在公開を停止しています。',pub:'STOP',cls:'c3'}
@@ -125,7 +125,7 @@ function advanceStory(){
  },300)
 }
 function startBook(bookKey){if(state.start.status==='starting')return;const visible=startAvailability(bookKey);if(!visible.allowed){state.start.status='blocked';state.start.error=visible.reason;render();return}state.start.status='starting';state.start.error='';render();setTimeout(()=>{const book=state.books.find(x=>x.key===bookKey);if(state.start.mode==='error'){state.start.status='error';state.start.error='Bookを開始できませんでした。通信状態を確認して、もう一度お試しください。';render();return}if(state.start.mode==='blocked'||!book||!book.available){state.start.status='blocked';state.start.error='現在、このBookは開始できません。'+(book?.unavailableReason?' 開始できない理由: '+book.unavailableReason:' サーバー側の最新状態を確認してください。');render();return}const progress={bookKey:book.key,chapter:1,scene:1,sceneKey:'scene-1',sceneTitle:'街角のはじまり',updatedAt:new Date().toISOString(),resumable:true};upsertProgress(progress);state.book=book.key;state.story={chapter:progress.chapter,scene:progress.scene,sceneKey:progress.sceneKey,title:progress.sceneTitle};state.storyAdvance={status:'idle',error:'',notice:'',mode:'success',lastRequestKey:''};state.start={status:'idle',error:'',mode:'success'};state.screen='U03';history.replaceState({s:'U03'},'','#U03');render()},300)}
-function go(s){if(s!=='LOGIN'&&state.auth.status!=='logged_in'){state.screen='LOGIN';state.auth.error='ログインが必要です。';history.replaceState({s:'LOGIN'},'','#LOGIN');render();return}state.screen=s;history.replaceState({s},'', '#'+s);render()}
+function go(s){if(s!=='LOGIN'&&state.auth.status!=='logged_in'){state.screen='LOGIN';state.auth.error='ログインが必要です。';history.replaceState({s:'LOGIN'},'','#LOGIN');render();return}if(s==='U05'&&state.screen!=='U05')resetLocationCheck();state.screen=s;history.replaceState({s},'', '#'+s);render()}
 function btn(t,a,c=''){return '<button class="btn '+c+'" onclick="'+a+'">'+t+'</button>'}
 function page(body){return '<div class="paper">'+body+'<div class="dev">画面・遷移確認用PoCです。公開・進行・位置到達・Completeは本番確定処理ではありません。</div></div>'}
 function renderNav(){
@@ -164,7 +164,14 @@ function render(){
  }else if(state.screen==='U04'){
   app.innerHTML='<div class="map-screen"><div id="leafletMap" class="map" role="application" aria-label="Biblio Map。目的地の青い壁の広場と周辺マーカーを表示します。ズーム操作ができます。"></div><div class="map-overlay"><div class="map-status" aria-label="地図情報のテキスト代替"><strong>目的地：青い壁の広場</strong><div class="map-text-alt">渋谷エリアのサンプル地点。周辺マーカーは Mobian A / Mobian B。地図を見ながら歩かず、安全な場所で確認してください。</div><div class="map-current">現在地：未取得（到着確認時のみ取得）</div><div class="map-legend" aria-label="マーカー凡例"><span class="map-legend-item"><i class="map-legend-dot"></i>目的地</span><span class="map-legend-item"><i class="map-legend-dot friend"></i>周辺マーカー</span></div><div class="actions">'+btn('目的地を中央に',"focusMapTarget()",'secondary')+btn('現在地を確認',"go('U05')",'secondary')+'</div></div></div></div>';setTimeout(initLeafletMap,0);
  }else if(state.screen==='U05'){
-  app.innerHTML=page('<h2>到着を確認</h2><div class="notice"><strong>位置情報を使う理由</strong><br>この目的地に到着したか確認するため、今だけ端末の位置情報を利用します。</div><p>位置情報は到着確認に必要なときだけ取得します。PoCでは実位置情報は取得しません。</p><div class="actions">'+btn('到着として確認',"locationMock('ARRIVED')")+btn('まだ到着していない',"locationMock('NOT_ARRIVED')",'secondary')+btn('判定不能を試す',"locationMock('INDETERMINATE')",'secondary')+'</div>');
+  const loc=state.location,checking=loc.status==='checking',hasResult=loc.status==='result';
+  const permissionLabel=loc.permission==='granted'?'許可済み':loc.permission==='denied'?'拒否されています':loc.permission==='prompt'?'確認時にOS/ブラウザが尋ねます':loc.permission==='unsupported'?'事前確認非対応（実行時に確認）':'確認前';
+  const resultClass=loc.result==='ARRIVED'?'notice':loc.result?'notice warn':'';
+  const resultTitle=loc.result==='ARRIVED'?'到着を確認できました。':loc.result==='NOT_ARRIVED'?'まだ目的地への到着を確認できませんでした。':loc.result==='INDETERMINATE'?'位置情報を確認できませんでした。':loc.result==='LOCATION_UNAVAILABLE'?'位置情報を利用できませんでした。':'';
+  const resultPanel=hasResult?'<div class="'+resultClass+'" role="status"><strong>'+resultTitle+'</strong><br>'+loc.message+'<div class="fact"><span>判定コード</span><strong>'+loc.result+' / '+loc.reason+'</strong></div></div>':'';
+  const actionPanel=checking?'<button class="btn" disabled>到着を確認しています…</button>':hasResult?(loc.result==='ARRIVED'?btn('ストーリーへ戻る',"continueAfterArrival()"):'<div class="actions">'+(loc.reason!=='PERMISSION_DENIED'&&loc.attempts<LOCATION_RULES.maxAttempts?btn('もう一度確認',"checkCurrentPosition()"):'')+btn('安全な進め方を確認',"go('U06')",'secondary')+btn('Mapへ戻る',"go('U04')",'secondary')+'</div>'):'<div class="actions">'+btn('現在地を確認する',"checkCurrentPosition()")+btn('今は確認しない',"go('U04')",'secondary')+'</div>';
+  app.innerHTML=page('<h2>到着を確認します</h2><div class="notice"><strong>位置情報を使う理由</strong><br>この目的地に到着したか確認するため、今だけ端末の位置情報を利用します。</div><p>位置情報は到着確認に必要なときだけ取得します。</p><div class="panel"><div class="fact"><span>権限状態</span><strong>'+permissionLabel+'</strong></div><div class="fact"><span>取得方式</span><strong>1回だけ取得 / 常時追跡なし</strong></div></div>'+resultPanel+actionPanel+(reviewMode?'<div class="panel"><strong>U05 判定mock確認</strong><p class="muted">実位置を使わず、結果分岐だけ確認します。失敗・拒否・不明はARRIVEDへ変換しません。</p><div class="actions">'+btn('ARRIVED',"setLocationReviewResult('ARRIVED')",'secondary')+btn('NOT_ARRIVED',"setLocationReviewResult('NOT_ARRIVED')",'secondary')+btn('INDETERMINATE',"setLocationReviewResult('INDETERMINATE')",'secondary')+btn('権限拒否',"setLocationReviewResult('PERMISSION_DENIED')",'secondary')+btn('取得失敗',"setLocationReviewResult('POSITION_UNAVAILABLE')",'secondary')+btn('TIMEOUT',"setLocationReviewResult('TIMEOUT')",'secondary')+'</div></div>':'')+'<p class="muted">生の緯度・経度・精度はlocalStorageや通常ログへ保存しません。</p>');
+  if(loc.status==='idle'&&loc.permission==='unknown')queryLocationPermission();
  }else if(state.screen==='U06'){
   app.innerHTML=page('<h2>安全に続けるために</h2><div class="notice danger"><strong>'+(state.locationResult==='NOT_ARRIVED'?'まだ目的地への到着を確認できませんでした。':'位置情報を確認できませんでした。')+'</strong><br>失敗・拒否・不明を到着成功として扱いません。</div><div class="actions">'+btn('Mapへ',"go('U04')")+btn('もう一度確認',"go('U05')",'secondary')+btn('代替進行',"alternativeProgress()",'secondary')+btn('中断',"go('U01')",'secondary')+'</div>');
  }else if(state.screen==='U08'){
@@ -212,7 +219,83 @@ function loginMock(mode){state.auth.status='authenticating';state.auth.error='';
 function restoreSessionMock(){try{const raw=localStorage.getItem(SESSION_KEY);if(!raw)return false;const session=JSON.parse(raw);if(session?.provider!=='google'||!session?.email)throw new Error('invalid session');state.auth.status='logged_in';state.auth.user=session;state.auth.restored=true;state.auth.error='';return true}catch(e){localStorage.removeItem(SESSION_KEY);state.auth.status='logged_out';state.auth.user=null;state.auth.error='保存されたセッションを復元できませんでした。もう一度ログインしてください。';return false}}
 function logoutMock(){localStorage.removeItem(SESSION_KEY);state.auth.status='logged_out';state.auth.user=null;state.auth.restored=false;state.auth.error='';state.screen='LOGIN';history.replaceState({s:'LOGIN'},'','#LOGIN');render()}
 function clearSessionMock(){localStorage.removeItem(SESSION_KEY);state.auth.status='logged_out';state.auth.user=null;state.auth.restored=false;state.auth.error='保存セッションを消去しました。';render()}
-function locationMock(r){state.locationResult=r;if(r==='ARRIVED'){state.complete=true;go('U08')}else go('U06')}
+const LOCATION_RULES=Object.freeze({arrivalRadiusM:60,maxAccuracyM:50,maxAgeMs:30000,futureSkewMs:5000,timeoutMs:10000,minRetryMs:3000,maxAttempts:3});
+function resetLocationCheck(){
+ const permission=state.location?.permission||'unknown';
+ state.location={status:'idle',result:null,reason:'',permission,message:'',attempts:0,lastAttemptAt:0};
+ state.locationResult=null;
+}
+async function queryLocationPermission(){
+ if(state.screen!=='U05'||state.location.status!=='idle'||state.location.permission!=='unknown')return;
+ if(!navigator.permissions||!navigator.permissions.query){state.location.permission='unsupported';return}
+ try{
+  const p=await navigator.permissions.query({name:'geolocation'});
+  state.location.permission=p.state;
+  p.onchange=()=>{state.location.permission=p.state;if(state.screen==='U05')render()};
+  if(state.screen==='U05')render();
+ }catch(e){state.location.permission='unsupported';}
+}
+function checkCurrentPosition(){
+ const loc=state.location,now=Date.now();
+ if(loc.status==='checking')return;
+ if(loc.lastAttemptAt&&now-loc.lastAttemptAt<LOCATION_RULES.minRetryMs){loc.message='連続確認を避けるため、少し待ってからもう一度お試しください。';render();return}
+ if(loc.attempts>=LOCATION_RULES.maxAttempts){applyLocationResult('LOCATION_UNAVAILABLE','TECHNICAL_RETRY_LIMIT','この画面での技術的な再確認上限に達しました。安全な進め方を確認してください。');return}
+ if(!navigator.geolocation){applyLocationResult('LOCATION_UNAVAILABLE','GEOLOCATION_UNSUPPORTED','このブラウザでは位置情報を利用できません。');return}
+ loc.status='checking';loc.result=null;loc.reason='';loc.message='到着を確認しています…';loc.attempts+=1;loc.lastAttemptAt=now;render();
+ navigator.geolocation.getCurrentPosition(onLocationSuccess,onLocationError,{enableHighAccuracy:true,maximumAge:0,timeout:LOCATION_RULES.timeoutMs});
+}
+function onLocationSuccess(position){
+ if(state.screen!=='U05')return;
+ const sample={lat:Number(position.coords.latitude),lon:Number(position.coords.longitude),accuracy:Number(position.coords.accuracy),capturedAt:Number(position.timestamp)};
+ const result=mockAuthoritativeLocationApi(sample);
+ applyLocationResult(result.result,result.reason,result.message);
+}
+function onLocationError(error){
+ if(state.screen!=='U05')return;
+ if(error&&error.code===1){state.location.permission='denied';applyLocationResult('LOCATION_UNAVAILABLE','PERMISSION_DENIED','位置情報の利用が拒否されています。ブラウザまたは端末の設定を確認するか、安全な代替手段を選んでください。');return}
+ if(error&&error.code===2){applyLocationResult('LOCATION_UNAVAILABLE','POSITION_UNAVAILABLE','現在地を取得できませんでした。安全な場所で再確認するか、代替手段を選んでください。');return}
+ if(error&&error.code===3){applyLocationResult('LOCATION_UNAVAILABLE','TIMEOUT','10秒以内に現在地を取得できませんでした。安全な場所で再確認してください。');return}
+ applyLocationResult('LOCATION_UNAVAILABLE','GEOLOCATION_ERROR','位置情報を利用できませんでした。');
+}
+function mockAuthoritativeLocationApi(sample){
+ // PoCではここをServer権威のlocation-check API境界として模擬する。本番ではClientで到着を確定しない。
+ if(!Number.isFinite(sample.lat)||!Number.isFinite(sample.lon)||!Number.isFinite(sample.accuracy)||!Number.isFinite(sample.capturedAt))return{result:'INDETERMINATE',reason:'POSITION_INVALID',message:'取得した位置情報を安全に判定できませんでした。'};
+ const age=Date.now()-sample.capturedAt;
+ if(sample.accuracy>LOCATION_RULES.maxAccuracyM)return{result:'INDETERMINATE',reason:'POSITION_NOT_RELIABLE',message:'位置の精度が十分でないため、到着を確定しません。'};
+ if(age>LOCATION_RULES.maxAgeMs)return{result:'INDETERMINATE',reason:'POSITION_STALE',message:'位置情報が古いため、到着を確定しません。'};
+ if(age < -LOCATION_RULES.futureSkewMs)return{result:'INDETERMINATE',reason:'POSITION_CLOCK_SKEW',message:'端末時刻との差が大きいため、到着を確定しません。'};
+ const d=haversineMeters(sample.lat,sample.lon,MAP_TARGET[0],MAP_TARGET[1]),a=sample.accuracy,r=LOCATION_RULES.arrivalRadiusM;
+ if(d+a<=r)return{result:'ARRIVED',reason:'ARRIVAL_CONFIRMED',message:'位置の精度を含めても到着圏内であることを確認しました。'};
+ if(d-a>r)return{result:'NOT_ARRIVED',reason:'OUTSIDE_ARRIVAL_RADIUS',message:'現在地は到着圏外と判定されました。地図で目的地を確認してください。'};
+ return{result:'INDETERMINATE',reason:'BOUNDARY_UNCERTAIN',message:'位置の精度範囲が到着境界と重なるため、到着を確定しません。'};
+}
+function haversineMeters(lat1,lon1,lat2,lon2){
+ const toRad=x=>x*Math.PI/180,R=6371000,p1=toRad(lat1),p2=toRad(lat2),dp=toRad(lat2-lat1),dl=toRad(lon2-lon1);
+ const h=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;
+ return R*2*Math.atan2(Math.sqrt(h),Math.sqrt(1-h));
+}
+function applyLocationResult(result,reason,message){
+ state.location.status='result';state.location.result=result;state.location.reason=reason;state.location.message=message;state.locationResult=result;render();
+}
+function setLocationReviewResult(mode){
+ if(!reviewMode)return;
+ const map={
+  ARRIVED:['ARRIVED','ARRIVAL_CONFIRMED','PoC mock: 到着成立。'],
+  NOT_ARRIVED:['NOT_ARRIVED','OUTSIDE_ARRIVAL_RADIUS','PoC mock: 到着圏外。'],
+  INDETERMINATE:['INDETERMINATE','BOUNDARY_UNCERTAIN','PoC mock: 判定不能。'],
+  PERMISSION_DENIED:['LOCATION_UNAVAILABLE','PERMISSION_DENIED','PoC mock: 位置情報の利用を拒否。'],
+  POSITION_UNAVAILABLE:['LOCATION_UNAVAILABLE','POSITION_UNAVAILABLE','PoC mock: 現在地を取得できません。'],
+  TIMEOUT:['LOCATION_UNAVAILABLE','TIMEOUT','PoC mock: 位置取得がタイムアウト。']
+ };
+ if(mode==='PERMISSION_DENIED')state.location.permission='denied';
+ const x=map[mode]||map.INDETERMINATE;applyLocationResult(x[0],x[1],x[2]);
+}
+function continueAfterArrival(){
+ if(state.location.result!=='ARRIVED')return;
+ state.storyAdvance.notice='到着を確認できました。サーバー権威の到着結果をStory進行へ反映する接続点です。';
+ go('U03');
+}
+function locationMock(r){setLocationReviewResult(r)}
 function alternativeProgress(){state.locationResult='ALTERNATIVE';alert('PoC: 代替進行でStoryへ戻ります。');go('U03')}
 function selectNext(key){state.book=key;state.selectedNext=null;go('U02')}
 let pending=null;const dlg=document.getElementById('confirm');
