@@ -22,7 +22,7 @@ if grep -q 'crop_buttons' "$MAIN" && grep -q '_choose_crop' "$MAIN"; then pass "
 if grep -q 'stats_grid = GridContainer.new()' "$MAIN" && grep -q 'stats_labels' "$MAIN"; then pass "status uses readable cards"; else fail_msg "stats card grid contract missing"; fi
 if grep -q 'ui_theme.default_font_size = 18' "$MAIN"; then pass "default text is readable"; else fail_msg "default font size must be 18"; fi
 if grep -Eq 'custom_minimum_size[[:space:]]*=[[:space:]]*Vector2\(0,[[:space:]]*58\)' "$MAIN"; then pass "touch targets are at least 58px"; else fail_msg "58px minimum touch target missing"; fi
-if grep -q 'help.add_theme_font_size_override("font_size", 15)' "$MAIN"; then pass "help text is readable"; else fail_msg "help font size must be 15"; fi
+if grep -Eq '(help|help_label)\.add_theme_font_size_override\("font_size", 15\)' "$MAIN"; then pass "help text is readable"; else fail_msg "help font size must be 15"; fi
 if grep -q 'log_view.add_theme_font_size_override("font_size", 15)' "$MAIN"; then pass "log text is readable"; else fail_msg "log font size must be 15"; fi
 
 PORTAL="p021-game/index.html"
