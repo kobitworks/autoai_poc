@@ -47,19 +47,35 @@ var menu_panel: PanelContainer
 var save_button: Button
 var selection_marker: MeshInstance3D
 var last_selection_cell := Vector2i(-1, -1)
+var start_overlay: ColorRect
+var start_card: PanelContainer
+var start_button: Button
+var start_subtitle: Label
+var tutorial_panel: PanelContainer
+var tutorial_label: Label
+var tutorial_button: Button
+var tutorial_step := 0
+var tutorial_done := false
+var fresh_game := false
+var mission_complete_panel: PanelContainer
+var mission_reward_claimed := false
 
 func _ready() -> void:
 	_build_world()
 	_build_ui()
-	if not _load_game(false):
+
+	var loaded_existing := _load_game(false)
+	if not loaded_existing:
+		fresh_game = true
 		_seed_city()
 		_save_game(false)
+
 	_update_hud()
 	_update_camera()
 
 	simulation_timer = Timer.new()
 	simulation_timer.wait_time = 5.5
-	simulation_timer.autostart = true
+	simulation_timer.autostart = false
 	simulation_timer.timeout.connect(_monthly_tick)
 	add_child(simulation_timer)
 
@@ -69,6 +85,7 @@ func _ready() -> void:
 	toast_timer.timeout.connect(func(): toast_label.visible = false)
 	add_child(toast_timer)
 
+	_show_start_screen(loaded_existing)
 	get_viewport().size_changed.connect(_on_viewport_resized)
 
 
@@ -455,6 +472,7 @@ func _evaluate() -> void:
 	else:
 		level = 1
 
+	_check_mission_completion(c)
 	_update_hud()
 
 
@@ -698,6 +716,119 @@ func _build_ui() -> void:
 	toast_label.visible = false
 	layer.add_child(toast_label)
 
+	# First-view title/start overlay.
+	start_overlay = ColorRect.new()
+	start_overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	start_overlay.color = Color(0.01, 0.03, 0.06, 0.82)
+	layer.add_child(start_overlay)
+
+	start_card = PanelContainer.new()
+	start_card.set_anchors_preset(Control.PRESET_CENTER, false)
+	start_card.add_theme_stylebox_override("panel", _panel_style(Color(0.035, 0.075, 0.13, 0.99), 28))
+	start_overlay.add_child(start_card)
+
+	var start_box := VBoxContainer.new()
+	start_box.alignment = BoxContainer.ALIGNMENT_CENTER
+	start_box.add_theme_constant_override("separation", 18)
+	start_card.add_child(start_box)
+
+	var start_title := Label.new()
+	start_title.text = "CITYCRAFT 3D"
+	start_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	start_title.add_theme_font_size_override("font_size", 46)
+	start_title.add_theme_color_override("font_color", Color.WHITE)
+	start_box.add_child(start_title)
+
+	start_subtitle = Label.new()
+	start_subtitle.text = "道路をつなぎ、住宅・商業・公園を配置して\n住みやすい街を育てよう"
+	start_subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	start_subtitle.add_theme_font_size_override("font_size", 26)
+	start_subtitle.add_theme_color_override("font_color", Color("dbeafe"))
+	start_box.add_child(start_subtitle)
+
+	var goal_label := Label.new()
+	goal_label.text = "最初の目標：人口60人・商業2軒・満足度75%"
+	goal_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	goal_label.add_theme_font_size_override("font_size", 24)
+	goal_label.add_theme_color_override("font_color", Color("67e8f9"))
+	start_box.add_child(goal_label)
+
+	start_button = Button.new()
+	start_button.text = "街づくりを始める"
+	start_button.custom_minimum_size = Vector2(520, 86)
+	start_button.add_theme_font_size_override("font_size", 30)
+	start_button.add_theme_color_override("font_color", Color.WHITE)
+	start_button.add_theme_stylebox_override("normal", _menu_button_style(false))
+	start_button.add_theme_stylebox_override("hover", _menu_button_style(true))
+	start_button.add_theme_stylebox_override("pressed", _menu_button_style(true))
+	start_button.pressed.connect(_begin_play_session)
+	start_box.add_child(start_button)
+
+	# Short first-run tutorial.
+	tutorial_panel = PanelContainer.new()
+	tutorial_panel.set_anchors_preset(Control.PRESET_CENTER, false)
+	tutorial_panel.add_theme_stylebox_override("panel", _accent_panel_style(Color("22d3ee")))
+	tutorial_panel.visible = false
+	layer.add_child(tutorial_panel)
+
+	var tutorial_box := VBoxContainer.new()
+	tutorial_box.add_theme_constant_override("separation", 16)
+	tutorial_panel.add_child(tutorial_box)
+
+	tutorial_label = Label.new()
+	tutorial_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	tutorial_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	tutorial_label.add_theme_font_size_override("font_size", 30)
+	tutorial_label.add_theme_color_override("font_color", Color.WHITE)
+	tutorial_box.add_child(tutorial_label)
+
+	tutorial_button = Button.new()
+	tutorial_button.text = "次へ"
+	tutorial_button.custom_minimum_size = Vector2(300, 72)
+	tutorial_button.add_theme_font_size_override("font_size", 26)
+	tutorial_button.add_theme_color_override("font_color", Color.WHITE)
+	tutorial_button.add_theme_stylebox_override("normal", _menu_button_style(false))
+	tutorial_button.add_theme_stylebox_override("hover", _menu_button_style(true))
+	tutorial_button.add_theme_stylebox_override("pressed", _menu_button_style(true))
+	tutorial_button.pressed.connect(_tutorial_next)
+	tutorial_box.add_child(tutorial_button)
+
+	# Mission-complete celebration.
+	mission_complete_panel = PanelContainer.new()
+	mission_complete_panel.set_anchors_preset(Control.PRESET_CENTER, false)
+	mission_complete_panel.add_theme_stylebox_override("panel", _accent_panel_style(Color("fbbf24")))
+	mission_complete_panel.visible = false
+	layer.add_child(mission_complete_panel)
+
+	var clear_box := VBoxContainer.new()
+	clear_box.add_theme_constant_override("separation", 16)
+	mission_complete_panel.add_child(clear_box)
+
+	var clear_title := Label.new()
+	clear_title.text = "市長ミッション達成！"
+	clear_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	clear_title.add_theme_font_size_override("font_size", 40)
+	clear_title.add_theme_color_override("font_color", Color("fde68a"))
+	clear_box.add_child(clear_title)
+
+	var clear_text := Label.new()
+	clear_text.text = "人口・商業・満足度の目標を達成しました。\n報酬 ¥5,000 を獲得！"
+	clear_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	clear_text.add_theme_font_size_override("font_size", 28)
+	clear_text.add_theme_color_override("font_color", Color.WHITE)
+	clear_box.add_child(clear_text)
+
+	var clear_button := Button.new()
+	clear_button.text = "街づくりを続ける"
+	clear_button.custom_minimum_size = Vector2(420, 76)
+	clear_button.add_theme_font_size_override("font_size", 26)
+	clear_button.add_theme_color_override("font_color", Color.WHITE)
+	clear_button.add_theme_stylebox_override("normal", _menu_button_style(false))
+	clear_button.add_theme_stylebox_override("hover", _menu_button_style(true))
+	clear_button.add_theme_stylebox_override("pressed", _menu_button_style(true))
+	clear_button.pressed.connect(func(): mission_complete_panel.visible = false)
+	clear_box.add_child(clear_button)
+
 	_apply_ui_layout()
 	_set_tool(selected_tool)
 
@@ -802,6 +933,19 @@ func _apply_ui_layout() -> void:
 	var portrait: bool = viewport_size.y > viewport_size.x * 1.20
 
 	if portrait:
+		start_card.offset_left = -580
+		start_card.offset_right = 580
+		start_card.offset_top = -320
+		start_card.offset_bottom = 320
+		tutorial_panel.offset_left = -560
+		tutorial_panel.offset_right = 560
+		tutorial_panel.offset_top = -250
+		tutorial_panel.offset_bottom = 250
+		mission_complete_panel.offset_left = -540
+		mission_complete_panel.offset_right = 540
+		mission_complete_panel.offset_top = -240
+		mission_complete_panel.offset_bottom = 240
+
 		ui_theme.default_font_size = 30
 		title_label.add_theme_font_size_override("font_size", 42)
 		for label in [money_label, population_label, happiness_label, month_label]:
@@ -862,6 +1006,19 @@ func _apply_ui_layout() -> void:
 		toast_label.offset_top = 366
 		toast_label.offset_bottom = 446
 	else:
+		start_card.offset_left = -470
+		start_card.offset_right = 470
+		start_card.offset_top = -270
+		start_card.offset_bottom = 270
+		tutorial_panel.offset_left = -460
+		tutorial_panel.offset_right = 460
+		tutorial_panel.offset_top = -210
+		tutorial_panel.offset_bottom = 210
+		mission_complete_panel.offset_left = -440
+		mission_complete_panel.offset_right = 440
+		mission_complete_panel.offset_top = -200
+		mission_complete_panel.offset_bottom = 200
+
 		ui_theme.default_font_size = 20
 		title_label.add_theme_font_size_override("font_size", 30)
 		for label in [money_label, population_label, happiness_label, month_label]:
@@ -985,16 +1142,76 @@ func _toast(text: String) -> void:
 		toast_timer.start()
 
 
+func _show_start_screen(has_save: bool) -> void:
+	if start_overlay == null:
+		return
+	start_overlay.visible = true
+	start_button.text = "つづきから" if has_save else "街づくりを始める"
+	start_subtitle.text = "保存した街のつづきから始めます" if has_save else "道路をつなぎ、住宅・商業・公園を配置して\n住みやすい街を育てよう"
+
+func _begin_play_session() -> void:
+	if start_overlay:
+		start_overlay.visible = false
+	if simulation_timer and simulation_timer.is_stopped():
+		simulation_timer.start()
+	if not tutorial_done:
+		tutorial_step = 0
+		_show_tutorial_step()
+
+func _show_tutorial_step() -> void:
+	if tutorial_panel == null:
+		return
+	tutorial_panel.visible = true
+	match tutorial_step:
+		0:
+			tutorial_label.text = "1 / 3　道路を伸ばそう\n下の「道路」を選び、空いているマスをタップします。\n市役所から道路がつながることが街の基本です。"
+			tutorial_button.text = "次へ"
+			_set_tool("road")
+		1:
+			tutorial_label.text = "2 / 3　住宅を建てよう\n「住宅」を選び、道路の隣に建てます。\n道路につながった住宅には住民が増えていきます。"
+			tutorial_button.text = "次へ"
+			_set_tool("home")
+		2:
+			tutorial_label.text = "3 / 3　収入と満足度を伸ばそう\n商業は収入、公園は満足度を高めます。\n最初の市長ミッション達成を目指しましょう。"
+			tutorial_button.text = "遊び始める"
+			_set_tool("shop")
+
+func _tutorial_next() -> void:
+	tutorial_step += 1
+	if tutorial_step >= 3:
+		tutorial_done = true
+		tutorial_panel.visible = false
+		_set_tool("road")
+		_save_game(false)
+		_toast("チュートリアル完了　まずは人口60人を目指そう")
+		return
+	_show_tutorial_step()
+
+func _check_mission_completion(count_data: Dictionary) -> void:
+	if mission_reward_claimed:
+		return
+	var complete: bool = population >= 60 and int(count_data["shop"]) >= 2 and happiness >= 75
+	if not complete:
+		return
+	mission_reward_claimed = true
+	money += 5000
+	if mission_complete_panel:
+		mission_complete_panel.visible = true
+	_save_game(false)
+
 func _toggle_menu() -> void:
 	if menu_panel:
 		menu_panel.visible = not menu_panel.visible
 
 func _new_game() -> void:
+	tutorial_done = false
+	mission_reward_claimed = false
+	fresh_game = true
 	_seed_city()
 	_save_game(false)
 	if menu_panel:
 		menu_panel.visible = false
-	_toast("新しい街を開始しました")
+	_begin_play_session()
 
 func _can_place(cell: Vector2i) -> bool:
 	if cell.x < 0 or cell.y < 0 or cell.x >= GRID_SIZE or cell.y >= GRID_SIZE:
@@ -1089,6 +1306,8 @@ func _save_game(show_message := true) -> void:
 		"month": month,
 		"level": level,
 		"selected_tool": selected_tool,
+		"tutorial_done": tutorial_done,
+		"mission_reward_claimed": mission_reward_claimed,
 		"cells": []
 	}
 	for key in cells.keys():
@@ -1128,6 +1347,8 @@ func _load_game(show_message := true) -> bool:
 	month = int(parsed.get("month", 1))
 	level = int(parsed.get("level", 1))
 	selected_tool = str(parsed.get("selected_tool", "road"))
+	tutorial_done = bool(parsed.get("tutorial_done", true))
+	mission_reward_claimed = bool(parsed.get("mission_reward_claimed", false))
 
 	for item in parsed.get("cells", []):
 		_spawn(str(item["type"]), Vector2i(int(item["x"]), int(item["y"])))
