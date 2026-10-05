@@ -35,7 +35,7 @@ dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(10
 .dev{font-size:11px;color:#687577;border-top:1px dotted #aaa;margin-top:14px;padding-top:8px}
 @media(min-width:768px){.app-header{height:140px}.desktop-nav{display:flex;height:40px;background:color-mix(in srgb,var(--main) 50%,white);align-items:center;gap:2px;padding:0 10px}.desktop-nav button{background:transparent;border:0;border-right:1px solid #777;padding:0 12px;font-size:17px;font-weight:800;color:var(--link)}.page-title{top:140px}.main{top:170px;bottom:64px}.banner{bottom:0;height:64px}.bottomnav{display:none}.book-card{width:125px;height:165px}.ops-grid{grid-template-columns:340px 1fr}}
 @media(max-width:767px){.desktop-nav{display:none}.ops-grid{grid-template-columns:1fr}.paper{width:100%;padding:12px 10px}.reviewbar{top:134px}.map{min-height:0}}
-.login-screen{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 26px 82px;text-align:center}.login-logo{display:flex;align-items:center;gap:0;font:700 54px/1 Georgia,serif;color:#000;margin-top:-80px;margin-bottom:44px}.login-logo-book{width:78px;height:72px;border-radius:7px;background:#183b69;color:#f4f4f4;display:grid;place-items:center;font-size:66px;line-height:1;margin-right:-3px;text-shadow:0 1px 2px #333}.login-copy{font-size:16px;line-height:1.55;max-width:560px;color:#333}.google-login{margin-top:28px;width:min(400px,82vw);height:54px;border:1.5px solid #444;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;gap:28px;font-size:18px}.gmark{font:800 30px Arial;color:#4285f4}.login-note{font-size:11px;color:#718080;margin-top:12px}
+.login-screen{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 26px 82px;text-align:center}.login-logo{display:flex;align-items:center;gap:0;font:700 54px/1 Georgia,serif;color:#000;margin-top:-80px;margin-bottom:44px}.login-logo-book{width:78px;height:72px;border-radius:7px;background:#183b69;color:#f4f4f4;display:grid;place-items:center;font-size:66px;line-height:1;margin-right:-3px;text-shadow:0 1px 2px #333}.login-copy{font-size:16px;line-height:1.55;max-width:560px;color:#333}.google-login{margin-top:28px;width:min(400px,82vw);height:54px;border:1.5px solid #444;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;gap:28px;font-size:18px}.gmark{font:800 30px Arial;color:#4285f4}.login-note{font-size:11px;color:#718080;margin-top:12px}.login-error{margin-top:16px;padding:10px 12px;max-width:440px;border:1px solid #e3a1a1;background:#fff0f0;border-radius:6px;color:#8a1f1f;font-size:13px}.login-dev-actions{margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}.session-chip{position:fixed;right:8px;top:105px;z-index:26;background:#fff;border:1px solid #a9c8cf;border-radius:14px;padding:3px 9px;font-size:10px;color:#345;box-shadow:0 1px 3px #0002}.session-chip button{border:0;background:transparent;color:#004797;text-decoration:underline;padding:0 0 0 6px;font-size:10px;cursor:pointer}@media(min-width:768px){.session-chip{top:145px}}
 </style>
 </head>
 <body data-ui-baseline="biblio-v2-mobile-20261005">
@@ -45,6 +45,7 @@ dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(10
   <nav class="subnav" id="subnav"></nav>
 </header>
 <div class="page-title" id="pageTitle"></div>
+<div class="session-chip" id="sessionChip" hidden></div>
 <main class="main" id="app"></main>
 <div class="reviewbar"><details><summary>PoC画面ジャンプ</summary><div class="review-buttons" id="jump"></div></details></div>
 <footer class="banner"><div class="adbox" aria-label="広告モック"><div class="adcell">おすすめ商品<br><strong>+1箱無料</strong></div><div class="adcell">特集<br>ポイントUP</div><div class="adcell">和の逸品<br>期間限定</div><div class="adcell">ビューティー<br>キャンペーン</div><div class="adcell rakuten">Rakuten</div></div></footer>
@@ -57,13 +58,14 @@ dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(10
 </nav>
 <dialog id="confirm"><div class="dlg"><h3 id="confirmTitle">確認</h3><p id="confirmText"></p><div class="actions"><button class="btn secondary" id="cancelDlg">キャンセル</button><button class="btn" id="okDlg">実行</button></div></div></dialog>
 <script>
-const state={screen:'U01',book:'walk-shibuya',locationResult:null,progress:true,complete:false,selectedNext:null,books:[
+const SESSION_KEY='biblio_poc_session_v1';
+const state={screen:'U01',book:'walk-shibuya',locationResult:null,progress:true,complete:false,selectedNext:null,auth:{status:'logged_out',user:null,error:'',restored:false},books:[
  {key:'walk-shibuya',title:'街角ミステリー',region:'渋谷',time:'45分',desc:'街を歩きながら手がかりを集める短編Book。',available:true,pub:'LIVE',cls:''},
  {key:'river-story',title:'川辺の記憶',region:'清澄白河',time:'35分',desc:'水辺の風景をめぐる物語。',available:true,pub:'TEST',cls:'c2'},
  {key:'old-town',title:'古い商店街の手紙',region:'谷中',time:'50分',desc:'商店街に残された手紙を追うBook。',available:false,pub:'STOP',cls:'c3'}
 ]};
 const labels={LOGIN:'Login',U01:'Book',U02:'Book Detail',U03:'Story',U04:'Map',U05:'Location Check',U06:'Safety',U08:'Book Complete',U09:'Next Book',U10:'Book Select',O01:'Publication'};
-const app=document.getElementById('app'), jump=document.getElementById('jump'), subnav=document.getElementById('subnav'), title=document.getElementById('pageTitle');
+const app=document.getElementById('app'), jump=document.getElementById('jump'), subnav=document.getElementById('subnav'), title=document.getElementById('pageTitle'), sessionChip=document.getElementById('sessionChip');
 const LEGACY_UI_BASELINE=Object.freeze({
  id:'biblio-v2-mobile-20261005',
  tabs:['ALL','Spot','Mobian'],
@@ -74,7 +76,7 @@ const LEGACY_UI_BASELINE=Object.freeze({
 const reviewMode=new URLSearchParams(location.search).get('review')==='1';
 document.body.classList.toggle('review-mode',reviewMode);
 function b(){return state.books.find(x=>x.key===state.book)||state.books[0]}
-function go(s){state.screen=s;history.replaceState({s},'', '#'+s);render()}
+function go(s){if(s!=='LOGIN'&&state.auth.status!=='logged_in'){state.screen='LOGIN';state.auth.error='ログインが必要です。';history.replaceState({s:'LOGIN'},'','#LOGIN');render();return}state.screen=s;history.replaceState({s},'', '#'+s);render()}
 function btn(t,a,c=''){return '<button class="btn '+c+'" onclick="'+a+'">'+t+'</button>'}
 function page(body){return '<div class="paper">'+body+'<div class="dev">画面・遷移確認用PoCです。公開・進行・位置到達・Completeは本番確定処理ではありません。</div></div>'}
 function renderNav(){
@@ -90,12 +92,13 @@ function renderNav(){
  document.querySelectorAll('.bottomnav button').forEach(x=>x.classList.remove('current'));
  const menu=state.screen==='U04'||state.screen==='U05'||state.screen==='U06'?'map':state.screen==='O01'?'config':state.screen==='U09'||state.screen==='U10'?'info':'book';
  const el=document.querySelector('.bottomnav [data-menu="'+menu+'"]');if(el)el.classList.add('current');
+ const loggedIn=state.auth.status==='logged_in';sessionChip.hidden=isLogin||!loggedIn;sessionChip.innerHTML=loggedIn?'Google mock: '+state.auth.user.email+(state.auth.restored?' / 復元済み':'')+' <button onclick="logoutMock()">ログアウト</button>':'';
 }
 function cover(x,idx){return '<div class="book-card" tabindex="0" role="button" onclick="state.book=\''+x.key+'\';go(\'U02\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){this.click()}"><div class="cover '+x.cls+'"><div class="cover-title">'+x.title+'</div><div class="cover-region">'+x.region+' / '+x.time+'</div></div><span class="status">'+x.pub+'</span>'+(x.key===state.book?'<span class="selected">選択中</span>':'')+'</div>'}
 function render(){
  renderNav();const book=b();
  if(state.screen==='LOGIN'){
-  app.innerHTML='<div class="login-screen"><div class="login-logo"><span class="login-logo-book">▯</span><span>Biblio</span></div><div class="login-copy"><p>ゲームを遊ぶにはGoogleアカウントが必要です。</p><p>スマートフォンまたはタブレットの使用を推奨しております。</p></div><button class="google-login" onclick="go(\'U04\')"><span class="gmark">G</span><span>Google でログイン</span></button><div class="login-note">PoC：Google認証は実行しません</div></div>';
+  app.innerHTML='<div class="login-screen"><div class="login-logo"><span class="login-logo-book">▯</span><span>Biblio</span></div><div class="login-copy"><p>ゲームを遊ぶにはGoogleアカウントが必要です。</p><p>スマートフォンまたはタブレットの使用を推奨しております。</p></div><button class="google-login" onclick="loginMock(\'success\')" '+(state.auth.status==='authenticating'?'disabled':'')+'><span class="gmark">G</span><span>'+(state.auth.status==='authenticating'?'Google 認証中…':'Google でログイン')+'</span></button>'+(state.auth.error?'<div class="login-error" role="alert">'+state.auth.error+'</div>':'')+'<div class="login-note">PoC：Google OAuthの資格情報は使用せず、認証結果のみmockします</div>'+(reviewMode?'<div class="login-dev-actions"><button class="btn secondary" onclick="loginMock(\'error\')">認証エラーを試す</button><button class="btn secondary" onclick="clearSessionMock()">保存セッションを消去</button></div>':'')+'</div>';
  }else if(state.screen==='U01'){
   app.innerHTML=page((state.progress?'<div class="panel"><strong>つづきから</strong><p>'+book.title+' — Scene 2まで進行中</p>'+btn('つづきから',"go('U03')")+'</div>':'')+'<h3>Book一覧</h3><div class="book-container">'+state.books.map(cover).join('')+'</div><p class="muted">旧BiblioのBook表紙一覧を基準にしたPoC表示です。</p>');
  }else if(state.screen==='U02'){
@@ -120,6 +123,10 @@ function render(){
   app.innerHTML=page('<h2>公開管理</h2><p>一般利用画面とは分離した運用PoCです。</p><div class="ops-grid"><div class="panel ops-list">'+state.books.map(x=>'<button onclick="state.book=\''+x.key+'\';render()"><strong>'+x.title+'</strong><br><small>'+x.pub+'</small></button>').join('')+'</div><div class="panel"><h3>'+book.title+'</h3><div class="fact"><span>対象版</span><strong>v2026.10-poc</strong></div><div class="fact"><span>公開状態</span><strong>'+book.pub+'</strong></div><div class="actions">'+btn('Test公開',"opsConfirm('TEST')",'secondary')+btn('本公開',"opsConfirm('LIVE')")+btn('公開停止',"opsConfirm('STOP')",'danger')+btn('版を差し替え',"opsConfirm('REPLACE')",'secondary')+'</div></div></div>');
  }
 }
+function loginMock(mode){state.auth.status='authenticating';state.auth.error='';render();setTimeout(()=>{if(mode==='error'){state.auth.status='logged_out';state.auth.user=null;state.auth.error='Google認証に失敗しました。時間をおいてもう一度お試しください。';render();return}const session={provider:'google',email:'poc-user@example.com',displayName:'PoC User',issuedAt:new Date().toISOString()};localStorage.setItem(SESSION_KEY,JSON.stringify(session));state.auth.status='logged_in';state.auth.user=session;state.auth.restored=false;state.auth.error='';state.screen='U04';history.replaceState({s:'U04'},'','#U04');render()},250)}
+function restoreSessionMock(){try{const raw=localStorage.getItem(SESSION_KEY);if(!raw)return false;const session=JSON.parse(raw);if(session?.provider!=='google'||!session?.email)throw new Error('invalid session');state.auth.status='logged_in';state.auth.user=session;state.auth.restored=true;state.auth.error='';return true}catch(e){localStorage.removeItem(SESSION_KEY);state.auth.status='logged_out';state.auth.user=null;state.auth.error='保存されたセッションを復元できませんでした。もう一度ログインしてください。';return false}}
+function logoutMock(){localStorage.removeItem(SESSION_KEY);state.auth.status='logged_out';state.auth.user=null;state.auth.restored=false;state.auth.error='';state.screen='LOGIN';history.replaceState({s:'LOGIN'},'','#LOGIN');render()}
+function clearSessionMock(){localStorage.removeItem(SESSION_KEY);state.auth.status='logged_out';state.auth.user=null;state.auth.restored=false;state.auth.error='保存セッションを消去しました。';render()}
 function locationMock(r){state.locationResult=r;if(r==='ARRIVED'){state.complete=true;go('U08')}else go('U06')}
 function alternativeProgress(){state.locationResult='ALTERNATIVE';alert('PoC: 代替進行でStoryへ戻ります。');go('U03')}
 function selectNext(key){state.book=key;state.selectedNext=null;go('U02')}
@@ -128,7 +135,9 @@ function opsConfirm(a){pending=a;document.getElementById('confirmText').textCont
 document.getElementById('cancelDlg').onclick=()=>{pending=null;dlg.close()}
 document.getElementById('okDlg').onclick=()=>{if(pending&&pending!=='REPLACE')b().pub=pending;pending=null;dlg.close();render()}
 window.addEventListener('popstate',e=>{if(e.state?.s){state.screen=e.state.s;render()}})
-if(location.hash&&labels[location.hash.slice(1)])state.screen=location.hash.slice(1);
+const restored=restoreSessionMock();
+const requested=location.hash&&labels[location.hash.slice(1)]?location.hash.slice(1):null;
+if(restored)state.screen=requested&&requested!=='LOGIN'?requested:'U04';
 else state.screen='LOGIN';
 render();
 </script>
