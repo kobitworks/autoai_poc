@@ -2,93 +2,178 @@
 <html lang="ja">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Biblio PoC</title>
-<link rel="stylesheet" href="./ui-baseline.css">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Biblio PoC - Legacy UI</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIINfQ3ynxNVZQ7MZpYd5i5Jp6i4fQW4p7s=" crossorigin="">
+<style>
+:root{
+  --main:#7FC7D9;--base:#DCF2F1;--accent:#365486;--sub:#0F1035;--option:#6fc7dd;
+  --ink:#3b3b3b;--link:#00008a;--border:#ccc;--paper1:#faf4e1;--paper2:#fffdf8;
+  --white:#fff;--danger:#dc3545;--warn:#fff3cd;--ok:#28a745;
+  --head-top:70px;--head-sub:30px;--title:30px;--banner:54px;--bottom:64px;
+}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;font-family:"Yu Gothic Medium","游ゴシック Medium",YuGothic,"ヒラギノ角ゴ Pro W3",sans-serif;color:var(--ink);background:#e7f4f5}
+body.login-mode .app-header,body.login-mode .page-title,body.login-mode .bottomnav,body.login-mode .reviewbar{display:none}
+body.login-mode .main{top:0;bottom:54px;padding:0;background:#e7f4f5}
+body.login-mode .banner{bottom:0}.legacy-shell{display:contents}.main.map-mode{padding:0;overflow:hidden}
+button{font:inherit}.app-header{position:fixed;inset:0 0 auto 0;height:100px;z-index:30;background:var(--base);box-shadow:0 1px 4px #0002}
+.head-top{height:70px;padding:4px 8px;display:flex;align-items:center;justify-content:space-between;background:#d8eeee}
+.logo{display:flex;align-items:center;gap:0;color:#000}.logo-mark{width:60px;height:60px;border-radius:6px;background:#183b69;color:white;display:grid;place-items:center;font-family:Georgia,serif;font-size:0;box-shadow:1px 1px 3px #0004;position:relative;overflow:hidden}.logo-mark:before{content:"▯";position:absolute;left:6px;top:3px;font-size:47px;line-height:1;color:#f4f4f4;text-shadow:0 0 1px #333}.logo-mark:after{content:"Biblio";position:absolute;left:7px;bottom:5px;font-size:18px;line-height:1;color:#111;background:#fff8;padding:1px 2px;font-weight:800}.logo>span:last-child{display:none}.mode{display:flex;align-items:center;gap:8px}.book-mini{display:none}.mock{display:none}.mobian-world{min-width:170px;padding:7px 16px 6px;background:linear-gradient(#e7c47a,#f4dda5 45%,#d0a457);border:1px solid #a67c36;border-radius:3px;box-shadow:inset 0 0 9px #7f5f2a88,0 1px 2px #0002;color:#392713;font:700 25px/0.9 Georgia,serif;text-align:center;transform:skew(-1deg)}
+.subnav{height:30px;background:var(--option);display:flex;align-items:center;gap:4px;padding:0 8px;overflow-x:auto;white-space:nowrap}.subnav button{border:0;background:transparent;color:var(--link);font-weight:700;padding:4px 9px;border-bottom:3px solid transparent}.subnav button.active{border-bottom-color:#004797;color:#004797}
+.page-title{position:fixed;top:100px;left:0;right:0;height:30px;z-index:25;background:color-mix(in srgb,var(--main) 50%,white);display:flex;align-items:center;padding:0 10px;font-weight:800;color:color-mix(in srgb,var(--accent) 50%,black);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.main{position:fixed;top:130px;left:0;right:0;bottom:118px;overflow:auto;padding:8px;background:color-mix(in srgb,var(--base) 50%,white)}
+.paper{position:relative;width:min(97%,920px);margin:5px auto;padding:15px;background:linear-gradient(to right,var(--paper1),var(--paper2));border-right:2px solid var(--border);box-shadow:8px 8px 16px #0003;border-radius:8px}
+.paper:after{content:"";position:absolute;right:-5px;top:0;width:10px;height:100%;background:linear-gradient(to right,#0000000d,transparent);pointer-events:none}
+.panel{background:#fff;border:1px solid #dfe6e7;border-radius:7px;padding:12px;margin:10px 0;box-shadow:2px 2px 5px #0001}.muted{color:#666;font-size:.9em}.notice{padding:10px;border:1px solid #c4d9de;background:#f6feff;border-radius:6px}.notice.warn{background:#fff8e1;border-color:#e8c96d}.notice.danger{background:#fff0f0;border-color:#e3a1a1}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.btn{display:inline-block;padding:7px 13px;background:var(--accent);color:white;border:1px solid color-mix(in srgb,var(--accent) 50%,black);border-radius:4px;font-weight:700;cursor:pointer}.btn:hover,.btn:focus-visible{background:white;color:#004797}.btn.secondary{background:#fff;color:var(--accent)}.btn.danger{background:var(--danger)}.btn:disabled{opacity:.45;cursor:not-allowed}
+.book-container{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:0}.book-card{width:112px;height:150px;background:#fafafa;border:1px solid var(--border);box-shadow:2px 2px 5px #0002;margin:7px;position:relative;cursor:pointer}.book-card:hover{transform:translateY(-2px)}.cover{width:100%;height:100%;padding:8px;background:linear-gradient(160deg,#f5ead0,#c9dee6);display:flex;flex-direction:column;justify-content:space-between;border-left:8px solid var(--accent)}.cover.c2{background:linear-gradient(160deg,#dceff5,#bfdacb);border-left-color:#517f70}.cover.c3{background:linear-gradient(160deg,#eee1d2,#d8b7aa);border-left-color:#885d4d}.cover-title{font-weight:800;font-size:13px;line-height:1.35;color:#25333c}.cover-region{font-size:11px;color:#555}.status{position:absolute;top:4px;right:4px;background:white;border:1px solid var(--accent);border-radius:3px;padding:1px 4px;font-size:9px;font-weight:800}.selected{position:absolute;bottom:4px;right:4px;background:var(--ok);color:white;border-radius:10px;padding:2px 5px;font-size:9px}
+.fact{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-bottom:1px dotted #bbb}.story{font-size:17px;line-height:1.9}.map{height:calc(100% - 4px);min-height:420px;border:0;background:#f7f2e8;position:relative;overflow:hidden}.map:before{content:"";position:absolute;inset:-20px;background:repeating-linear-gradient(18deg,transparent 0 34px,#e4bc69 35px 38px,transparent 39px 68px),repeating-linear-gradient(96deg,transparent 0 46px,#e7c778 47px 51px,transparent 52px 90px),linear-gradient(90deg,transparent 59%,#b8d9ea 60% 67%,transparent 68%);opacity:.72}.map-label{position:absolute;left:48%;top:48%;background:#0673ad;color:white;padding:7px 6px;border:0;border-radius:0;font-size:13px}.map-control{position:absolute;z-index:2;background:white;border:1px solid #aaa;border-radius:3px;box-shadow:0 1px 3px #0003;display:grid;place-items:center;font-weight:800}.zoom{left:10px;top:10px;width:34px;height:64px;grid-template-rows:1fr 1fr;font-size:22px}.zoom span+span{border-top:1px solid #bbb;width:100%;text-align:center}.locate{right:12px;top:10px;width:38px;height:38px;font-size:22px}.person{position:absolute;z-index:2;width:18px;height:30px;border-radius:8px 8px 5px 5px;background:#f58c98;border:2px solid #4a4885}.p1{left:8%;top:67%}.p2{left:46%;top:78%}.p3{left:7%;top:87%}.map-screen{height:100%;display:flex;flex-direction:column;position:relative}.map-screen .map{flex:1}.leaflet-container{font-family:inherit;background:#e8eef0}.map-overlay{position:absolute;z-index:500;left:50%;bottom:12px;transform:translateX(-50%);width:min(94%,540px);pointer-events:none}.map-status{background:#ffffffec;border:1px solid #b9c9cc;border-radius:7px;box-shadow:0 2px 8px #0003;padding:8px 10px;font-size:12px;line-height:1.45;pointer-events:auto}.map-status strong{display:block;color:#123f6b}.map-status .actions{margin-top:6px}.map-status .btn{min-height:32px;padding:6px 10px}.map-pin{width:24px;height:24px;border-radius:50% 50% 50% 0;background:#176fa6;border:3px solid #fff;box-shadow:0 1px 4px #0005;transform:rotate(-45deg)}.map-pin.friend{background:#7469b6}.leaflet-control-attribution{font-size:9px}
+.ops-grid{display:grid;grid-template-columns:280px 1fr;gap:12px}.ops-list button{display:block;width:100%;text-align:left;padding:9px;margin:5px 0;background:white;border:1px solid #bbb;border-radius:4px}
+.banner{position:fixed;left:0;right:0;bottom:64px;height:54px;background:#e4f3f3;z-index:30;display:grid;place-items:center;border-top:1px solid #c6dcdc}.adbox{width:min(640px,86vw);height:50px;border:1px solid #bbb;background:#fff;display:grid;grid-template-columns:1.1fr 1fr 1.1fr 1fr 1.2fr;color:#444;font-size:9px;overflow:hidden}.adcell{display:grid;place-items:center;border-right:1px solid #ddd;text-align:center;padding:2px}.adcell strong{color:#c40000;font-size:13px}.adcell.rakuten{color:#bf0000;font-size:18px;font-weight:800}
+.bottomnav{position:fixed;left:0;right:0;bottom:0;height:64px;background:#d8eeee;z-index:31;border-top:1px solid #c4dddd;display:flex;justify-content:space-around;align-items:center}.bottomnav button{width:20%;height:100%;border:0;background:transparent;color:#00008a;font-weight:700;font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:3px 0 2px;gap:0}.bottomnav button.current{text-decoration:underline;color:#00008a}.navicon{width:38px;height:38px;object-fit:contain;display:block}.ico{font-size:24px}.info-wrap{position:relative}.badge70{position:absolute;right:-12px;top:-8px;background:#ff5e63;color:white;border-radius:999px;min-width:34px;height:34px;display:grid;place-items:center;font-size:13px;font-weight:700}
+.reviewbar{display:none;position:fixed;right:8px;top:137px;z-index:40}body.review-mode .reviewbar{display:block}.reviewbar details{background:#fff;border:1px solid #aaa;border-radius:5px;box-shadow:0 2px 8px #0003}.reviewbar summary{cursor:pointer;padding:5px 8px;font-size:11px;color:#555}.review-buttons{max-width:260px;padding:6px;display:flex;flex-wrap:wrap;gap:4px}.review-buttons button{font-size:10px;padding:4px;background:#eef6f8;border:1px solid #9bb;color:#345;border-radius:3px}
+dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(100% - 30px));box-shadow:0 15px 45px #0006}dialog::backdrop{background:#0006}.dlg{padding:16px}
+.dev{font-size:11px;color:#687577;border-top:1px dotted #aaa;margin-top:14px;padding-top:8px}
+@media(min-width:768px){.app-header{height:140px}.desktop-nav{display:flex;height:40px;background:color-mix(in srgb,var(--main) 50%,white);align-items:center;gap:2px;padding:0 10px}.desktop-nav button{background:transparent;border:0;border-right:1px solid #777;padding:0 12px;font-size:17px;font-weight:800;color:var(--link)}.page-title{top:140px}.main{top:170px;bottom:64px}.banner{bottom:0;height:64px}.bottomnav{display:none}.book-card{width:125px;height:165px}.ops-grid{grid-template-columns:340px 1fr}}
+@media(max-width:767px){.desktop-nav{display:none}.ops-grid{grid-template-columns:1fr}.paper{width:100%;padding:12px 10px}.reviewbar{top:134px}.map{min-height:0}}
+.login-screen{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 26px 82px;text-align:center}.login-logo{display:flex;align-items:center;gap:0;font:700 54px/1 Georgia,serif;color:#000;margin-top:-80px;margin-bottom:44px}.login-logo-book{width:78px;height:72px;border-radius:7px;background:#183b69;color:#f4f4f4;display:grid;place-items:center;font-size:66px;line-height:1;margin-right:-3px;text-shadow:0 1px 2px #333}.login-copy{font-size:16px;line-height:1.55;max-width:560px;color:#333}.google-login{margin-top:28px;width:min(400px,82vw);height:54px;border:1.5px solid #444;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;gap:28px;font-size:18px}.gmark{font:800 30px Arial;color:#4285f4}.login-note{font-size:11px;color:#718080;margin-top:12px}.login-error{margin-top:16px;padding:10px 12px;max-width:440px;border:1px solid #e3a1a1;background:#fff0f0;border-radius:6px;color:#8a1f1f;font-size:13px}.login-dev-actions{margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}.session-chip{position:fixed;right:8px;top:105px;z-index:26;background:#fff;border:1px solid #a9c8cf;border-radius:14px;padding:3px 9px;font-size:10px;color:#345;box-shadow:0 1px 3px #0002}.session-chip button{border:0;background:transparent;color:#004797;text-decoration:underline;padding:0 0 0 6px;font-size:10px;cursor:pointer}@media(min-width:768px){.session-chip{top:145px}}
+</style>
 </head>
-<body>
-<div id="app"></div>
-<nav class="routebar" aria-label="PoC画面ジャンプ" id="jump"></nav>
-<dialog id="confirm"><div class="dlg"><h3 id="confirmTitle">確認</h3><p id="confirmText"></p><div class="actions"><button class="btn secondary" id="cancelDlg">キャンセル</button><button class="btn primary" id="okDlg">実行</button></div></div></dialog>
+<body data-ui-baseline="biblio-v2-mobile-20261005">
+<header class="app-header">
+  <div class="head-top"><div class="logo"><span class="logo-mark">B</span><span>Biblio</span></div><div class="mode"><div class="mobian-world">Mobian’s<br>World</div></div></div>
+  <nav class="desktop-nav"><button onclick="go('U04')">Map</button><button onclick="go('U01')">List</button><button onclick="go('U01')">Book</button><button onclick="go('U09')">Info</button><button onclick="go('O01')">Config</button></nav>
+  <nav class="subnav" id="subnav"></nav>
+</header>
+<div class="page-title" id="pageTitle"></div>
+<div class="session-chip" id="sessionChip" hidden></div>
+<main class="main" id="app"></main>
+<div class="reviewbar"><details><summary>PoC画面ジャンプ</summary><div class="review-buttons" id="jump"></div></details></div>
+<footer class="banner"><div class="adbox" aria-label="広告モック"><div class="adcell">おすすめ商品<br><strong>+1箱無料</strong></div><div class="adcell">特集<br>ポイントUP</div><div class="adcell">和の逸品<br>期間限定</div><div class="adcell">ビューティー<br>キャンペーン</div><div class="adcell rakuten">Rakuten</div></div></footer>
+<nav class="bottomnav" aria-label="メインメニュー">
+  <button data-menu="map" onclick="go('U04')"><img class="navicon" src="https://img.icons8.com/office/40/000000/map-marker.png" alt=""><span>Map</span></button>
+  <button data-menu="list" onclick="go('U01')"><img class="navicon" src="https://img.icons8.com/office/40/000000/List-of-parts.png" alt=""><span>List</span></button>
+  <button data-menu="book" onclick="go('U01')"><img class="navicon" src="https://img.icons8.com/office/40/000000/book-shelf.png" alt=""><span>Book</span></button>
+  <button data-menu="info" onclick="go('U09')"><span class="info-wrap"><img class="navicon" src="https://img.icons8.com/office/40/000000/info--v1.png" alt=""><span class="badge70">70</span></span><span>Info</span></button>
+  <button data-menu="config" onclick="go('O01')"><img class="navicon" src="https://img.icons8.com/office/40/000000/settings.png" alt=""><span>Config</span></button>
+</nav>
+<dialog id="confirm"><div class="dlg"><h3 id="confirmTitle">確認</h3><p id="confirmText"></p><div class="actions"><button class="btn secondary" id="cancelDlg">キャンセル</button><button class="btn" id="okDlg">実行</button></div></div></dialog>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 const SESSION_KEY='biblio_poc_session_v1';
-const savedSession=(()=>{try{return JSON.parse(localStorage.getItem(SESSION_KEY)||'null')}catch(e){return null}})();
-const state={
-  screen:savedSession?'U01':'U00', book:'walk-shibuya', scene:'s1', locationResult:null,
-  progress:true, complete:false, selectedNext:null,
-  session:savedSession,
-  books:[
-    {key:'walk-shibuya',title:'街角ミステリー',region:'渋谷',time:'45分',desc:'街を歩きながら手がかりを集める短編Book。',available:true,pub:'LIVE'},
-    {key:'river-story',title:'川辺の記憶',region:'清澄白河',time:'35分',desc:'水辺の風景をめぐる物語。',available:true,pub:'TEST'},
-    {key:'old-town',title:'古い商店街の手紙',region:'谷中',time:'50分',desc:'商店街に残された手紙を追うBook。',available:false,pub:'STOP'}
-  ]
-};
-const label={U00:'U00 ログイン',U01:'U01 一覧',U02:'U02 詳細',U03:'U03 Story',U04:'U04 Map',U05:'U05 位置確認',U06:'U06 Safety',U08:'U08 Complete',U09:'U09 次Book',U10:'U10 選択',O01:'O01 公開管理'};
-const app=document.getElementById('app'), jump=document.getElementById('jump');
+const state={screen:'U01',book:'walk-shibuya',locationResult:null,complete:false,selectedNext:null,resumeNotice:'',story:null,start:{status:'idle',error:'',mode:'success'},auth:{status:'logged_out',user:null,error:'',restored:false},books:[
+ {key:'walk-shibuya',title:'街角ミステリー',region:'渋谷',time:'45分',desc:'街を歩きながら手がかりを集める短編Book。',safety:'移動時は画面を見続けず、安全な場所で操作してください。',available:true,unavailableReason:'',pub:'LIVE',cls:''},
+ {key:'river-story',title:'川辺の記憶',region:'清澄白河',time:'35分',desc:'水辺の風景をめぐる物語。',safety:'川沿いでは足元と周囲を確認し、安全な場所でのみ画面を操作してください。',available:true,unavailableReason:'',pub:'TEST',cls:'c2'},
+ {key:'old-town',title:'古い商店街の手紙',region:'谷中',time:'50分',desc:'商店街に残された手紙を追うBook。',safety:'通行の妨げにならない場所で立ち止まって操作してください。',available:false,unavailableReason:'現在公開を停止しています。',pub:'STOP',cls:'c3'}
+],progressRecords:[
+ {bookKey:'walk-shibuya',chapter:1,scene:1,sceneKey:'scene-1',sceneTitle:'街角のはじまり',updatedAt:'2026-10-05T08:00:00+09:00',resumable:true},
+ {bookKey:'walk-shibuya',chapter:1,scene:2,sceneKey:'scene-2',sceneTitle:'交差点の小さな違和感',updatedAt:'2026-10-05T10:30:00+09:00',resumable:true}
+]};
+const labels={LOGIN:'Login',U01:'Book',U02:'Book Detail',U03:'Story',U04:'Map',U05:'Location Check',U06:'Safety',U08:'Book Complete',U09:'Next Book',U10:'Book Select',O01:'Publication'};
+const app=document.getElementById('app'), jump=document.getElementById('jump'), subnav=document.getElementById('subnav'), title=document.getElementById('pageTitle'), sessionChip=document.getElementById('sessionChip');
+const LEGACY_UI_BASELINE=Object.freeze({
+ id:'biblio-v2-mobile-20261005',
+ tabs:['ALL','Spot','Mobian'],
+ bottomMenu:['Map','List','Book','Info','Config'],
+ shellParts:['header','tabs','page-title','content','banner','bottom-nav'],
+ mobileBreakpoint:767
+});
+const reviewMode=new URLSearchParams(location.search).get('review')==='1';
+document.body.classList.toggle('review-mode',reviewMode);
 function b(){return state.books.find(x=>x.key===state.book)||state.books[0]}
-function go(s){if(!state.session&&s!=='U00')s='U00';state.screen=s;render();history.replaceState({s},'', '#'+s)}
-function userTools(){
-  if(!state.session)return '<span class="badge">MOCK / 非本番</span>';
-  const initial=(state.session.name||'U').slice(0,1);
-  return '<div class="userbox"><span class="badge">MOCK / 非本番</span><span class="userpill"><span class="avatar">'+initial+'</span><span>'+state.session.name+'</span></span><button class="linkbtn" onclick="logout()">ログアウト</button></div>'
+function latestProgress(bookKey){return state.progressRecords.filter(x=>x.bookKey===bookKey&&x.resumable).sort((a,b)=>Date.parse(b.updatedAt)-Date.parse(a.updatedAt))[0]||null}
+function latestResumeCandidate(){return state.books.map(book=>({book,progress:latestProgress(book.key)})).filter(x=>x.book.available&&x.progress).sort((a,b)=>Date.parse(b.progress.updatedAt)-Date.parse(a.progress.updatedAt))[0]||null}
+function resumeBook(bookKey){const book=state.books.find(x=>x.key===bookKey),progress=latestProgress(bookKey);if(!book||!book.available||!progress){state.resumeNotice='再開できる進行データがありません。Book一覧から選び直してください。';state.screen='U01';history.replaceState({s:'U01'},'','#U01');render();return}state.book=book.key;state.story={chapter:progress.chapter,scene:progress.scene,sceneKey:progress.sceneKey,title:progress.sceneTitle};state.resumeNotice='';state.screen='U03';history.replaceState({s:'U03'},'','#U03');render()}
+function setResumeMock(enabled){state.progressRecords=enabled?[{bookKey:'walk-shibuya',chapter:1,scene:1,sceneKey:'scene-1',sceneTitle:'街角のはじまり',updatedAt:'2026-10-05T08:00:00+09:00',resumable:true},{bookKey:'walk-shibuya',chapter:1,scene:2,sceneKey:'scene-2',sceneTitle:'交差点の小さな違和感',updatedAt:'2026-10-05T10:30:00+09:00',resumable:true}]:[];state.resumeNotice='';state.screen='U01';history.replaceState({s:'U01'},'','#U01');render()}
+function startAvailability(bookKey){const book=state.books.find(x=>x.key===bookKey);if(!book)return{allowed:false,reason:'Book情報を確認できません。',resume:false};if(!book.available)return{allowed:false,reason:book.unavailableReason||'現在、このBookは開始できません。',resume:false};const progress=latestProgress(bookKey);if(progress)return{allowed:false,reason:'このBookは進行中です。「つづきから」を利用してください。',resume:true};return{allowed:true,reason:'このBookは開始できます。',resume:false}}
+function setStartMockMode(mode){state.start.mode=mode;state.start.status='idle';state.start.error='';render()}
+function startBook(bookKey){if(state.start.status==='starting')return;const visible=startAvailability(bookKey);if(!visible.allowed){state.start.status='blocked';state.start.error=visible.reason;render();return}state.start.status='starting';state.start.error='';render();setTimeout(()=>{const book=state.books.find(x=>x.key===bookKey);if(state.start.mode==='error'){state.start.status='error';state.start.error='Bookを開始できませんでした。通信状態を確認して、もう一度お試しください。';render();return}if(state.start.mode==='blocked'||!book||!book.available){state.start.status='blocked';state.start.error='現在、このBookは開始できません。'+(book?.unavailableReason?' 開始できない理由: '+book.unavailableReason:' サーバー側の最新状態を確認してください。');render();return}const progress={bookKey:book.key,chapter:1,scene:1,sceneKey:'scene-1',sceneTitle:'街角のはじまり',updatedAt:new Date().toISOString(),resumable:true};state.progressRecords=state.progressRecords.filter(x=>x.bookKey!==book.key);state.progressRecords.push(progress);state.book=book.key;state.story={chapter:progress.chapter,scene:progress.scene,sceneKey:progress.sceneKey,title:progress.sceneTitle};state.start={status:'idle',error:'',mode:'success'};state.screen='U03';history.replaceState({s:'U03'},'','#U03');render()},300)}
+function go(s){if(s!=='LOGIN'&&state.auth.status!=='logged_in'){state.screen='LOGIN';state.auth.error='ログインが必要です。';history.replaceState({s:'LOGIN'},'','#LOGIN');render();return}state.screen=s;history.replaceState({s},'', '#'+s);render()}
+function btn(t,a,c=''){return '<button class="btn '+c+'" onclick="'+a+'">'+t+'</button>'}
+function page(body){return '<div class="paper">'+body+'<div class="dev">画面・遷移確認用PoCです。公開・進行・位置到達・Completeは本番確定処理ではありません。</div></div>'}
+function renderNav(){
+ const isLogin=state.screen==='LOGIN';
+ document.body.classList.toggle('login-mode',isLogin);
+ app.classList.toggle('map-mode',state.screen==='U04');
+ const tabs=state.screen==='O01'?['Publication','Version']:(isLogin?[]:LEGACY_UI_BASELINE.tabs);
+ subnav.innerHTML=tabs.map((x,i)=>'<button class="'+(i===0?'active':'')+'" type="button">'+x+'</button>').join('');
+ title.textContent=labels[state.screen]||'Biblio';
+ if(reviewMode){
+  jump.innerHTML=Object.keys(labels).map(k=>'<button onclick="go(\''+k+'\')">'+k+' '+labels[k]+'</button>').join('');
+ }
+ document.querySelectorAll('.bottomnav button').forEach(x=>x.classList.remove('current'));
+ const menu=state.screen==='U04'||state.screen==='U05'||state.screen==='U06'?'map':state.screen==='O01'?'config':state.screen==='U09'||state.screen==='U10'?'info':'book';
+ const el=document.querySelector('.bottomnav [data-menu="'+menu+'"]');if(el)el.classList.add('current');
+ const loggedIn=state.auth.status==='logged_in';sessionChip.hidden=isLogin||!loggedIn;sessionChip.innerHTML=loggedIn?'Google mock: '+state.auth.user.email+(state.auth.restored?' / 復元済み':'')+' <button onclick="logoutMock()">ログアウト</button>':'';
 }
-function shell(body,ops=false){return '<main class="shell '+(ops?'ops':'')+'"><div class="top"><div><div class="brand">Biblio</div><div class="muted">街歩きストーリー PoC</div></div>'+userTools()+'</div>'+body+'<p class="dev">このPoCは画面・遷移確認用です。Google認証は疑似ログイン、セッションはlocalStorageで復元します。本番OAuth・認可は未接続です。</p></main>'}
-function btn(text,action,cls='primary',dis=false){return '<button class="btn '+cls+'" onclick="'+action+'" '+(dis?'disabled':'')+'>'+text+'</button>'}
+function cover(x,idx){const p=latestProgress(x.key),availability=!x.available?'利用不可':p?'進行中':'利用可';return '<div class="book-card" tabindex="0" role="button" aria-label="'+x.title+' '+availability+'" onclick="state.book=\''+x.key+'\';go(\'U02\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){this.click()}"><div class="cover '+x.cls+'"><div class="cover-title">'+x.title+'</div><div class="cover-region">'+x.region+' / '+x.time+'</div></div><span class="status">'+availability+'</span>'+(x.key===state.book?'<span class="selected">選択中</span>':'')+'</div>'}
 function render(){
- if(!state.session&&state.screen!=='U00')state.screen='U00';
- jump.innerHTML=Object.keys(label).map(k=>'<button class="'+(state.screen===k?'active':'')+'" onclick="go(\''+k+'\')">'+label[k]+'</button>').join('');
- const book=b();
- if(state.screen==='U00'){
-   app.innerHTML=shell('<section class="card authcard"><div class="authlogo">📚</div><h1>Biblioへログイン</h1><p class="muted">Bookの進行状況を端末に保持して、次回も続きから利用できます。</p><div class="notice"><strong>PoC認証</strong><br>この画面ではGoogle OAuthの代わりにテストユーザーでログイン状態を再現します。</div><div class="actions" style="justify-content:center">'+
-   '<button class="googlebtn" onclick="loginMock()"><span class="googlemark">G</span> Googleでログイン</button></div></section>');
- } else if(state.screen==='U01'){
-   app.innerHTML=shell('<section class="card hero"><h1>物語を、街で読む。</h1><p>Bookを選び、安全な場所で操作しながら街をめぐります。</p></section>'+
-   (state.progress?'<section class="card"><h2>つづきから</h2><p><strong>'+book.title+'</strong> — Scene 2まで進行中</p>'+btn('つづきから',"go('U03')")+'</section>':'')+
-   '<h2>利用できるBook</h2><section class="books">'+state.books.map(x=>'<article class="card book"><div><h3>'+x.title+'</h3><p class="muted">'+x.region+' ・ 約'+x.time+'</p><p>'+x.desc+'</p></div>'+btn('このBookを見る',"state.book='"+x.key+"';go('U02')",'secondary')+'</article>').join('')+'</section>');
- } else if(state.screen==='U02'){
-   app.innerHTML=shell('<section class="card hero"><p class="muted">'+book.region+'</p><h1>'+book.title+'</h1><p>'+book.desc+'</p></section><section class="card"><h2>始める前に</h2>'+
-   '<div class="fact"><span>地域</span><strong>'+book.region+'</strong></div><div class="fact"><span>想定時間</span><strong>'+book.time+'</strong></div><div class="fact"><span>位置情報</span><strong>必要な場面だけ</strong></div><div class="fact"><span>公開状態</span><strong>'+(book.available?'開始可能':'現在開始不可')+'</strong></div>'+
-   '<div class="actions">'+btn('Book一覧へ戻る',"go('U01')",'secondary')+btn(book.available?'このBookを始める':'現在、このBookは開始できません。',"mockStart()",book.available?'primary':'secondary',!book.available)+'</div></section>');
- } else if(state.screen==='U03'){
-   app.innerHTML=shell('<section class="card"><p class="muted">'+book.title+' / Chapter 1 / Scene 2</p><h1>交差点の小さな違和感</h1><div class="story"><p>店先の古い時計は、街の時間から少しだけ遅れていた。</p><p>次の手がかりは、ここから数分歩いた「青い壁の広場」にあるらしい。</p></div><div class="notice warn"><strong>移動前に確認</strong><br>歩きながら画面を見続けず、安全な場所で操作してください。</div><div class="actions">'+btn('目的地を確認する',"go('U04')")+btn('中断して一覧へ',"go('U01')",'secondary')+'</div></section>');
- } else if(state.screen==='U04'){
-   app.innerHTML=shell('<section class="card"><h1>目的地：青い壁の広場</h1><div class="notice warn">移動中は画面を見続けず、安全な場所で操作してください。</div><div class="map" role="img" aria-label="青い壁の広場の位置を示す簡易地図"><div class="card"><strong>青い壁の広場</strong><br><span class="muted">現在地から約350m（PoC表示）</span></div></div><p>地図を見られない場合：大通りを北へ進み、青い壁の広場を目印にしてください。</p><div class="actions">'+btn('到着確認へ',"go('U05')")+btn('Storyへ戻る',"go('U03')",'secondary')+'</div></section>');
- } else if(state.screen==='U05'){
-   app.innerHTML=shell('<section class="card"><h1>到着を確認</h1><div class="notice"><strong>位置情報を使う理由</strong><br>この目的地に到着したか確認するため、今だけ端末の位置情報を利用します。</div><p>位置情報は到着確認に必要なときだけ取得します。このPoCでは実際の位置情報は取得せず、結果を選んで画面遷移を確認します。</p><div class="actions">'+btn('到着として確認',"locationMock('ARRIVED')")+btn('まだ到着していない',"locationMock('NOT_ARRIVED')",'secondary')+btn('判定不能を試す',"locationMock('INDETERMINATE')",'secondary')+btn('キャンセル',"go('U04')",'ghost')+'</div></section>');
- } else if(state.screen==='U06'){
-   const arrived=state.locationResult==='NOT_ARRIVED';
-   app.innerHTML=shell('<section class="card"><h1>安全に続けるために</h1><div class="notice dangerbox"><strong>'+(arrived?'まだ到着を確認できませんでした。':'位置情報を確認できませんでした。')+'</strong><br>失敗や権限拒否を到着成功として扱いません。</div><p>安全な場所で、次の行動を選んでください。</p><div class="actions">'+btn('Mapへ戻る',"go('U04')")+btn('もう一度確認',"go('U05')",'secondary')+btn('代替進行を試す',"alternativeProgress()",'secondary')+btn('Bookを中断',"go('U01')",'ghost')+'</div></section>');
- } else if(state.screen==='U08'){
-   app.innerHTML=shell('<section class="card hero"><h1>Book Complete</h1><p><strong>'+book.title+'</strong> を完走しました。</p></section><section class="card"><p>Completeは次Book選択や広告表示とは独立して成立しています。</p><div class="actions">'+btn('次のBookを見る',"go('U09')")+btn('Book一覧へ戻る',"go('U01')",'secondary')+'</div></section>');
- } else if(state.screen==='U09'){
-   const next=state.books.filter(x=>x.key!==book.key && x.available);
-   app.innerHTML=shell('<section class="card"><h1>次のBook候補</h1><p>候補を見ただけでは選択済みになりません。</p></section><section class="books">'+next.map(x=>'<article class="card"><h3>'+x.title+'</h3><p>'+x.region+' ・ '+x.time+'</p>'+btn('候補として選ぶ',"state.selectedNext='"+x.key+"';go('U10')",'secondary')+'</article>').join('')+'</section><div class="actions">'+btn('今は選ばない',"go('U01')",'ghost')+'</div>');
- } else if(state.screen==='U10'){
-   const x=state.books.find(v=>v.key===state.selectedNext)||state.books.find(v=>v.key!==book.key&&v.available);
-   app.innerHTML=shell('<section class="card"><h1>次に読むBook</h1><h2>'+x.title+'</h2><p>'+x.region+' ・ '+x.time+'</p><p>'+x.desc+'</p><div class="actions">'+btn('このBookを選ぶ',"selectNext('"+x.key+"')")+btn('候補へ戻る',"go('U09')",'secondary')+'</div></section>');
- } else if(state.screen==='O01'){
-   app.innerHTML=shell('<section class="card"><h1>公開管理</h1><p>一般利用画面とは分離された運用PoCです。操作はすべてmockです。</p></section><div class="opsgrid"><section class="card tablelike"><h2>Book一覧</h2>'+state.books.map(x=>'<button onclick="state.book=\''+x.key+'\';render()"><strong>'+x.title+'</strong><br><span class="state '+(x.pub==='LIVE'?'live':x.pub==='STOP'?'stop':'test')+'">'+x.pub+'</span></button>').join('')+'</section><section class="card"><h2>'+book.title+'</h2><div class="fact"><span>対象版</span><strong>v2026.10-poc</strong></div><div class="fact"><span>現在公開状態</span><strong>'+book.pub+'</strong></div><div class="actions">'+btn('Test公開',"opsConfirm('TEST')",'secondary')+btn('本公開',"opsConfirm('LIVE')")+btn('公開停止',"opsConfirm('STOP')",'danger')+btn('版を差し替え',"opsConfirm('REPLACE')",'ghost')+'</div></section></div>',true);
+ renderNav();const book=b();
+ if(state.screen==='LOGIN'){
+  app.innerHTML='<div class="login-screen"><div class="login-logo"><span class="login-logo-book">▯</span><span>Biblio</span></div><div class="login-copy"><p>ゲームを遊ぶにはGoogleアカウントが必要です。</p><p>スマートフォンまたはタブレットの使用を推奨しております。</p></div><button class="google-login" onclick="loginMock(\'success\')" '+(state.auth.status==='authenticating'?'disabled':'')+'><span class="gmark">G</span><span>'+(state.auth.status==='authenticating'?'Google 認証中…':'Google でログイン')+'</span></button>'+(state.auth.error?'<div class="login-error" role="alert">'+state.auth.error+'</div>':'')+'<div class="login-note">PoC：Google OAuthの資格情報は使用せず、認証結果のみmockします</div>'+(reviewMode?'<div class="login-dev-actions"><button class="btn secondary" onclick="loginMock(\'error\')">認証エラーを試す</button><button class="btn secondary" onclick="clearSessionMock()">保存セッションを消去</button></div>':'')+'</div>';
+ }else if(state.screen==='U01'){
+  const resume=latestResumeCandidate();
+  app.innerHTML=page((state.resumeNotice?'<div class="notice warn">'+state.resumeNotice+'</div>':'')+(resume?'<div class="panel"><strong>つづきから</strong><p>'+resume.book.title+' — Chapter '+resume.progress.chapter+' / Scene '+resume.progress.scene+'</p><p class="muted">'+resume.progress.sceneTitle+'</p>'+btn('つづきから',"resumeBook('"+resume.book.key+"')")+'</div>':'<div class="panel muted">再開できる進行中Bookはありません。</div>')+'<h3>Book一覧</h3><div class="book-container">'+state.books.map(cover).join('')+'</div><p class="muted">旧BiblioのBook表紙一覧を維持し、利用可能・進行中・利用不可を表示しています。</p>'+(reviewMode?'<div class="panel"><strong>U07 Resume Resolver 確認</strong><p class="muted">U07は独立画面を表示せず、最新の再開可能Sceneを解決してU03へreplaceします。</p><div class="actions">'+btn('再開データあり',"setResumeMock(true)",'secondary')+btn('再開データなし',"setResumeMock(false)",'secondary')+'</div></div>':''));
+ }else if(state.screen==='U02'){
+  const availability=startAvailability(book.key),starting=state.start.status==='starting';
+  const availabilityPanel=availability.allowed?'<div class="notice"><strong>開始可能</strong><br>'+availability.reason+'</div>':'<div class="notice warn"><strong>現在、このBookは開始できません。</strong><br>開始できない理由: '+availability.reason+'</div>';
+  const primary=availability.resume?btn('つづきから',"resumeBook('"+book.key+"')"):(availability.allowed?'<button class="btn" onclick="startBook(\''+book.key+'\')" '+(starting?'disabled':'')+'>'+(starting?'開始可否を確認中…':'このBookを始める')+'</button>':'<button class="btn" disabled>現在開始できません</button>');
+  app.innerHTML=page('<h2>'+book.title+'</h2><div class="panel"><strong>あらすじ</strong><p>'+book.desc+'</p></div><div class="panel"><div class="fact"><span>地域</span><strong>'+(book.region||'地域情報を確認中です。')+'</strong></div><div class="fact"><span>想定時間</span><strong>'+book.time+'</strong></div></div><div class="notice warn"><strong>安全上の注意</strong><br>'+book.safety+'</div>'+availabilityPanel+(state.start.error?'<div class="notice danger" role="alert">'+state.start.error+'</div>':'')+'<div class="actions">'+btn('Book一覧へ戻る',"go('U01')",'secondary')+primary+'</div>'+(reviewMode?'<div class="panel"><strong>Start API mock確認</strong><p class="muted">画面表示後もStart時にサーバー側で開始可否を再確認します。</p><div class="actions">'+btn('API成功',"setStartMockMode('success')",'secondary')+btn('APIエラー',"setStartMockMode('error')",'secondary')+btn('直前に開始不可',"setStartMockMode('blocked')",'secondary')+'</div><p class="muted">現在のmock: '+state.start.mode+'</p></div>':''));
+ }else if(state.screen==='U03'){
+  const story=state.story||{chapter:1,scene:1,sceneKey:'scene-1',title:'街角のはじまり'};
+  app.innerHTML=page('<p class="muted">'+book.title+' / Chapter '+story.chapter+' / Scene '+story.scene+'</p><h2>'+story.title+'</h2><div class="story"><p>店先の古い時計は、街の時間から少しだけ遅れていた。</p><p>次の手がかりは、ここから数分歩いた「青い壁の広場」にあるらしい。</p></div><div class="notice warn"><strong>移動前に確認</strong><br>歩きながら画面を見続けず、安全な場所で操作してください。</div><div class="actions">'+btn('目的地を確認する',"go('U04')")+btn('中断してBookへ',"go('U01')",'secondary')+'</div>');
+ }else if(state.screen==='U04'){
+  app.innerHTML='<div class="map-screen"><div id="leafletMap" class="map" role="application" aria-label="Biblio Map。目的地と周辺マーカーを表示します"></div><div class="map-overlay"><div class="map-status"><strong>目的地：青い壁の広場</strong><span>渋谷エリアのサンプル地点を表示中。地図を見ながら歩かず、安全な場所で確認してください。</span><div class="actions">'+btn('現在地を確認',"go('U05')",'secondary')+'</div></div></div></div>';setTimeout(initLeafletMap,0);
+ }else if(state.screen==='U05'){
+  app.innerHTML=page('<h2>到着を確認</h2><div class="notice"><strong>位置情報を使う理由</strong><br>この目的地に到着したか確認するため、今だけ端末の位置情報を利用します。</div><p>位置情報は到着確認に必要なときだけ取得します。PoCでは実位置情報は取得しません。</p><div class="actions">'+btn('到着として確認',"locationMock('ARRIVED')")+btn('まだ到着していない',"locationMock('NOT_ARRIVED')",'secondary')+btn('判定不能を試す',"locationMock('INDETERMINATE')",'secondary')+'</div>');
+ }else if(state.screen==='U06'){
+  app.innerHTML=page('<h2>安全に続けるために</h2><div class="notice danger"><strong>'+(state.locationResult==='NOT_ARRIVED'?'まだ目的地への到着を確認できませんでした。':'位置情報を確認できませんでした。')+'</strong><br>失敗・拒否・不明を到着成功として扱いません。</div><div class="actions">'+btn('Mapへ',"go('U04')")+btn('もう一度確認',"go('U05')",'secondary')+btn('代替進行',"alternativeProgress()",'secondary')+btn('中断',"go('U01')",'secondary')+'</div>');
+ }else if(state.screen==='U08'){
+  app.innerHTML=page('<h1>Book Complete</h1><p><strong>'+book.title+'</strong> を完走しました。</p><div class="panel">Completeは次Book選択や広告表示とは独立して成立します。</div><div class="actions">'+btn('次のBookを見る',"go('U09')")+btn('Book一覧へ',"go('U01')",'secondary')+'</div>');
+ }else if(state.screen==='U09'){
+  const next=state.books.filter(x=>x.key!==book.key&&x.available);
+  app.innerHTML=page('<h2>次のBook</h2><div class="book-container">'+next.map(cover).join('')+'</div><p class="muted">候補表示だけでは次Bookは確定しません。</p>');
+ }else if(state.screen==='U10'){
+  const x=state.books.find(v=>v.key===state.selectedNext)||state.books.find(v=>v.key!==book.key&&v.available);
+  app.innerHTML=page('<h2>次に読むBook</h2><div class="panel"><strong>'+x.title+'</strong><p>'+x.region+' / '+x.time+'</p><p>'+x.desc+'</p></div><div class="actions">'+btn('このBookを選ぶ',"selectNext('"+x.key+"')")+btn('候補へ',"go('U09')",'secondary')+'</div>');
+ }else if(state.screen==='O01'){
+  app.innerHTML=page('<h2>公開管理</h2><p>一般利用画面とは分離した運用PoCです。</p><div class="ops-grid"><div class="panel ops-list">'+state.books.map(x=>'<button onclick="state.book=\''+x.key+'\';render()"><strong>'+x.title+'</strong><br><small>'+x.pub+'</small></button>').join('')+'</div><div class="panel"><h3>'+book.title+'</h3><div class="fact"><span>対象版</span><strong>v2026.10-poc</strong></div><div class="fact"><span>公開状態</span><strong>'+book.pub+'</strong></div><div class="actions">'+btn('Test公開',"opsConfirm('TEST')",'secondary')+btn('本公開',"opsConfirm('LIVE')")+btn('公開停止',"opsConfirm('STOP')",'danger')+btn('版を差し替え',"opsConfirm('REPLACE')",'secondary')+'</div></div></div>');
  }
 }
-function loginMock(){
-  state.session={provider:'google',userId:'poc-google-user-001',name:'テストユーザー',email:'test.user@example.com',loggedInAt:new Date().toISOString()};
-  localStorage.setItem(SESSION_KEY,JSON.stringify(state.session));
-  go('U01');
+let leafletMapInstance=null;
+function mapMarkerIcon(kind='target'){
+ const cls=kind==='friend'?'map-pin friend':'map-pin';
+ return L.divIcon({className:'',html:'<div class="'+cls+'"></div>',iconSize:[24,24],iconAnchor:[12,24],popupAnchor:[0,-24]});
 }
-function logout(){
-  localStorage.removeItem(SESSION_KEY);state.session=null;state.screen='U00';render();history.replaceState({s:'U00'},'','#U00');
+function initLeafletMap(){
+ const el=document.getElementById('leafletMap');
+ if(!el||typeof L==='undefined')return;
+ if(leafletMapInstance){leafletMapInstance.remove();leafletMapInstance=null}
+ const target=[35.65952,139.70055];
+ leafletMapInstance=L.map(el,{zoomControl:true,attributionControl:true}).setView(target,16);
+ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(leafletMapInstance);
+ L.marker(target,{icon:mapMarkerIcon('target')}).addTo(leafletMapInstance).bindPopup('<strong>青い壁の広場</strong><br>物語上の目的地（PoC）').openPopup();
+ L.marker([35.66018,139.69898],{icon:mapMarkerIcon('friend')}).addTo(leafletMapInstance).bindPopup('Mobian A');
+ L.marker([35.65858,139.70173],{icon:mapMarkerIcon('friend')}).addTo(leafletMapInstance).bindPopup('Mobian B');
+ L.control.scale({imperial:false,position:'bottomleft'}).addTo(leafletMapInstance);
+ setTimeout(()=>leafletMapInstance&&leafletMapInstance.invalidateSize(),80);
 }
-function mockStart(){setTimeout(()=>{state.progress=true;go('U03')},180)}
-function locationMock(r){state.locationResult=r;if(r==='ARRIVED'){setTimeout(()=>{state.complete=true;go('U08')},180)}else{go('U06')}}
-function alternativeProgress(){state.locationResult='ALTERNATIVE';alert('PoC: progression_mode=ALTERNATIVE / location_reached=false としてStoryへ戻ります。');go('U03')}
+function loginMock(mode){state.auth.status='authenticating';state.auth.error='';render();setTimeout(()=>{if(mode==='error'){state.auth.status='logged_out';state.auth.user=null;state.auth.error='Google認証に失敗しました。時間をおいてもう一度お試しください。';render();return}const session={provider:'google',email:'poc-user@example.com',displayName:'PoC User',issuedAt:new Date().toISOString()};localStorage.setItem(SESSION_KEY,JSON.stringify(session));state.auth.status='logged_in';state.auth.user=session;state.auth.restored=false;state.auth.error='';state.screen='U04';history.replaceState({s:'U04'},'','#U04');render()},250)}
+function restoreSessionMock(){try{const raw=localStorage.getItem(SESSION_KEY);if(!raw)return false;const session=JSON.parse(raw);if(session?.provider!=='google'||!session?.email)throw new Error('invalid session');state.auth.status='logged_in';state.auth.user=session;state.auth.restored=true;state.auth.error='';return true}catch(e){localStorage.removeItem(SESSION_KEY);state.auth.status='logged_out';state.auth.user=null;state.auth.error='保存されたセッションを復元できませんでした。もう一度ログインしてください。';return false}}
+function logoutMock(){localStorage.removeItem(SESSION_KEY);state.auth.status='logged_out';state.auth.user=null;state.auth.restored=false;state.auth.error='';state.screen='LOGIN';history.replaceState({s:'LOGIN'},'','#LOGIN');render()}
+function clearSessionMock(){localStorage.removeItem(SESSION_KEY);state.auth.status='logged_out';state.auth.user=null;state.auth.restored=false;state.auth.error='保存セッションを消去しました。';render()}
+function locationMock(r){state.locationResult=r;if(r==='ARRIVED'){state.complete=true;go('U08')}else go('U06')}
+function alternativeProgress(){state.locationResult='ALTERNATIVE';alert('PoC: 代替進行でStoryへ戻ります。');go('U03')}
 function selectNext(key){state.book=key;state.selectedNext=null;go('U02')}
-let pending=null; const dlg=document.getElementById('confirm');
-function opsConfirm(action){pending=action;document.getElementById('confirmTitle').textContent='公開操作の確認';document.getElementById('confirmText').textContent= action==='LIVE'?'この版を本公開します。利用者へ公開されます。よろしいですか？':action==='STOP'?'このBookの公開を停止します。進行中利用者への影響を確認してください。':action==='TEST'?'この版をTest公開します。よろしいですか？':'公開対象の版を差し替えます。対象版を確認してください。';dlg.showModal()}
+let pending=null;const dlg=document.getElementById('confirm');
+function opsConfirm(a){pending=a;document.getElementById('confirmText').textContent=a==='LIVE'?'この版を本公開します。よろしいですか？':a==='STOP'?'このBookの公開を停止します。よろしいですか？':a==='TEST'?'この版をTest公開します。よろしいですか？':'公開対象の版を差し替えます。よろしいですか？';dlg.showModal()}
 document.getElementById('cancelDlg').onclick=()=>{pending=null;dlg.close()}
-document.getElementById('okDlg').onclick=()=>{if(pending){if(pending!=='REPLACE')b().pub=pending;else alert('PoC: 差し替え候補版を選択した想定です。');pending=null;dlg.close();render()}}
-window.addEventListener('popstate',e=>{if(e.state&&e.state.s){state.screen=e.state.s;render()}})
-if(location.hash&&label[location.hash.slice(1)])state.screen=location.hash.slice(1);
-if(!state.session)state.screen='U00';
+document.getElementById('okDlg').onclick=()=>{if(pending&&pending!=='REPLACE')b().pub=pending;pending=null;dlg.close();render()}
+window.addEventListener('popstate',e=>{if(e.state?.s){state.screen=e.state.s;render()}})
+const restored=restoreSessionMock();
+const requested=location.hash&&labels[location.hash.slice(1)]?location.hash.slice(1):null;
+if(restored)state.screen=requested&&requested!=='LOGIN'?requested:'U04';
+else state.screen='LOGIN';
 render();
 </script>
 </body>
