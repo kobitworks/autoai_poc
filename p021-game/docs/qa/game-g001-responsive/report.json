@@ -1,0 +1,96 @@
+{
+  "checkedAt": "2026-10-05T19:50:31.209Z",
+  "url": "http://127.0.0.1:4173/games/one-square-farm-godot-v5/",
+  "task": "GAME-023",
+  "cases": [
+    {
+      "name": "phone-portrait",
+      "width": 390,
+      "height": 844,
+      "canvas": {
+        "width": 390,
+        "height": 844
+      },
+      "selectedChallengeByKeyboard": "sprint",
+      "startClick": {
+        "x": 195,
+        "y": 766
+      },
+      "introScreenshot": "p021-game/docs/qa/game-g001-responsive/phone-portrait-intro-ready.png",
+      "gameScreenshot": "p021-game/docs/qa/game-g001-responsive/phone-portrait-game.png",
+      "introSha256": "29efc012eacf0120ab62263b80d63624adfd8aae617619dbad972027e8b3b7be",
+      "gameSha256": "ebc57e007bed30825f91a3475909a813991a7cc09ad2c65828d52a40b6c3676a",
+      "changedAfterStartClick": true,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "result": "PASS"
+    },
+    {
+      "name": "phone-landscape",
+      "width": 844,
+      "height": 390,
+      "canvas": {
+        "width": 844,
+        "height": 390
+      },
+      "selectedChallengeByKeyboard": "sprint",
+      "startClick": {
+        "x": 422,
+        "y": 322
+      },
+      "introScreenshot": "p021-game/docs/qa/game-g001-responsive/phone-landscape-intro-ready.png",
+      "gameScreenshot": "p021-game/docs/qa/game-g001-responsive/phone-landscape-game.png",
+      "introSha256": "b796482e108e56070d5731baa83f92ab4ba240342505001ddd80a199c185505a",
+      "gameSha256": "99a33689af8b5a65b38f51d5bf31ecbf2f04d9c775da266d661fd4899940a4fc",
+      "changedAfterStartClick": true,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "result": "PASS"
+    },
+    {
+      "name": "tablet-portrait",
+      "width": 768,
+      "height": 1024,
+      "canvas": {
+        "width": 768,
+        "height": 1024
+      },
+      "selectedChallengeByKeyboard": "sprint",
+      "startClick": {
+        "x": 384,
+        "y": 946
+      },
+      "introScreenshot": "p021-game/docs/qa/game-g001-responsive/tablet-portrait-intro-ready.png",
+      "gameScreenshot": "p021-game/docs/qa/game-g001-responsive/tablet-portrait-game.png",
+      "introSha256": "47013f3a28b30d79580f2fd7e4c406b93535a0a367bdae4e777ad837ae77fd66",
+      "gameSha256": "abd31e5185d00ff32564170ac306f47a9d816566241f61a01ff152b697a95086",
+      "changedAfterStartClick": true,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "result": "PASS"
+    },
+    {
+      "name": "tablet-landscape",
+      "width": 1024,
+      "height": 768,
+      "canvas": {
+        "width": 1024,
+        "height": 768
+      },
+      "selectedChallengeByKeyboard": "sprint",
+      "startClick": {
+        "x": 512,
+        "y": 690
+      },
+      "introScreenshot": "p021-game/docs/qa/game-g001-responsive/tablet-landscape-intro-ready.png",
+      "gameScreenshot": "p021-game/docs/qa/game-g001-responsive/tablet-landscape-game.png",
+      "introSha256": "c9845841d8b28ab7eb168916fd07464e055e367b2aac750fde80a81ec2805377",
+      "gameSha256": "d81ffcfbaee2bf61bc9231a67308a75337f6a47dabbcfd053aaba61100c9ae0e",
+      "changedAfterStartClick": true,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "result": "PASS"
+    }
+  ],
+  "result": "PASS"
+}
