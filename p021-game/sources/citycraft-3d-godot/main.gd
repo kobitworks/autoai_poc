@@ -497,27 +497,38 @@ func _place(cell: Vector2i) -> void:
 
 	if selected_tool == "bulldoze":
 		if not cells.has(cell) or cells[cell]["type"] == "city":
+			_flash_failure(cell)
 			_toast("ここは撤去できません")
 			return
-		var refund := roundi(float(cells[cell]["cost"]) * 0.25)
+		var refund: int = roundi(float(cells[cell]["cost"]) * 0.25)
+		_show_floating_amount(cell, "+¥%s" % _comma(refund), Color("86efac"))
 		_clear_cell(cell)
 		money += refund
-		_toast("撤去しました +%d円" % refund)
+		_flash_success(cell, Color("fb7185"))
+		_toast("撤去しました　+¥%s" % _comma(refund))
 		_evaluate()
 		_save_game(false)
 		return
 
 	if cells.has(cell):
-		_toast("空いている土地を選んでください")
+		_flash_failure(cell)
+		_toast("そのマスには建設できません")
 		return
 
-	var cost: int = COSTS[selected_tool]
+	var cost: int = int(COSTS[selected_tool])
 	if money < cost:
+		_flash_failure(cell)
 		_toast("資金が足りません")
 		return
 
 	money -= cost
 	_spawn(selected_tool, cell)
+
+	var built_node: Node3D = cells[cell]["node"] as Node3D
+	_animate_build(built_node)
+	_show_floating_amount(cell, "-¥%s" % _comma(cost), Color("fde68a"))
+	_flash_success(cell, Color("34d399"))
+
 	_evaluate()
 	_save_game(false)
 
@@ -1198,6 +1209,89 @@ func _check_mission_completion(count_data: Dictionary) -> void:
 	if mission_complete_panel:
 		mission_complete_panel.visible = true
 	_save_game(false)
+
+func _animate_build(node: Node3D) -> void:
+	if node == null:
+		return
+	var final_position: Vector3 = node.position
+	node.position = final_position + Vector3(0.0, -0.22, 0.0)
+	node.scale = Vector3(0.18, 0.18, 0.18)
+
+	var tween: Tween = create_tween()
+	tween.set_trans(Tween.TRANS_BACK)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(node, "scale", Vector3.ONE, 0.34)
+	tween.parallel().tween_property(node, "position", final_position, 0.28)
+
+
+func _show_floating_amount(cell: Vector2i, amount_text: String, amount_color: Color) -> void:
+	var label := Label3D.new()
+	label.text = amount_text
+	label.font_size = 42
+	label.outline_size = 10
+	label.modulate = amount_color
+	label.outline_modulate = Color(0.02, 0.04, 0.07, 0.95)
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.no_depth_test = true
+	label.pixel_size = 0.0045
+	if ResourceLoader.exists("res://fonts/NotoSansJP.ttf"):
+		label.font = load("res://fonts/NotoSansJP.ttf") as Font
+	label.position = Vector3(cell.x - HALF, 1.15, cell.y - HALF)
+	add_child(label)
+
+	var end_position: Vector3 = label.position + Vector3(0.0, 0.95, 0.0)
+	var end_color: Color = amount_color
+	end_color.a = 0.0
+
+	var tween: Tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(label, "position", end_position, 0.90).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	tween.tween_property(label, "modulate", end_color, 0.90)
+	tween.chain().tween_callback(label.queue_free)
+
+
+func _flash_success(cell: Vector2i, flash_color: Color = Color("34d399")) -> void:
+	if selection_marker == null:
+		return
+	selection_marker.visible = true
+	selection_marker.position = Vector3(cell.x - HALF, 0.16, cell.y - HALF)
+	selection_marker.scale = Vector3(1.28, 1.0, 1.28)
+
+	var marker_mat := selection_marker.material_override as StandardMaterial3D
+	if marker_mat:
+		var c: Color = flash_color
+		c.a = 0.64
+		marker_mat.albedo_color = c
+
+	var tween: Tween = create_tween()
+	tween.tween_property(selection_marker, "scale", Vector3.ONE, 0.32).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+	tween.tween_interval(0.18)
+	tween.tween_callback(func():
+		if selection_marker:
+			selection_marker.visible = false
+	)
+
+
+func _flash_failure(cell: Vector2i) -> void:
+	if selection_marker == null:
+		return
+	selection_marker.visible = true
+	selection_marker.position = Vector3(cell.x - HALF, 0.16, cell.y - HALF)
+	selection_marker.scale = Vector3.ONE
+
+	var marker_mat := selection_marker.material_override as StandardMaterial3D
+	if marker_mat:
+		marker_mat.albedo_color = Color(0.98, 0.30, 0.36, 0.66)
+
+	var tween: Tween = create_tween()
+	tween.tween_property(selection_marker, "scale", Vector3(1.12, 1.0, 1.12), 0.10)
+	tween.tween_property(selection_marker, "scale", Vector3.ONE, 0.10)
+	tween.tween_interval(0.18)
+	tween.tween_callback(func():
+		if selection_marker:
+			selection_marker.visible = false
+	)
+
 
 func _toggle_menu() -> void:
 	if menu_panel:
