@@ -58,7 +58,9 @@ var tutorial_step := 0
 var tutorial_done := false
 var fresh_game := false
 var mission_complete_panel: PanelContainer
-var mission_reward_claimed := false
+var mission_complete_title: Label
+var mission_complete_text: Label
+var mission_stage := 1
 
 func _ready() -> void:
 	_build_world()
@@ -598,6 +600,7 @@ func _build_ui() -> void:
 	mission_label.text = "次の目標"
 	mission_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	mission_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	mission_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	mission_label.add_theme_color_override("font_color", Color.WHITE)
 	mission_label.add_theme_font_size_override("font_size", 22)
 	mission_panel.add_child(mission_label)
@@ -815,19 +818,19 @@ func _build_ui() -> void:
 	clear_box.add_theme_constant_override("separation", 16)
 	mission_complete_panel.add_child(clear_box)
 
-	var clear_title := Label.new()
-	clear_title.text = "市長ミッション達成！"
-	clear_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	clear_title.add_theme_font_size_override("font_size", 40)
-	clear_title.add_theme_color_override("font_color", Color("fde68a"))
-	clear_box.add_child(clear_title)
+	mission_complete_title = Label.new()
+	mission_complete_title.text = "市長ミッション達成！"
+	mission_complete_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mission_complete_title.add_theme_font_size_override("font_size", 40)
+	mission_complete_title.add_theme_color_override("font_color", Color("fde68a"))
+	clear_box.add_child(mission_complete_title)
 
-	var clear_text := Label.new()
-	clear_text.text = "人口・商業・満足度の目標を達成しました。\n報酬 ¥5,000 を獲得！"
-	clear_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	clear_text.add_theme_font_size_override("font_size", 28)
-	clear_text.add_theme_color_override("font_color", Color.WHITE)
-	clear_box.add_child(clear_text)
+	mission_complete_text = Label.new()
+	mission_complete_text.text = ""
+	mission_complete_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mission_complete_text.add_theme_font_size_override("font_size", 28)
+	mission_complete_text.add_theme_color_override("font_color", Color.WHITE)
+	clear_box.add_child(mission_complete_text)
 
 	var clear_button := Button.new()
 	clear_button.text = "街づくりを続ける"
@@ -976,7 +979,7 @@ func _apply_ui_layout() -> void:
 		mission_panel.offset_left = -570
 		mission_panel.offset_right = 570
 		mission_panel.offset_top = 238
-		mission_panel.offset_bottom = 350
+		mission_panel.offset_bottom = 390
 
 		camera_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT, false)
 		camera_panel.offset_left = -90
@@ -1121,19 +1124,34 @@ func _update_hud() -> void:
 	month_label.text = "月\n%d" % month
 
 	var c := _counts()
-	var d1: bool = population >= 60
-	var d2: bool = int(c["shop"]) >= 2
-	var d3: bool = happiness >= 75
+	if mission_stage <= 3:
+		var cfg: Dictionary = _mission_config(mission_stage)
+		var pop_target: int = int(cfg["population"])
+		var shop_target: int = int(cfg["shops"])
+		var park_target: int = int(cfg["parks"])
+		var happy_target: int = int(cfg["happiness"])
+		var reward: int = int(cfg["reward"])
 
-	var pop_progress := "達成" if d1 else "%d/60" % population
-	var shop_progress := "達成" if d2 else "%d/2" % int(c["shop"])
-	var happy_progress := "達成" if d3 else "%d/75" % happiness
-	mission_label.text = "次の目標  Lv.%d\n人口 %s　　商業 %s　　満足度 %s" % [
-		level,
-		pop_progress,
-		shop_progress,
-		happy_progress
-	]
+		mission_label.text = "市長ミッション %d/3「%s」　報酬 ¥%s\n人口 %d/%d　商業 %d/%d\n公園 %d/%d　満足度 %d/%d" % [
+			mission_stage,
+			str(cfg["name"]),
+			_comma(reward),
+			population,
+			pop_target,
+			int(c["shop"]),
+			shop_target,
+			int(c["park"]),
+			park_target,
+			happiness,
+			happy_target
+		]
+	else:
+		mission_label.text = "全ミッション達成！　自由都市モード\n人口 %d人　商業 %d軒\n公園 %dか所　満足度 %d%%" % [
+			population,
+			int(c["shop"]),
+			int(c["park"]),
+			happiness
+		]
 
 func _comma(value: int) -> String:
 	var s := str(value)
@@ -1198,16 +1216,81 @@ func _tutorial_next() -> void:
 		return
 	_show_tutorial_step()
 
+func _mission_config(stage: int) -> Dictionary:
+	match stage:
+		1:
+			return {
+				"population": 60,
+				"shops": 2,
+				"parks": 1,
+				"happiness": 75,
+				"reward": 5000,
+				"name": "小さな街"
+			}
+		2:
+			return {
+				"population": 100,
+				"shops": 4,
+				"parks": 3,
+				"happiness": 80,
+				"reward": 8000,
+				"name": "にぎわう街"
+			}
+		3:
+			return {
+				"population": 150,
+				"shops": 5,
+				"parks": 5,
+				"happiness": 85,
+				"reward": 12000,
+				"name": "住みたい都市"
+			}
+		_:
+			return {}
+
+
 func _check_mission_completion(count_data: Dictionary) -> void:
-	if mission_reward_claimed:
+	if mission_stage > 3:
 		return
-	var complete: bool = population >= 60 and int(count_data["shop"]) >= 2 and happiness >= 75
+
+	var cfg: Dictionary = _mission_config(mission_stage)
+	if cfg.is_empty():
+		return
+
+	var complete: bool = (
+		population >= int(cfg["population"])
+		and int(count_data["shop"]) >= int(cfg["shops"])
+		and int(count_data["park"]) >= int(cfg["parks"])
+		and happiness >= int(cfg["happiness"])
+	)
 	if not complete:
 		return
-	mission_reward_claimed = true
-	money += 5000
+
+	var completed_stage: int = mission_stage
+	var reward: int = int(cfg["reward"])
+	money += reward
+	mission_stage += 1
+
+	if mission_complete_title:
+		mission_complete_title.text = "市長ミッション Lv.%d 達成！" % completed_stage
+	if mission_complete_text:
+		if mission_stage <= 3:
+			var next_cfg: Dictionary = _mission_config(mission_stage)
+			mission_complete_text.text = "%s を達成しました。\n報酬 ¥%s を獲得！\n次は「%s」を目指そう。" % [
+				str(cfg["name"]),
+				_comma(reward),
+				str(next_cfg["name"])
+			]
+		else:
+			mission_complete_text.text = "%s を達成しました。\n報酬 ¥%s を獲得！\n全3段階クリア。ここからは自由都市モードです。" % [
+				str(cfg["name"]),
+				_comma(reward)
+			]
+
 	if mission_complete_panel:
 		mission_complete_panel.visible = true
+
+	_update_hud()
 	_save_game(false)
 
 func _animate_build(node: Node3D) -> void:
@@ -1299,7 +1382,7 @@ func _toggle_menu() -> void:
 
 func _new_game() -> void:
 	tutorial_done = false
-	mission_reward_claimed = false
+	mission_stage = 1
 	fresh_game = true
 	_seed_city()
 	_save_game(false)
@@ -1401,7 +1484,7 @@ func _save_game(show_message := true) -> void:
 		"level": level,
 		"selected_tool": selected_tool,
 		"tutorial_done": tutorial_done,
-		"mission_reward_claimed": mission_reward_claimed,
+		"mission_stage": mission_stage,
 		"cells": []
 	}
 	for key in cells.keys():
@@ -1442,7 +1525,11 @@ func _load_game(show_message := true) -> bool:
 	level = int(parsed.get("level", 1))
 	selected_tool = str(parsed.get("selected_tool", "road"))
 	tutorial_done = bool(parsed.get("tutorial_done", true))
-	mission_reward_claimed = bool(parsed.get("mission_reward_claimed", false))
+	if parsed.has("mission_stage"):
+		mission_stage = clampi(int(parsed.get("mission_stage", 1)), 1, 4)
+	else:
+		# Backward compatibility with saves from the single-mission version.
+		mission_stage = 2 if bool(parsed.get("mission_reward_claimed", false)) else 1
 
 	for item in parsed.get("cells", []):
 		_spawn(str(item["type"]), Vector2i(int(item["x"]), int(item["y"])))
