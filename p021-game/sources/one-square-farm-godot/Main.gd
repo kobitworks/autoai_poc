@@ -32,12 +32,13 @@ var ended := false
 var started := false
 var harvests := 0
 
-var stats: Label
+var stats_grid: GridContainer
+var stats_labels: Dictionary = {}
 var timer_label: Label
 var timer_bar: ProgressBar
 var growth: Label
 var log_view: Label
-var chooser: OptionButton
+var crop_buttons: Dictionary = {}
 var plant_btn: Button
 var water_btn: Button
 var compost_btn: Button
@@ -48,6 +49,8 @@ var visual: Control
 var main_grid: GridContainer
 var side_panel_ref: PanelContainer
 var farm_panel_ref: PanelContainer
+var scroll: ScrollContainer
+var content_root: VBoxContainer
 var intro_layer: ColorRect
 var result_layer: ColorRect
 var result_text: Label
@@ -61,10 +64,12 @@ func _apply_responsive_layout() -> void:
         return
     var is_portrait := size.y > size.x
     main_grid.columns = 1 if is_portrait else 2
+    if stats_grid != null:
+        stats_grid.columns = 2 if is_portrait else 5
     if side_panel_ref != null:
-        side_panel_ref.custom_minimum_size = Vector2(0, 0) if is_portrait else Vector2(315, 0)
+        side_panel_ref.custom_minimum_size = Vector2(0, 0) if is_portrait else Vector2(340, 0)
     if visual != null:
-        visual.custom_minimum_size = Vector2(0, 360) if is_portrait else Vector2(540, 360)
+        visual.custom_minimum_size = Vector2(0, 320) if is_portrait else Vector2(540, 360)
     queue_redraw()
 
 func _ready() -> void:
@@ -91,204 +96,274 @@ func _setup_theme() -> void:
     var jp_font: Font = load(FONT_PATH) as Font
     if jp_font != null:
         ui_theme.default_font = jp_font
-    ui_theme.default_font_size = 17
+    ui_theme.default_font_size = 18
 
-    ui_theme.set_color("font_color", "Label", Color8(36, 55, 45))
-    ui_theme.set_color("font_color", "Button", Color8(36, 55, 45))
-    ui_theme.set_color("font_hover_color", "Button", Color8(15, 82, 50))
-    ui_theme.set_color("font_pressed_color", "Button", Color8(15, 82, 50))
-    ui_theme.set_color("font_disabled_color", "Button", Color8(135, 145, 138))
-    ui_theme.set_color("font_color", "OptionButton", Color8(36, 55, 45))
+    ui_theme.set_color("font_color", "Label", Color8(28, 48, 37))
+    ui_theme.set_color("font_color", "Button", Color8(26, 61, 43))
+    ui_theme.set_color("font_hover_color", "Button", Color8(10, 78, 44))
+    ui_theme.set_color("font_pressed_color", "Button", Color8(10, 78, 44))
+    ui_theme.set_color("font_disabled_color", "Button", Color8(105, 116, 108))
 
     var button_style := StyleBoxFlat.new()
-    button_style.bg_color = Color8(244, 249, 244)
-    button_style.border_color = Color8(198, 218, 203)
-    button_style.set_border_width_all(1)
+    button_style.bg_color = Color8(246, 250, 246)
+    button_style.border_color = Color8(176, 207, 185)
+    button_style.set_border_width_all(2)
     button_style.set_corner_radius_all(14)
     button_style.content_margin_left = 14
     button_style.content_margin_right = 14
-    button_style.content_margin_top = 10
-    button_style.content_margin_bottom = 10
+    button_style.content_margin_top = 11
+    button_style.content_margin_bottom = 11
     ui_theme.set_stylebox("normal", "Button", button_style)
-    ui_theme.set_stylebox("normal", "OptionButton", button_style)
 
     var hover_style := button_style.duplicate() as StyleBoxFlat
-    hover_style.bg_color = Color8(225, 244, 230)
-    hover_style.border_color = Color8(89, 173, 114)
+    hover_style.bg_color = Color8(227, 246, 232)
+    hover_style.border_color = Color8(71, 161, 99)
     ui_theme.set_stylebox("hover", "Button", hover_style)
-    ui_theme.set_stylebox("hover", "OptionButton", hover_style)
+
+    var pressed_style := button_style.duplicate() as StyleBoxFlat
+    pressed_style.bg_color = Color8(207, 239, 218)
+    pressed_style.border_color = Color8(35, 139, 73)
+    ui_theme.set_stylebox("pressed", "Button", pressed_style)
+
+    var disabled_style := button_style.duplicate() as StyleBoxFlat
+    disabled_style.bg_color = Color8(232, 235, 232)
+    disabled_style.border_color = Color8(203, 208, 204)
+    ui_theme.set_stylebox("disabled", "Button", disabled_style)
 
     var panel_style := StyleBoxFlat.new()
-    panel_style.bg_color = Color8(255, 255, 255, 245)
-    panel_style.border_color = Color8(215, 229, 218)
+    panel_style.bg_color = Color8(255, 255, 255, 250)
+    panel_style.border_color = Color8(205, 224, 210)
     panel_style.set_border_width_all(1)
-    panel_style.set_corner_radius_all(20)
-    panel_style.content_margin_left = 18
-    panel_style.content_margin_right = 18
-    panel_style.content_margin_top = 16
-    panel_style.content_margin_bottom = 16
+    panel_style.set_corner_radius_all(18)
+    panel_style.content_margin_left = 14
+    panel_style.content_margin_right = 14
+    panel_style.content_margin_top = 13
+    panel_style.content_margin_bottom = 13
     ui_theme.set_stylebox("panel", "PanelContainer", panel_style)
 
     theme = ui_theme
 
 func _build_ui() -> void:
     var bg := ColorRect.new()
-    bg.color = Color8(234, 242, 234)
+    bg.color = Color8(232, 242, 233)
     bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
     add_child(bg)
 
+    scroll = ScrollContainer.new()
+    scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+    scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+    scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
+    add_child(scroll)
+
     var margin := MarginContainer.new()
-    margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-    margin.add_theme_constant_override("margin_left", 22)
-    margin.add_theme_constant_override("margin_right", 22)
-    margin.add_theme_constant_override("margin_top", 16)
-    margin.add_theme_constant_override("margin_bottom", 18)
-    add_child(margin)
+    margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    margin.add_theme_constant_override("margin_left", 12)
+    margin.add_theme_constant_override("margin_right", 12)
+    margin.add_theme_constant_override("margin_top", 12)
+    margin.add_theme_constant_override("margin_bottom", 20)
+    scroll.add_child(margin)
 
-    var root := VBoxContainer.new()
-    root.add_theme_constant_override("separation", 12)
-    margin.add_child(root)
+    content_root = VBoxContainer.new()
+    content_root.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+    content_root.add_theme_constant_override("separation", 12)
+    margin.add_child(content_root)
 
-    var header := HBoxContainer.new()
-    root.add_child(header)
+    var header_panel := PanelContainer.new()
+    content_root.add_child(header_panel)
 
-    var title_box := VBoxContainer.new()
-    title_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    header.add_child(title_box)
+    var header := VBoxContainer.new()
+    header.add_theme_constant_override("separation", 9)
+    header_panel.add_child(header)
 
     var title := Label.new()
     title.text = "1マス農園  |  15日チャレンジ"
-    title.add_theme_font_size_override("font_size", 28)
-    title_box.add_child(title)
+    title.add_theme_font_size_override("font_size", 24)
+    title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    header.add_child(title)
 
     var subtitle := Label.new()
     subtitle.text = "Kenney Tiny Farm × Godot 4.7.2  •  目標 150G"
-    subtitle.add_theme_font_size_override("font_size", 13)
-    subtitle.add_theme_color_override("font_color", Color8(74, 112, 89))
-    title_box.add_child(subtitle)
+    subtitle.add_theme_font_size_override("font_size", 14)
+    subtitle.add_theme_color_override("font_color", Color8(64, 92, 74))
+    header.add_child(subtitle)
 
     var controls := HBoxContainer.new()
+    controls.alignment = BoxContainer.ALIGNMENT_END
     controls.add_theme_constant_override("separation", 8)
     header.add_child(controls)
 
     pause_btn = _button("一時停止", _toggle_pause)
-    pause_btn.custom_minimum_size = Vector2(110, 44)
+    pause_btn.custom_minimum_size = Vector2(118, 58)
     speed_btn = _button("速度 ×1", _cycle_speed)
-    speed_btn.custom_minimum_size = Vector2(105, 44)
+    speed_btn.custom_minimum_size = Vector2(112, 58)
     controls.add_child(pause_btn)
     controls.add_child(speed_btn)
 
-    var status_panel := PanelContainer.new()
-    root.add_child(status_panel)
-    var status_box := VBoxContainer.new()
-    status_box.add_theme_constant_override("separation", 7)
-    status_panel.add_child(status_box)
+    stats_grid = GridContainer.new()
+    stats_grid.columns = 5
+    stats_grid.add_theme_constant_override("h_separation", 8)
+    stats_grid.add_theme_constant_override("v_separation", 8)
+    content_root.add_child(stats_grid)
 
-    stats = Label.new()
-    stats.add_theme_font_size_override("font_size", 17)
-    status_box.add_child(stats)
+    var stat_items := [
+        ["day", "DAY"],
+        ["coin", "所持金"],
+        ["water", "水"],
+        ["soil", "土"],
+        ["weather", "天気"]
+    ]
+    for item in stat_items:
+        var key := str(item[0])
+        var caption_text := str(item[1])
+        var card := PanelContainer.new()
+        card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+        card.custom_minimum_size = Vector2(0, 76)
+        stats_grid.add_child(card)
+
+        var card_box := VBoxContainer.new()
+        card_box.add_theme_constant_override("separation", 2)
+        card.add_child(card_box)
+
+        var caption := Label.new()
+        caption.text = caption_text
+        caption.add_theme_font_size_override("font_size", 13)
+        caption.add_theme_color_override("font_color", Color8(74, 94, 81))
+        card_box.add_child(caption)
+
+        var value := Label.new()
+        value.add_theme_font_size_override("font_size", 20)
+        value.add_theme_color_override("font_color", Color8(22, 62, 39))
+        card_box.add_child(value)
+        stats_labels[key] = value
+
+    var timer_panel := PanelContainer.new()
+    content_root.add_child(timer_panel)
 
     var timer_row := HBoxContainer.new()
     timer_row.add_theme_constant_override("separation", 10)
-    status_box.add_child(timer_row)
+    timer_panel.add_child(timer_row)
+
     timer_label = Label.new()
-    timer_label.custom_minimum_size = Vector2(150, 0)
+    timer_label.custom_minimum_size = Vector2(112, 0)
+    timer_label.add_theme_font_size_override("font_size", 16)
     timer_row.add_child(timer_label)
+
     timer_bar = ProgressBar.new()
     timer_bar.min_value = 0
     timer_bar.max_value = DAY_SECONDS
     timer_bar.show_percentage = false
     timer_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    timer_bar.custom_minimum_size = Vector2(300, 18)
+    timer_bar.custom_minimum_size = Vector2(120, 20)
     timer_row.add_child(timer_bar)
 
     main_grid = GridContainer.new()
     main_grid.columns = 2
     main_grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    main_grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
     main_grid.add_theme_constant_override("h_separation", 12)
     main_grid.add_theme_constant_override("v_separation", 12)
-    root.add_child(main_grid)
+    content_root.add_child(main_grid)
 
     farm_panel_ref = PanelContainer.new()
     farm_panel_ref.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    farm_panel_ref.size_flags_vertical = Control.SIZE_EXPAND_FILL
     main_grid.add_child(farm_panel_ref)
 
     var farm_box := VBoxContainer.new()
-    farm_box.add_theme_constant_override("separation", 8)
+    farm_box.add_theme_constant_override("separation", 10)
     farm_panel_ref.add_child(farm_box)
 
     visual = FARM_VISUAL.new()
     visual.custom_minimum_size = Vector2(540, 360)
     visual.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-    visual.size_flags_vertical = Control.SIZE_EXPAND_FILL
     farm_box.add_child(visual)
 
     growth = Label.new()
     growth.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    growth.add_theme_font_size_override("font_size", 16)
+    growth.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    growth.add_theme_font_size_override("font_size", 18)
+    growth.add_theme_color_override("font_color", Color8(29, 70, 46))
     farm_box.add_child(growth)
 
     side_panel_ref = PanelContainer.new()
-    side_panel_ref.custom_minimum_size = Vector2(315, 0)
+    side_panel_ref.custom_minimum_size = Vector2(340, 0)
     side_panel_ref.size_flags_horizontal = Control.SIZE_EXPAND_FILL
     main_grid.add_child(side_panel_ref)
 
     var side := VBoxContainer.new()
-    side.add_theme_constant_override("separation", 8)
+    side.add_theme_constant_override("separation", 10)
     side_panel_ref.add_child(side)
 
     var choose_title := Label.new()
     choose_title.text = "種を選ぶ"
-    choose_title.add_theme_font_size_override("font_size", 19)
+    choose_title.add_theme_font_size_override("font_size", 20)
     side.add_child(choose_title)
 
-    chooser = OptionButton.new()
-    chooser.add_item("ラディッシュ　8G / 3日")
-    chooser.add_item("レタス　12G / 4日")
-    chooser.add_item("トマト　18G / 5日")
-    chooser.item_selected.connect(_choose)
-    side.add_child(chooser)
+    var crop_grid := GridContainer.new()
+    crop_grid.columns = 1
+    crop_grid.add_theme_constant_override("v_separation", 8)
+    side.add_child(crop_grid)
+
+    for key in ["radish", "lettuce", "tomato"]:
+        var data: Dictionary = CROPS[key]
+        var crop_btn := Button.new()
+        crop_btn.text = "%s  %dG / %d日\n%s" % [data.name, int(data.seed), int(data.days), data.note]
+        crop_btn.custom_minimum_size = Vector2(0, 64)
+        crop_btn.toggle_mode = true
+        crop_btn.add_theme_font_size_override("font_size", 16)
+        crop_btn.pressed.connect(_choose_crop.bind(key))
+        crop_grid.add_child(crop_btn)
+        crop_buttons[key] = crop_btn
+
+    var action_title := Label.new()
+    action_title.text = "今日の操作"
+    action_title.add_theme_font_size_override("font_size", 20)
+    side.add_child(action_title)
+
+    var action_grid := GridContainer.new()
+    action_grid.columns = 2
+    action_grid.add_theme_constant_override("h_separation", 8)
+    action_grid.add_theme_constant_override("v_separation", 8)
+    side.add_child(action_grid)
 
     plant_btn = _button("種を植える", _plant)
     water_btn = _button("水やり", _water)
-    compost_btn = _button("土を整える　-5G", _compost)
+    compost_btn = _button("土を整える\n-5G", _compost)
     harvest_btn = _button("収穫", _harvest)
-    side.add_child(plant_btn)
-    side.add_child(water_btn)
-    side.add_child(compost_btn)
-    side.add_child(harvest_btn)
+    action_grid.add_child(plant_btn)
+    action_grid.add_child(water_btn)
+    action_grid.add_child(compost_btn)
+    action_grid.add_child(harvest_btn)
 
     var help := Label.new()
-    help.text = "遊び方\n1. 種を選んで植える\n2. 水と土を管理する\n3. 育ったら収穫する\n\nキーボード: 1=植える  2=水  3=土  4=収穫\n15日終了時に150G以上で大成功！"
+    help.text = "遊び方\n1. 種を選んで植える\n2. 水と土を管理する\n3. 育ったら収穫する\n\n15日終了時に150G以上で大成功！"
     help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    help.add_theme_font_size_override("font_size", 12)
-    help.add_theme_color_override("font_color", Color8(92, 111, 99))
+    help.add_theme_font_size_override("font_size", 15)
+    help.add_theme_color_override("font_color", Color8(63, 82, 70))
     side.add_child(help)
 
     var log_title := Label.new()
     log_title.text = "農園ログ"
-    log_title.add_theme_font_size_override("font_size", 17)
+    log_title.add_theme_font_size_override("font_size", 18)
     side.add_child(log_title)
 
     log_view = Label.new()
     log_view.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    log_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
-    log_view.add_theme_font_size_override("font_size", 12)
+    log_view.custom_minimum_size = Vector2(0, 150)
+    log_view.add_theme_font_size_override("font_size", 15)
+    log_view.add_theme_color_override("font_color", Color8(49, 73, 58))
     side.add_child(log_view)
 
 func _button(text_value: String, callback: Callable) -> Button:
     var b := Button.new()
     b.text = text_value
-    b.custom_minimum_size = Vector2(0, 46)
+    b.custom_minimum_size = Vector2(0, 58)
+    b.add_theme_font_size_override("font_size", 17)
     b.pressed.connect(callback)
     return b
 
-func _choose(index: int) -> void:
-    if ended or not crop.is_empty():
+func _choose_crop(key: String) -> void:
+    if ended or not crop.is_empty() or not CROPS.has(key):
         return
-    selected = ["radish", "lettuce", "tomato"][index]
+    selected = key
     _log("%sの種を選びました。" % CROPS[selected].name)
 
 func _plant() -> void:
@@ -409,7 +484,12 @@ func _finish_game() -> void:
 
 func _refresh() -> void:
     var weather_name: String = WEATHERS[weather_index].name
-    stats.text = "DAY %d / %d　　所持金 %dG　　水 %d/5　　土 %d　　天気 %s" % [day, MAX_DAY, coins, water_stock, soil, weather_name]
+    if stats_labels.has("day"):
+        stats_labels["day"].text = "%d / %d" % [day, MAX_DAY]
+        stats_labels["coin"].text = "%d G" % coins
+        stats_labels["water"].text = "%d / 5" % water_stock
+        stats_labels["soil"].text = str(soil)
+        stats_labels["weather"].text = weather_name
 
     if crop.is_empty():
         growth.text = "空きマス — 種を選んで植えてください"
@@ -420,7 +500,11 @@ func _refresh() -> void:
         var wet := "　水やり済み" if bool(crop.watered) else ""
         growth.text = "%s　成長 %d%%　元気 %d%%%s%s" % [data.name, roundi(ratio * 100.0), int(crop.health), wet, ready]
 
-    chooser.disabled = ended or not crop.is_empty()
+    for key in crop_buttons.keys():
+        var crop_btn: Button = crop_buttons[key]
+        crop_btn.disabled = ended or not crop.is_empty()
+        crop_btn.button_pressed = key == selected
+
     plant_btn.disabled = ended or not crop.is_empty() or coins < int(CROPS[selected].seed)
     water_btn.disabled = ended or crop.is_empty() or bool(crop.get("watered", false)) or water_stock <= 0
     compost_btn.disabled = ended or coins < 5 or soil >= 100
@@ -464,39 +548,39 @@ func _build_intro() -> void:
     intro_layer.add_child(center)
 
     var panel := PanelContainer.new()
-    panel.custom_minimum_size = Vector2(600, 390)
+    panel.custom_minimum_size = Vector2(350, 0)
     center.add_child(panel)
 
     var box := VBoxContainer.new()
-    box.add_theme_constant_override("separation", 14)
+    box.add_theme_constant_override("separation", 13)
     panel.add_child(box)
 
     var eyebrow := Label.new()
     eyebrow.text = "GAME-G001 / FARM MANAGEMENT"
     eyebrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    eyebrow.add_theme_font_size_override("font_size", 14)
-    eyebrow.add_theme_color_override("font_color", Color8(64, 137, 91))
+    eyebrow.add_theme_font_size_override("font_size", 13)
+    eyebrow.add_theme_color_override("font_color", Color8(55, 122, 78))
     box.add_child(eyebrow)
 
     var title := Label.new()
     title.text = "1マス農園"
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    title.add_theme_font_size_override("font_size", 42)
+    title.add_theme_font_size_override("font_size", 36)
     box.add_child(title)
 
     var lead := Label.new()
-    lead.text = "たった1マスの畑を15日間経営。\n水・土・作物を見極めて、資金150G以上を目指そう。\nクリック / タップ / Enter / Space でも開始できます。"
+    lead.text = "たった1マスの畑を15日間経営。\n水・土・作物を見極めて、資金150G以上を目指そう。\nタップで開始できます。"
     lead.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     lead.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    lead.add_theme_font_size_override("font_size", 18)
+    lead.add_theme_font_size_override("font_size", 17)
     box.add_child(lead)
 
     var rules := Label.new()
-    rules.text = "ラディッシュ：早い・安定　　レタス：バランス　　トマト：遅い・高収益\n雨の日は水やり不要。土が弱ると成長が遅くなります。"
+    rules.text = "ラディッシュ：早い・安定\nレタス：バランス\nトマト：遅い・高収益\n雨の日は水やり不要。土が弱ると成長が遅くなります。"
     rules.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     rules.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     rules.add_theme_font_size_override("font_size", 14)
-    rules.add_theme_color_override("font_color", Color8(80, 105, 90))
+    rules.add_theme_color_override("font_color", Color8(72, 94, 80))
     box.add_child(rules)
 
     var start := _button("農園をはじめる", _start_game)
@@ -507,7 +591,7 @@ func _build_intro() -> void:
     credit.text = "Art: Kenney Tiny Farm (CC0) / Font: Noto Sans JP"
     credit.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     credit.add_theme_font_size_override("font_size", 11)
-    credit.add_theme_color_override("font_color", Color8(104, 122, 110))
+    credit.add_theme_color_override("font_color", Color8(92, 110, 98))
     box.add_child(credit)
 
 func _start_game() -> void:
@@ -530,7 +614,7 @@ func _show_result(result: String) -> void:
     result_layer.add_child(center)
 
     var panel := PanelContainer.new()
-    panel.custom_minimum_size = Vector2(560, 320)
+    panel.custom_minimum_size = Vector2(350, 300)
     center.add_child(panel)
 
     var box := VBoxContainer.new()
@@ -540,7 +624,7 @@ func _show_result(result: String) -> void:
     var title := Label.new()
     title.text = result
     title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    title.add_theme_font_size_override("font_size", 34)
+    title.add_theme_font_size_override("font_size", 30)
     box.add_child(title)
 
     var grade := "S" if coins >= 220 else ("A" if coins >= 180 else ("B" if coins >= 150 else "C"))
@@ -551,7 +635,7 @@ func _show_result(result: String) -> void:
     box.add_child(result_text)
 
     var again := _button("もう一度プレイ", _restart_game)
-    again.custom_minimum_size = Vector2(0, 54)
+    again.custom_minimum_size = Vector2(0, 58)
     box.add_child(again)
 
 func _restart_game() -> void:
