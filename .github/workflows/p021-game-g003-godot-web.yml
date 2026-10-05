@@ -1,0 +1,68 @@
+name: P021 Build GAME-G003 CityCraft Godot Web
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'p021-game/sources/citycraft-3d-godot/**'
+      - '.github/workflows/p021-game-g003-godot-web.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: p021-game-g003-web-develop
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: "4.7.2"
+
+jobs:
+  export-web:
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.7.2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+      - name: Setup Godot export templates
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates/
+          cp -a /root/.local/share/godot/export_templates/\${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/\${GODOT_VERSION}.stable
+
+      - name: Bundle Japanese font
+        working-directory: p021-game/sources/citycraft-3d-godot
+        run: |
+          mkdir -p fonts
+          wget -q -O fonts/NotoSansJP.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/NotoSansJP%5Bwght%5D.ttf"
+          test -s fonts/NotoSansJP.ttf
+
+      - name: Validate project
+        working-directory: p021-game/sources/citycraft-3d-godot
+        run: |
+          godot --headless --editor --quit-after 2
+
+      - name: Export GAME-G003 for Web
+        working-directory: p021-game/sources/citycraft-3d-godot
+        run: |
+          mkdir -p ../../games/citycraft-3d-godot-v1
+          godot --headless --export-release "Web" ../../games/citycraft-3d-godot-v1/index.html
+          test -f ../../games/citycraft-3d-godot-v1/index.html
+          test -f ../../games/citycraft-3d-godot-v1/index.wasm
+          test -f ../../games/citycraft-3d-godot-v1/index.pck
+
+      - name: Commit exported Web build
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add p021-game/games/citycraft-3d-godot-v1/
+          if git diff --cached --quiet; then
+            echo "No exported changes."
+          else
+            git commit -m "P021: build GAME-G003 CityCraft Godot Web"
+            git pull --rebase origin develop
+            git push origin HEAD:develop
+          fi
