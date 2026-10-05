@@ -348,7 +348,7 @@ func _road_network() -> Dictionary:
 	while not queue.is_empty():
 		var current: Vector2i = queue.pop_front()
 		for d in [Vector2i.RIGHT, Vector2i.LEFT, Vector2i.UP, Vector2i.DOWN]:
-			var next := current + d
+			var next: Vector2i = current + d
 			if next.x < 0 or next.y < 0 or next.x >= GRID_SIZE or next.y >= GRID_SIZE:
 				continue
 			if seen.has(next):
@@ -390,7 +390,7 @@ func _park_influence() -> int:
 		for park_cell in cells.keys():
 			if cells[park_cell]["type"] != "park":
 				continue
-			var distance := abs(park_cell.x - home_cell.x) + abs(park_cell.y - home_cell.y)
+			var distance: int = abs(park_cell.x - home_cell.x) + abs(park_cell.y - home_cell.y)
 			if distance <= 3:
 				score += 1
 				break
@@ -411,8 +411,8 @@ func _evaluate() -> void:
 	population = roundi(population_f)
 	var disconnected_homes: int = c["home"] - c["connected_homes"]
 	var jobs: int = c["connected_shops"] * 28
-	var job_penalty := max(0, population - jobs - 24) * 0.18
-	var h := 58.0 + float(_park_influence()) * 3.5 + min(float(c["connected_shops"]) * 2.0, 10.0)
+	var job_penalty: float = float(max(0, population - jobs - 24)) * 0.18
+	var h: float = 58.0 + float(_park_influence()) * 3.5 + min(float(c["connected_shops"]) * 2.0, 10.0)
 	h -= float(disconnected_homes) * 8.0
 	h -= job_penalty
 	if money < 0:
@@ -663,7 +663,7 @@ func _update_hud() -> void:
 
 	var c := _counts()
 	var d1 := population >= 60
-	var d2 := c["shop"] >= 2
+	var d2: bool = int(c["shop"]) >= 2
 	var d3 := happiness >= 75
 	mission_label.text = "市長ミッション　Lv.%d\n%s 人口60人\n%s 商業施設2軒\n%s 満足度75%%" % [
 		level,
@@ -718,7 +718,7 @@ func _update_camera() -> void:
 	camera.position = Vector3(cos(camera_angle) * r, 11.5, sin(camera_angle) * r)
 	camera.look_at(Vector3.ZERO, Vector3.UP)
 	var viewport_size := get_viewport().get_visible_rect().size
-	var aspect := viewport_size.x / max(viewport_size.y, 1.0)
+	var aspect: float = viewport_size.x / max(viewport_size.y, 1.0)
 	var portrait_boost := 1.25 if aspect < 0.85 else 1.0
 	camera.size = 14.0 * portrait_boost / camera_zoom
 
