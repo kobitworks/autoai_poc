@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>タブレットナビ PoC</title>
+<meta name="theme-color" content="#0b1220">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="タブレットナビ">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icon.svg">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 html,body{height:100%;margin:0;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;background:#111;color:#111}
@@ -14,10 +21,12 @@ header{background:#fff;padding:10px 12px;box-shadow:0 2px 10px #0002;z-index:100
 .version{font-size:13px;color:#667085}
 h1{font-size:18px;margin:0 0 8px}
 .row{display:grid;grid-template-columns:1fr auto auto;gap:8px}
-input,button{font:inherit;border-radius:10px;border:1px solid #cfd5dc;min-height:48px}
-input{padding:0 12px;font-size:18px}
-button{padding:0 14px;background:#fff;font-weight:700}
+input,button{font:inherit;border-radius:12px;border:1px solid #cfd5dc;min-height:56px}
+input{padding:0 14px;font-size:20px}
+button{padding:0 16px;background:#fff;font-weight:800;font-size:17px}
 button.primary{background:#1769e0;color:#fff;border-color:#1769e0}
+button.voice{background:#0b1220;color:#fff;border-color:#0b1220}
+button.danger{background:#fff3f2;color:#b42318;border-color:#fecdca}
 #status{font-size:13px;color:#667085;margin-top:6px;min-height:18px;line-height:1.35}
 #mapWrap{position:relative;width:100%;height:100%;min-height:0}
 #map{width:100%;height:100%}
@@ -32,20 +41,21 @@ button.primary{background:#1769e0;color:#fff;border-color:#1769e0}
 #panel strong{font-size:20px}
 #panel span{color:#667085;margin-left:8px}
 .leaflet-control-zoom a{width:44px!important;height:44px!important;line-height:44px!important;font-size:26px!important}
-@media (orientation:landscape){header{padding:8px 12px}.row{grid-template-columns:minmax(320px,1fr) auto auto auto}}
+@media (orientation:landscape){header{padding:8px 12px}.row{grid-template-columns:minmax(320px,1fr) auto auto auto auto}}
 @media (max-width:560px){#driveHud{grid-template-columns:repeat(2,minmax(96px,1fr));right:8px;top:8px}.hudCard{min-width:96px;padding:8px}.hudValue{font-size:38px}#headingValue{font-size:30px}}
 </style>
 </head>
 <body>
 <div id="app">
 <header>
-  <div class="topline"><a class="back" href="../">← PoC一覧へ戻る</a><span class="version">Version 0.3</span></div>
+  <div class="topline"><a class="back" href="../">← PoC一覧へ戻る</a><span class="version">Version 0.4 / PWA</span></div>
   <h1>🚚 タブレットナビ PoC</h1>
   <div class="row">
     <input id="q" type="search" inputmode="search" placeholder="目的地を入力（例：渋川駅）" autocomplete="off">
-    <button id="voice" title="音声入力">🎤</button>
+    <button id="voice" class="voice" title="音声操作" aria-label="音声操作">🎤 音声</button>
     <button id="search" class="primary">検索</button>
     <button id="locate">現在地へ</button>
+    <button id="stopNav" class="danger">案内終了</button>
   </div>
   <div id="status">GPSを開始しています…</div>
 </header>
@@ -79,6 +89,69 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,att
 let current=null,currentMarker=null,accuracyCircle=null,destMarker=null,routeLine=null,watchId=null,firstFix=true;
 let followMode=true,lastFix=null,gpsFault=false,gpsGeneration=0,lastPositionTimestamp=null,currentFixUsable=false;
 function setStatus(s){statusEl.textContent=s}
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='ja-JP';
+  u.rate=1;
+  window.speechSynthesis.speak(u);
+}
+function stopNavigation(announce=true){
+  if(routeLine){map.removeLayer(routeLine);routeLine=null}
+  if(destMarker){map.removeLayer(destMarker);destMarker=null}
+  panel.style.display='none';
+  distEl.textContent='';
+  durEl.textContent='';
+  destEl.textContent='';
+  setStatus('案内を終了しました。GPS追従は継続します。');
+  if(announce) speak('案内を終了しました');
+}
+function zoomBy(delta){
+  map.setZoom(Math.max(map.getMinZoom(),Math.min(map.getMaxZoom(),map.getZoom()+delta)));
+  setStatus(delta>0?'地図を拡大しました。':'地図を縮小しました。');
+}
+function normalizeVoiceText(text){return String(text||'').trim().replace(/[。、，,.]/g,'')}
+async function handleVoiceCommand(raw){
+  const text=normalizeVoiceText(raw);
+  if(!text){setStatus('音声を認識できませんでした。');return}
+  if(/^(現在地|現在地へ|今いる場所|自分の位置)$/.test(text)){
+    recenter();
+    speak('現在地へ戻ります');
+    return;
+  }
+  if(/^(拡大|ズームイン|地図を拡大)$/.test(text)){
+    zoomBy(1);
+    speak('地図を拡大します');
+    return;
+  }
+  if(/^(縮小|ズームアウト|地図を縮小)$/.test(text)){
+    zoomBy(-1);
+    speak('地図を縮小します');
+    return;
+  }
+  if(/^(案内終了|案内を終了|ナビ終了|ルート消去|ルート削除)$/.test(text)){
+    stopNavigation(true);
+    return;
+  }
+  if(/^(キャンセル|やめる)$/.test(text)){
+    setStatus('音声操作をキャンセルしました。');
+    speak('キャンセルしました');
+    return;
+  }
+  const m=text.match(/^(?:目的地|目的地は|検索|行き先|行き先は)\s*(.+)$/);
+  if(m&&m[1]){
+    q.value=m[1].trim();
+    setStatus('音声で目的地「'+q.value+'」を受け付けました。検索します。');
+    speak(q.value+'を検索します');
+    await searchDest();
+    return;
+  }
+  q.value=text;
+  setStatus('「'+text+'」を目的地として検索します。');
+  speak(text+'を検索します');
+  await searchDest();
+}
 
 function toRad(v){return v*Math.PI/180}
 function toDeg(v){return v*180/Math.PI}
@@ -287,6 +360,7 @@ async function drawRoute(a,b){
 
 document.getElementById('search').onclick=searchDest;
 document.getElementById('locate').onclick=recenter;
+document.getElementById('stopNav').onclick=()=>stopNavigation(false);
 q.addEventListener('keydown',e=>{if(e.key==='Enter')searchDest()});
 map.on('dragstart',()=>{
   followMode=false;
@@ -299,13 +373,33 @@ map.on('click',async e=>{
   else setStatus('目的地を設定しました。GPS精度60m以内の現在地取得後に経路表示できます。');
 });
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let activeRecognition=null;
 document.getElementById('voice').onclick=()=>{
-  if(!SR){setStatus('このブラウザは音声入力に対応していません。キーボード入力を使ってください。');return}
-  const r=new SR(); r.lang='ja-JP'; r.interimResults=false; r.maxAlternatives=1;
-  setStatus('目的地を話してください…');
-  r.onresult=e=>{q.value=e.results[0][0].transcript;searchDest()};
-  r.onerror=()=>setStatus('音声入力に失敗しました。');
-  r.start();
+  if(!SR){setStatus('このブラウザは音声操作に対応していません。画面の大型ボタンを使ってください。');return}
+  if(activeRecognition){
+    try{activeRecognition.abort()}catch(e){}
+    activeRecognition=null;
+    setStatus('音声操作を停止しました。');
+    return;
+  }
+  const r=new SR();
+  activeRecognition=r;
+  r.lang='ja-JP';
+  r.interimResults=false;
+  r.maxAlternatives=1;
+  setStatus('音声操作を受付中：現在地・拡大・縮小・案内終了・目的地 ○○');
+  r.onresult=async e=>{
+    const transcript=e.results[0][0].transcript;
+    setStatus('認識：「'+transcript+'」');
+    await handleVoiceCommand(transcript);
+  };
+  r.onerror=e=>{
+    if(e&&e.error==='no-speech') setStatus('音声が聞き取れませんでした。もう一度押してください。');
+    else if(e&&e.error==='not-allowed') setStatus('マイク利用が許可されていません。ブラウザ設定を確認してください。');
+    else setStatus('音声操作に失敗しました。画面操作を利用してください。');
+  };
+  r.onend=()=>{activeRecognition=null};
+  try{r.start()}catch(e){activeRecognition=null;setStatus('音声操作を開始できませんでした。')}
 };
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState==='hidden'){
@@ -319,6 +413,11 @@ document.addEventListener('visibilitychange',()=>{
 window.addEventListener('beforeunload',()=>{
   stopGpsWatch();
 });
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').catch(()=>{});
+  });
+}
 startGps();
 </script>
 </body>
