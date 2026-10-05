@@ -9,6 +9,8 @@ run/main_scene="res://Main.tscn"
 window/size/viewport_width=960
 window/size/viewport_height=640
 window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=0
 
 [rendering]
 renderer/rendering_method="gl_compatibility"
