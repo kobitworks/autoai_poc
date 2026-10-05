@@ -190,9 +190,9 @@ function onPosition(p){
   if(lastPositionTimestamp!==null&&positionTimestamp<=lastPositionTimestamp) return;
   lastPositionTimestamp=positionTimestamp;
   gpsFault=false;
-  currentFixUsable=true;
   const c=p.coords;
   const accuracy=accuracyMeters(c);
+  currentFixUsable=accuracy!==null&&accuracy<=60;
   current=[c.latitude,c.longitude];
   if(currentMarker) currentMarker.setLatLng(current);
   else currentMarker=L.marker(current).addTo(map).bindPopup('現在地');
@@ -265,7 +265,7 @@ async function searchDest(){
     destMarker.openPopup();
     destEl.textContent=data[0].display_name;
     if(current&&currentFixUsable) await drawRoute(current,d);
-    else {map.setView(d,15);setStatus('目的地を表示しました。最新GPS取得後に経路表示できます。')}
+    else {map.setView(d,15);setStatus('目的地を表示しました。GPS精度60m以内の現在地取得後に経路表示できます。')}
   }catch(e){setStatus('検索に失敗しました。通信状態を確認してください。')}
 }
 async function drawRoute(a,b){
@@ -296,7 +296,7 @@ map.on('click',async e=>{
   if(destMarker) destMarker.setLatLng(e.latlng); else destMarker=L.marker(e.latlng).addTo(map);
   destEl.textContent='地図で指定した地点';
   if(current&&currentFixUsable) await drawRoute(current,[e.latlng.lat,e.latlng.lng]);
-  else setStatus('目的地を設定しました。最新GPS取得後に経路表示できます。');
+  else setStatus('目的地を設定しました。GPS精度60m以内の現在地取得後に経路表示できます。');
 });
 const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 document.getElementById('voice').onclick=()=>{
