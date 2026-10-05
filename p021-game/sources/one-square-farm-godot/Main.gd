@@ -537,22 +537,32 @@ func _restart_game() -> void:
 
 func _input(event: InputEvent) -> void:
     if not started:
-        var start_by_key := event is InputEventKey and event.pressed and (event.keycode == KEY_ENTER or event.keycode == KEY_SPACE)
-        var start_by_mouse := event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT
-        var start_by_touch := event is InputEventScreenTouch and event.pressed
-        if start_by_key or start_by_mouse or start_by_touch:
+        var should_start: bool = false
+        if event is InputEventKey:
+            var key_event: InputEventKey = event as InputEventKey
+            should_start = key_event.pressed and (key_event.keycode == KEY_ENTER or key_event.keycode == KEY_SPACE)
+        elif event is InputEventMouseButton:
+            var mouse_event: InputEventMouseButton = event as InputEventMouseButton
+            should_start = mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_LEFT
+        elif event is InputEventScreenTouch:
+            var touch_event: InputEventScreenTouch = event as InputEventScreenTouch
+            should_start = touch_event.pressed
+        if should_start:
             _start_game()
             get_viewport().set_input_as_handled()
         return
 
     if ended:
         return
-    if event is InputEventKey and event.pressed:
-        if event.keycode == KEY_1:
+    if event is InputEventKey:
+        var key_event: InputEventKey = event as InputEventKey
+        if not key_event.pressed:
+            return
+        if key_event.keycode == KEY_1:
             _plant()
-        elif event.keycode == KEY_2:
+        elif key_event.keycode == KEY_2:
             _water()
-        elif event.keycode == KEY_3:
+        elif key_event.keycode == KEY_3:
             _compost()
-        elif event.keycode == KEY_4:
+        elif key_event.keycode == KEY_4:
             _harvest()
