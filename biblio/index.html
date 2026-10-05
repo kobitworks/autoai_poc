@@ -59,10 +59,13 @@ dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(10
 <dialog id="confirm"><div class="dlg"><h3 id="confirmTitle">確認</h3><p id="confirmText"></p><div class="actions"><button class="btn secondary" id="cancelDlg">キャンセル</button><button class="btn" id="okDlg">実行</button></div></div></dialog>
 <script>
 const SESSION_KEY='biblio_poc_session_v1';
-const state={screen:'U01',book:'walk-shibuya',locationResult:null,progress:true,complete:false,selectedNext:null,auth:{status:'logged_out',user:null,error:'',restored:false},books:[
+const state={screen:'U01',book:'walk-shibuya',locationResult:null,complete:false,selectedNext:null,resumeNotice:'',story:null,auth:{status:'logged_out',user:null,error:'',restored:false},books:[
  {key:'walk-shibuya',title:'街角ミステリー',region:'渋谷',time:'45分',desc:'街を歩きながら手がかりを集める短編Book。',available:true,pub:'LIVE',cls:''},
  {key:'river-story',title:'川辺の記憶',region:'清澄白河',time:'35分',desc:'水辺の風景をめぐる物語。',available:true,pub:'TEST',cls:'c2'},
  {key:'old-town',title:'古い商店街の手紙',region:'谷中',time:'50分',desc:'商店街に残された手紙を追うBook。',available:false,pub:'STOP',cls:'c3'}
+],progressRecords:[
+ {bookKey:'walk-shibuya',chapter:1,scene:1,sceneKey:'scene-1',sceneTitle:'街角のはじまり',updatedAt:'2026-10-05T08:00:00+09:00',resumable:true},
+ {bookKey:'walk-shibuya',chapter:1,scene:2,sceneKey:'scene-2',sceneTitle:'交差点の小さな違和感',updatedAt:'2026-10-05T10:30:00+09:00',resumable:true}
 ]};
 const labels={LOGIN:'Login',U01:'Book',U02:'Book Detail',U03:'Story',U04:'Map',U05:'Location Check',U06:'Safety',U08:'Book Complete',U09:'Next Book',U10:'Book Select',O01:'Publication'};
 const app=document.getElementById('app'), jump=document.getElementById('jump'), subnav=document.getElementById('subnav'), title=document.getElementById('pageTitle'), sessionChip=document.getElementById('sessionChip');
@@ -76,6 +79,10 @@ const LEGACY_UI_BASELINE=Object.freeze({
 const reviewMode=new URLSearchParams(location.search).get('review')==='1';
 document.body.classList.toggle('review-mode',reviewMode);
 function b(){return state.books.find(x=>x.key===state.book)||state.books[0]}
+function latestProgress(bookKey){return state.progressRecords.filter(x=>x.bookKey===bookKey&&x.resumable).sort((a,b)=>Date.parse(b.updatedAt)-Date.parse(a.updatedAt))[0]||null}
+function latestResumeCandidate(){return state.books.map(book=>({book,progress:latestProgress(book.key)})).filter(x=>x.book.available&&x.progress).sort((a,b)=>Date.parse(b.progress.updatedAt)-Date.parse(a.progress.updatedAt))[0]||null}
+function resumeBook(bookKey){const book=state.books.find(x=>x.key===bookKey),progress=latestProgress(bookKey);if(!book||!book.available||!progress){state.resumeNotice='再開できる進行データがありません。Book一覧から選び直してください。';state.screen='U01';history.replaceState({s:'U01'},'','#U01');render();return}state.book=book.key;state.story={chapter:progress.chapter,scene:progress.scene,sceneKey:progress.sceneKey,title:progress.sceneTitle};state.resumeNotice='';state.screen='U03';history.replaceState({s:'U03'},'','#U03');render()}
+function setResumeMock(enabled){state.progressRecords=enabled?[{bookKey:'walk-shibuya',chapter:1,scene:1,sceneKey:'scene-1',sceneTitle:'街角のはじまり',updatedAt:'2026-10-05T08:00:00+09:00',resumable:true},{bookKey:'walk-shibuya',chapter:1,scene:2,sceneKey:'scene-2',sceneTitle:'交差点の小さな違和感',updatedAt:'2026-10-05T10:30:00+09:00',resumable:true}]:[];state.resumeNotice='';state.screen='U01';history.replaceState({s:'U01'},'','#U01');render()}
 function go(s){if(s!=='LOGIN'&&state.auth.status!=='logged_in'){state.screen='LOGIN';state.auth.error='ログインが必要です。';history.replaceState({s:'LOGIN'},'','#LOGIN');render();return}state.screen=s;history.replaceState({s},'', '#'+s);render()}
 function btn(t,a,c=''){return '<button class="btn '+c+'" onclick="'+a+'">'+t+'</button>'}
 function page(body){return '<div class="paper">'+body+'<div class="dev">画面・遷移確認用PoCです。公開・進行・位置到達・Completeは本番確定処理ではありません。</div></div>'}
@@ -94,17 +101,19 @@ function renderNav(){
  const el=document.querySelector('.bottomnav [data-menu="'+menu+'"]');if(el)el.classList.add('current');
  const loggedIn=state.auth.status==='logged_in';sessionChip.hidden=isLogin||!loggedIn;sessionChip.innerHTML=loggedIn?'Google mock: '+state.auth.user.email+(state.auth.restored?' / 復元済み':'')+' <button onclick="logoutMock()">ログアウト</button>':'';
 }
-function cover(x,idx){return '<div class="book-card" tabindex="0" role="button" onclick="state.book=\''+x.key+'\';go(\'U02\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){this.click()}"><div class="cover '+x.cls+'"><div class="cover-title">'+x.title+'</div><div class="cover-region">'+x.region+' / '+x.time+'</div></div><span class="status">'+x.pub+'</span>'+(x.key===state.book?'<span class="selected">選択中</span>':'')+'</div>'}
+function cover(x,idx){const p=latestProgress(x.key),availability=!x.available?'利用不可':p?'進行中':'利用可';return '<div class="book-card" tabindex="0" role="button" aria-label="'+x.title+' '+availability+'" onclick="state.book=\''+x.key+'\';go(\'U02\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){this.click()}"><div class="cover '+x.cls+'"><div class="cover-title">'+x.title+'</div><div class="cover-region">'+x.region+' / '+x.time+'</div></div><span class="status">'+availability+'</span>'+(x.key===state.book?'<span class="selected">選択中</span>':'')+'</div>'}
 function render(){
  renderNav();const book=b();
  if(state.screen==='LOGIN'){
   app.innerHTML='<div class="login-screen"><div class="login-logo"><span class="login-logo-book">▯</span><span>Biblio</span></div><div class="login-copy"><p>ゲームを遊ぶにはGoogleアカウントが必要です。</p><p>スマートフォンまたはタブレットの使用を推奨しております。</p></div><button class="google-login" onclick="loginMock(\'success\')" '+(state.auth.status==='authenticating'?'disabled':'')+'><span class="gmark">G</span><span>'+(state.auth.status==='authenticating'?'Google 認証中…':'Google でログイン')+'</span></button>'+(state.auth.error?'<div class="login-error" role="alert">'+state.auth.error+'</div>':'')+'<div class="login-note">PoC：Google OAuthの資格情報は使用せず、認証結果のみmockします</div>'+(reviewMode?'<div class="login-dev-actions"><button class="btn secondary" onclick="loginMock(\'error\')">認証エラーを試す</button><button class="btn secondary" onclick="clearSessionMock()">保存セッションを消去</button></div>':'')+'</div>';
  }else if(state.screen==='U01'){
-  app.innerHTML=page((state.progress?'<div class="panel"><strong>つづきから</strong><p>'+book.title+' — Scene 2まで進行中</p>'+btn('つづきから',"go('U03')")+'</div>':'')+'<h3>Book一覧</h3><div class="book-container">'+state.books.map(cover).join('')+'</div><p class="muted">旧BiblioのBook表紙一覧を基準にしたPoC表示です。</p>');
+  const resume=latestResumeCandidate();
+  app.innerHTML=page((state.resumeNotice?'<div class="notice warn">'+state.resumeNotice+'</div>':'')+(resume?'<div class="panel"><strong>つづきから</strong><p>'+resume.book.title+' — Chapter '+resume.progress.chapter+' / Scene '+resume.progress.scene+'</p><p class="muted">'+resume.progress.sceneTitle+'</p>'+btn('つづきから',"resumeBook('"+resume.book.key+"')")+'</div>':'<div class="panel muted">再開できる進行中Bookはありません。</div>')+'<h3>Book一覧</h3><div class="book-container">'+state.books.map(cover).join('')+'</div><p class="muted">旧BiblioのBook表紙一覧を維持し、利用可能・進行中・利用不可を表示しています。</p>'+(reviewMode?'<div class="panel"><strong>U07 Resume Resolver 確認</strong><p class="muted">U07は独立画面を表示せず、最新の再開可能Sceneを解決してU03へreplaceします。</p><div class="actions">'+btn('再開データあり',"setResumeMock(true)",'secondary')+btn('再開データなし',"setResumeMock(false)",'secondary')+'</div></div>':''));
  }else if(state.screen==='U02'){
   app.innerHTML=page('<h2>'+book.title+'</h2><p>'+book.desc+'</p><div class="panel"><div class="fact"><span>地域</span><strong>'+book.region+'</strong></div><div class="fact"><span>想定時間</span><strong>'+book.time+'</strong></div><div class="fact"><span>位置情報</span><strong>必要な場面だけ</strong></div><div class="fact"><span>公開状態</span><strong>'+(book.available?'開始可能':'現在開始不可')+'</strong></div></div><div class="actions">'+btn('Book一覧へ',"go('U01')",'secondary')+(book.available?btn('このBookを始める',"go('U03')"):'<button class="btn" disabled>現在開始できません</button>')+'</div>');
  }else if(state.screen==='U03'){
-  app.innerHTML=page('<p class="muted">'+book.title+' / Chapter 1 / Scene 2</p><h2>交差点の小さな違和感</h2><div class="story"><p>店先の古い時計は、街の時間から少しだけ遅れていた。</p><p>次の手がかりは、ここから数分歩いた「青い壁の広場」にあるらしい。</p></div><div class="notice warn"><strong>移動前に確認</strong><br>歩きながら画面を見続けず、安全な場所で操作してください。</div><div class="actions">'+btn('目的地を確認する',"go('U04')")+btn('中断してBookへ',"go('U01')",'secondary')+'</div>');
+  const story=state.story||{chapter:1,scene:1,sceneKey:'scene-1',title:'街角のはじまり'};
+  app.innerHTML=page('<p class="muted">'+book.title+' / Chapter '+story.chapter+' / Scene '+story.scene+'</p><h2>'+story.title+'</h2><div class="story"><p>店先の古い時計は、街の時間から少しだけ遅れていた。</p><p>次の手がかりは、ここから数分歩いた「青い壁の広場」にあるらしい。</p></div><div class="notice warn"><strong>移動前に確認</strong><br>歩きながら画面を見続けず、安全な場所で操作してください。</div><div class="actions">'+btn('目的地を確認する',"go('U04')")+btn('中断してBookへ',"go('U01')",'secondary')+'</div>');
  }else if(state.screen==='U04'){
   app.innerHTML='<div class="map-screen"><div class="map" role="img" aria-label="旧Biblio Map画面を模した簡易地図"><div class="map-control zoom"><span>+</span><span>−</span></div><div class="map-control locate">➤</div><div class="map-label">和彦</div><span class="person p1"></span><span class="person p2"></span><span class="person p3"></span></div></div>';
  }else if(state.screen==='U05'){
