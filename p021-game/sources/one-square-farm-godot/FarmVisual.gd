@@ -74,7 +74,7 @@ func _draw() -> void:
 
 func _src(tile_id: int) -> Rect2:
 	var x := (tile_id % COLS) * TILE
-	var y := (tile_id / COLS) * TILE
+	var y := floori(float(tile_id) / float(COLS)) * TILE
 	return Rect2(x, y, TILE, TILE)
 
 func _tile(tile_id: int, pos: Vector2, scale_value: float = 3.0) -> void:
@@ -104,7 +104,7 @@ func _draw_pixel_scene(w: float, h: float) -> void:
 	var fence_y := field.position.y - step * 0.74
 	var fence_cols := int(field.size.x / step) + 1
 	for x in range(fence_cols):
-		var id := FENCE_GATE if x == fence_cols / 2 else FENCE
+		var id := FENCE_GATE if x == floori(float(fence_cols) / 2.0) else FENCE
 		_tile(id, Vector2(field.position.x + x * step, fence_y), scale_value)
 
 	_tile(BARN, Vector2(w * 0.08, h * 0.18), 4.4)
