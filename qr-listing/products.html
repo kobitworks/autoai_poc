@@ -34,7 +34,7 @@ main{max-width:1120px;margin:auto;padding:18px 16px 44px}
 .photo{min-width:0}.photo img{width:100%;aspect-ratio:1/1;display:block;object-fit:cover;border-radius:10px;background:#e7edf4;border:1px solid var(--line)}
 .photo span{display:block;font-size:9px;color:var(--muted);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .card-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:13px}
-.btn{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:11px;padding:9px 11px;background:#e9f7fb;color:#0e7490;text-decoration:none;font-size:12px;font-weight:800}
+.btn{display:inline-flex;align-items:center;justify-content:center;border:0;border-radius:11px;padding:9px 11px;background:#e9f7fb;color:#0e7490;text-decoration:none;font-size:12px;font-weight:800}.btn.ai{background:#ecfdf5;color:#047857}
 .detail{font-size:11px;color:var(--muted);margin-left:auto}
 .empty{background:#fff;border:2px dashed #cbd5e1;border-radius:18px;padding:38px 18px;text-align:center;color:var(--muted)}
 .error{background:#fff1f2;border:1px solid #fecdd3;color:#9f1239;border-radius:14px;padding:14px;line-height:1.6}
@@ -65,7 +65,7 @@ main{max-width:1120px;margin:auto;padding:18px 16px 44px}
     <div class="metric"><span>保存容量</span><strong id="mBytes">0 B</strong></div>
     <div class="metric"><span>保存先</span><strong style="font-size:15px">このブラウザ</strong></div>
   </div>
-  <div class="info">PoC保存方式: IndexedDB / File・Blob。ブラウザのサイトデータ削除や別端末への切替ではデータは引き継がれません。本番向けDB・オブジェクトストレージは別工程で判断します。</div>
+  <div class="info">PoC保存方式: IndexedDB / File・Blob。商品ごとの「AI解析・候補生成」はユーザー操作時だけ端末内AIを実行し、候補をこのブラウザへ保存します。サイトデータ削除や別端末への切替では引き継がれません。</div>
   <div class="toolbar">
     <input id="search" type="search" placeholder="商品ID・商品名・ファイル名で絞り込み">
     <span id="loadState" class="status">読込中…</span>
@@ -85,7 +85,7 @@ function bytes(n){n=Number(n||0);if(!n)return '0 B';var u=['B','KB','MB','GB'],i
 function date(s){if(!s)return '—';var d=new Date(s);return isNaN(d.getTime())?s:d.toLocaleString('ja-JP',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}
 function cleanup(){objectUrls.forEach(function(x){URL.revokeObjectURL(x)});objectUrls=[]}
 function photoUrl(blob){var x=URL.createObjectURL(blob);objectUrls.push(x);return x}
-function searchText(p,imgs){return [p.code,p.title,p.category,p.brand,p.status,p.processingState].concat((imgs||[]).map(function(x){return x.originalName+' '+x.virtualName})).join(' ').toLowerCase()}
+function searchText(p,imgs){var a=p.aiAnalysis&&p.aiAnalysis.fields?p.aiAnalysis.fields:{};return [p.code,p.title,p.category,p.brand,p.color,p.condition,p.status,p.processingState,a.title,a.brand,a.category,a.color,a.features].concat((imgs||[]).map(function(x){return x.originalName+' '+x.virtualName})).join(' ').toLowerCase()}
 
 async function load(){
   cleanup();
@@ -137,6 +137,7 @@ function render(){
       '<div class="photos">'+photoHtml+'</div>'+
       '<div class="card-actions">'+
       (batch?'<a class="btn" href="./analyze.html?batch='+encodeURIComponent(batch)+'">QR解析で確認</a>':'')+
+      (imgs.length?'<a class="btn ai" href="./ai-analysis.html?product='+encodeURIComponent(p.code)+'">AI解析・候補生成</a>':'')+
       '<span class="detail">'+(batches.length?batches.length+'バッチ / ':'')+esc(p.storageMode||'indexeddb-poc')+'</span></div>';
     grid.appendChild(card);
   });
