@@ -1,4 +1,4 @@
-const CACHE_NAME='tablet-nav-v04';
+const CACHE_NAME='tablet-nav-v05';
 const APP_SHELL=['./','./index.html','./manifest.webmanifest','./icon.svg'];
 
 self.addEventListener('install',event=>{
