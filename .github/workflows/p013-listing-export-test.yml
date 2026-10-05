@@ -1,0 +1,28 @@
+name: P013 QR-009 listing export tests
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'qr-listing/listing-export-core.js'
+      - 'qr-listing/listing-export-core.test.js'
+      - '.github/workflows/p013-listing-export-test.yml'
+  pull_request:
+    paths:
+      - 'qr-listing/listing-export-core.js'
+      - 'qr-listing/listing-export-core.test.js'
+      - '.github/workflows/p013-listing-export-test.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run QR-009 listing export core tests
+        run: node qr-listing/listing-export-core.test.js
