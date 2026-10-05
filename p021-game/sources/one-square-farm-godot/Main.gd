@@ -1014,7 +1014,18 @@ func _input(event: InputEvent) -> void:
     if not started:
         if event is InputEventKey:
             var key_event: InputEventKey = event as InputEventKey
-            if key_event.pressed and (key_event.keycode == KEY_ENTER or key_event.keycode == KEY_SPACE):
+            if not key_event.pressed:
+                return
+            if key_event.keycode == KEY_1:
+                _choose_challenge("standard")
+                get_viewport().set_input_as_handled()
+            elif key_event.keycode == KEY_2:
+                _choose_challenge("sprint")
+                get_viewport().set_input_as_handled()
+            elif key_event.keycode == KEY_3:
+                _choose_challenge("drought")
+                get_viewport().set_input_as_handled()
+            elif key_event.keycode == KEY_ENTER or key_event.keycode == KEY_SPACE:
                 _start_game()
                 get_viewport().set_input_as_handled()
         return
