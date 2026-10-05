@@ -37,11 +37,16 @@ var ui_theme: Theme
 var top_panel: PanelContainer
 var title_label: Label
 var mission_panel: PanelContainer
-var camera_panel: HBoxContainer
+var camera_panel: VBoxContainer
 var camera_buttons: Array[Button] = []
+var help_panel: PanelContainer
 var dock_panel: PanelContainer
 var dock_container: HBoxContainer
+var menu_button: Button
+var menu_panel: PanelContainer
 var save_button: Button
+var selection_marker: MeshInstance3D
+var last_selection_cell := Vector2i(-1, -1)
 
 func _ready() -> void:
 	_build_world()
@@ -105,6 +110,19 @@ func _build_world() -> void:
 	object_root = Node3D.new()
 	object_root.name = "CityObjects"
 	add_child(object_root)
+
+	selection_marker = MeshInstance3D.new()
+	var marker_mesh := BoxMesh.new()
+	marker_mesh.size = Vector3(0.96, 0.035, 0.96)
+	selection_marker.mesh = marker_mesh
+	var marker_mat := StandardMaterial3D.new()
+	marker_mat.albedo_color = Color(0.13, 0.83, 0.93, 0.44)
+	marker_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	marker_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	selection_marker.material_override = marker_mat
+	selection_marker.position.y = 0.15
+	selection_marker.visible = false
+	add_child(selection_marker)
 
 	var scenery := [
 		Vector2(-7.0, -6.2), Vector2(-6.3, -7.0), Vector2(-7.0, 6.1),
@@ -493,140 +511,211 @@ func _build_ui() -> void:
 	ui_theme = Theme.new()
 	if ResourceLoader.exists("res://fonts/NotoSansJP.ttf"):
 		ui_theme.default_font = load("res://fonts/NotoSansJP.ttf") as Font
-	ui_theme.default_font_size = 16
+	ui_theme.default_font_size = 20
 
+	# Header: title + menu on the first row, four large status cards on the second.
 	top_panel = PanelContainer.new()
 	top_panel.theme = ui_theme
 	top_panel.set_anchors_preset(Control.PRESET_TOP_WIDE)
-	top_panel.offset_left = 12
-	top_panel.offset_top = 10
-	top_panel.offset_right = -12
-	top_panel.offset_bottom = 74
-	top_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.06, 0.09, 0.16, 0.90), 16))
+	top_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.035, 0.075, 0.13, 0.97), 22))
 	layer.add_child(top_panel)
 
-	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 10)
-	top_panel.add_child(top)
+	var top_root := VBoxContainer.new()
+	top_root.add_theme_constant_override("separation", 10)
+	top_panel.add_child(top_root)
+
+	var title_row := HBoxContainer.new()
+	title_row.add_theme_constant_override("separation", 12)
+	top_root.add_child(title_row)
 
 	title_label = Label.new()
-	title_label.text = "  CITYCRAFT 3D"
-	title_label.add_theme_font_size_override("font_size", 20)
-	title_label.add_theme_color_override("font_color", Color("f8fafc"))
+	title_label.text = "CITYCRAFT 3D"
 	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top.add_child(title_label)
+	title_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title_label.add_theme_color_override("font_color", Color.WHITE)
+	title_label.add_theme_font_size_override("font_size", 30)
+	title_row.add_child(title_label)
+
+	menu_button = Button.new()
+	menu_button.text = "メニュー"
+	menu_button.pressed.connect(_toggle_menu)
+	menu_button.add_theme_stylebox_override("normal", _menu_button_style(false))
+	menu_button.add_theme_stylebox_override("hover", _menu_button_style(true))
+	menu_button.add_theme_stylebox_override("pressed", _menu_button_style(true))
+	title_row.add_child(menu_button)
+
+	var stats_row := GridContainer.new()
+	stats_row.columns = 4
+	stats_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stats_row.add_theme_constant_override("h_separation", 10)
+	top_root.add_child(stats_row)
 
 	money_label = _stat_label()
 	population_label = _stat_label()
 	happiness_label = _stat_label()
 	month_label = _stat_label()
-	top.add_child(money_label)
-	top.add_child(population_label)
-	top.add_child(happiness_label)
-	top.add_child(month_label)
+	stats_row.add_child(_stat_card(money_label, Color("fbbf24")))
+	stats_row.add_child(_stat_card(population_label, Color("38bdf8")))
+	stats_row.add_child(_stat_card(happiness_label, Color("34d399")))
+	stats_row.add_child(_stat_card(month_label, Color("a78bfa")))
 
+	# Compact progress card. It no longer occupies a large block of the playfield.
 	mission_panel = PanelContainer.new()
 	mission_panel.theme = ui_theme
-	mission_panel.position = Vector2(12, 86)
-	mission_panel.size = Vector2(260, 108)
-	mission_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.06, 0.09, 0.16, 0.88), 16))
+	mission_panel.add_theme_stylebox_override("panel", _accent_panel_style(Color("22d3ee")))
 	layer.add_child(mission_panel)
+
 	mission_label = Label.new()
-	mission_label.text = "市長ミッション"
-	mission_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	mission_label.add_theme_font_size_override("font_size", 14)
-	mission_label.add_theme_color_override("font_color", Color("dbeafe"))
+	mission_label.text = "次の目標"
+	mission_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	mission_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	mission_label.add_theme_color_override("font_color", Color.WHITE)
+	mission_label.add_theme_font_size_override("font_size", 22)
 	mission_panel.add_child(mission_label)
 
-	camera_panel = HBoxContainer.new()
+	# Camera controls are kept away from the building bar.
+	camera_panel = VBoxContainer.new()
 	camera_panel.theme = ui_theme
 	camera_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
-	camera_panel.position = Vector2(-194, 86)
-	camera_panel.size = Vector2(182, 44)
+	camera_panel.add_theme_constant_override("separation", 8)
 	layer.add_child(camera_panel)
 	for spec in [
 		["↶", Callable(self, "_rotate_left")],
 		["＋", Callable(self, "_zoom_in")],
-		["−", Callable(self, "_zoom_out")],
+		["－", Callable(self, "_zoom_out")],
 		["↷", Callable(self, "_rotate_right")]
 	]:
 		var b := Button.new()
 		b.text = spec[0]
-		b.custom_minimum_size = Vector2(42, 42)
 		b.pressed.connect(spec[1])
+		b.add_theme_font_size_override("font_size", 28)
+		b.add_theme_color_override("font_color", Color.WHITE)
+		b.add_theme_stylebox_override("normal", _camera_button_style(false))
+		b.add_theme_stylebox_override("hover", _camera_button_style(true))
+		b.add_theme_stylebox_override("pressed", _camera_button_style(true))
 		camera_panel.add_child(b)
 		camera_buttons.append(b)
 
+	# Current action guide.
+	help_panel = PanelContainer.new()
+	help_panel.theme = ui_theme
+	help_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
+	help_panel.add_theme_stylebox_override("panel", _accent_panel_style(Color("0ea5e9")))
+	layer.add_child(help_panel)
+
 	help_label = Label.new()
-	help_label.theme = ui_theme
-	help_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	help_label.position = Vector2(-270, -108)
-	help_label.size = Vector2(540, 40)
 	help_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	help_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	help_label.add_theme_color_override("font_color", Color("e0f2fe"))
-	help_label.add_theme_font_size_override("font_size", 13)
-	layer.add_child(help_label)
+	help_label.add_theme_color_override("font_color", Color.WHITE)
+	help_label.add_theme_font_size_override("font_size", 22)
+	help_panel.add_child(help_label)
 
+	# Bottom action bar: building tools only.
 	dock_panel = PanelContainer.new()
 	dock_panel.theme = ui_theme
 	dock_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-	dock_panel.position = Vector2(-385, -82)
-	dock_panel.size = Vector2(770, 72)
-	dock_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.06, 0.09, 0.16, 0.94), 18))
+	dock_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.035, 0.075, 0.13, 0.98), 24))
 	layer.add_child(dock_panel)
 
 	dock_container = HBoxContainer.new()
-	dock_container.add_theme_constant_override("separation", 6)
+	dock_container.alignment = BoxContainer.ALIGNMENT_CENTER
+	dock_container.add_theme_constant_override("separation", 10)
 	dock_panel.add_child(dock_container)
 
 	var tools := [
-		["road", "道路\n¥200"],
-		["home", "住宅\n¥1,200"],
-		["shop", "商業\n¥2,200"],
-		["park", "公園\n¥800"],
-		["bulldoze", "撤去\n25%還元"]
+		["road", "道路\n¥200", Color("64748b")],
+		["home", "住宅\n¥1,200", Color("f59e0b")],
+		["shop", "商業\n¥2,200", Color("0ea5e9")],
+		["park", "公園\n¥800", Color("22c55e")],
+		["bulldoze", "撤去\n25%還元", Color("ef4444")]
 	]
 	for spec in tools:
 		var button := Button.new()
 		button.text = spec[1]
-		button.custom_minimum_size = Vector2(120, 58)
 		button.toggle_mode = true
+		button.set_meta("tool_color", spec[2])
+		button.add_theme_font_size_override("font_size", 24)
+		button.add_theme_color_override("font_color", Color.WHITE)
 		button.pressed.connect(_set_tool.bind(spec[0]))
 		dock_container.add_child(button)
 		tool_buttons[spec[0]] = button
 
+	# Save/load/new-game are moved into a menu so the action bar stays focused.
+	menu_panel = PanelContainer.new()
+	menu_panel.theme = ui_theme
+	menu_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
+	menu_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.035, 0.075, 0.13, 0.99), 20))
+	menu_panel.visible = false
+	layer.add_child(menu_panel)
+
+	var menu_box := VBoxContainer.new()
+	menu_box.add_theme_constant_override("separation", 10)
+	menu_panel.add_child(menu_box)
+
+	var menu_title := Label.new()
+	menu_title.text = "ゲームメニュー"
+	menu_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	menu_title.add_theme_font_size_override("font_size", 26)
+	menu_title.add_theme_color_override("font_color", Color.WHITE)
+	menu_box.add_child(menu_title)
+
 	save_button = Button.new()
-	save_button.text = "保存"
-	save_button.custom_minimum_size = Vector2(74, 58)
-	save_button.pressed.connect(func(): _save_game(true))
-	dock_container.add_child(save_button)
+	save_button.text = "保存する"
+	save_button.pressed.connect(func():
+		_save_game(true)
+		menu_panel.visible = false
+	)
+	menu_box.add_child(save_button)
+
+	var load_button := Button.new()
+	load_button.text = "保存を読み込む"
+	load_button.pressed.connect(func():
+		_load_game(true)
+		menu_panel.visible = false
+	)
+	menu_box.add_child(load_button)
+
+	var new_button := Button.new()
+	new_button.text = "最初から始める"
+	new_button.pressed.connect(_new_game)
+	menu_box.add_child(new_button)
+
+	for menu_item in [save_button, load_button, new_button]:
+		menu_item.custom_minimum_size = Vector2(300, 62)
+		menu_item.add_theme_font_size_override("font_size", 22)
+		menu_item.add_theme_color_override("font_color", Color.WHITE)
+		menu_item.add_theme_stylebox_override("normal", _menu_action_style(false))
+		menu_item.add_theme_stylebox_override("hover", _menu_action_style(true))
+		menu_item.add_theme_stylebox_override("pressed", _menu_action_style(true))
 
 	toast_label = Label.new()
 	toast_label.theme = ui_theme
 	toast_label.set_anchors_preset(Control.PRESET_CENTER_TOP)
-	toast_label.position = Vector2(-190, 84)
-	toast_label.size = Vector2(380, 44)
 	toast_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	toast_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	toast_label.add_theme_color_override("font_color", Color.WHITE)
-	toast_label.add_theme_stylebox_override("normal", _panel_style(Color(0.06, 0.09, 0.16, 0.92), 14))
+	toast_label.add_theme_stylebox_override("normal", _accent_panel_style(Color("0ea5e9")))
 	toast_label.visible = false
 	layer.add_child(toast_label)
 
 	_apply_ui_layout()
 	_set_tool(selected_tool)
 
-
 func _stat_label() -> Label:
 	var label := Label.new()
-	label.custom_minimum_size = Vector2(105, 42)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 14)
-	label.add_theme_color_override("font_color", Color("f8fafc"))
+	label.add_theme_font_size_override("font_size", 22)
+	label.add_theme_color_override("font_color", Color.WHITE)
 	return label
 
+func _stat_card(label: Label, accent: Color) -> PanelContainer:
+	var card := PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.add_theme_stylebox_override("panel", _status_card_style(accent))
+	card.add_child(label)
+	return card
 
 func _panel_style(color: Color, radius: int) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
@@ -639,13 +728,68 @@ func _panel_style(color: Color, radius: int) -> StyleBoxFlat:
 	style.border_width_top = 1
 	style.border_width_right = 1
 	style.border_width_bottom = 1
-	style.border_color = Color(1, 1, 1, 0.10)
-	style.content_margin_left = 10
-	style.content_margin_right = 10
+	style.border_color = Color(1, 1, 1, 0.12)
+	style.content_margin_left = 14
+	style.content_margin_right = 14
+	style.content_margin_top = 12
+	style.content_margin_bottom = 12
+	return style
+
+func _status_card_style(accent: Color) -> StyleBoxFlat:
+	var style := _panel_style(Color(0.06, 0.12, 0.20, 0.98), 16)
+	style.border_width_left = 4
+	style.border_color = accent
 	style.content_margin_top = 8
 	style.content_margin_bottom = 8
 	return style
 
+func _accent_panel_style(accent: Color) -> StyleBoxFlat:
+	var style := _panel_style(Color(0.035, 0.075, 0.13, 0.94), 18)
+	style.border_width_left = 3
+	style.border_width_right = 3
+	style.border_width_top = 3
+	style.border_width_bottom = 3
+	style.border_color = accent
+	return style
+
+func _tool_button_style(color: Color, selected: bool) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color.darkened(0.18 if selected else 0.34)
+	var radius := 18
+	style.corner_radius_top_left = radius
+	style.corner_radius_top_right = radius
+	style.corner_radius_bottom_left = radius
+	style.corner_radius_bottom_right = radius
+	var width := 5 if selected else 2
+	style.border_width_left = width
+	style.border_width_top = width
+	style.border_width_right = width
+	style.border_width_bottom = width
+	style.border_color = Color("67e8f9") if selected else color.lightened(0.18)
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 12
+	style.content_margin_bottom = 12
+	return style
+
+func _camera_button_style(active: bool) -> StyleBoxFlat:
+	var style := _panel_style(Color(0.05, 0.11, 0.19, 0.98), 18)
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = Color("67e8f9") if active else Color("334155")
+	return style
+
+func _menu_button_style(active: bool) -> StyleBoxFlat:
+	var style := _panel_style(Color("0e7490") if active else Color("155e75"), 16)
+	style.border_color = Color("67e8f9")
+	return style
+
+func _menu_action_style(active: bool) -> StyleBoxFlat:
+	var style := _panel_style(Color("155e75") if active else Color("0f3345"), 14)
+	style.border_color = Color("2dd4bf")
+	return style
 
 func _apply_ui_layout() -> void:
 	if ui_theme == null or top_panel == null:
@@ -655,126 +799,173 @@ func _apply_ui_layout() -> void:
 	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
 		return
 
-	# Portrait Web builds keep the 1280px logical width and expand vertically,
-	# so aspect ratio is the reliable signal for phone portrait layout.
 	var portrait: bool = viewport_size.y > viewport_size.x * 1.20
-	var base_font_size: int = 34 if portrait else 16
-	var title_font_size: int = 36 if portrait else 20
-	var stat_font_size: int = 32 if portrait else 14
-	var mission_font_size: int = 30 if portrait else 14
-	var help_font_size: int = 28 if portrait else 13
-	var toast_font_size: int = 30 if portrait else 14
-
-	ui_theme.default_font_size = base_font_size
-	title_label.add_theme_font_size_override("font_size", title_font_size)
-	for label in [money_label, population_label, happiness_label, month_label]:
-		label.add_theme_font_size_override("font_size", stat_font_size)
-	mission_label.add_theme_font_size_override("font_size", mission_font_size)
-	help_label.add_theme_font_size_override("font_size", help_font_size)
-	toast_label.add_theme_font_size_override("font_size", toast_font_size)
 
 	if portrait:
-		top_panel.offset_left = 10
-		top_panel.offset_top = 10
-		top_panel.offset_right = -10
-		top_panel.offset_bottom = 132
+		ui_theme.default_font_size = 30
+		title_label.add_theme_font_size_override("font_size", 42)
+		for label in [money_label, population_label, happiness_label, month_label]:
+			label.add_theme_font_size_override("font_size", 34)
+		mission_label.add_theme_font_size_override("font_size", 30)
+		help_label.add_theme_font_size_override("font_size", 30)
+		toast_label.add_theme_font_size_override("font_size", 28)
 
-		mission_panel.position = Vector2(10, 146)
-		mission_panel.size = Vector2(390, 190)
-
-		camera_panel.position = Vector2(-286, 146)
-		camera_panel.size = Vector2(276, 70)
-		for button in camera_buttons:
-			button.custom_minimum_size = Vector2(64, 64)
-
-		help_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM, false)
-		help_label.offset_left = -390
-		help_label.offset_right = 390
-		help_label.offset_top = -190
-		help_label.offset_bottom = -128
-
-		dock_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM, false)
-		dock_panel.offset_left = -500
-		dock_panel.offset_right = 500
-		dock_panel.offset_top = -126
-		dock_panel.offset_bottom = -12
-		for key in tool_buttons.keys():
-			var tool_button: Button = tool_buttons[key]
-			tool_button.custom_minimum_size = Vector2(148, 96)
-		save_button.custom_minimum_size = Vector2(148, 96)
-
-		toast_label.position = Vector2(-320, 150)
-		toast_label.size = Vector2(640, 72)
-	else:
 		top_panel.offset_left = 12
-		top_panel.offset_top = 10
+		top_panel.offset_top = 12
 		top_panel.offset_right = -12
-		top_panel.offset_bottom = 74
+		top_panel.offset_bottom = 224
+		menu_button.custom_minimum_size = Vector2(190, 64)
+		menu_button.add_theme_font_size_override("font_size", 28)
 
-		mission_panel.position = Vector2(12, 86)
-		mission_panel.size = Vector2(260, 108)
+		mission_panel.set_anchors_preset(Control.PRESET_CENTER_TOP, false)
+		mission_panel.offset_left = -570
+		mission_panel.offset_right = 570
+		mission_panel.offset_top = 238
+		mission_panel.offset_bottom = 350
 
-		camera_panel.position = Vector2(-194, 86)
-		camera_panel.size = Vector2(182, 44)
+		camera_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT, false)
+		camera_panel.offset_left = -90
+		camera_panel.offset_right = -16
+		camera_panel.offset_top = 370
+		camera_panel.offset_bottom = 730
 		for button in camera_buttons:
-			button.custom_minimum_size = Vector2(42, 42)
+			button.custom_minimum_size = Vector2(72, 72)
+			button.add_theme_font_size_override("font_size", 36)
 
-		help_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM, false)
-		help_label.offset_left = -270
-		help_label.offset_right = 270
-		help_label.offset_top = -108
-		help_label.offset_bottom = -68
+		help_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM, false)
+		help_panel.offset_left = -560
+		help_panel.offset_right = 560
+		help_panel.offset_top = -304
+		help_panel.offset_bottom = -220
 
 		dock_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM, false)
-		dock_panel.offset_left = -385
-		dock_panel.offset_right = 385
-		dock_panel.offset_top = -82
-		dock_panel.offset_bottom = -10
+		dock_panel.offset_left = -620
+		dock_panel.offset_right = 620
+		dock_panel.offset_top = -204
+		dock_panel.offset_bottom = -16
 		for key in tool_buttons.keys():
 			var tool_button: Button = tool_buttons[key]
-			tool_button.custom_minimum_size = Vector2(120, 58)
-		save_button.custom_minimum_size = Vector2(74, 58)
+			tool_button.custom_minimum_size = Vector2(232, 146)
+			tool_button.add_theme_font_size_override("font_size", 34)
 
-		toast_label.position = Vector2(-190, 84)
-		toast_label.size = Vector2(380, 44)
+		menu_panel.offset_left = -500
+		menu_panel.offset_right = -16
+		menu_panel.offset_top = 104
+		menu_panel.offset_bottom = 500
+		for menu_item in menu_panel.find_children("*", "Button", true, false):
+			var button := menu_item as Button
+			button.custom_minimum_size = Vector2(410, 82)
+			button.add_theme_font_size_override("font_size", 30)
 
+		toast_label.offset_left = -390
+		toast_label.offset_right = 390
+		toast_label.offset_top = 366
+		toast_label.offset_bottom = 446
+	else:
+		ui_theme.default_font_size = 20
+		title_label.add_theme_font_size_override("font_size", 30)
+		for label in [money_label, population_label, happiness_label, month_label]:
+			label.add_theme_font_size_override("font_size", 22)
+		mission_label.add_theme_font_size_override("font_size", 20)
+		help_label.add_theme_font_size_override("font_size", 20)
+		toast_label.add_theme_font_size_override("font_size", 20)
+
+		top_panel.offset_left = 16
+		top_panel.offset_top = 14
+		top_panel.offset_right = -16
+		top_panel.offset_bottom = 144
+		menu_button.custom_minimum_size = Vector2(130, 48)
+		menu_button.add_theme_font_size_override("font_size", 20)
+
+		mission_panel.set_anchors_preset(Control.PRESET_TOP_LEFT, false)
+		mission_panel.offset_left = 16
+		mission_panel.offset_right = 430
+		mission_panel.offset_top = 158
+		mission_panel.offset_bottom = 284
+
+		camera_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT, false)
+		camera_panel.offset_left = -76
+		camera_panel.offset_right = -16
+		camera_panel.offset_top = 160
+		camera_panel.offset_bottom = 430
+		for button in camera_buttons:
+			button.custom_minimum_size = Vector2(58, 58)
+			button.add_theme_font_size_override("font_size", 28)
+
+		help_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM, false)
+		help_panel.offset_left = -390
+		help_panel.offset_right = 390
+		help_panel.offset_top = -206
+		help_panel.offset_bottom = -148
+
+		dock_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM, false)
+		dock_panel.offset_left = -530
+		dock_panel.offset_right = 530
+		dock_panel.offset_top = -136
+		dock_panel.offset_bottom = -14
+		for key in tool_buttons.keys():
+			var tool_button: Button = tool_buttons[key]
+			tool_button.custom_minimum_size = Vector2(192, 96)
+			tool_button.add_theme_font_size_override("font_size", 24)
+
+		menu_panel.offset_left = -370
+		menu_panel.offset_right = -16
+		menu_panel.offset_top = 82
+		menu_panel.offset_bottom = 390
+
+		toast_label.offset_left = -280
+		toast_label.offset_right = 280
+		toast_label.offset_top = 158
+		toast_label.offset_bottom = 214
 
 func _set_tool(tool: String) -> void:
 	selected_tool = tool
 	for key in tool_buttons.keys():
 		var b: Button = tool_buttons[key]
-		b.button_pressed = key == tool
+		var active: bool = key == tool
+		b.button_pressed = active
+		var color: Color = b.get_meta("tool_color", Color("64748b"))
+		b.add_theme_stylebox_override("normal", _tool_button_style(color, active))
+		b.add_theme_stylebox_override("hover", _tool_button_style(color, true))
+		b.add_theme_stylebox_override("pressed", _tool_button_style(color, true))
+		b.add_theme_stylebox_override("focus", _tool_button_style(color, active))
 
 	var help := {
-		"road": "道路：市役所から道路を伸ばして街をつなげよう",
-		"home": "住宅：道路沿いに建てると人口が増える",
-		"shop": "商業：道路接続で毎月の収入が増える",
-		"park": "公園：近くの住宅の満足度が上がる",
-		"bulldoze": "撤去：建設費の25%が戻る"
+		"road": "道路を選択中　空いているマスをタップして道路をつなげます",
+		"home": "住宅を選択中　道路沿いに建てると人口が増えます",
+		"shop": "商業を選択中　道路につなぐと毎月の収入が増えます",
+		"park": "公園を選択中　周辺住宅の満足度を上げます",
+		"bulldoze": "撤去を選択中　撤去したい建物や道路をタップします"
 	}
 	if help_label:
 		help_label.text = help.get(tool, "")
 
+	if last_selection_cell.x >= 0:
+		_show_selection(last_selection_cell)
 
 func _update_hud() -> void:
 	if not money_label:
 		return
+
 	money_label.text = "資金\n%s¥%s" % ["-" if money < 0 else "", _comma(abs(money))]
 	population_label.text = "人口\n%s人" % _comma(population)
 	happiness_label.text = "満足度\n%d%%" % happiness
 	month_label.text = "月\n%d" % month
 
 	var c := _counts()
-	var d1 := population >= 60
+	var d1: bool = population >= 60
 	var d2: bool = int(c["shop"]) >= 2
-	var d3 := happiness >= 75
-	mission_label.text = "市長ミッション　Lv.%d\n%s 人口60人\n%s 商業施設2軒\n%s 満足度75%%" % [
-		level,
-		"●" if d1 else "○",
-		"●" if d2 else "○",
-		"●" if d3 else "○"
-	]
+	var d3: bool = happiness >= 75
 
+	var pop_progress := "達成" if d1 else "%d/60" % population
+	var shop_progress := "達成" if d2 else "%d/2" % int(c["shop"])
+	var happy_progress := "達成" if d3 else "%d/75" % happiness
+	mission_label.text = "次の目標  Lv.%d\n人口 %s　　商業 %s　　満足度 %s" % [
+		level,
+		pop_progress,
+		shop_progress,
+		happy_progress
+	]
 
 func _comma(value: int) -> String:
 	var s := str(value)
@@ -793,6 +984,37 @@ func _toast(text: String) -> void:
 	if toast_timer:
 		toast_timer.start()
 
+
+func _toggle_menu() -> void:
+	if menu_panel:
+		menu_panel.visible = not menu_panel.visible
+
+func _new_game() -> void:
+	_seed_city()
+	_save_game(false)
+	if menu_panel:
+		menu_panel.visible = false
+	_toast("新しい街を開始しました")
+
+func _can_place(cell: Vector2i) -> bool:
+	if cell.x < 0 or cell.y < 0 or cell.x >= GRID_SIZE or cell.y >= GRID_SIZE:
+		return false
+	if selected_tool == "bulldoze":
+		return cells.has(cell) and cells[cell]["type"] != "city"
+	return not cells.has(cell)
+
+func _show_selection(cell: Vector2i) -> void:
+	if selection_marker == null:
+		return
+	last_selection_cell = cell
+	if cell.x < 0 or cell.y < 0 or cell.x >= GRID_SIZE or cell.y >= GRID_SIZE:
+		selection_marker.visible = false
+		return
+	selection_marker.position = Vector3(cell.x - HALF, 0.15, cell.y - HALF)
+	selection_marker.visible = true
+	var marker_mat := selection_marker.material_override as StandardMaterial3D
+	if marker_mat:
+		marker_mat.albedo_color = Color(0.13, 0.83, 0.93, 0.46) if _can_place(cell) else Color(0.98, 0.30, 0.36, 0.46)
 
 func _rotate_left() -> void:
 	camera_angle -= PI / 2.0
@@ -854,6 +1076,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	var world_pos: Vector3 = hit
 	var cell := Vector2i(roundi(world_pos.x) + HALF, roundi(world_pos.z) + HALF)
+	_show_selection(cell)
 	_place(cell)
 
 
