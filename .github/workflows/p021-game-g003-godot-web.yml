@@ -79,3 +79,5 @@ jobs:
             git pull --rebase origin develop
             git push origin HEAD:develop
           fi
+
+# UI redesign validation
