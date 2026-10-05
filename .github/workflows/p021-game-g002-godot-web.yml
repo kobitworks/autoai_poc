@@ -1,4 +1,4 @@
-name: P021 Build GAME-G002 Godot Web
+name: P021 Build GAME-G002 Responsive Godot Web
 
 on:
   push:
@@ -7,6 +7,10 @@ on:
       - 'p021-game/sources/past-self-coop-godot/**'
       - '.github/workflows/p021-game-g002-godot-web.yml'
   workflow_dispatch:
+
+concurrency:
+  group: p021-game-g002-web-develop
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -33,6 +37,30 @@ jobs:
           mkdir -p fonts
           wget -q -O fonts/NotoSansJP.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/NotoSansJP%5Bwght%5D.ttf"
           test -s fonts/NotoSansJP.ttf
+      - name: Bundle Kenney Sci-Fi UI and Sounds
+        working-directory: p021-game/sources/past-self-coop-godot
+        run: |
+          mkdir -p assets/kenney /tmp/kenney-ui /tmp/kenney-sfx
+          wget -q -O /tmp/kenney-ui.zip "https://kenney.nl/media/pages/assets/ui-pack-sci-fi/b67c2acd31-1724181109/kenney_ui-pack-space-expansion.zip"
+          wget -q -O /tmp/kenney-sfx.zip "https://kenney.nl/media/pages/assets/sci-fi-sounds/6b296f9ecf-1677589334/kenney_sci-fi-sounds.zip"
+          unzip -oq /tmp/kenney-ui.zip -d /tmp/kenney-ui
+          unzip -oq /tmp/kenney-sfx.zip -d /tmp/kenney-sfx
+          PANEL=$(find /tmp/kenney-ui -type f -iname '*.png' | head -n 1)
+          BUTTON=$(find /tmp/kenney-ui -type f -iname '*.png' | sed -n '2p')
+          ICON=$(find /tmp/kenney-ui -type f -iname '*.png' | sed -n '3p')
+          test -n "$PANEL" && test -n "$BUTTON" && test -n "$ICON"
+          cp "$PANEL" assets/kenney/ui_panel.png
+          cp "$BUTTON" assets/kenney/ui_button.png
+          cp "$ICON" assets/kenney/ui_icon.png
+          i=0
+          find /tmp/kenney-sfx -type f \( -iname '*.ogg' -o -iname '*.wav' -o -iname '*.mp3' \) | head -n 4 | while read f; do
+            ext="${f##*.}"
+            cp "$f" "assets/kenney/sfx_${i}.${ext}"
+            i=$((i+1))
+          done
+          test -s assets/kenney/ui_panel.png
+          test -s assets/kenney/ui_button.png
+          test -s assets/kenney/ui_icon.png
       - name: Validate project
         working-directory: p021-game/sources/past-self-coop-godot
         run: |
@@ -40,20 +68,21 @@ jobs:
       - name: Export GAME-G002 for Web
         working-directory: p021-game/sources/past-self-coop-godot
         run: |
-          mkdir -p ../../games/past-self-coop
-          godot --headless --export-release "Web" ../../games/past-self-coop/index.html
-          test -f ../../games/past-self-coop/index.html
-          test -f ../../games/past-self-coop/index.wasm
-          test -f ../../games/past-self-coop/index.pck
+          mkdir -p ../../games/past-self-coop-v2
+          godot --headless --export-release "Web" ../../games/past-self-coop-v2/index.html
+          test -f ../../games/past-self-coop-v2/index.html
+          test -f ../../games/past-self-coop-v2/index.wasm
+          test -f ../../games/past-self-coop-v2/index.pck
       - name: Commit exported Web build
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add p021-game/games/past-self-coop/
+          git add p021-game/games/past-self-coop-v2/
           if git diff --cached --quiet; then
             echo "No exported changes."
           else
-            git commit -m "P021: build GAME-G002 Godot Web"
+            git commit -m "P021: build GAME-G002 responsive Web"
+            git pull --rebase origin develop
             git push origin HEAD:develop
           fi
