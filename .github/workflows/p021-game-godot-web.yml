@@ -49,6 +49,20 @@ jobs:
           cp /tmp/kenney-tiny-farm/License.txt assets/kenney/License.txt
           test -s assets/kenney/tiny_farm.png
           test -s assets/kenney/License.txt
+      - name: Bundle Kenney Interface Sounds CC0 assets
+        working-directory: p021-game/sources/one-square-farm-godot
+        run: |
+          mkdir -p audio assets/kenney /tmp/kenney-interface-sounds
+          wget -q -O /tmp/kenney-interface-sounds.zip "https://kenney.nl/media/pages/assets/interface-sounds/fa43c1dd4d-1677589452/kenney_interface-sounds.zip"
+          unzip -o /tmp/kenney-interface-sounds.zip -d /tmp/kenney-interface-sounds
+          for file in select_001.ogg click_001.ogg click_002.ogg click_003.ogg confirmation_001.ogg confirmation_004.ogg error_001.ogg; do
+            cp "/tmp/kenney-interface-sounds/Audio/$file" "audio/$file"
+            test -s "audio/$file"
+          done
+          cp /tmp/kenney-interface-sounds/License.txt assets/kenney/interface-sounds-License.txt
+          test -s assets/kenney/interface-sounds-License.txt
+      - name: Validate GAME-G001 audio contract
+        run: sh p021-game/sources/one-square-farm-godot/tests/test_audio_contract.sh
       - name: Export GAME-G001 for Web
         working-directory: p021-game/sources/one-square-farm-godot
         run: |
