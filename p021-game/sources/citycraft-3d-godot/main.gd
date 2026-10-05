@@ -658,12 +658,12 @@ func _apply_ui_layout() -> void:
 	# Portrait Web builds keep the 1280px logical width and expand vertically,
 	# so aspect ratio is the reliable signal for phone portrait layout.
 	var portrait: bool = viewport_size.y > viewport_size.x * 1.20
-	var base_font_size: int = 26 if portrait else 16
-	var title_font_size: int = 30 if portrait else 20
-	var stat_font_size: int = 24 if portrait else 14
-	var mission_font_size: int = 22 if portrait else 14
-	var help_font_size: int = 20 if portrait else 13
-	var toast_font_size: int = 22 if portrait else 14
+	var base_font_size: int = 34 if portrait else 16
+	var title_font_size: int = 36 if portrait else 20
+	var stat_font_size: int = 32 if portrait else 14
+	var mission_font_size: int = 30 if portrait else 14
+	var help_font_size: int = 28 if portrait else 13
+	var toast_font_size: int = 30 if portrait else 14
 
 	ui_theme.default_font_size = base_font_size
 	title_label.add_theme_font_size_override("font_size", title_font_size)
@@ -677,28 +677,34 @@ func _apply_ui_layout() -> void:
 		top_panel.offset_left = 10
 		top_panel.offset_top = 10
 		top_panel.offset_right = -10
-		top_panel.offset_bottom = 102
+		top_panel.offset_bottom = 132
 
-		mission_panel.position = Vector2(10, 114)
-		mission_panel.size = Vector2(330, 150)
+		mission_panel.position = Vector2(10, 146)
+		mission_panel.size = Vector2(390, 190)
 
-		camera_panel.position = Vector2(-246, 114)
-		camera_panel.size = Vector2(236, 58)
+		camera_panel.position = Vector2(-286, 146)
+		camera_panel.size = Vector2(276, 70)
 		for button in camera_buttons:
-			button.custom_minimum_size = Vector2(54, 54)
+			button.custom_minimum_size = Vector2(64, 64)
 
-		help_label.position = Vector2(-320, -162)
-		help_label.size = Vector2(640, 54)
+		help_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM, false)
+		help_label.offset_left = -390
+		help_label.offset_right = 390
+		help_label.offset_top = -190
+		help_label.offset_bottom = -128
 
-		dock_panel.position = Vector2(-380, -112)
-		dock_panel.size = Vector2(760, 102)
+		dock_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM, false)
+		dock_panel.offset_left = -500
+		dock_panel.offset_right = 500
+		dock_panel.offset_top = -126
+		dock_panel.offset_bottom = -12
 		for key in tool_buttons.keys():
 			var tool_button: Button = tool_buttons[key]
-			tool_button.custom_minimum_size = Vector2(112, 84)
-		save_button.custom_minimum_size = Vector2(112, 84)
+			tool_button.custom_minimum_size = Vector2(148, 96)
+		save_button.custom_minimum_size = Vector2(148, 96)
 
-		toast_label.position = Vector2(-260, 116)
-		toast_label.size = Vector2(520, 58)
+		toast_label.position = Vector2(-320, 150)
+		toast_label.size = Vector2(640, 72)
 	else:
 		top_panel.offset_left = 12
 		top_panel.offset_top = 10
@@ -713,11 +719,17 @@ func _apply_ui_layout() -> void:
 		for button in camera_buttons:
 			button.custom_minimum_size = Vector2(42, 42)
 
-		help_label.position = Vector2(-270, -108)
-		help_label.size = Vector2(540, 40)
+		help_label.set_anchors_preset(Control.PRESET_CENTER_BOTTOM, false)
+		help_label.offset_left = -270
+		help_label.offset_right = 270
+		help_label.offset_top = -108
+		help_label.offset_bottom = -68
 
-		dock_panel.position = Vector2(-385, -82)
-		dock_panel.size = Vector2(770, 72)
+		dock_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM, false)
+		dock_panel.offset_left = -385
+		dock_panel.offset_right = 385
+		dock_panel.offset_top = -82
+		dock_panel.offset_bottom = -10
 		for key in tool_buttons.keys():
 			var tool_button: Button = tool_buttons[key]
 			tool_button.custom_minimum_size = Vector2(120, 58)
