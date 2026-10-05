@@ -5,6 +5,7 @@ on:
     branches: [develop]
     paths:
       - 'p021-game/sources/one-square-farm-godot/**'
+      - 'p021-game/sources/past-self-coop-godot/**'
       - '.github/workflows/p021-game-godot-web.yml'
   workflow_dispatch:
 
@@ -42,15 +43,30 @@ jobs:
           test -f ../../games/one-square-farm-godot-v3/index.html
           test -f ../../games/one-square-farm-godot-v3/index.wasm
           test -f ../../games/one-square-farm-godot-v3/index.pck
+      - name: Bundle Japanese font for GAME-G002
+        working-directory: p021-game/sources/past-self-coop-godot
+        run: |
+          mkdir -p fonts
+          wget -q -O fonts/NotoSansJP.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/NotoSansJP%5Bwght%5D.ttf"
+          test -s fonts/NotoSansJP.ttf
+      - name: Export GAME-G002 for Web
+        working-directory: p021-game/sources/past-self-coop-godot
+        run: |
+          mkdir -p ../../games/past-self-coop
+          godot --headless --editor --quit-after 2
+          godot --headless --export-release "Web" ../../games/past-self-coop/index.html
+          test -f ../../games/past-self-coop/index.html
+          test -f ../../games/past-self-coop/index.wasm
+          test -f ../../games/past-self-coop/index.pck
       - name: Commit exported Web build
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add p021-game/games/one-square-farm-godot-v3/
+          git add p021-game/games/one-square-farm-godot-v3/ p021-game/games/past-self-coop/
           if git diff --cached --quiet; then
             echo "No exported changes."
           else
-            git commit -m "P021: build GAME-G001 animated Godot Web v3"
+            git commit -m "P021: build Godot Web games"
             git push origin HEAD:develop
           fi
