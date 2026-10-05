@@ -862,9 +862,9 @@ func _build_intro() -> void:
     for key in ["standard", "sprint", "drought"]:
         var data: Dictionary = CHALLENGES[key]
         var mode_btn := Button.new()
-        mode_btn.text = "%s  |  %s" % [str(data.name), _challenge_condition_text(data)]
+        mode_btn.text = "%s\n%s" % [str(data.name), _challenge_condition_text(data)]
         mode_btn.toggle_mode = true
-        mode_btn.custom_minimum_size = Vector2(0, 54)
+        mode_btn.custom_minimum_size = Vector2(0, 64)
         mode_btn.add_theme_font_size_override("font_size", 15)
         mode_btn.pressed.connect(_choose_challenge.bind(key))
         challenge_grid.add_child(mode_btn)
