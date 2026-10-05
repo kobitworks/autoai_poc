@@ -41,7 +41,7 @@ linear-gradient(#14201c 12px,transparent 12px) 0 0/29px 29px,#fff;border:10px so
 </style>
 </head>
 <body>
-<header class="topbar"><div class="topin"><div class="brand">モノリンク</div><span class="version">PoC v0.1</span><div class="spacer"></div><button class="topbtn" id="resetBtn">リセット</button><button class="topbtn" onclick="location.href='../'">PoC一覧へ</button></div></header>
+<header class="topbar"><div class="topin"><div class="brand">モノリンク</div><span class="version">PoC v0.2-prep</span><div class="spacer"></div><button class="topbtn" id="resetBtn">リセット</button><button class="topbtn" onclick="location.href='../'">PoC一覧へ</button></div></header>
 <main>
 <section class="hero">
   <div class="hero-card">
@@ -51,7 +51,7 @@ linear-gradient(#14201c 12px,transparent 12px) 0 0/29px 29px,#fff;border:10px so
   </div>
   <div class="status-card">
     <div class="status-row"><div class="itemicon">☂️</div><div><h2 id="summaryName">青い折りたたみ傘</h2><p>QR ID: ML-DEMO-0001</p></div></div>
-    <div class="chips"><span class="chip" id="ownerChip">所有者: テストユーザー</span><span class="chip" id="lostChip">通常</span><span class="chip" id="custodyChip">自己保管</span></div>
+    <div class="chips"><span class="chip" id="ownerChip">所有者: テストユーザー</span><span class="chip" id="lostChip">通常</span><span class="chip" id="custodyChip">自己保管</span><span class="chip" id="apiModeChip">API: MOCK</span></div>
   </div>
 </section>
 
@@ -72,7 +72,7 @@ linear-gradient(#14201c 12px,transparent 12px) 0 0/29px 29px,#fff;border:10px so
     </div>
   </div></div>
   <div class="panel"><div class="panel-h"><h2>現在の状態履歴</h2></div><div class="panel-b"><div class="timeline" id="timeline"></div></div></div>
-  <div class="notice">このPoCは操作体験用です。DB保存、本人確認、通知送信、警察・鉄道との実連携は行いません。</div>
+  <div class="notice" id="runtimeNotice">API base URL未設定時は外部通信を行わず、従来どおり画面内mockだけで操作できます。</div>
 </section>
 
 <section class="view" id="ownerView">
@@ -144,9 +144,11 @@ linear-gradient(#14201c 12px,transparent 12px) 0 0/29px 29px,#fff;border:10px so
     </div>
   </div></div>
 </section>
-<div class="footer-note">PoC Version 0.1 / 表示内容・データはすべてデモ用です。実サービスの法令・本人確認・通知・保管運用は後続タスクで検証します。</div>
+<div class="footer-note">PoC Version 0.2-prep / API切替境界を追加済み。実Worker接続・D1保存・本人確認・通知・本番公開は後続タスクで検証します。</div>
 </main>
 <div class="toast" id="toast"></div>
+<script src="./api-client.js"></script>
+<script src="./api-runtime.js"></script>
 <script>
 const state={
  owner:"テストユーザー",
@@ -164,6 +166,19 @@ const state={
  ]
 };
 const qs=s=>document.querySelector(s), qsa=s=>document.querySelectorAll(s);
+const apiRuntime=window.MonolinkApiRuntime.createMonolinkApiRuntime({
+ baseUrl:String(window.MONOLINK_API_BASE_URL||"").trim()
+});
+window.MonolinkPoC=Object.freeze({apiRuntime});
+function renderApiMode(){
+ const enabled=apiRuntime.isApiEnabled();
+ const chip=qs("#apiModeChip");
+ const notice=qs("#runtimeNotice");
+ if(chip)chip.textContent=enabled?"API: 接続設定あり":"API: MOCK";
+ if(notice)notice.textContent=enabled
+  ?"API base URLが設定されています。後続のMONO-015で各操作を実データへ接続・検証する準備状態です。"
+  :"API base URL未設定のため外部通信は行わず、従来どおり画面内mockだけで操作します。";
+}
 function toast(msg){const t=qs("#toast");t.textContent=msg;t.classList.add("show");clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove("show"),2000)}
 function addEvent(title,detail){state.events.unshift({title:title,detail:detail});renderTimeline()}
 function renderTimeline(){qs("#timeline").innerHTML=state.events.map((e,i)=>'<div class="event"><div class="dotcol"><div class="dot"></div><div class="line"></div></div><div class="eventbody"><b>'+e.title+'</b><p>'+e.detail+'</p></div></div>').join("")}
@@ -240,7 +255,7 @@ qs("#acceptGift").addEventListener("click",()=>{
  addEvent("管理権移転完了",old+" → "+state.owner+" / 旧管理権を失効（PoC）");updateSummary();qs("#giftCodeBox").innerHTML="";qs("#giftCodeInput").value="";toast("新しい管理者へ切り替えました");
 });
 qs("#resetBtn").addEventListener("click",()=>location.reload());
-renderTimeline();renderMessages();updateSummary();
+renderTimeline();renderMessages();updateSummary();renderApiMode();
 </script>
 </body>
 </html>
