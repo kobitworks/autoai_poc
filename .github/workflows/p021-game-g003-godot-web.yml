@@ -30,7 +30,7 @@ jobs:
       - name: Setup Godot export templates
         run: |
           mkdir -p ~/.local/share/godot/export_templates/
-          cp -a /root/.local/share/godot/export_templates/\${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/\${GODOT_VERSION}.stable
+          cp -a /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
 
       - name: Bundle Japanese font
         working-directory: p021-game/sources/citycraft-3d-godot
