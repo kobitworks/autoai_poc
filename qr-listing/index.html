@@ -126,7 +126,7 @@ main{max-width:1280px;margin:auto;padding:18px 18px 44px}
           <a href="./upload.html">02 商品画像アップロード</a>
           <button type="button" data-fallback="商品画像AI解析">03 商品画像AI解析</button>
           <button type="button" data-fallback="商品データ取込">04 商品データ取込</button>
-          <button type="button" data-fallback="商品一覧">05 商品一覧</button>
+          <a href="./products.html">05 商品一覧</a>
         </div>
       </div>
     </div>
@@ -183,8 +183,8 @@ if (!window.Phaser) {
     },
     {
       no:'05', short:'商品一覧', name:'商品一覧',
-      sub:'INVENTORY HUB', status:'LOCKED', active:false,
-      x:.88, y:.31, type:'inventory'
+      sub:'INVENTORY HUB', status:'READY', active:true,
+      link:'./products.html', x:.88, y:.31, type:'inventory'
     }
   ];
 
