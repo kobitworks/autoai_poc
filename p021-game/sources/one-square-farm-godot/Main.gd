@@ -889,7 +889,7 @@ func _build_intro() -> void:
     intro_title.text = "1マス農園"
     intro_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     intro_title.add_theme_font_size_override("font_size", 36)
-    intro_box.add_child(title)
+    intro_box.add_child(intro_title)
 
     intro_summary = Label.new()
     intro_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
