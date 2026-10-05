@@ -238,7 +238,7 @@ func _build_ui() -> void:
     side.add_child(harvest_btn)
 
     var help := Label.new()
-    help.text = "遊び方\n1. 種を選んで植える\n2. 水と土を管理する\n3. 育ったら収穫する\n\n15日終了時に150G以上で大成功！"
+    help.text = "遊び方\n1. 種を選んで植える\n2. 水と土を管理する\n3. 育ったら収穫する\n\nキーボード: 1=植える  2=水  3=土  4=収穫\n15日終了時に150G以上で大成功！"
     help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     help.add_theme_font_size_override("font_size", 12)
     help.add_theme_color_override("font_color", Color8(92, 111, 99))
@@ -462,7 +462,7 @@ func _build_intro() -> void:
     box.add_child(title)
 
     var lead := Label.new()
-    lead.text = "たった1マスの畑を15日間経営。\n水・土・作物を見極めて、資金150G以上を目指そう。"
+    lead.text = "たった1マスの畑を15日間経営。\n水・土・作物を見極めて、資金150G以上を目指そう。\nクリック / タップ / Enter / Space でも開始できます。"
     lead.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     lead.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
     lead.add_theme_font_size_override("font_size", 18)
@@ -533,3 +533,26 @@ func _show_result(result: String) -> void:
 
 func _restart_game() -> void:
     get_tree().reload_current_scene()
+
+
+func _input(event: InputEvent) -> void:
+    if not started:
+        var start_by_key := event is InputEventKey and event.pressed and (event.keycode == KEY_ENTER or event.keycode == KEY_SPACE)
+        var start_by_mouse := event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT
+        var start_by_touch := event is InputEventScreenTouch and event.pressed
+        if start_by_key or start_by_mouse or start_by_touch:
+            _start_game()
+            get_viewport().set_input_as_handled()
+        return
+
+    if ended:
+        return
+    if event is InputEventKey and event.pressed:
+        if event.keycode == KEY_1:
+            _plant()
+        elif event.keycode == KEY_2:
+            _water()
+        elif event.keycode == KEY_3:
+            _compost()
+        elif event.keycode == KEY_4:
+            _harvest()
