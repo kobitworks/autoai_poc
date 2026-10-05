@@ -36,7 +36,7 @@ button{font:inherit}.app-header{position:fixed;inset:0 0 auto 0;height:100px;z-i
 #leafletMap .leaflet-tile{max-width:none!important;max-height:none!important}
 .map-overlay{position:absolute;z-index:500;left:50%;bottom:12px;transform:translateX(-50%);width:min(94%,540px);pointer-events:none}
 .map-status{background:#ffffffec;border:1px solid #b9c9cc;border-radius:7px;box-shadow:0 2px 8px #0003;padding:8px 10px;font-size:12px;line-height:1.45;pointer-events:auto}
-.map-status strong{display:block;color:#123f6b}.map-status .actions{margin-top:6px}.map-status .btn{min-height:32px;padding:6px 10px}
+.map-status strong{display:block;color:#123f6b}.map-status .actions{margin-top:6px}.map-status .btn{min-height:32px;padding:6px 10px}.map-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px;color:#46565a}.map-legend-item{display:inline-flex;align-items:center;gap:4px}.map-legend-dot{width:9px;height:9px;border-radius:50%;background:#176fa6;display:inline-block}.map-legend-dot.friend{background:#7469b6}.map-text-alt{margin-top:5px;color:#41535a}.map-current{font-weight:700;color:#5c6870}
 .map-pin{width:24px;height:24px;border-radius:50% 50% 50% 0;background:#176fa6;border:3px solid #fff;box-shadow:0 1px 4px #0005;transform:rotate(-45deg)}.map-pin.friend{background:#7469b6}.leaflet-control-attribution{font-size:9px}
 .ops-grid{display:grid;grid-template-columns:280px 1fr;gap:12px}.ops-list button{display:block;width:100%;text-align:left;padding:9px;margin:5px 0;background:white;border:1px solid #bbb;border-radius:4px}
 .banner{position:fixed;left:0;right:0;bottom:64px;height:54px;background:#e4f3f3;z-index:30;display:grid;place-items:center;border-top:1px solid #c6dcdc}.adbox{width:min(640px,86vw);height:50px;border:1px solid #bbb;background:#fff;display:grid;grid-template-columns:1.1fr 1fr 1.1fr 1fr 1.2fr;color:#444;font-size:9px;overflow:hidden}.adcell{display:grid;place-items:center;border-right:1px solid #ddd;text-align:center;padding:2px}.adcell strong{color:#c40000;font-size:13px}.adcell.rakuten{color:#bf0000;font-size:18px;font-weight:800}
@@ -162,7 +162,7 @@ function render(){
   const nextAction=scene.nextSceneKey?'<button class="btn" onclick="advanceStory()" '+(saving?'disabled':'')+'>'+(saving?'進捗を保存中…':scene.nextLabel)+'</button>':btn(scene.nextLabel||'次へ',"go('"+(scene.nextScreen||'U04')+"')");
   app.innerHTML=page('<p class="muted">'+book.title+' / Chapter '+scene.chapter+' / Scene '+scene.scene+'</p><h2>'+scene.title+'</h2><div class="story">'+scene.body.map(x=>'<p>'+x+'</p>').join('')+'</div><div class="panel"><div class="fact"><span>進捗状態</span><strong>'+(saving?'保存中':'保存済み')+'</strong></div><div class="fact"><span>再開地点</span><strong>Chapter '+scene.chapter+' / Scene '+scene.scene+'</strong></div></div>'+(state.storyAdvance.notice?'<div class="notice" role="status">'+state.storyAdvance.notice+'</div>':'')+(state.storyAdvance.error?'<div class="notice danger" role="alert">'+state.storyAdvance.error+'</div>':'')+'<div class="notice warn"><strong>移動前に確認</strong><br>歩きながら画面を見続けず、安全な場所で操作してください。</div><div class="actions">'+nextAction+btn('中断してBookへ',"go('U01')",'secondary')+'</div>'+(reviewMode?'<div class="panel"><strong>Story Progress API mock確認</strong><p class="muted">Scene確定はAPI相当の応答後だけ反映します。保存中はボタンを無効化し、同じrequestの二重反映を防ぎます。</p><div class="actions">'+btn('API成功',"setStoryMockMode('success')",'secondary')+btn('APIエラー',"setStoryMockMode('error')",'secondary')+btn('競合を試す',"setStoryMockMode('conflict')",'secondary')+'</div><p class="muted">現在のmock: '+state.storyAdvance.mode+' / localStorage: '+PROGRESS_KEY+'</p></div>':'') );
  }else if(state.screen==='U04'){
-  app.innerHTML='<div class="map-screen"><div id="leafletMap" class="map" role="application" aria-label="Biblio Map。目的地と周辺マーカーを表示します"></div><div class="map-overlay"><div class="map-status"><strong>目的地：青い壁の広場</strong><span>渋谷エリアのサンプル地点を表示中。地図を見ながら歩かず、安全な場所で確認してください。</span><div class="actions">'+btn('現在地を確認',"go('U05')",'secondary')+'</div></div></div></div>';setTimeout(initLeafletMap,0);
+  app.innerHTML='<div class="map-screen"><div id="leafletMap" class="map" role="application" aria-label="Biblio Map。目的地の青い壁の広場と周辺マーカーを表示します。ズーム操作ができます。"></div><div class="map-overlay"><div class="map-status" aria-label="地図情報のテキスト代替"><strong>目的地：青い壁の広場</strong><div class="map-text-alt">渋谷エリアのサンプル地点。周辺マーカーは Mobian A / Mobian B。地図を見ながら歩かず、安全な場所で確認してください。</div><div class="map-current">現在地：未取得（到着確認時のみ取得）</div><div class="map-legend" aria-label="マーカー凡例"><span class="map-legend-item"><i class="map-legend-dot"></i>目的地</span><span class="map-legend-item"><i class="map-legend-dot friend"></i>周辺マーカー</span></div><div class="actions">'+btn('目的地を中央に',"focusMapTarget()",'secondary')+btn('現在地を確認',"go('U05')",'secondary')+'</div></div></div></div>';setTimeout(initLeafletMap,0);
  }else if(state.screen==='U05'){
   app.innerHTML=page('<h2>到着を確認</h2><div class="notice"><strong>位置情報を使う理由</strong><br>この目的地に到着したか確認するため、今だけ端末の位置情報を利用します。</div><p>位置情報は到着確認に必要なときだけ取得します。PoCでは実位置情報は取得しません。</p><div class="actions">'+btn('到着として確認',"locationMock('ARRIVED')")+btn('まだ到着していない',"locationMock('NOT_ARRIVED')",'secondary')+btn('判定不能を試す',"locationMock('INDETERMINATE')",'secondary')+'</div>');
  }else if(state.screen==='U06'){
@@ -180,6 +180,8 @@ function render(){
  }
 }
 let leafletMapInstance=null;
+const MAP_TARGET=[35.65952,139.70055];
+function focusMapTarget(){if(leafletMapInstance)leafletMapInstance.setView(MAP_TARGET,16,{animate:true})}
 function mapMarkerIcon(kind='target'){
  const cls=kind==='friend'?'map-pin friend':'map-pin';
  return L.divIcon({className:'',html:'<div class="'+cls+'"></div>',iconSize:[24,24],iconAnchor:[12,24],popupAnchor:[0,-24]});
@@ -188,12 +190,12 @@ function initLeafletMap(){
  const el=document.getElementById('leafletMap');
  if(!el||typeof L==='undefined')return;
  if(leafletMapInstance){leafletMapInstance.remove();leafletMapInstance=null}
- const target=[35.65952,139.70055];
- leafletMapInstance=L.map(el,{zoomControl:true,attributionControl:true}).setView(target,16);
+ const target=MAP_TARGET;
+ leafletMapInstance=L.map(el,{zoomControl:true,attributionControl:true,minZoom:3,maxZoom:19}).setView(target,16);
  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(leafletMapInstance);
- L.marker(target,{icon:mapMarkerIcon('target')}).addTo(leafletMapInstance).bindPopup('<strong>青い壁の広場</strong><br>物語上の目的地（PoC）').openPopup();
- L.marker([35.66018,139.69898],{icon:mapMarkerIcon('friend')}).addTo(leafletMapInstance).bindPopup('Mobian A');
- L.marker([35.65858,139.70173],{icon:mapMarkerIcon('friend')}).addTo(leafletMapInstance).bindPopup('Mobian B');
+ L.marker(target,{icon:mapMarkerIcon('target'),title:'目的地：青い壁の広場'}).addTo(leafletMapInstance).bindPopup('<strong>青い壁の広場</strong><br>物語上の目的地（PoC）').openPopup();
+ L.marker([35.66018,139.69898],{icon:mapMarkerIcon('friend'),title:'周辺マーカー：Mobian A'}).addTo(leafletMapInstance).bindPopup('Mobian A');
+ L.marker([35.65858,139.70173],{icon:mapMarkerIcon('friend'),title:'周辺マーカー：Mobian B'}).addTo(leafletMapInstance).bindPopup('Mobian B');
  L.control.scale({imperial:false,position:'bottomleft'}).addTo(leafletMapInstance);
  const refreshMapSize=()=>{if(leafletMapInstance){leafletMapInstance.invalidateSize({pan:false});}};
  requestAnimationFrame(refreshMapSize);
