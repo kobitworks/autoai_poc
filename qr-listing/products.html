@@ -52,6 +52,7 @@ main{max-width:1120px;margin:auto;padding:18px 16px 44px}
     </div>
     <div class="head-actions">
       <a class="pill" href="./upload.html">写真アップロード</a>
+      <a class="pill" href="./listing-export.html">出品データ</a>
       <a class="pill" href="./index.html">メニュー</a>
       <button id="reload" class="icon-btn" type="button" aria-label="商品一覧を再読込" title="再読込">↻</button>
     </div>
@@ -140,6 +141,7 @@ function render(){
       '<div class="card-actions">'+
       (batch?'<a class="btn" href="./analyze.html?batch='+encodeURIComponent(batch)+'">QR解析で確認</a>':'')+
       (imgs.length?'<a class="btn ai" href="./ai-analysis.html?product='+encodeURIComponent(p.code)+'">'+(confirmed?'商品情報を確認・修正':'AI解析・候補生成')+'</a>':'')+
+      (confirmed?'<a class="btn" href="./listing-export.html?product='+encodeURIComponent(p.code)+'">出品データ</a>':'')+
       '<span class="detail">'+(batches.length?batches.length+'バッチ / ':'')+esc(p.storageMode||'indexeddb-poc')+'</span></div>';
     grid.appendChild(card);
   });
