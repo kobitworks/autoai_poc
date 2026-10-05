@@ -59,3 +59,25 @@ PWA・大型車載UI・基本音声操作を develop に実装済みです。
 - GPS・watch世代・timestamp・精度60mゲートなどNAV-007の安全ガードは維持
 
 実機でのPWA追加・音声認識のブラウザ差はNAV-009/NAV-010で確認します。
+
+
+### NAV-020
+
+目的地検索・経路APIの正本仕様とPreview実装を整合しました。
+
+PoCの継続採用方式は次のとおりです。
+
+- 地図表示: Leaflet 1.9.4 + OpenStreetMap標準タイル
+- 目的地検索: OpenStreetMap Foundationのpublic Nominatim
+- 経路検索: Project OSRMのpublic demo server
+- APIキー: 不要
+- 用途: 低頻度・人が明示操作する非商用PoCに限定
+- Nominatim/OSRMともクライアント側で最短1.1秒間隔に制御
+- Nominatimのオートコンプリートは実装しない。検索ボタン、Enter、音声確定後の明示検索だけを送信する
+- プロバイダURLと間隔は `providers.json` へ分離し、プロバイダ変更時にアプリ本体コードを書き換えず切替できる
+- `providers.json` はService Workerの固定キャッシュ対象外とし、設定変更をネットワークから取得する
+- OSM帰属はLeaflet上に常時表示する
+- public Nominatimは最大1 request/second、OSRM demoも1 request/secondを超えないこと
+- OSRM demoは非商用・reasonable use・best effortでSLAなし。商用/本番化前にopenrouteservice/HeiGIT、商用OSM系provider、自前ホスト等へ切替を再評価する
+
+NAV-004で採用候補だったHeiGIT Pelias + openrouteserviceは、APIキー管理とサーバー側プロキシを導入する段階の代替候補として維持します。2026年時点では旧 `api.openrouteservice.org` は廃止移行中で、新規利用は `api.heigit.org` を前提とします。
