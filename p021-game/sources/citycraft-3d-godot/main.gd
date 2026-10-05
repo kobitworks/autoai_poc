@@ -33,6 +33,15 @@ var toast_label: Label
 var toast_timer: Timer
 var simulation_timer: Timer
 var tool_buttons: Dictionary = {}
+var ui_theme: Theme
+var top_panel: PanelContainer
+var title_label: Label
+var mission_panel: PanelContainer
+var camera_panel: HBoxContainer
+var camera_buttons: Array[Button] = []
+var dock_panel: PanelContainer
+var dock_container: HBoxContainer
+var save_button: Button
 
 func _ready() -> void:
 	_build_world()
@@ -481,12 +490,12 @@ func _build_ui() -> void:
 	var layer := CanvasLayer.new()
 	add_child(layer)
 
-	var ui_theme := Theme.new()
+	ui_theme = Theme.new()
 	if ResourceLoader.exists("res://fonts/NotoSansJP.ttf"):
 		ui_theme.default_font = load("res://fonts/NotoSansJP.ttf") as Font
-	ui_theme.default_font_size = 14
+	ui_theme.default_font_size = 16
 
-	var top_panel := PanelContainer.new()
+	top_panel = PanelContainer.new()
 	top_panel.theme = ui_theme
 	top_panel.set_anchors_preset(Control.PRESET_TOP_WIDE)
 	top_panel.offset_left = 12
@@ -500,12 +509,12 @@ func _build_ui() -> void:
 	top.add_theme_constant_override("separation", 10)
 	top_panel.add_child(top)
 
-	var title := Label.new()
-	title.text = "  CITYCRAFT 3D"
-	title.add_theme_font_size_override("font_size", 20)
-	title.add_theme_color_override("font_color", Color("f8fafc"))
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top.add_child(title)
+	title_label = Label.new()
+	title_label.text = "  CITYCRAFT 3D"
+	title_label.add_theme_font_size_override("font_size", 20)
+	title_label.add_theme_color_override("font_color", Color("f8fafc"))
+	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(title_label)
 
 	money_label = _stat_label()
 	population_label = _stat_label()
@@ -516,7 +525,7 @@ func _build_ui() -> void:
 	top.add_child(happiness_label)
 	top.add_child(month_label)
 
-	var mission_panel := PanelContainer.new()
+	mission_panel = PanelContainer.new()
 	mission_panel.theme = ui_theme
 	mission_panel.position = Vector2(12, 86)
 	mission_panel.size = Vector2(260, 108)
@@ -529,7 +538,7 @@ func _build_ui() -> void:
 	mission_label.add_theme_color_override("font_color", Color("dbeafe"))
 	mission_panel.add_child(mission_label)
 
-	var camera_panel := HBoxContainer.new()
+	camera_panel = HBoxContainer.new()
 	camera_panel.theme = ui_theme
 	camera_panel.set_anchors_preset(Control.PRESET_TOP_RIGHT)
 	camera_panel.position = Vector2(-194, 86)
@@ -546,6 +555,7 @@ func _build_ui() -> void:
 		b.custom_minimum_size = Vector2(42, 42)
 		b.pressed.connect(spec[1])
 		camera_panel.add_child(b)
+		camera_buttons.append(b)
 
 	help_label = Label.new()
 	help_label.theme = ui_theme
@@ -558,7 +568,7 @@ func _build_ui() -> void:
 	help_label.add_theme_font_size_override("font_size", 13)
 	layer.add_child(help_label)
 
-	var dock_panel := PanelContainer.new()
+	dock_panel = PanelContainer.new()
 	dock_panel.theme = ui_theme
 	dock_panel.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 	dock_panel.position = Vector2(-385, -82)
@@ -566,9 +576,9 @@ func _build_ui() -> void:
 	dock_panel.add_theme_stylebox_override("panel", _panel_style(Color(0.06, 0.09, 0.16, 0.94), 18))
 	layer.add_child(dock_panel)
 
-	var dock := HBoxContainer.new()
-	dock.add_theme_constant_override("separation", 6)
-	dock_panel.add_child(dock)
+	dock_container = HBoxContainer.new()
+	dock_container.add_theme_constant_override("separation", 6)
+	dock_panel.add_child(dock_container)
 
 	var tools := [
 		["road", "道路\n¥200"],
@@ -583,14 +593,14 @@ func _build_ui() -> void:
 		button.custom_minimum_size = Vector2(120, 58)
 		button.toggle_mode = true
 		button.pressed.connect(_set_tool.bind(spec[0]))
-		dock.add_child(button)
+		dock_container.add_child(button)
 		tool_buttons[spec[0]] = button
 
-	var save_button := Button.new()
+	save_button = Button.new()
 	save_button.text = "保存"
 	save_button.custom_minimum_size = Vector2(74, 58)
 	save_button.pressed.connect(func(): _save_game(true))
-	dock.add_child(save_button)
+	dock_container.add_child(save_button)
 
 	toast_label = Label.new()
 	toast_label.theme = ui_theme
@@ -604,6 +614,7 @@ func _build_ui() -> void:
 	toast_label.visible = false
 	layer.add_child(toast_label)
 
+	_apply_ui_layout()
 	_set_tool(selected_tool)
 
 
@@ -634,6 +645,86 @@ func _panel_style(color: Color, radius: int) -> StyleBoxFlat:
 	style.content_margin_top = 8
 	style.content_margin_bottom = 8
 	return style
+
+
+func _apply_ui_layout() -> void:
+	if ui_theme == null or top_panel == null:
+		return
+
+	var viewport_size: Vector2 = get_viewport().get_visible_rect().size
+	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
+		return
+
+	# Portrait Web builds keep the 1280px logical width and expand vertically,
+	# so aspect ratio is the reliable signal for phone portrait layout.
+	var portrait: bool = viewport_size.y > viewport_size.x * 1.20
+	var base_font_size: int = 26 if portrait else 16
+	var title_font_size: int = 30 if portrait else 20
+	var stat_font_size: int = 24 if portrait else 14
+	var mission_font_size: int = 22 if portrait else 14
+	var help_font_size: int = 20 if portrait else 13
+	var toast_font_size: int = 22 if portrait else 14
+
+	ui_theme.default_font_size = base_font_size
+	title_label.add_theme_font_size_override("font_size", title_font_size)
+	for label in [money_label, population_label, happiness_label, month_label]:
+		label.add_theme_font_size_override("font_size", stat_font_size)
+	mission_label.add_theme_font_size_override("font_size", mission_font_size)
+	help_label.add_theme_font_size_override("font_size", help_font_size)
+	toast_label.add_theme_font_size_override("font_size", toast_font_size)
+
+	if portrait:
+		top_panel.offset_left = 10
+		top_panel.offset_top = 10
+		top_panel.offset_right = -10
+		top_panel.offset_bottom = 102
+
+		mission_panel.position = Vector2(10, 114)
+		mission_panel.size = Vector2(330, 150)
+
+		camera_panel.position = Vector2(-246, 114)
+		camera_panel.size = Vector2(236, 58)
+		for button in camera_buttons:
+			button.custom_minimum_size = Vector2(54, 54)
+
+		help_label.position = Vector2(-320, -162)
+		help_label.size = Vector2(640, 54)
+
+		dock_panel.position = Vector2(-380, -112)
+		dock_panel.size = Vector2(760, 102)
+		for key in tool_buttons.keys():
+			var tool_button: Button = tool_buttons[key]
+			tool_button.custom_minimum_size = Vector2(112, 84)
+		save_button.custom_minimum_size = Vector2(112, 84)
+
+		toast_label.position = Vector2(-260, 116)
+		toast_label.size = Vector2(520, 58)
+	else:
+		top_panel.offset_left = 12
+		top_panel.offset_top = 10
+		top_panel.offset_right = -12
+		top_panel.offset_bottom = 74
+
+		mission_panel.position = Vector2(12, 86)
+		mission_panel.size = Vector2(260, 108)
+
+		camera_panel.position = Vector2(-194, 86)
+		camera_panel.size = Vector2(182, 44)
+		for button in camera_buttons:
+			button.custom_minimum_size = Vector2(42, 42)
+
+		help_label.position = Vector2(-270, -108)
+		help_label.size = Vector2(540, 40)
+
+		dock_panel.position = Vector2(-385, -82)
+		dock_panel.size = Vector2(770, 72)
+		for key in tool_buttons.keys():
+			var tool_button: Button = tool_buttons[key]
+			tool_button.custom_minimum_size = Vector2(120, 58)
+		save_button.custom_minimum_size = Vector2(74, 58)
+
+		toast_label.position = Vector2(-190, 84)
+		toast_label.size = Vector2(380, 44)
 
 
 func _set_tool(tool: String) -> void:
@@ -725,6 +816,7 @@ func _update_camera() -> void:
 
 func _on_viewport_resized() -> void:
 	_update_camera()
+	_apply_ui_layout()
 
 
 func _unhandled_input(event: InputEvent) -> void:
