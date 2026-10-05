@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f4f7fb">
+<title>AI解析・候補生成 | QR商品出品支援</title>
+<style>
+:root{--bg:#f3f6fa;--card:#fff;--text:#172033;--muted:#667085;--line:#dfe6ee;--cyan:#0891b2;--cyan-soft:#ecfeff;--emerald:#059669;--emerald-soft:#ecfdf5;--amber:#b45309;--amber-soft:#fffbeb;--bad:#be123c;--bad-soft:#fff1f2;--shadow:0 6px 22px rgba(15,23,42,.07)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select,textarea,a{font:inherit}
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:10}.head{max-width:1120px;margin:auto;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.eyebrow{font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--cyan)}h1{font-size:23px;margin:2px 0 0}.actions{margin-left:auto;display:flex;gap:8px}.pill{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:999px;padding:9px 12px;text-decoration:none;font-weight:750}
+main{max-width:1120px;margin:auto;padding:18px 16px 44px}.lead{color:var(--muted);line-height:1.7;margin:0 0 14px}.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:var(--shadow);margin-bottom:14px}
+.toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.toolbar select{flex:1;min-width:240px;border:1px solid var(--line);border-radius:12px;padding:11px;background:#fff}.btn{border:0;border-radius:12px;padding:11px 14px;font-weight:800;cursor:pointer;background:#e9f7fb;color:#0e7490}.btn.primary{background:var(--cyan);color:#fff}.btn.save{background:var(--emerald);color:#fff}.btn:disabled{opacity:.45;cursor:not-allowed}
+.notice{background:var(--cyan-soft);border:1px solid #bae6fd;color:#155e75;border-radius:13px;padding:11px 13px;font-size:12px;line-height:1.65;margin-top:12px}.notice.warn{background:var(--amber-soft);border-color:#fde68a;color:#92400e}.notice.bad{background:var(--bad-soft);border-color:#fecdd3;color:var(--bad)}
+.product-head{display:flex;gap:12px;align-items:flex-start}.code{font-weight:850;word-break:break-all}.meta{font-size:12px;color:var(--muted);line-height:1.6}.badge{margin-left:auto;border-radius:999px;padding:5px 9px;background:var(--emerald-soft);color:#047857;font-size:10px;font-weight:850}
+.photos{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:12px}.photo img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;border-radius:11px;border:1px solid var(--line);background:#e7edf4}.photo span{display:block;font-size:9px;color:var(--muted);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.progress{margin-top:12px}.bar{height:8px;border-radius:999px;background:#e8eef4;overflow:hidden}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#06b6d4,#10b981);transition:width .2s}.status{font-size:12px;color:var(--muted);margin-top:7px}
+.predictions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}.pred{border:1px solid var(--line);border-radius:12px;padding:10px}.pred b{display:block;font-size:12px}.pred span{font-size:11px;color:var(--muted)}
+.form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.field label{display:block;font-size:11px;color:var(--muted);font-weight:800;margin:0 0 5px}.field input,.field textarea{width:100%;border:1px solid var(--line);border-radius:11px;padding:10px 11px;background:#fff}.field textarea{min-height:92px;resize:vertical}.wide{grid-column:1/-1}.form-actions{grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap}.save-state{font-size:12px;color:var(--muted)}
+.empty{text-align:center;padding:30px 16px;color:var(--muted);border:2px dashed #cbd5e1;border-radius:16px}
+@media(max-width:760px){.photos{grid-template-columns:repeat(3,minmax(0,1fr))}.predictions,.form{grid-template-columns:1fr}.wide,.form-actions{grid-column:auto}}
+@media(max-width:520px){h1{font-size:20px}.actions .pill:first-child{display:none}.photos{grid-template-columns:repeat(2,minmax(0,1fr))}.panel{padding:13px}}
+</style>
+<script src="./poc-store.js"></script>
+<script src="./ai-analysis-core.js"></script>
+</head>
+<body>
+<header><div class="head"><div><div class="eyebrow">ON-DEVICE AI CANDIDATES</div><h1>AI解析・候補生成</h1></div><div class="actions"><a class="pill" href="./products.html">商品一覧</a><a class="pill" href="./index.html">メニュー</a></div></div></header>
+<main>
+<p class="lead">QR仕分け済みの商品写真から、ユーザーが「AI解析を実行」を押した時だけ候補を生成します。結果は候補として保存し、自動確定しません。</p>
+
+<section class="panel">
+  <div class="toolbar">
+    <select id="productSelect" aria-label="解析する商品"></select>
+    <button id="run" class="btn primary" type="button" disabled>AI解析を実行</button>
+  </div>
+  <div class="notice">費用0円のPoC: Transformers.js + MobileNetV4をブラウザ内で実行します。初回実行時のみモデルファイルを取得しますが、商品写真そのものは外部APIへ送信・保存しません。分類結果は商品特定の確定情報ではないため、人の確認が前提です。</div>
+  <div id="message" class="notice warn" hidden></div>
+</section>
+
+<section id="productPanel" class="panel" hidden>
+  <div class="product-head"><div><div id="productCode" class="code"></div><div id="productMeta" class="meta"></div></div><span id="candidateBadge" class="badge" hidden>AI候補あり</span></div>
+  <div id="photos" class="photos"></div>
+  <div class="progress"><div class="bar"><i id="bar"></i></div><div id="status" class="status">商品を選択してください。</div></div>
+  <div id="predictions" class="predictions"></div>
+</section>
+
+<section id="candidatePanel" class="panel" hidden>
+  <h2 style="font-size:18px;margin:0 0 12px">AI候補（確認・修正前）</h2>
+  <div class="form">
+    <div class="field"><label for="title">商品名候補</label><input id="title"></div>
+    <div class="field"><label for="brand">ブランド候補</label><input id="brand" placeholder="画像だけで判断できない場合は空欄"></div>
+    <div class="field"><label for="category">カテゴリ候補</label><input id="category"></div>
+    <div class="field"><label for="color">色候補</label><input id="color"></div>
+    <div class="field"><label for="condition">状態候補</label><input id="condition"></div>
+    <div class="field"><label for="features">特徴候補</label><input id="features"></div>
+    <div class="field wide"><label for="description">説明文候補</label><textarea id="description"></textarea></div>
+    <div class="form-actions"><button id="save" class="btn save" type="button">候補を保存</button><span id="saveState" class="save-state">未保存</span></div>
+  </div>
+</section>
+
+<div id="empty" class="empty" hidden>AI解析できる商品がありません。先に写真アップロードとQR解析を行ってください。</div>
+</main>
+
+<script type="module">
+const MODEL='onnx-community/mobilenetv4s-webnn';
+const TRANSFORMERS='https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1';
+const Core=window.AutoAIAIAnalysisCore;
+const $=id=>document.getElementById(id);
+let products=[],product=null,images=[],objectUrls=[],classifierPromise=null,lastAnalysis=null;
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function cleanup(){objectUrls.forEach(x=>URL.revokeObjectURL(x));objectUrls=[]}
+function photoUrl(blob){const u=URL.createObjectURL(blob);objectUrls.push(u);return u}
+function setMessage(text,type='warn'){const el=$('message');el.hidden=!text;el.className='notice '+type;el.textContent=text||''}
+function setProgress(p,text){$('bar').style.width=Math.max(0,Math.min(100,p))+'%';$('status').textContent=text}
+function setField(id,value){$(id).value=value==null?'':String(value)}
+function fieldsFromForm(){return {title:$('title').value.trim(),brand:$('brand').value.trim(),category:$('category').value.trim(),color:$('color').value.trim(),condition:$('condition').value.trim(),features:$('features').value.trim(),description:$('description').value.trim()}}
+
+async function loadProducts(){
+  products=(await AutoAIStore.listProducts()).filter(p=>Number(p.imageCount||0)>0);
+  const sel=$('productSelect');sel.innerHTML='';
+  if(!products.length){$('empty').hidden=false;$('run').disabled=true;return}
+  $('empty').hidden=true;
+  products.forEach(p=>{const o=document.createElement('option');o.value=p.code;o.textContent=(p.title?p.title+' / ':'')+p.code+' ('+Number(p.imageCount||0)+'枚)';sel.appendChild(o)});
+  const wanted=new URLSearchParams(location.search).get('product');
+  if(wanted&&products.some(p=>p.code===wanted))sel.value=wanted;
+  await loadProduct(sel.value);
+}
+
+async function loadProduct(code){
+  cleanup();setMessage('');lastAnalysis=null;
+  product=await AutoAIStore.getProduct(code);images=await AutoAIStore.getProductImages(code);
+  $('productPanel').hidden=false;$('run').disabled=!images.length;
+  $('productCode').textContent=product.code;
+  $('productMeta').textContent=images.length+'枚 / '+(product.processingState||product.status||'qr_grouped')+' / ブラウザ内保存';
+  $('photos').innerHTML=images.map(x=>'<div class="photo"><img src="'+photoUrl(x.blob)+'" alt="'+esc(x.originalName)+'"><span>'+esc(x.virtualName||x.originalName)+'</span></div>').join('');
+  $('predictions').innerHTML='';setProgress(0,'AI解析はまだ実行していません。');
+  $('candidateBadge').hidden=!product.aiAnalysis;
+  if(product.aiAnalysis&&product.aiAnalysis.fields){
+    const f=product.aiAnalysis.fields;
+    Object.keys(f).forEach(k=>{if($(k))setField(k,f[k])});
+    lastAnalysis=product.aiAnalysis;
+    renderPredictions(product.aiAnalysis.labels||[]);
+    $('candidatePanel').hidden=false;
+    $('saveState').textContent='保存済み候補を表示中';
+    setProgress(100,'保存済みAI候補: '+new Date(product.aiAnalysis.executedAt||product.updatedAt).toLocaleString('ja-JP'));
+  }else{
+    $('candidatePanel').hidden=true;
+  }
+  history.replaceState(null,'','?product='+encodeURIComponent(code));
+}
+
+async function getClassifier(){
+  if(!classifierPromise){
+    setProgress(5,'Transformers.jsを読み込み中…');
+    classifierPromise=import(TRANSFORMERS).then(async mod=>{
+      setProgress(12,'AIモデルを読み込み中…（初回のみモデル取得）');
+      return mod.pipeline('image-classification',MODEL);
+    }).catch(err=>{classifierPromise=null;throw err});
+  }
+  return classifierPromise;
+}
+
+async function averageColor(blob){
+  try{
+    const bitmap=await createImageBitmap(blob);
+    const c=document.createElement('canvas');c.width=48;c.height=48;
+    const ctx=c.getContext('2d',{willReadFrequently:true});ctx.drawImage(bitmap,0,0,48,48);bitmap.close();
+    const d=ctx.getImageData(0,0,48,48).data;let r=0,g=0,b=0,n=0;
+    for(let i=0;i<d.length;i+=16){if(d[i+3]<128)continue;r+=d[i];g+=d[i+1];b+=d[i+2];n++}
+    return n?{r:Math.round(r/n),g:Math.round(g/n),b:Math.round(b/n)}:{r:128,g:128,b:128};
+  }catch(_){return {r:128,g:128,b:128}}
+}
+
+function renderPredictions(labels){
+  $('predictions').innerHTML=(labels||[]).slice(0,6).map((x,i)=>'<div class="pred"><b>'+(i+1)+'. '+esc(x.label)+'</b><span>AI信頼度 '+Core.scoreText(x.score)+(x.imageCount?' / '+x.imageCount+'画像':'')+'</span></div>').join('');
+}
+
+async function runAnalysis(){
+  if(!product||!images.length)return;
+  $('run').disabled=true;$('save').disabled=true;setMessage('');
+  try{
+    const classifier=await getClassifier();
+    const targets=images.slice(0,Math.min(3,images.length)),per=[];
+    for(let i=0;i<targets.length;i++){
+      setProgress(18+Math.round((i/targets.length)*58),'画像 '+(i+1)+' / '+targets.length+' を端末内AIで解析中…');
+      const url=URL.createObjectURL(targets[i].blob);
+      try{per.push(await classifier(url,{top_k:5}))}finally{URL.revokeObjectURL(url)}
+    }
+    setProgress(80,'AI結果を商品候補へ整理中…');
+    const labels=Core.aggregate(per);
+    const rgb=await averageColor(images[0].blob);
+    const fields=Core.buildFields({labels,dominantColor:rgb,photoCount:images.length,existing:{}});
+    Object.keys(fields).forEach(k=>setField(k,fields[k]));
+    lastAnalysis={model:MODEL,engine:'transformers.js-3.8.1-browser',executedAt:new Date().toISOString(),imageCountAnalyzed:targets.length,labels,dominantColor:rgb,fields,confirmed:false};
+    renderPredictions(labels);$('candidatePanel').hidden=false;$('saveState').textContent='候補は未保存';
+    setProgress(100,'AI解析完了。内容を確認し、必要なら修正して「候補を保存」を押してください。');
+  }catch(err){
+    console.error(err);
+    setProgress(0,'AI解析に失敗しました。');
+    setMessage('モデルの読込または端末内推論に失敗しました。通信状態・ブラウザ対応・端末メモリを確認してください。写真データは外部APIへ送信していません。','bad');
+  }finally{$('run').disabled=false;$('save').disabled=false}
+}
+
+async function saveCandidate(){
+  if(!product)return;
+  const fields=fieldsFromForm();
+  const base=lastAnalysis||product.aiAnalysis||{};
+  const aiAnalysis=Object.assign({},base,{model:base.model||MODEL,engine:base.engine||'transformers.js-3.8.1-browser',executedAt:base.executedAt||new Date().toISOString(),fields,confirmed:false,savedAt:new Date().toISOString()});
+  product=await AutoAIStore.putProduct(Object.assign({},product,fields,{aiAnalysis,processingState:'ai_candidate_ready',status:'ai_candidate_ready'}));
+  lastAnalysis=aiAnalysis;$('candidateBadge').hidden=false;$('saveState').textContent='AI候補をブラウザ内に保存しました';
+  $('productMeta').textContent=images.length+'枚 / ai_candidate_ready / ブラウザ内保存';
+}
+
+$('productSelect').addEventListener('change',()=>loadProduct($('productSelect').value));
+$('run').addEventListener('click',runAnalysis);
+$('save').addEventListener('click',saveCandidate);
+window.addEventListener('beforeunload',cleanup);
+if(!window.indexedDB){setMessage('このブラウザではIndexedDBを利用できません。','bad');$('run').disabled=true}else{loadProducts().catch(err=>setMessage('商品データの読込に失敗しました: '+err.message,'bad'))}
+</script>
+</body>
+</html>
