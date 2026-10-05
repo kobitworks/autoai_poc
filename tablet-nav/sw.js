@@ -18,6 +18,7 @@ self.addEventListener('fetch',event=>{
   if(req.method!=='GET') return;
   const url=new URL(req.url);
   if(url.origin!==self.location.origin) return;
+  if(url.pathname.endsWith('/providers.json')) return;
   event.respondWith(
     fetch(req).then(res=>{
       if(res&&res.ok){
