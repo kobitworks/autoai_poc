@@ -3,7 +3,43 @@ extends Control
 const FONT_PATH := "res://fonts/NotoSansJP.ttf"
 const FARM_VISUAL = preload("res://FarmVisual.gd")
 const DAY_SECONDS := 8.0
-const MAX_DAY := 15
+const RECORDS_PATH := "user://farm_records.cfg"
+
+const CHALLENGES := {
+    "standard": {
+        "name": "スタンダード",
+        "tagline": "15日で150G。基本ルールで農園経営を楽しむ。",
+        "max_day": 15,
+        "target_coins": 150,
+        "start_coins": 60,
+        "start_water": 3,
+        "start_soil": 70,
+        "water_refill": 2,
+        "required_harvests": 0
+    },
+    "sprint": {
+        "name": "10日スプリント",
+        "tagline": "10日で115G、2回以上収穫。短期判断が勝負。",
+        "max_day": 10,
+        "target_coins": 115,
+        "start_coins": 58,
+        "start_water": 3,
+        "start_soil": 72,
+        "water_refill": 2,
+        "required_harvests": 2
+    },
+    "drought": {
+        "name": "節水チャレンジ",
+        "tagline": "15日で130G、3回以上収穫。水補充は1日1回だけ。",
+        "max_day": 15,
+        "target_coins": 130,
+        "start_coins": 62,
+        "start_water": 1,
+        "start_soil": 82,
+        "water_refill": 1,
+        "required_harvests": 3
+    }
+}
 
 const CROPS := {
     "radish": {"name":"ラディッシュ","seed":8,"days":3.0,"sell":24,"note":"早い・安定"},
@@ -70,6 +106,23 @@ var audio_btn: Button
 var sfx_player: AudioStreamPlayer
 var audio_level_index := 1
 
+var selected_challenge := "standard"
+var challenge_max_day := 15
+var challenge_target_coins := 150
+var challenge_start_coins := 60
+var challenge_start_water := 3
+var challenge_start_soil := 70
+var challenge_water_refill := 2
+var challenge_required_harvests := 0
+var challenge_buttons: Dictionary = {}
+var intro_summary: Label
+var intro_records: Label
+var intro_start_button: Button
+var record_cache: Dictionary = {}
+var header_title: Label
+var header_subtitle: Label
+var help_label: Label
+
 func _notification(what: int) -> void:
     if what == NOTIFICATION_RESIZED and is_inside_tree():
         _apply_responsive_layout()
@@ -90,12 +143,15 @@ func _apply_responsive_layout() -> void:
 func _ready() -> void:
     paused = true
     _load_audio_settings()
+    _load_records()
+    _apply_challenge_settings()
     _setup_audio_player()
     _setup_theme()
     _build_ui()
     _build_intro()
+    _update_challenge_copy()
     _apply_responsive_layout()
-    _log("準備完了。15日間で150G以上を目指しましょう。")
+    _log("準備完了。%sに挑戦しましょう。" % _challenge().name)
     _refresh()
 
 func _process(delta: float) -> void:
@@ -192,17 +248,15 @@ func _build_ui() -> void:
     header.add_theme_constant_override("separation", 9)
     header_panel.add_child(header)
 
-    var title := Label.new()
-    title.text = "1マス農園  |  15日チャレンジ"
-    title.add_theme_font_size_override("font_size", 24)
-    title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    header.add_child(title)
+    header_title = Label.new()
+    header_title.add_theme_font_size_override("font_size", 24)
+    header_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    header.add_child(header_title)
 
-    var subtitle := Label.new()
-    subtitle.text = "Kenney Tiny Farm × Godot 4.7.2  •  目標 150G"
-    subtitle.add_theme_font_size_override("font_size", 14)
-    subtitle.add_theme_color_override("font_color", Color8(64, 92, 74))
-    header.add_child(subtitle)
+    header_subtitle = Label.new()
+    header_subtitle.add_theme_font_size_override("font_size", 14)
+    header_subtitle.add_theme_color_override("font_color", Color8(64, 92, 74))
+    header.add_child(header_subtitle)
 
     var controls := HBoxContainer.new()
     controls.alignment = BoxContainer.ALIGNMENT_END
@@ -354,12 +408,11 @@ func _build_ui() -> void:
     action_grid.add_child(compost_btn)
     action_grid.add_child(harvest_btn)
 
-    var help := Label.new()
-    help.text = "遊び方\n1. 種を選んで植える\n2. 水と土を管理する\n3. 育ったら収穫する\n\n15日終了時に150G以上で大成功！"
-    help.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    help.add_theme_font_size_override("font_size", 15)
-    help.add_theme_color_override("font_color", Color8(63, 82, 70))
-    side.add_child(help)
+    help_label = Label.new()
+    help_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    help_label.add_theme_font_size_override("font_size", 15)
+    help_label.add_theme_color_override("font_color", Color8(63, 82, 70))
+    side.add_child(help_label)
 
     var log_title := Label.new()
     log_title.text = "農園ログ"
@@ -380,6 +433,145 @@ func _button(text_value: String, callback: Callable) -> Button:
     b.add_theme_font_size_override("font_size", 17)
     b.pressed.connect(callback)
     return b
+
+func _challenge() -> Dictionary:
+    return CHALLENGES[selected_challenge]
+
+func _apply_challenge_settings() -> void:
+    var data := _challenge()
+    challenge_max_day = int(data.max_day)
+    challenge_target_coins = int(data.target_coins)
+    challenge_start_coins = int(data.start_coins)
+    challenge_start_water = int(data.start_water)
+    challenge_start_soil = int(data.start_soil)
+    challenge_water_refill = int(data.water_refill)
+    challenge_required_harvests = int(data.required_harvests)
+
+    day = 1
+    coins = challenge_start_coins
+    water_stock = challenge_start_water
+    soil = challenge_start_soil
+    selected = "radish"
+    crop = {}
+    logs = []
+    weather_index = 0
+    day_time = DAY_SECONDS
+    paused = true
+    speed = 1.0
+    ended = false
+    started = false
+    harvests = 0
+
+func _load_records() -> void:
+    record_cache = {}
+    var config := ConfigFile.new()
+    var load_ok: bool = config.load(RECORDS_PATH) == OK
+    for raw_key in CHALLENGES.keys():
+        var key := str(raw_key)
+        var section := "challenge_%s" % key
+        record_cache[key] = {
+            "best_coins": int(config.get_value(section, "best_coins", 0)) if load_ok else 0,
+            "best_rank": str(config.get_value(section, "best_rank", "-")) if load_ok else "-",
+            "cleared": bool(config.get_value(section, "cleared", false)) if load_ok else false,
+            "plays": int(config.get_value(section, "plays", 0)) if load_ok else 0
+        }
+
+func _record_for(key: String) -> Dictionary:
+    if record_cache.has(key):
+        var saved: Dictionary = record_cache[key]
+        return saved.duplicate(true)
+    return {"best_coins": 0, "best_rank": "-", "cleared": false, "plays": 0}
+
+func _rank_score(rank_text: String) -> int:
+    match rank_text:
+        "S":
+            return 4
+        "A":
+            return 3
+        "B":
+            return 2
+        "C":
+            return 1
+        _:
+            return 0
+
+func _grade_for_score(score: int) -> String:
+    if score >= challenge_target_coins + 70:
+        return "S"
+    if score >= challenge_target_coins + 30:
+        return "A"
+    if score >= challenge_target_coins:
+        return "B"
+    return "C"
+
+func _is_challenge_cleared() -> bool:
+    return coins >= challenge_target_coins and harvests >= challenge_required_harvests
+
+func _save_result_record(grade: String, cleared: bool) -> Dictionary:
+    var record := _record_for(selected_challenge)
+    record.best_coins = maxi(int(record.best_coins), coins)
+    if _rank_score(grade) > _rank_score(str(record.best_rank)):
+        record.best_rank = grade
+    record.cleared = bool(record.cleared) or cleared
+    record.plays = int(record.plays) + 1
+    record_cache[selected_challenge] = record
+
+    var config := ConfigFile.new()
+    config.load(RECORDS_PATH)
+    for raw_key in CHALLENGES.keys():
+        var key := str(raw_key)
+        var section := "challenge_%s" % key
+        var saved := _record_for(key)
+        config.set_value(section, "best_coins", int(saved.best_coins))
+        config.set_value(section, "best_rank", str(saved.best_rank))
+        config.set_value(section, "cleared", bool(saved.cleared))
+        config.set_value(section, "plays", int(saved.plays))
+    config.save(RECORDS_PATH)
+    return record
+
+func _challenge_condition_text(data: Dictionary) -> String:
+    var required := int(data.required_harvests)
+    var harvest_text := "" if required <= 0 else "・収穫%d回以上" % required
+    return "%d日 / 目標%dG%s" % [int(data.max_day), int(data.target_coins), harvest_text]
+
+func _record_text(key: String) -> String:
+    var record := _record_for(key)
+    if int(record.plays) <= 0:
+        return "未挑戦"
+    return "BEST %dG / RANK %s / %s" % [
+        int(record.best_coins),
+        str(record.best_rank),
+        "CLEAR" if bool(record.cleared) else "未クリア"
+    ]
+
+func _choose_challenge(key: String) -> void:
+    if started or not CHALLENGES.has(key):
+        return
+    selected_challenge = key
+    _apply_challenge_settings()
+    _update_challenge_copy()
+    _play_sfx("select")
+    _refresh()
+
+func _update_challenge_copy() -> void:
+    var data := _challenge()
+    if header_title != null:
+        header_title.text = "1マス農園  |  %s" % str(data.name)
+    if header_subtitle != null:
+        header_subtitle.text = "Kenney Tiny Farm × Godot 4.7.2  •  %s" % _challenge_condition_text(data)
+    if help_label != null:
+        help_label.text = "遊び方\n1. 種を選んで植える\n2. 水と土を管理する\n3. 育ったら収穫する\n\n%s\n%s" % [_challenge_condition_text(data), str(data.tagline)]
+    if intro_summary != null:
+        intro_summary.text = "%s\n%s" % [_challenge_condition_text(data), str(data.tagline)]
+    if intro_records != null:
+        intro_records.text = "このモードの記録: %s" % _record_text(selected_challenge)
+    if intro_start_button != null:
+        intro_start_button.text = "%sをはじめる" % str(data.name)
+    for raw_key in challenge_buttons.keys():
+        var key := str(raw_key)
+        var button := challenge_buttons[key] as Button
+        if button != null:
+            button.button_pressed = key == selected_challenge
 
 func _setup_audio_player() -> void:
     sfx_player = AudioStreamPlayer.new()
@@ -527,15 +719,15 @@ func _advance_day() -> void:
         crop.watered = false
         soil = max(10, soil - 6)
 
-    if day >= MAX_DAY:
+    if day >= challenge_max_day:
         _finish_game()
         return
 
     day += 1
-    water_stock = min(5, water_stock + 2)
+    water_stock = min(5, water_stock + challenge_water_refill)
     weather_index = _next_weather()
     day_time = DAY_SECONDS
-    _log("DAY %d。天気は%s。水が2回分補充されました。" % [day, WEATHERS[weather_index].name])
+    _log("DAY %d。天気は%s。水が%d回分補充されました。" % [day, WEATHERS[weather_index].name, challenge_water_refill])
 
 func _next_weather() -> int:
     var roll := randf()
@@ -549,10 +741,13 @@ func _finish_game() -> void:
     ended = true
     paused = true
     day_time = 0.0
-    var result := "農園、大成功！" if coins >= 150 else "15日間終了！"
-    _play_sfx("success" if coins >= 150 else "error")
-    _log("%s 最終資金 %dG / 収穫 %d回" % [result, coins, harvests])
-    _show_result(result)
+    var cleared := _is_challenge_cleared()
+    var result := "チャレンジクリア！" if cleared else "チャレンジ終了！"
+    var grade := _grade_for_score(coins)
+    var record := _save_result_record(grade, cleared)
+    _play_sfx("success" if cleared else "error")
+    _log("%s 最終資金 %dG / 収穫 %d回 / ランク%s" % [result, coins, harvests, grade])
+    _show_result(result, grade, cleared, record)
     pause_btn.disabled = true
     speed_btn.disabled = true
     plant_btn.disabled = true
@@ -563,7 +758,7 @@ func _finish_game() -> void:
 func _refresh() -> void:
     var weather_name: String = WEATHERS[weather_index].name
     if stats_labels.has("day"):
-        stats_labels["day"].text = "%d / %d" % [day, MAX_DAY]
+        stats_labels["day"].text = "%d / %d" % [day, challenge_max_day]
         stats_labels["coin"].text = "%d G" % coins
         stats_labels["water"].text = "%d / 5" % water_stock
         stats_labels["soil"].text = str(soil)
@@ -596,7 +791,7 @@ func _refresh_timer() -> void:
         return
     timer_bar.value = maxf(0.0, day_time)
     if ended:
-        timer_label.text = "15日間終了"
+        timer_label.text = "チャレンジ終了"
     elif paused:
         timer_label.text = "停止中"
     else:
@@ -646,24 +841,53 @@ func _build_intro() -> void:
     title.add_theme_font_size_override("font_size", 36)
     box.add_child(title)
 
-    var lead := Label.new()
-    lead.text = "たった1マスの畑を15日間経営。\n水・土・作物を見極めて、資金150G以上を目指そう。\nタップで開始できます。"
-    lead.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    lead.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    lead.add_theme_font_size_override("font_size", 17)
-    box.add_child(lead)
+    intro_summary = Label.new()
+    intro_summary.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    intro_summary.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    intro_summary.add_theme_font_size_override("font_size", 17)
+    box.add_child(intro_summary)
+
+    var challenge_title := Label.new()
+    challenge_title.text = "チャレンジを選ぶ"
+    challenge_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    challenge_title.add_theme_font_size_override("font_size", 16)
+    challenge_title.add_theme_color_override("font_color", Color8(55, 122, 78))
+    box.add_child(challenge_title)
+
+    var challenge_grid := GridContainer.new()
+    challenge_grid.columns = 1
+    challenge_grid.add_theme_constant_override("v_separation", 7)
+    box.add_child(challenge_grid)
+
+    for key in ["standard", "sprint", "drought"]:
+        var data: Dictionary = CHALLENGES[key]
+        var mode_btn := Button.new()
+        mode_btn.text = "%s  |  %s" % [str(data.name), _challenge_condition_text(data)]
+        mode_btn.toggle_mode = true
+        mode_btn.custom_minimum_size = Vector2(0, 54)
+        mode_btn.add_theme_font_size_override("font_size", 15)
+        mode_btn.pressed.connect(_choose_challenge.bind(key))
+        challenge_grid.add_child(mode_btn)
+        challenge_buttons[key] = mode_btn
+
+    intro_records = Label.new()
+    intro_records.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+    intro_records.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    intro_records.add_theme_font_size_override("font_size", 14)
+    intro_records.add_theme_color_override("font_color", Color8(72, 94, 80))
+    box.add_child(intro_records)
 
     var rules := Label.new()
-    rules.text = "ラディッシュ：早い・安定\nレタス：バランス\nトマト：遅い・高収益\n雨の日は水やり不要。土が弱ると成長が遅くなります。"
+    rules.text = "ラディッシュ：早い・安定 / レタス：バランス / トマト：遅い・高収益\n雨の日は水やり不要。土が弱ると成長が遅くなります。"
     rules.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
     rules.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-    rules.add_theme_font_size_override("font_size", 14)
+    rules.add_theme_font_size_override("font_size", 13)
     rules.add_theme_color_override("font_color", Color8(72, 94, 80))
     box.add_child(rules)
 
-    var start := _button("農園をはじめる", _start_game)
-    start.custom_minimum_size = Vector2(0, 58)
-    box.add_child(start)
+    intro_start_button = _button("農園をはじめる", _start_game)
+    intro_start_button.custom_minimum_size = Vector2(0, 58)
+    box.add_child(intro_start_button)
 
     var credit := Label.new()
     credit.text = "Art: Kenney Tiny Farm (CC0) / Font: Noto Sans JP"
@@ -675,14 +899,16 @@ func _build_intro() -> void:
 func _start_game() -> void:
     if started:
         return
+    _apply_challenge_settings()
     started = true
     paused = false
+    _update_challenge_copy()
     if intro_layer != null:
         intro_layer.hide()
     _play_sfx("success")
-    _log("農園スタート！")
+    _log("%sスタート！" % _challenge().name)
 
-func _show_result(result: String) -> void:
+func _show_result(result: String, grade: String, cleared: bool, record: Dictionary) -> void:
     if result_layer != null:
         return
     result_layer = ColorRect.new()
@@ -708,14 +934,25 @@ func _show_result(result: String) -> void:
     title.add_theme_font_size_override("font_size", 30)
     box.add_child(title)
 
-    var grade := "S" if coins >= 220 else ("A" if coins >= 180 else ("B" if coins >= 150 else "C"))
     result_text = Label.new()
-    result_text.text = "最終資金 %dG\n収穫 %d回\n農園ランク %s" % [coins, harvests, grade]
+    var clear_text := "CLEAR" if cleared else "未クリア"
+    result_text.text = "%s\n%s\n最終資金 %dG / 収穫 %d回\n農園ランク %s  •  %s\nBEST %dG / RANK %s / 挑戦%d回" % [
+        str(_challenge().name),
+        _challenge_condition_text(_challenge()),
+        coins,
+        harvests,
+        grade,
+        clear_text,
+        int(record.best_coins),
+        str(record.best_rank),
+        int(record.plays)
+    ]
     result_text.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-    result_text.add_theme_font_size_override("font_size", 21)
+    result_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    result_text.add_theme_font_size_override("font_size", 19)
     box.add_child(result_text)
 
-    var again := _button("もう一度プレイ", _restart_game)
+    var again := _button("チャレンジ選択へ戻る", _restart_game)
     again.custom_minimum_size = Vector2(0, 58)
     box.add_child(again)
 
@@ -725,19 +962,11 @@ func _restart_game() -> void:
 
 func _input(event: InputEvent) -> void:
     if not started:
-        var should_start: bool = false
         if event is InputEventKey:
             var key_event: InputEventKey = event as InputEventKey
-            should_start = key_event.pressed and (key_event.keycode == KEY_ENTER or key_event.keycode == KEY_SPACE)
-        elif event is InputEventMouseButton:
-            var mouse_event: InputEventMouseButton = event as InputEventMouseButton
-            should_start = mouse_event.pressed and mouse_event.button_index == MOUSE_BUTTON_LEFT
-        elif event is InputEventScreenTouch:
-            var touch_event: InputEventScreenTouch = event as InputEventScreenTouch
-            should_start = touch_event.pressed
-        if should_start:
-            _start_game()
-            get_viewport().set_input_as_handled()
+            if key_event.pressed and (key_event.keycode == KEY_ENTER or key_event.keycode == KEY_SPACE):
+                _start_game()
+                get_viewport().set_input_as_handled()
         return
 
     if ended:
