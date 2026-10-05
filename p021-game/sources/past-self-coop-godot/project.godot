@@ -1,0 +1,16 @@
+; GAME-G002 / 過去の自分と協力するゲーム
+config_version=5
+
+[application]
+config/name="過去の自分と協力するゲーム"
+run/main_scene="res://Main.tscn"
+
+[display]
+window/size/viewport_width=960
+window/size/viewport_height=640
+window/stretch/mode="canvas_items"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.055,0.075,0.11,1)
