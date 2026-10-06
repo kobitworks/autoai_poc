@@ -1,0 +1,81 @@
+name: P021 Build GAME-G006 SKYBOUND Godot Web
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'p021-game/sources/skybound-flight-godot/**'
+      - '.github/workflows/p021-game-g006-skybound-godot-web.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: p021-game-g006-web-develop
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: "4.7.2"
+
+jobs:
+  export-web:
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.7.2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+
+      - name: Setup Godot export templates
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates/
+          cp -a /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+
+      - name: Validate project
+        working-directory: p021-game/sources/skybound-flight-godot
+        run: |
+          godot --headless --editor --quit-after 2
+
+      - name: Runtime smoke test
+        working-directory: p021-game/sources/skybound-flight-godot
+        run: |
+          godot --headless --path . --quit-after 3 > /tmp/skybound-runtime.log 2>&1 || {
+            cat /tmp/skybound-runtime.log
+            exit 1
+          }
+          cat /tmp/skybound-runtime.log
+          if grep -E "SCRIPT ERROR|Parse Error|Invalid (call|assignment|access)|ERROR:" /tmp/skybound-runtime.log; then
+            echo "Runtime error detected."
+            exit 1
+          fi
+
+      - name: Export GAME-G006 for Web
+        working-directory: p021-game/sources/skybound-flight-godot
+        run: |
+          mkdir -p ../../games/skybound-flight
+          godot --headless --export-release "Web" ../../games/skybound-flight/index.html
+          test -f ../../games/skybound-flight/index.html
+          test -f ../../games/skybound-flight/index.wasm
+          test -f ../../games/skybound-flight/index.pck
+
+      - name: Sync legacy public path
+        run: |
+          rm -rf skybound-flight/godot-web
+          mkdir -p skybound-flight/godot-web
+          cp -a p021-game/games/skybound-flight/. skybound-flight/godot-web/
+
+      - name: Commit exported Web build
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add p021-game/games/skybound-flight/ skybound-flight/godot-web/
+          if git diff --cached --quiet; then
+            echo "No exported changes."
+          else
+            git commit -m "P021: build GAME-G006 SKYBOUND Godot Web"
+            git pull --rebase origin develop
+            git push origin HEAD:develop
+          fi
