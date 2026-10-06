@@ -47,7 +47,11 @@ jobs:
         run: |
           grep -q 'class_name WindReaderFlightModel' scripts/FlightModel.gd
           grep -q 'stage_1' scripts/StageDefinition.gd
+          grep -q 'stage_2' scripts/StageDefinition.gd
+          grep -q 'stage_3' scripts/StageDefinition.gd
           grep -q 'ConfigFile' scripts/SaveManager.gd
+          grep -q 'record_stage' scripts/SaveManager.gd
+          grep -q 'unlocked_stage' scripts/SaveManager.gd
           grep -q 'required_target' scripts/Main.gd
           grep -q 'InputEventScreenDrag' scripts/Main.gd
           grep -q 'KEY_SPACE' scripts/Main.gd
@@ -193,12 +197,12 @@ jobs:
         run: |
           python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/g003-http.log 2>&1 &
           echo $! > /tmp/g003-http.pid
-      - name: Run four-viewport Stage 1 smoke
+      - name: Run four-viewport three-stage flow QA
         run: node p021-game/tests/g003-stage1-responsive-qa.mjs
       - name: Upload GAME-G003 QA evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: game-g003-stage1-responsive-qa
-          path: p021-game/test-artifacts/game-g003-stage1/
+          name: game-g003-three-stage-responsive-qa
+          path: p021-game/test-artifacts/game-g003-stage-flow/
           if-no-files-found: warn

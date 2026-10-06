@@ -4,7 +4,7 @@ const FlightModelScript = preload("res://scripts/FlightModel.gd")
 const StageDefinitionScript = preload("res://scripts/StageDefinition.gd")
 const SaveManagerScript = preload("res://scripts/SaveManager.gd")
 
-enum ScreenState { TITLE, RUNNING, RESULT }
+enum ScreenState { TITLE, STAGE_SELECT, RUNNING, RESULT }
 
 var state: ScreenState = ScreenState.TITLE
 var model: WindReaderFlightModel
@@ -13,6 +13,7 @@ var saves: WindReaderSaveManager
 var font: Font
 var qa_mode := false
 var paused := false
+var selected_stage_id := 1
 
 var touch_steer := Vector2.ZERO
 var steer_touch_id := -1
@@ -36,13 +37,18 @@ var tutorial_step := 0
 var tutorial_timer := 0.0
 
 var play_rect := Rect2()
+var stage_select_rect := Rect2()
+var stage_buttons: Array[Rect2] = []
+var back_rect := Rect2()
 var retry_rect := Rect2()
+var next_rect := Rect2()
+var result_stage_select_rect := Rect2()
 var title_rect := Rect2()
 var sound_rect := Rect2()
 var boost_rect := Rect2()
 
 func _ready() -> void:
-	stage = StageDefinitionScript.stage_1()
+	stage = StageDefinitionScript.get_stage(selected_stage_id)
 	model = FlightModelScript.new()
 	model.reset(stage)
 	saves = SaveManagerScript.new()
@@ -64,7 +70,16 @@ func _detect_qa_mode() -> bool:
 		return bool(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('qa') === '1'", true))
 	return false
 
+func _load_stage(stage_id: int) -> void:
+	selected_stage_id = clampi(stage_id, 1, 3)
+	stage = StageDefinitionScript.get_stage(selected_stage_id)
+
+func _open_stage_select() -> void:
+	state = ScreenState.STAGE_SELECT
+	queue_redraw()
+
 func _start_run() -> void:
+	stage = StageDefinitionScript.get_stage(selected_stage_id)
 	model = FlightModelScript.new()
 	model.reset(stage)
 	state = ScreenState.RUNNING
@@ -150,6 +165,9 @@ func _current_wind() -> Dictionary:
 					out["cross"] = 0.22 * strength * direction
 				"TAILWIND":
 					out["forward"] = 4.0 * strength
+				"TURBULENCE":
+					out["lift"] = sin(model.position.x * 0.041) * 1.5 * strength
+					out["cross"] = sin(model.position.x * 0.027 + 1.7) * 0.12 * strength
 			break
 	return out
 
@@ -205,7 +223,9 @@ func _finish_run(clear: bool, reason: String) -> void:
 		elif model.durability >= 80.0:
 			score += 1000
 		result_medal = _medal_for_score(score)
-		result_best = saves.record_stage_1(score, int(model.elapsed * 1000.0), result_medal)
+		result_best = saves.record_stage(selected_stage_id, score, int(model.elapsed * 1000.0), result_medal)
+		if selected_stage_id < 3:
+			saves.unlock_stage(selected_stage_id + 1)
 	touch_steer = Vector2.ZERO
 	steer_touch_id = -1
 	boost_touch_id = -1
@@ -213,9 +233,11 @@ func _finish_run(clear: bool, reason: String) -> void:
 	queue_redraw()
 
 func _medal_for_score(value: int) -> String:
-	if value >= 13000:
+	var gold_score := int(stage.get("gold_score", 13000))
+	var silver_score := int(stage.get("silver_score", 9000))
+	if value >= gold_score:
 		return "GOLD"
-	if value >= 9000:
+	if value >= silver_score:
 		return "SILVER"
 	return "BRONZE"
 
@@ -226,7 +248,27 @@ func _input(event: InputEvent) -> void:
 			if key.keycode == KEY_ENTER and state == ScreenState.TITLE:
 				_start_run()
 				return
+			if state == ScreenState.STAGE_SELECT:
+				var requested_stage := 0
+				if key.keycode == KEY_1:
+					requested_stage = 1
+				elif key.keycode == KEY_2:
+					requested_stage = 2
+				elif key.keycode == KEY_3:
+					requested_stage = 3
+				if requested_stage > 0 and requested_stage <= saves.unlocked_stage:
+					_load_stage(requested_stage)
+					_start_run()
+					return
+				if key.keycode == KEY_ESCAPE:
+					state = ScreenState.TITLE
+					queue_redraw()
+					return
 			if key.keycode == KEY_R and state == ScreenState.RESULT:
+				_start_run()
+				return
+			if key.keycode == KEY_ENTER and state == ScreenState.RESULT and result_clear and selected_stage_id < 3:
+				_load_stage(selected_stage_id + 1)
 				_start_run()
 				return
 			if key.keycode == KEY_M:
@@ -247,13 +289,30 @@ func _input(event: InputEvent) -> void:
 			if state == ScreenState.TITLE:
 				if play_rect.has_point(touch.position):
 					_start_run()
+				elif stage_select_rect.has_point(touch.position):
+					_open_stage_select()
 				elif sound_rect.has_point(touch.position):
 					saves.cycle_sfx()
+					queue_redraw()
+				return
+			if state == ScreenState.STAGE_SELECT:
+				for i in range(stage_buttons.size()):
+					if stage_buttons[i].has_point(touch.position) and i + 1 <= saves.unlocked_stage:
+						_load_stage(i + 1)
+						_start_run()
+						return
+				if back_rect.has_point(touch.position):
+					state = ScreenState.TITLE
 					queue_redraw()
 				return
 			if state == ScreenState.RESULT:
 				if retry_rect.has_point(touch.position):
 					_start_run()
+				elif result_clear and selected_stage_id < 3 and next_rect.has_point(touch.position):
+					_load_stage(selected_stage_id + 1)
+					_start_run()
+				elif result_stage_select_rect.has_point(touch.position):
+					_open_stage_select()
 				elif title_rect.has_point(touch.position):
 					state = ScreenState.TITLE
 					queue_redraw()
@@ -293,12 +352,28 @@ func _input(event: InputEvent) -> void:
 		if state == ScreenState.TITLE and mouse.pressed:
 			if play_rect.has_point(mouse.position):
 				_start_run()
+			elif stage_select_rect.has_point(mouse.position):
+				_open_stage_select()
 			elif sound_rect.has_point(mouse.position):
 				saves.cycle_sfx()
+				queue_redraw()
+		elif state == ScreenState.STAGE_SELECT and mouse.pressed:
+			for i in range(stage_buttons.size()):
+				if stage_buttons[i].has_point(mouse.position) and i + 1 <= saves.unlocked_stage:
+					_load_stage(i + 1)
+					_start_run()
+					return
+			if back_rect.has_point(mouse.position):
+				state = ScreenState.TITLE
 				queue_redraw()
 		elif state == ScreenState.RESULT and mouse.pressed:
 			if retry_rect.has_point(mouse.position):
 				_start_run()
+			elif result_clear and selected_stage_id < 3 and next_rect.has_point(mouse.position):
+				_load_stage(selected_stage_id + 1)
+				_start_run()
+			elif result_stage_select_rect.has_point(mouse.position):
+				_open_stage_select()
 			elif title_rect.has_point(mouse.position):
 				state = ScreenState.TITLE
 				queue_redraw()
@@ -307,20 +382,28 @@ func _input(event: InputEvent) -> void:
 
 func _qa_advance() -> void:
 	if state == ScreenState.TITLE:
+		_open_stage_select()
+	elif state == ScreenState.STAGE_SELECT:
+		_load_stage(1)
 		_start_run()
 	elif state == ScreenState.RUNNING:
 		required_passed = int(stage["required_target"])
-		score = 9000
+		score = int(stage.get("gold_score", 13000)) - 500
 		model.position.x = float(stage["length"])
 		_finish_run(true, "QA CLEAR")
-	else:
+	elif selected_stage_id < 3:
+		_load_stage(selected_stage_id + 1)
 		_start_run()
+	else:
+		_open_stage_select()
 
 func _draw() -> void:
 	_update_ui_rects()
 	_draw_sky()
 	if state == ScreenState.TITLE:
 		_draw_title()
+	elif state == ScreenState.STAGE_SELECT:
+		_draw_stage_select()
 	elif state == ScreenState.RUNNING:
 		_draw_running()
 	else:
@@ -332,16 +415,29 @@ func _update_ui_rects() -> void:
 	var w := size.x
 	var h := size.y
 	var portrait := h > w
+	stage_buttons.clear()
 	if portrait:
-		play_rect = Rect2(w * 0.12, h * 0.64, w * 0.76, maxf(58.0, h * 0.075))
-		sound_rect = Rect2(w * 0.22, h * 0.75, w * 0.56, maxf(48.0, h * 0.06))
-		retry_rect = Rect2(w * 0.12, h * 0.68, w * 0.76, maxf(58.0, h * 0.07))
-		title_rect = Rect2(w * 0.18, h * 0.79, w * 0.64, maxf(48.0, h * 0.06))
+		play_rect = Rect2(w * 0.12, h * 0.56, w * 0.76, maxf(56.0, h * 0.068))
+		stage_select_rect = Rect2(w * 0.12, h * 0.66, w * 0.76, maxf(52.0, h * 0.064))
+		sound_rect = Rect2(w * 0.18, h * 0.76, w * 0.64, maxf(48.0, h * 0.058))
+		for i in range(3):
+			stage_buttons.append(Rect2(w * 0.10, h * (0.30 + i * 0.13), w * 0.80, maxf(58.0, h * 0.082)))
+		back_rect = Rect2(w * 0.20, h * 0.73, w * 0.60, maxf(48.0, h * 0.06))
+		retry_rect = Rect2(w * 0.10, h * 0.58, w * 0.80, maxf(52.0, h * 0.062))
+		next_rect = Rect2(w * 0.10, h * 0.67, w * 0.80, maxf(52.0, h * 0.062))
+		result_stage_select_rect = Rect2(w * 0.10, h * 0.76, w * 0.80, maxf(50.0, h * 0.060))
+		title_rect = Rect2(w * 0.18, h * 0.85, w * 0.64, maxf(46.0, h * 0.055))
 	else:
-		play_rect = Rect2(w * 0.32, h * 0.62, w * 0.36, maxf(54.0, h * 0.09))
-		sound_rect = Rect2(w * 0.39, h * 0.75, w * 0.22, maxf(42.0, h * 0.07))
-		retry_rect = Rect2(w * 0.31, h * 0.67, w * 0.38, maxf(52.0, h * 0.085))
-		title_rect = Rect2(w * 0.37, h * 0.80, w * 0.26, maxf(42.0, h * 0.07))
+		play_rect = Rect2(w * 0.32, h * 0.49, w * 0.36, maxf(46.0, h * 0.11))
+		stage_select_rect = Rect2(w * 0.32, h * 0.64, w * 0.36, maxf(44.0, h * 0.105))
+		sound_rect = Rect2(w * 0.39, h * 0.79, w * 0.22, maxf(40.0, h * 0.095))
+		for i in range(3):
+			stage_buttons.append(Rect2(w * (0.075 + i * 0.305), h * 0.41, w * 0.26, maxf(62.0, h * 0.18)))
+		back_rect = Rect2(w * 0.37, h * 0.73, w * 0.26, maxf(42.0, h * 0.10))
+		retry_rect = Rect2(w * 0.08, h * 0.68, w * 0.22, maxf(42.0, h * 0.10))
+		next_rect = Rect2(w * 0.39, h * 0.68, w * 0.22, maxf(42.0, h * 0.10))
+		result_stage_select_rect = Rect2(w * 0.70, h * 0.68, w * 0.22, maxf(42.0, h * 0.10))
+		title_rect = Rect2(w * 0.39, h * 0.83, w * 0.22, maxf(38.0, h * 0.09))
 	boost_rect = Rect2(w - maxf(112.0, w * 0.14), h - maxf(122.0, h * 0.23), maxf(88.0, w * 0.10), maxf(88.0, w * 0.10))
 
 func _draw_sky() -> void:
@@ -359,38 +455,63 @@ func _draw_title() -> void:
 	var w := size.x
 	var h := size.y
 	var portrait := h > w
-	var panel_w := w * (0.90 if portrait else 0.66)
-	var panel_h := h * (0.68 if portrait else 0.72)
-	var panel := Rect2((w - panel_w) * 0.5, h * 0.11, panel_w, panel_h)
+	var panel_w := w * (0.90 if portrait else 0.68)
+	var panel_h := h * (0.82 if portrait else 0.86)
+	var panel := Rect2((w - panel_w) * 0.5, h * 0.07, panel_w, panel_h)
 	draw_rect(panel, Color(0.04, 0.16, 0.27, 0.91), true)
 	draw_rect(panel, Color("#dff8ff"), false, 2.0)
 
 	var title_size := int(clampf(w * (0.060 if portrait else 0.037), 26.0, 46.0))
-	_text(Vector2(panel.position.x + 28, panel.position.y + 65), "風読みグライダー", title_size, Color("#ffffff"))
-	_text(Vector2(panel.position.x + 30, panel.position.y + 105), "風をつかみ、ゲートを抜けてゴールへ", int(clampf(title_size * 0.48, 14, 20)), Color("#bceeff"))
+	_text(Vector2(panel.position.x + 28, panel.position.y + 58), "風読みグライダー", title_size, Color("#ffffff"))
+	_text(Vector2(panel.position.x + 30, panel.position.y + 96), "風をつかみ、ゲートを抜けてゴールへ", int(clampf(title_size * 0.48, 14, 20)), Color("#bceeff"))
 
 	var body_size := int(clampf(minf(w, h) * 0.027, 14, 19))
 	var lines := [
-		"自動で前進。左側をドラッグして高度と奥行きを操作",
-		"青い上昇気流で高度とBOOSTを回復",
-		"右下BOOSTは速いがゲージを消費",
-		"必須ゲート 6 / 8 以上でゴールするとCLEAR"
+		"自動で前進。左側ドラッグで高度と奥行きを操作",
+		"上昇気流で高度とBOOSTを回復、右下BOOSTで加速",
+		"3ステージを攻略し、メダルとBEST更新を目指そう"
 	]
-	var yy := panel.position.y + 155
+	var yy := panel.position.y + 142
 	for line in lines:
 		_text(Vector2(panel.position.x + 32, yy), line, body_size, Color("#e5f7ff"))
-		yy += body_size + 14
+		yy += body_size + 12
 
-	_button(play_rect, "PLAY  /  Enter", Color("#137b90"))
+	var record := saves.get_stage_record(selected_stage_id)
+	_text(Vector2(panel.position.x + 32, panel.position.y + 260), "選択: STAGE %d  %s" % [selected_stage_id, str(stage["name"])], body_size, Color("#ffe28b"))
+	if int(record["best_score"]) > 0:
+		_text(Vector2(panel.position.x + 32, panel.position.y + 290), "BEST %d  %s" % [int(record["best_score"]), str(record["best_medal"])], 14, Color("#dff8ff"))
+
+	_button(play_rect, "PLAY STAGE %d  /  Enter" % selected_stage_id, Color("#137b90"))
+	_button(stage_select_rect, "STAGE SELECT", Color("#246878"))
 	_button(sound_rect, "%s  /  M" % saves.sfx_label(), Color("#355a70"))
-	if saves.best_score > 0:
-		_text(Vector2(panel.position.x + 32, panel.end.y - 24), "BEST %d  %s" % [saves.best_score, saves.best_medal], 14, Color("#ffe28b"))
+
+func _draw_stage_select() -> void:
+	var w := size.x
+	var h := size.y
+	var portrait := h > w
+	var panel := Rect2(w * (0.06 if portrait else 0.04), h * 0.08, w * (0.88 if portrait else 0.92), h * 0.82)
+	draw_rect(panel, Color(0.03, 0.14, 0.23, 0.94), true)
+	draw_rect(panel, Color("#dff8ff"), false, 2.0)
+	_text(Vector2(panel.position.x + 28, panel.position.y + 56), "STAGE SELECT", int(clampf(minf(w, h) * 0.052, 26, 42)), Color.WHITE)
+	_text(Vector2(panel.position.x + 30, panel.position.y + 88), "クリアすると次のステージが解放されます", 15, Color("#bceeff"))
+	for i in range(3):
+		var stage_id := i + 1
+		var info := StageDefinitionScript.get_stage(stage_id)
+		var unlocked := stage_id <= saves.unlocked_stage
+		var record := saves.get_stage_record(stage_id)
+		var label := "STAGE %d  %s" % [stage_id, str(info["name"])]
+		if not unlocked:
+			label += "  [LOCKED]"
+		elif int(record["best_score"]) > 0:
+			label += "  BEST %d %s" % [int(record["best_score"]), str(record["best_medal"])]
+		_button(stage_buttons[i], label, Color("#176f7e") if unlocked else Color("#4a5962"))
+	_button(back_rect, "BACK / Esc", Color("#355a70"))
 
 func _draw_running() -> void:
 	_draw_course()
 	_draw_hud()
 	_draw_touch_controls()
-	if tutorial_step < 3:
+	if selected_stage_id == 1 and tutorial_step < 3:
 		_draw_tutorial()
 	if paused:
 		draw_rect(Rect2(Vector2.ZERO, size), Color(0.02, 0.08, 0.12, 0.70), true)
@@ -411,9 +532,19 @@ func _draw_course() -> void:
 		var ex := anchor_x + (float(zone["x_end"]) - model.position.x) * ppm
 		if ex < 0.0 or sx > w:
 			continue
-		var color := Color(0.25, 0.85, 1.0, 0.15) if str(zone["type"]) == "UPDRAFT" else Color(1.0, 0.85, 0.35, 0.12)
+		var zone_type := str(zone["type"])
+		var color := Color(0.25, 0.85, 1.0, 0.15)
+		var symbol := "↑"
+		if zone_type == "CROSSWIND":
+			color = Color(1.0, 0.85, 0.35, 0.14)
+			symbol = "→" if float(zone["direction"]) > 0.0 else "←"
+		elif zone_type == "TAILWIND":
+			color = Color(0.45, 1.0, 0.65, 0.14)
+			symbol = "≫"
+		elif zone_type == "TURBULENCE":
+			color = Color(0.75, 0.55, 1.0, 0.15)
+			symbol = "↯"
 		draw_rect(Rect2(sx, h * 0.19, ex - sx, h * 0.57), color, true)
-		var symbol := "↑" if str(zone["type"]) == "UPDRAFT" else ("→" if float(zone["direction"]) > 0.0 else "←")
 		_text(Vector2(sx + 10, h * 0.26), symbol, 24, Color(color, 0.9))
 
 	for gate in stage["gates"]:
@@ -461,14 +592,15 @@ func _draw_hud() -> void:
 	var hud_h := 126.0 if portrait else 82.0
 	draw_rect(Rect2(0, 0, w, hud_h), Color(0.02, 0.12, 0.20, 0.90), true)
 	var progress := clampf(model.position.x / float(stage["length"]), 0.0, 1.0)
+	var stage_label := "STAGE %d  %s" % [selected_stage_id, str(stage["name"])]
 	if portrait:
-		_text(Vector2(18, 30), "STAGE 1  朝凪の丘", 17, Color.WHITE)
+		_text(Vector2(18, 30), stage_label, 17, Color.WHITE)
 		_text(Vector2(18, 59), "GATE %d/%d   SCORE %d   COMBO x%d" % [required_passed, int(stage["required_target"]), score, combo], 14, Color("#d5f6ff"))
 		_text(Vector2(18, 87), "ALT %.0f   BOOST %.0f   HP %.0f   WIND %s" % [model.position.y, model.boost, model.durability, current_wind_label], 14, Color("#d5f6ff"))
 		draw_rect(Rect2(18, 104, w - 36, 8), Color("#24495d"), true)
 		draw_rect(Rect2(18, 104, (w - 36) * progress, 8), Color("#58e0bb"), true)
 	else:
-		_text(Vector2(20, 32), "STAGE 1  朝凪の丘", 18, Color.WHITE)
+		_text(Vector2(20, 32), stage_label, 18, Color.WHITE)
 		_text(Vector2(220, 32), "GATE %d/%d" % [required_passed, int(stage["required_target"])], 16, Color("#d5f6ff"))
 		_text(Vector2(350, 32), "SCORE %d" % score, 16, Color("#d5f6ff"))
 		_text(Vector2(500, 32), "ALT %.0f" % model.position.y, 16, Color("#d5f6ff"))
@@ -508,19 +640,25 @@ func _draw_result() -> void:
 	var w := size.x
 	var h := size.y
 	var portrait := h > w
-	var panel := Rect2(w * (0.08 if portrait else 0.24), h * 0.12, w * (0.84 if portrait else 0.52), h * 0.70)
+	var panel := Rect2(w * (0.06 if portrait else 0.17), h * 0.07, w * (0.88 if portrait else 0.66), h * 0.86)
 	draw_rect(panel, Color(0.03, 0.15, 0.23, 0.94), true)
 	draw_rect(panel, Color("#6af0c6") if result_clear else Color("#ff8d83"), false, 3.0)
 	var headline := "CLEAR!" if result_clear else "FAILED"
-	_text(Vector2(panel.position.x + 28, panel.position.y + 70), headline, 40, Color("#75f3cc") if result_clear else Color("#ff9b91"))
-	_text(Vector2(panel.position.x + 30, panel.position.y + 110), result_reason, 16, Color("#d8f5ff"))
-	_text(Vector2(panel.position.x + 30, panel.position.y + 160), "SCORE  %d" % score, 22, Color.WHITE)
-	_text(Vector2(panel.position.x + 30, panel.position.y + 196), "TIME   %.1f s" % model.elapsed, 18, Color("#d8f5ff"))
-	_text(Vector2(panel.position.x + 30, panel.position.y + 230), "GATE   %d/%d   BONUS %d" % [required_passed, int(stage["required_target"]), bonus_passed], 18, Color("#d8f5ff"))
-	_text(Vector2(panel.position.x + 30, panel.position.y + 264), "HP     %.0f" % model.durability, 18, Color("#d8f5ff"))
+	_text(Vector2(panel.position.x + 28, panel.position.y + 58), headline, 38, Color("#75f3cc") if result_clear else Color("#ff9b91"))
+	_text(Vector2(panel.position.x + 30, panel.position.y + 92), "STAGE %d  %s" % [selected_stage_id, str(stage["name"])], 17, Color("#d8f5ff"))
+	_text(Vector2(panel.position.x + 30, panel.position.y + 123), result_reason, 15, Color("#d8f5ff"))
+	_text(Vector2(panel.position.x + 30, panel.position.y + 164), "SCORE  %d" % score, 21, Color.WHITE)
+	_text(Vector2(panel.position.x + 30, panel.position.y + 196), "TIME   %.1f s" % model.elapsed, 17, Color("#d8f5ff"))
+	_text(Vector2(panel.position.x + 30, panel.position.y + 228), "GATE   %d/%d   BONUS %d" % [required_passed, int(stage["required_target"]), bonus_passed], 17, Color("#d8f5ff"))
+	_text(Vector2(panel.position.x + 30, panel.position.y + 260), "HP     %.0f" % model.durability, 17, Color("#d8f5ff"))
 	if result_clear:
-		_text(Vector2(panel.position.x + 30, panel.position.y + 310), "MEDAL  %s%s" % [result_medal, "  NEW BEST!" if result_best else ""], 20, Color("#ffe28b"))
+		_text(Vector2(panel.position.x + 30, panel.position.y + 298), "MEDAL  %s%s" % [result_medal, "  NEW BEST!" if result_best else ""], 19, Color("#ffe28b"))
 	_button(retry_rect, "RETRY  /  R", Color("#187868"))
+	if result_clear and selected_stage_id < 3:
+		_button(next_rect, "NEXT STAGE  /  Enter", Color("#147f91"))
+	else:
+		_button(next_rect, "ALL STAGES CLEAR" if result_clear else "CLEAR TO UNLOCK NEXT", Color("#4b6470"))
+	_button(result_stage_select_rect, "STAGE SELECT", Color("#315f72"))
 	_button(title_rect, "TITLE", Color("#355a70"))
 
 func _draw_qa_overlay() -> void:

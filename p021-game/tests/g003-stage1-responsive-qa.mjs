@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 const baseUrl = "http://127.0.0.1:4173/p021-game/games/wind-reader-glider/?qa=1";
-const outDir = "p021-game/test-artifacts/game-g003-stage1";
+const outDir = "p021-game/test-artifacts/game-g003-stage-flow";
 const cases = [
   { name: "phone-portrait", width: 390, height: 844 },
   { name: "phone-landscape", width: 844, height: 390 },
@@ -18,6 +18,10 @@ const report = [];
 
 function digest(buffer) {
   return crypto.createHash("sha256").update(buffer).digest("hex");
+}
+
+async function shot(page, name) {
+  return page.screenshot({ path: path.join(outDir, name + ".png") });
 }
 
 for (const c of cases) {
@@ -41,52 +45,61 @@ for (const c of cases) {
   const canvasBox = await page.locator("canvas").boundingBox();
   if (!canvasBox) throw new Error("Godot canvas has no bounding box");
 
-  const titleShot = await page.screenshot({
-    path: path.join(outDir, c.name + "-title.png"),
-  });
+  const images = [];
+  images.push(await shot(page, c.name + "-title"));
 
-  // QA mode is only enabled with ?qa=1. F9 advances deterministic
-  // screen states while the actual game still runs the production scene.
-  await page.keyboard.press("F9"); // title -> Stage 1
-  await page.waitForTimeout(500);
+  await page.keyboard.press("F9"); // title -> stage select
+  await page.waitForTimeout(250);
+  images.push(await shot(page, c.name + "-stage-select"));
 
-  // Exercise real keyboard flight input and boost for the Stage 1 smoke.
+  await page.keyboard.press("F9"); // stage select -> stage 1
+  await page.waitForTimeout(300);
   await page.keyboard.down("w");
   await page.keyboard.down(" ");
-  await page.waitForTimeout(450);
+  await page.waitForTimeout(300);
   await page.keyboard.up(" ");
   await page.keyboard.up("w");
+  images.push(await shot(page, c.name + "-stage1"));
 
-  // Exercise the real touch boost target once.
-  await page.touchscreen.tap(
-    Math.max(20, c.width - Math.max(68, c.width * 0.09)),
-    Math.max(20, c.height - Math.max(76, c.height * 0.15)),
-  );
+  await page.keyboard.press("F9"); // stage 1 -> result
   await page.waitForTimeout(250);
+  images.push(await shot(page, c.name + "-result1"));
 
-  const runningShot = await page.screenshot({
-    path: path.join(outDir, c.name + "-running.png"),
-  });
+  // Touch Retry on the real result button, then clear Stage 1 again.
+  if (c.height > c.width) {
+    await page.touchscreen.tap(c.width * 0.50, c.height * 0.61);
+  } else {
+    await page.touchscreen.tap(c.width * 0.19, c.height * 0.73);
+  }
+  await page.waitForTimeout(250);
+  images.push(await shot(page, c.name + "-retry1"));
+  await page.keyboard.press("F9"); // retried Stage 1 -> result
+  await page.waitForTimeout(180);
+  await page.keyboard.press("F9"); // result -> Stage 2
+  await page.waitForTimeout(250);
+  images.push(await shot(page, c.name + "-stage2"));
 
-  await page.keyboard.press("F9"); // running -> clear result
-  await page.waitForTimeout(300);
-  const resultShot = await page.screenshot({
-    path: path.join(outDir, c.name + "-result.png"),
-  });
+  await page.keyboard.press("F9"); // Stage 2 -> result
+  await page.waitForTimeout(180);
+  await page.keyboard.press("F9"); // result -> Stage 3
+  await page.waitForTimeout(250);
+  images.push(await shot(page, c.name + "-stage3"));
 
-  await page.keyboard.press("F9"); // result -> retry
-  await page.waitForTimeout(300);
-  const retryShot = await page.screenshot({
-    path: path.join(outDir, c.name + "-retry.png"),
-  });
+  await page.keyboard.press("F9"); // Stage 3 -> result
+  await page.waitForTimeout(250);
+  images.push(await shot(page, c.name + "-result3"));
 
-  const hashes = [
-    digest(titleShot),
-    digest(runningShot),
-    digest(resultShot),
-    digest(retryShot),
-  ];
-  const distinctScreens = new Set(hashes).size >= 3;
+  // Touch Stage Select from final result.
+  if (c.height > c.width) {
+    await page.touchscreen.tap(c.width * 0.50, c.height * 0.79);
+  } else {
+    await page.touchscreen.tap(c.width * 0.81, c.height * 0.73);
+  }
+  await page.waitForTimeout(250);
+  images.push(await shot(page, c.name + "-stage-select-final"));
+
+  const hashes = images.map(digest);
+  const distinctScreens = new Set(hashes).size >= 7;
   const canvasFits =
     canvasBox.x >= -1 &&
     canvasBox.y >= -1 &&
@@ -103,6 +116,7 @@ for (const c of cases) {
     viewport: c.width + "x" + c.height,
     canvasFits,
     distinctScreens,
+    screenCount: new Set(hashes).size,
     consoleErrors,
     pageErrors,
     pass,
