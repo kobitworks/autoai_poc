@@ -1,0 +1,204 @@
+name: P021 Build GAME-G003 Wind Reader Glider
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'p021-game/sources/wind-reader-glider/**'
+      - 'p021-game/tests/g003-stage1-responsive-qa.mjs'
+      - '.github/workflows/p021-game-g003-wind-reader-godot-web.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: p021-game-g003-wind-reader-develop
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: "4.7.2"
+
+jobs:
+  export-web:
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.7.2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+          fetch-depth: 0
+
+      - name: Setup Godot export templates
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates/
+          cp -a /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+
+      - name: Bundle Japanese font
+        working-directory: p021-game/sources/wind-reader-glider
+        run: |
+          mkdir -p fonts
+          wget -q -O fonts/NotoSansJP.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/NotoSansJP%5Bwght%5D.ttf"
+          test -s fonts/NotoSansJP.ttf
+
+      - name: Validate GAME-G003 contracts
+        working-directory: p021-game/sources/wind-reader-glider
+        run: |
+          grep -q 'class_name WindReaderFlightModel' scripts/FlightModel.gd
+          grep -q 'stage_1' scripts/StageDefinition.gd
+          grep -q 'ConfigFile' scripts/SaveManager.gd
+          grep -q 'required_target' scripts/Main.gd
+          grep -q 'InputEventScreenDrag' scripts/Main.gd
+          grep -q 'KEY_SPACE' scripts/Main.gd
+          grep -q 'qa_mode' scripts/Main.gd
+
+      - name: Headless FlightModel smoke
+        working-directory: p021-game/sources/wind-reader-glider
+        run: godot --headless --path . --script res://tests/test_flight_model.gd
+
+      - name: Validate project
+        working-directory: p021-game/sources/wind-reader-glider
+        run: godot --headless --editor --quit-after 2
+
+      - name: Runtime smoke
+        working-directory: p021-game/sources/wind-reader-glider
+        run: |
+          godot --headless --path . --quit-after 4 > /tmp/g003-runtime.log 2>&1 || {
+            cat /tmp/g003-runtime.log
+            exit 1
+          }
+          cat /tmp/g003-runtime.log
+          if grep -E "SCRIPT ERROR|Parse Error|Invalid (call|assignment|access)" /tmp/g003-runtime.log; then
+            echo "Runtime script error detected."
+            exit 1
+          fi
+
+      - name: Export Web build
+        working-directory: p021-game/sources/wind-reader-glider
+        run: |
+          rm -rf /tmp/g003-export
+          mkdir -p /tmp/g003-export
+          godot --headless --export-release "Web" /tmp/g003-export/index.html
+          test -s /tmp/g003-export/index.js
+          test -s /tmp/g003-export/index.wasm
+          test -s /tmp/g003-export/index.pck
+
+      - name: Build shared Game Hub runtime layout
+        run: |
+          mkdir -p p021-game/runtime/godot-4.7.2
+          mkdir -p p021-game/games/wind-reader-glider
+          cp /tmp/g003-export/index.js p021-game/runtime/godot-4.7.2/godot.js
+          cp /tmp/g003-export/index.wasm p021-game/runtime/godot-4.7.2/godot.wasm
+          cp /tmp/g003-export/index.pck p021-game/games/wind-reader-glider/wind-reader-glider.pck
+          if [ -f /tmp/g003-export/index.png ]; then
+            cp /tmp/g003-export/index.png p021-game/games/wind-reader-glider/splash.png
+          fi
+          cat > p021-game/games/wind-reader-glider/index.html <<'HTML'
+          <!doctype html>
+          <html lang="ja">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,viewport-fit=cover">
+            <title>風読みグライダー | GAME-G003</title>
+            <style>
+              html,body,#canvas{margin:0;width:100%;height:100%;overflow:hidden;background:#123c5d;touch-action:none}
+              #canvas{display:block}
+              #status{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#123c5d;color:#e8fbff;font:600 16px system-ui,sans-serif}
+              #status progress{width:min(62vw,420px)}
+            </style>
+          </head>
+          <body>
+            <canvas id="canvas">Canvas is required.</canvas>
+            <div id="status"><div>風読みグライダーを読み込み中…</div><progress id="progress"></progress></div>
+            <script src="../../runtime/godot-4.7.2/godot.js"></script>
+            <script>
+              const status = document.getElementById("status");
+              const progress = document.getElementById("progress");
+              const config = {
+                executable: "../../runtime/godot-4.7.2/godot",
+                mainPack: "./wind-reader-glider.pck",
+                canvasResizePolicy: 2,
+                focusCanvas: true,
+                ensureCrossOriginIsolationHeaders: true,
+                experimentalVK: false
+              };
+              const missing = Engine.getMissingFeatures({threads:false});
+              if (missing.length) {
+                status.innerHTML = "<div>このブラウザでは起動できません: " + missing.join(", ") + "</div>";
+                console.error("Missing Godot Web features", missing);
+              } else {
+                const engine = new Engine(config);
+                engine.startGame({
+                  onProgress(current,total){
+                    if(current>0 && total>0){progress.value=current;progress.max=total}else{progress.removeAttribute("value")}
+                  }
+                }).then(()=>status.remove()).catch(err=>{
+                  console.error(err);
+                  status.innerHTML="<div>起動に失敗しました</div>";
+                });
+              }
+            </script>
+          </body>
+          </html>
+          HTML
+
+          test -s p021-game/runtime/godot-4.7.2/godot.js
+          test -s p021-game/runtime/godot-4.7.2/godot.wasm
+          test -s p021-game/games/wind-reader-glider/wind-reader-glider.pck
+          grep -q '../../runtime/godot-4.7.2/godot.js' p021-game/games/wind-reader-glider/index.html
+          if [ -e p021-game/games/wind-reader-glider/index.wasm ]; then
+            echo "Per-game WASM duplication is not allowed."
+            exit 1
+          fi
+
+      - name: Commit exported GAME-G003 and shared runtime
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add p021-game/runtime/godot-4.7.2/ p021-game/games/wind-reader-glider/
+          if git diff --cached --quiet; then
+            echo "No exported changes."
+          else
+            git commit -m "P021: build GAME-G003 shared-runtime Web"
+            pushed=0
+            for attempt in 1 2 3 4; do
+              git pull --rebase origin develop
+              if git push origin HEAD:develop; then
+                pushed=1
+                break
+              fi
+              sleep 3
+            done
+            test "$pushed" -eq 1
+          fi
+
+  browser-responsive:
+    needs: export-web
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Serve GAME-G003
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/g003-http.log 2>&1 &
+          echo $! > /tmp/g003-http.pid
+      - name: Run four-viewport Stage 1 smoke
+        run: node p021-game/tests/g003-stage1-responsive-qa.mjs
+      - name: Upload GAME-G003 QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: game-g003-stage1-responsive-qa
+          path: p021-game/test-artifacts/game-g003-stage1/
+          if-no-files-found: warn
