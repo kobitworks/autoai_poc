@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="theme-color" content="#0b2030">
+<title>風の航路 - SKYBOUND</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#071521;font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+body{touch-action:none}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+.hud{position:fixed;inset:0;pointer-events:none;color:white;text-shadow:0 2px 12px rgba(0,0,0,.75)}
+.top{position:absolute;top:max(14px,env(safe-area-inset-top));left:max(16px,env(safe-area-inset-left));right:max(16px,env(safe-area-inset-right));display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.brand{background:linear-gradient(135deg,rgba(5,22,34,.78),rgba(5,22,34,.32));backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:12px 14px;box-shadow:0 12px 36px rgba(0,0,0,.22)}
+.brand .kicker{font-size:11px;letter-spacing:.22em;opacity:.72}
+.brand h1{font-size:clamp(18px,3vw,28px);margin:2px 0 0;line-height:1.05}
+.status{font-size:12px;padding:8px 12px;border-radius:999px;background:rgba(4,24,34,.58);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2)}
+.bottom{position:absolute;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);width:min(720px,calc(100% - 28px));pointer-events:auto}
+.panel{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;padding:13px 16px;border-radius:18px;background:linear-gradient(135deg,rgba(5,22,34,.84),rgba(15,44,54,.58));backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.22);box-shadow:0 18px 60px rgba(0,0,0,.34)}
+.label{font-size:12px;line-height:1.2;opacity:.82}.label strong{display:block;font-size:15px;opacity:1}
+input[type=range]{width:100%;accent-color:#e6c56b}
+button{border:0;border-radius:12px;background:#f6e0a0;color:#163342;font-weight:800;padding:11px 14px;min-height:44px;font-size:13px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.cue{position:absolute;left:50%;top:53%;transform:translate(-50%,-50%);padding:10px 14px;border-radius:999px;background:rgba(8,30,43,.5);border:1px solid rgba(255,255,255,.2);font-size:13px;letter-spacing:.06em;opacity:0;transition:opacity .3s}
+.cue.show{opacity:1}
+@media (max-width:560px){
+ .brand{padding:10px 12px;border-radius:14px}.brand .kicker{font-size:9px}.status{font-size:10px;padding:7px 9px}
+ .panel{grid-template-columns:1fr auto;gap:8px 12px;padding:11px 12px}.panel input{grid-column:1/-1;grid-row:2}.label strong{font-size:14px}
+ button{grid-column:2;grid-row:1}
+}
+@media (orientation:portrait){.cue{top:48%}}
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div class="hud">
+  <div class="top">
+    <div class="brand"><div class="kicker">CINEMATIC FLIGHT / AUTO PILOT</div><h1>風の航路 <span style="opacity:.55">SKYBOUND</span></h1></div>
+    <div class="status" id="status">夜明けの上昇気流</div>
+  </div>
+  <div class="cue show" id="cue">風をつかめ</div>
+  <div class="bottom">
+    <div class="panel">
+      <div class="label">速度<strong id="speedText">巡航 100%</strong></div>
+      <input id="speed" type="range" min="65" max="155" value="100" step="1" aria-label="飛行速度">
+      <button id="replay" type="button">もう一度</button>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+"use strict";
+const c=document.getElementById("scene"),ctx=c.getContext("2d");
+const speed=document.getElementById("speed"),speedText=document.getElementById("speedText");
+const replay=document.getElementById("replay"),status=document.getElementById("status"),cue=document.getElementById("cue");
+let W=0,H=0,D=1,start=performance.now(),last=start,world=0;
+let particles=[],clouds=[],birds=[];
+function resize(){
+  D=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;
+  c.width=Math.floor(W*D);c.height=Math.floor(H*D);c.style.width=W+"px";c.style.height=H+"px";
+  ctx.setTransform(D,0,0,D,0,0);
+  makeClouds();
+}
+function rnd(a,b){return a+Math.random()*(b-a)}
+function makeClouds(){
+  clouds=[];for(let i=0;i<18;i++)clouds.push({x:rnd(-W,W*2),y:rnd(H*.18,H*.88),s:rnd(.45,1.75),a:rnd(.11,.42),z:rnd(.25,1)});
+}
+function reset(){start=performance.now();last=start;world=0;particles=[];cue.classList.add("show");setTimeout(()=>cue.classList.remove("show"),2200)}
+function hill(base,amp,step,offset,fill){
+  ctx.beginPath();ctx.moveTo(0,H);
+  for(let x=0;x<=W+step;x+=step){
+    const y=base+Math.sin((x+offset)*.005)*amp+Math.sin((x+offset)*.013)*amp*.28;
+    ctx.lineTo(x,y);
+  }
+  ctx.lineTo(W,H);ctx.closePath();ctx.fillStyle=fill;ctx.fill();
+}
+function cloud(x,y,s,a){
+  ctx.save();ctx.globalAlpha=a;ctx.translate(x,y);ctx.scale(s,s);
+  const g=ctx.createRadialGradient(0,0,10,0,0,95);g.addColorStop(0,"rgba(255,247,223,.96)");g.addColorStop(1,"rgba(255,255,255,0)");
+  ctx.fillStyle=g;
+  [[0,0,70],[55,8,52],[-52,13,46],[8,25,78]].forEach(q=>{ctx.beginPath();ctx.arc(q[0],q[1],q[2],0,Math.PI*2);ctx.fill()});
+  ctx.restore();
+}
+function drawSky(){
+  const g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,"#3d79a0");g.addColorStop(.42,"#a8c6c8");g.addColorStop(.72,"#deb47c");g.addColorStop(1,"#5d6b58");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  const sx=W*.79,sy=H*.22,r=Math.max(W,H)*.24;
+  const sun=ctx.createRadialGradient(sx,sy,0,sx,sy,r);sun.addColorStop(0,"rgba(255,245,188,.96)");sun.addColorStop(.12,"rgba(255,222,145,.38)");sun.addColorStop(1,"rgba(255,210,130,0)");ctx.fillStyle=sun;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle="rgba(255,248,218,.92)";ctx.beginPath();ctx.arc(sx,sy,Math.max(14,W*.012),0,Math.PI*2);ctx.fill();
+}
+function drawMountains(){
+  hill(H*.52,H*.065,55,world*.045,"rgba(59,86,90,.28)");
+  hill(H*.60,H*.08,48,world*.09,"rgba(45,70,67,.45)");
+  hill(H*.72,H*.12,38,world*.18,"rgba(35,57,49,.76)");
+  // distant ruins
+  ctx.save();ctx.globalAlpha=.38;ctx.fillStyle="#243f45";
+  for(let i=0;i<8;i++){let x=(i*W/7-world*.06)%(W+120);if(x<-80)x+=W+120;let h=H*(.05+(i%3)*.018);ctx.fillRect(x,H*.47-h,Math.max(5,W*.006),h);ctx.fillRect(x-8,H*.47-h*.72,Math.max(3,W*.003),h*.72)}
+  ctx.restore();
+}
+function drawClouds(dt){
+  const sp=Number(speed.value)/100;
+  for(const q of clouds){
+    q.x-=dt*(8+22*q.z)*sp;
+    if(q.x<-180*q.s){q.x=W+rnd(80,500);q.y=rnd(H*.2,H*.84);q.s=rnd(.45,1.7);q.a=rnd(.1,.38)}
+    cloud(q.x,q.y,q.s,q.a);
+  }
+}
+function drawCliff(t){
+  const pull=Math.min(1,Math.max(0,(t-1.8)/2.4));
+  const ox=-pull*W*.42;
+  ctx.save();ctx.translate(ox,0);
+  const grad=ctx.createLinearGradient(0,H*.58,0,H);grad.addColorStop(0,"#657153");grad.addColorStop(.35,"#3a4834");grad.addColorStop(1,"#18251f");
+  ctx.fillStyle=grad;ctx.beginPath();ctx.moveTo(0,H*.58);ctx.lineTo(W*.27,H*.62);ctx.lineTo(W*.34,H*.72);ctx.lineTo(W*.25,H);ctx.lineTo(0,H);ctx.closePath();ctx.fill();
+  ctx.strokeStyle="rgba(240,220,150,.22)";ctx.lineWidth=2;
+  for(let i=0;i<22;i++){let x=rnd(0,W*.3),y=H*.59+rnd(0,H*.2);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+rnd(-10,20),y-rnd(7,25));ctx.stroke()}
+  ctx.restore();
+}
+function drawGlider(t){
+  const p=Math.min(1,Math.max(0,(t-1.25)/5.3));
+  const ease=1-Math.pow(1-p,3);
+  const x=W*(.25+.28*ease);
+  const y=H*(.58-.30*ease)+Math.sin(t*1.8)*4*p;
+  const sc=Math.min(W/900,H/560)*(1+.10*ease);
+  const bank=Math.sin(t*.9)*.045*p-0.035*ease;
+  ctx.save();ctx.translate(x,y);ctx.rotate(bank);ctx.scale(sc,sc);
+  // scarf
+  ctx.strokeStyle="#a94d36";ctx.lineWidth=16;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(-5,-25);ctx.bezierCurveTo(-42,-38,-74,-26,-118,-55-Math.sin(t*5)*8);ctx.stroke();
+  // wings
+  const wg=ctx.createLinearGradient(-180,-40,190,55);wg.addColorStop(0,"#ead7ad");wg.addColorStop(.52,"#f3e6c9");wg.addColorStop(1,"#b96b48");
+  ctx.fillStyle=wg;ctx.strokeStyle="rgba(64,53,40,.85)";ctx.lineWidth=4;
+  ctx.beginPath();ctx.moveTo(-220,-18);ctx.quadraticCurveTo(-60,-92,18,-38);ctx.quadraticCurveTo(105,-70,218,-6);ctx.lineTo(122,20);ctx.quadraticCurveTo(20,2,-20,15);ctx.quadraticCurveTo(-105,10,-220,-18);ctx.closePath();ctx.fill();ctx.stroke();
+  // frame
+  ctx.strokeStyle="#4a4036";ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-140,-10);ctx.lineTo(126,13);ctx.moveTo(-20,-38);ctx.lineTo(30,62);ctx.moveTo(95,-18);ctx.lineTo(28,61);ctx.stroke();
+  // hero
+  ctx.fillStyle="#2c5060";ctx.beginPath();ctx.ellipse(0,-3,18,28,-.18,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#e3b780";ctx.beginPath();ctx.arc(4,-36,11,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#3c2c26";ctx.beginPath();ctx.arc(1,-40,12,Math.PI,Math.PI*2);ctx.fill();
+  ctx.strokeStyle="#342d29";ctx.lineWidth=8;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(-8,1);ctx.lineTo(-35,30);ctx.moveTo(10,4);ctx.lineTo(32,32);ctx.moveTo(-8,-8);ctx.lineTo(-36,18);ctx.moveTo(12,-10);ctx.lineTo(42,13);ctx.stroke();
+  // dust at launch
+  if(t<3.1){for(let i=0;i<9;i++){const a=(3.1-t)/2;ctx.fillStyle="rgba(226,205,159,"+(a*.16)+")";ctx.beginPath();ctx.arc(-120-rnd(0,110),45+rnd(-15,25),rnd(3,13),0,Math.PI*2);ctx.fill()}}
+  ctx.restore();
+}
+function addWind(dt,t){
+  const sp=Number(speed.value)/100;
+  if(t>2 && Math.random()<dt*.055*sp*1000){particles.push({x:W+rnd(0,100),y:rnd(H*.12,H*.82),l:rnd(30,130),v:rnd(220,520)*sp,a:rnd(.08,.28)})}
+  ctx.lineWidth=1.4;
+  particles=particles.filter(p=>p.x>-p.l);
+  for(const p of particles){p.x-=p.v*dt;ctx.strokeStyle="rgba(255,255,235,"+p.a+")";ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+p.l,p.y);ctx.stroke()}
+}
+function vignette(){
+  const g=ctx.createRadialGradient(W/2,H/2,Math.min(W,H)*.2,W/2,H/2,Math.max(W,H)*.72);g.addColorStop(.55,"rgba(0,0,0,0)");g.addColorStop(1,"rgba(0,12,20,.48)");ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  ctx.fillStyle="rgba(0,0,0,.12)";ctx.fillRect(0,0,W,Math.max(0,(H-W*9/16)/2));ctx.fillRect(0,H-Math.max(0,(H-W*9/16)/2),W,Math.max(0,(H-W*9/16)/2));
+}
+function frame(now){
+  const dt=Math.min(.033,(now-last)/1000);last=now;const t=(now-start)/1000;const sp=Number(speed.value)/100;world+=dt*130*sp;
+  drawSky();drawMountains();drawClouds(dt);drawCliff(t);addWind(dt,t);drawGlider(t);vignette();
+  if(t<1.5)status.textContent="崖上 / 発進準備";
+  else if(t<4.0)status.textContent="上昇気流 / 離陸";
+  else status.textContent="AUTO PILOT / 雲海巡航";
+  requestAnimationFrame(frame);
+}
+speed.addEventListener("input",()=>{const v=Number(speed.value);speedText.textContent=(v<85?"ゆっくり ":v>125?"高速 ":"巡航 ")+v+"%"});
+replay.addEventListener("click",reset);
+addEventListener("resize",resize,{passive:true});
+resize();reset();requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
