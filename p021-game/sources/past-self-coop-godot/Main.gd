@@ -29,6 +29,17 @@ var font: Font
 var show_intro := true
 var pulse := 0.0
 var unlocked_flash := 0.0
+var run_elapsed := 0.0
+var retry_count := 0
+var best_time := -1.0
+var best_retries := -1
+var best_rank := "--"
+var current_rank := "--"
+var sfx_volume_index := 1
+var qa_mode := false
+
+const SFX_DB := [0.0, -6.0, -14.0, -80.0]
+const SFX_LABELS := ["SFX 100%", "SFX 70%", "SFX 40%", "SFX OFF"]
 
 var switch_a := Vector2.ZERO
 var switch_b := Vector2.ZERO
@@ -53,6 +64,8 @@ var pad_left := Rect2()
 var pad_right := Rect2()
 var finish_rect := Rect2()
 var retry_rect := Rect2()
+var audio_rect := Rect2()
+var restart_rect := Rect2()
 
 func _ready() -> void:
 	if ResourceLoader.exists("res://fonts/NotoSansJP.ttf"):
@@ -64,6 +77,9 @@ func _ready() -> void:
 	ui_icon = _load_texture("res://assets/kenney/ui_icon.png")
 	audio_player = AudioStreamPlayer.new()
 	add_child(audio_player)
+	_load_persistent_state()
+	_apply_audio_level()
+	qa_mode = _detect_qa_mode()
 	_apply_stage(0)
 	_refresh_layout()
 	set_process_input(true)
@@ -94,6 +110,8 @@ func _refresh_layout() -> void:
 		pad_right = Rect2(176, 766, 72, 72)
 		finish_rect = Rect2(350, 714, 252, 68)
 		retry_rect = Rect2(350, 806, 252, 68)
+		audio_rect = Rect2(350, 884, 252, 54)
+		restart_rect = Rect2(120, 650, 400, 72)
 	else:
 		start_rect = Rect2(330, 432, 300, 62)
 		next_rect = Rect2(330, 422, 300, 58)
@@ -103,6 +121,8 @@ func _refresh_layout() -> void:
 		pad_right = Rect2(152, 512, 58, 58)
 		finish_rect = Rect2(730, 500, 180, 48)
 		retry_rect = Rect2(730, 558, 180, 48)
+		audio_rect = Rect2(540, 558, 170, 48)
+		restart_rect = Rect2(330, 430, 300, 58)
 	queue_redraw()
 
 func _screen_to_layout(screen_pos: Vector2) -> Vector2:
@@ -125,6 +145,8 @@ func _world_rect_to_layout(world_rect: Rect2) -> Rect2:
 func _physics_process(delta: float) -> void:
 	pulse += delta
 	unlocked_flash = maxf(0.0, unlocked_flash - delta)
+	if not show_intro and phase != Phase.COMPLETE:
+		run_elapsed += delta
 	if show_intro or phase == Phase.CLEAR or phase == Phase.COMPLETE:
 		queue_redraw()
 		return
@@ -193,8 +215,104 @@ func _start_replay() -> void:
 	_play_sfx(1)
 
 func _retry() -> void:
+	retry_count += 1
 	_reset_stage_state()
 	_play_sfx(0)
+
+func _restart_run() -> void:
+	run_elapsed = 0.0
+	retry_count = 0
+	current_rank = "--"
+	_apply_stage(0)
+	show_intro = true
+	_play_sfx(0)
+	queue_redraw()
+
+func _finish_run() -> void:
+	phase = Phase.COMPLETE
+	touch_dir = Vector2.ZERO
+	current_rank = _rank_for_run(run_elapsed, retry_count)
+	if best_time < 0.0 or run_elapsed < best_time:
+		best_time = run_elapsed
+	if best_retries < 0 or retry_count < best_retries:
+		best_retries = retry_count
+	var order := {"--": 0, "C": 1, "B": 2, "A": 3, "S": 4}
+	if int(order.get(current_rank, 0)) > int(order.get(best_rank, 0)):
+		best_rank = current_rank
+	_save_persistent_state()
+	_play_sfx(3)
+	queue_redraw()
+
+func _rank_for_run(seconds: float, retries: int) -> String:
+	if seconds <= 55.0 and retries == 0:
+		return "S"
+	if seconds <= 80.0 and retries <= 2:
+		return "A"
+	if seconds <= 120.0 and retries <= 5:
+		return "B"
+	return "C"
+
+func _best_summary() -> String:
+	var time_text := "--"
+	if best_time >= 0.0:
+		time_text = "%.1fs" % best_time
+	var retry_text := "--" if best_retries < 0 else str(best_retries)
+	return "BEST  %s / RETRY %s / RANK %s" % [time_text, retry_text, best_rank]
+
+func _load_persistent_state() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load("user://past_sync.cfg") == OK:
+		sfx_volume_index = clampi(int(cfg.get_value("audio", "level", 1)), 0, SFX_DB.size() - 1)
+		best_time = float(cfg.get_value("records", "best_time", -1.0))
+		best_retries = int(cfg.get_value("records", "best_retries", -1))
+		best_rank = str(cfg.get_value("records", "best_rank", "--"))
+
+func _save_persistent_state() -> void:
+	var cfg := ConfigFile.new()
+	cfg.set_value("audio", "level", sfx_volume_index)
+	cfg.set_value("records", "best_time", best_time)
+	cfg.set_value("records", "best_retries", best_retries)
+	cfg.set_value("records", "best_rank", best_rank)
+	cfg.save("user://past_sync.cfg")
+
+func _apply_audio_level() -> void:
+	if audio_player != null:
+		audio_player.volume_db = float(SFX_DB[sfx_volume_index])
+
+func _cycle_audio() -> void:
+	sfx_volume_index = (sfx_volume_index + 1) % SFX_DB.size()
+	_apply_audio_level()
+	_save_persistent_state()
+	queue_redraw()
+
+func _detect_qa_mode() -> bool:
+	if OS.has_feature("web"):
+		return bool(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('qa') === '1'", true))
+	return false
+
+func _qa_advance() -> void:
+	if not qa_mode:
+		return
+	if show_intro:
+		show_intro = false
+		run_elapsed = 0.0
+		retry_count = 0
+		queue_redraw()
+		return
+	if phase == Phase.RECORDING or phase == Phase.REPLAYING:
+		phase = Phase.CLEAR
+		touch_dir = Vector2.ZERO
+		_play_sfx(3)
+		queue_redraw()
+		return
+	if phase == Phase.CLEAR:
+		if stage_index < STAGES.size() - 1:
+			_apply_stage(stage_index + 1)
+		else:
+			_finish_run()
+		return
+	if phase == Phase.COMPLETE:
+		_restart_run()
 
 func _update_switches_and_goal() -> void:
 	var a_on: bool = _is_on_switch(current_pos, switch_a) or (phase != Phase.RECORDING and _is_on_switch(ghost_pos, switch_a))
@@ -221,6 +339,41 @@ func _play_sfx(slot: int) -> void:
 			return
 
 func _input(event: InputEvent) -> void:
+	var pointer_pressed := false
+	var pointer_pos := Vector2(-9999, -9999)
+	if event is InputEventMouseButton:
+		var top_mouse: InputEventMouseButton = event as InputEventMouseButton
+		if top_mouse.pressed and top_mouse.button_index == MOUSE_BUTTON_LEFT:
+			pointer_pressed = true
+			pointer_pos = _screen_to_layout(top_mouse.position)
+	elif event is InputEventScreenTouch:
+		var top_touch: InputEventScreenTouch = event as InputEventScreenTouch
+		if top_touch.pressed:
+			pointer_pressed = true
+			pointer_pos = _screen_to_layout(top_touch.position)
+
+	if event is InputEventKey:
+		var global_key: InputEventKey = event as InputEventKey
+		if global_key.pressed and global_key.keycode == KEY_M:
+			_cycle_audio()
+			return
+		if qa_mode and global_key.pressed and global_key.keycode == KEY_F9:
+			_qa_advance()
+			return
+
+	if pointer_pressed and audio_rect.has_point(pointer_pos):
+		_cycle_audio()
+		return
+
+	if phase == Phase.COMPLETE:
+		var restart_now := pointer_pressed and restart_rect.has_point(pointer_pos)
+		if event is InputEventKey:
+			var complete_key: InputEventKey = event as InputEventKey
+			restart_now = restart_now or (complete_key.pressed and complete_key.keycode in [KEY_R, KEY_ENTER, KEY_SPACE])
+		if restart_now:
+			_restart_run()
+		return
+
 	if show_intro:
 		var start_now := false
 		if event is InputEventKey:
@@ -234,6 +387,9 @@ func _input(event: InputEvent) -> void:
 			start_now = touch_event.pressed and start_rect.has_point(_screen_to_layout(touch_event.position))
 		if start_now:
 			show_intro = false
+			run_elapsed = 0.0
+			retry_count = 0
+			current_rank = "--"
 			_play_sfx(0)
 			queue_redraw()
 		return
@@ -253,16 +409,8 @@ func _input(event: InputEvent) -> void:
 			if stage_index < STAGES.size() - 1:
 				_apply_stage(stage_index + 1)
 			else:
-				phase = Phase.COMPLETE
+				_finish_run()
 			return
-
-	if phase == Phase.COMPLETE:
-		if event is InputEventKey:
-			var final_key: InputEventKey = event as InputEventKey
-			if final_key.pressed and final_key.keycode == KEY_R:
-				_apply_stage(0)
-				show_intro = true
-		return
 
 	if event is InputEventKey:
 		var key_event: InputEventKey = event as InputEventKey
@@ -322,6 +470,7 @@ func _draw() -> void:
 		_draw_clear()
 	elif phase == Phase.COMPLETE:
 		_draw_complete()
+	_draw_button(audio_rect, "%s  M" % SFX_LABELS[sfx_volume_index], Color("#24475c"))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 func _draw_background() -> void:
@@ -472,6 +621,7 @@ func _draw_intro() -> void:
 		draw_string(font, Vector2(70, 344), "NOWとPASTで2つのスイッチを同時に踏もう。", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#b4cbd7"))
 		draw_string(font, Vector2(104, 410), "全3ステージ / 縦横画面に自動対応", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#8faec0"))
 		draw_string(font, Vector2(80, 466), "スマホ・タブレットは画面下の操作パッドだけで遊べます。", HORIZONTAL_ALIGNMENT_LEFT, 480, 14, Color("#9fc5d7"))
+		draw_string(font, Vector2(116, 590), _best_summary(), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#7cf4ca"))
 		_draw_button(start_rect, "同期実験を開始", Color("#155d71"))
 		draw_string(font, Vector2(172, 838), "Kenney Sci-Fi UI / Sounds (CC0)", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#668898"))
 	else:
@@ -483,6 +633,7 @@ func _draw_intro() -> void:
 		draw_string(font, Vector2(257, 286), "1回目の動きを記録し、その動きをPASTとして再生。", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#b4cbd7"))
 		draw_string(font, Vector2(235, 316), "NOWとPASTで2つのスイッチを同時に踏み、出口を開けよう。", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#b4cbd7"))
 		draw_string(font, Vector2(300, 360), "全3ステージ / Portrait・Landscape対応", HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#8faec0"))
+		draw_string(font, Vector2(337, 400), _best_summary(), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("#7cf4ca"))
 		_draw_button(start_rect, "同期実験を開始  Enter", Color("#155d71"))
 		draw_string(font, Vector2(349, 493), "Kenney Sci-Fi UI / Sounds (CC0)", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#668898"))
 
@@ -503,18 +654,22 @@ func _draw_clear() -> void:
 
 func _draw_complete() -> void:
 	draw_rect(Rect2(Vector2.ZERO, logical_size), Color(0.01,0.05,0.07,0.94), true)
-	var box := Rect2(40, 160, 560, 620) if portrait else Rect2(185,140,590,365)
+	var box := Rect2(40, 140, 560, 660) if portrait else Rect2(185,105,590,430)
 	draw_rect(box, Color("#081b29"), true)
 	draw_rect(box, Color("#61eec2"), false, 3.0)
 	if portrait:
-		draw_string(font, Vector2(92, 258), "EXPERIMENT COMPLETE", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color("#7cf4ca"))
-		draw_string(font, Vector2(98, 320), "3つの時間同期パズルを突破！", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("#e5fff7"))
-		draw_string(font, Vector2(78, 392), "過去の自分を「障害」ではなく「仲間」に変えることに成功しました。", HORIZONTAL_ALIGNMENT_LEFT, 480, 15, Color("#afccd6"))
-		draw_string(font, Vector2(196, 520), "R で最初からリプレイ", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#9fc4d3"))
-		draw_string(font, Vector2(184, 585), "Art / UI / SFX: Kenney (CC0)", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#668898"))
+		draw_string(font, Vector2(92, 230), "EXPERIMENT COMPLETE", HORIZONTAL_ALIGNMENT_LEFT, -1, 26, Color("#7cf4ca"))
+		draw_string(font, Vector2(98, 286), "3つの時間同期パズルを突破！", HORIZONTAL_ALIGNMENT_LEFT, -1, 20, Color("#e5fff7"))
+		draw_string(font, Vector2(78, 350), "過去の自分を「障害」ではなく「仲間」に変えることに成功しました。", HORIZONTAL_ALIGNMENT_LEFT, 480, 15, Color("#afccd6"))
+		draw_string(font, Vector2(105, 475), "今回  %.1fs / RETRY %d / RANK %s" % [run_elapsed, retry_count, current_rank], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#d8f7ff"))
+		draw_string(font, Vector2(105, 515), _best_summary(), HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color("#7cf4ca"))
+		_draw_button(restart_rect, "最初からもう一度", Color("#176759"))
+		draw_string(font, Vector2(184, 755), "Art / UI / SFX: Kenney (CC0)", HORIZONTAL_ALIGNMENT_LEFT, -1, 11, Color("#668898"))
 	else:
-		draw_string(font, Vector2(308,215), "EXPERIMENT COMPLETE", HORIZONTAL_ALIGNMENT_LEFT, -1, 28, Color("#7cf4ca"))
-		draw_string(font, Vector2(300,265), "3つの時間同期パズルを突破！", HORIZONTAL_ALIGNMENT_LEFT, -1, 21, Color("#e5fff7"))
-		draw_string(font, Vector2(245,320), "過去の自分を「障害」ではなく「仲間」に変えることに成功しました。", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#afccd6"))
-		draw_string(font, Vector2(343,380), "R で最初からリプレイ", HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color("#9fc4d3"))
-		draw_string(font, Vector2(347,430), "Art / UI / SFX: Kenney (CC0)", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#668898"))
+		draw_string(font, Vector2(308,180), "EXPERIMENT COMPLETE", HORIZONTAL_ALIGNMENT_LEFT, -1, 28, Color("#7cf4ca"))
+		draw_string(font, Vector2(300,230), "3つの時間同期パズルを突破！", HORIZONTAL_ALIGNMENT_LEFT, -1, 21, Color("#e5fff7"))
+		draw_string(font, Vector2(245,280), "過去の自分を「障害」ではなく「仲間」に変えることに成功しました。", HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#afccd6"))
+		draw_string(font, Vector2(300,335), "今回 %.1fs / RETRY %d / RANK %s" % [run_elapsed, retry_count, current_rank], HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color("#d8f7ff"))
+		draw_string(font, Vector2(320,370), _best_summary(), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color("#7cf4ca"))
+		_draw_button(restart_rect, "最初からもう一度  R", Color("#176759"))
+		draw_string(font, Vector2(347,515), "Art / UI / SFX: Kenney (CC0)", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("#668898"))
