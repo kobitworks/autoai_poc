@@ -58,13 +58,13 @@ func _draw() -> void:
 	# Wing seams and ribs.
 	for i in range(6):
 		var t := float(i + 1) / 7.0
-		var lx := lerp(-365.0, -24.0, t)
-		var ly := lerp(-16.0, -50.0, t)
-		draw_line(Vector2(lx, ly), Vector2(lerp(-304.0, -8.0, t), lerp(29.0, -16.0, t)), Color(0.34, 0.26, 0.18, 0.28), 2.0)
+		var lx: float = lerpf(-365.0, -24.0, t)
+		var ly: float = lerpf(-16.0, -50.0, t)
+		draw_line(Vector2(lx, ly), Vector2(lerpf(-304.0, -8.0, t), lerpf(29.0, -16.0, t)), Color(0.34, 0.26, 0.18, 0.28), 2.0)
 	for i in range(7):
 		var t := float(i + 1) / 8.0
-		var rx := lerp(9.0, 420.0, t)
-		draw_line(Vector2(rx, lerp(-50.0, -3.0, t)), Vector2(lerp(13.0, 319.0, t), lerp(-12.0, 54.0, t)), Color(0.34, 0.26, 0.18, 0.24), 2.0)
+		var rx: float = lerpf(9.0, 420.0, t)
+		draw_line(Vector2(rx, lerpf(-50.0, -3.0, t)), Vector2(lerpf(13.0, 319.0, t), lerpf(-12.0, 54.0, t)), Color(0.34, 0.26, 0.18, 0.24), 2.0)
 
 	# Main wooden spars.
 	draw_line(Vector2(-376, -9), Vector2(421, 6), wood, 12.0, true)
