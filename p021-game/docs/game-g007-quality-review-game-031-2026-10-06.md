@@ -1,9 +1,11 @@
-# GAME-G003「風読みグライダー」品質レビュー — GAME-031
+# GAME-G007「風読みグライダー」品質レビュー — GAME-031
 
+
+> ID correction (GAME-034, 2026-10-07): 風読みグライダーの正しい孫プロジェクトIDは `GAME-G007`。旧 `GAME-G003` は CityCraft 3D の正本IDとして維持する。過去のActions run / artifact / commit等に残る `g003` 表記は、訂正前に生成された不変の監査証跡としてそのまま参照する。
 - Review date: 2026-10-06 JST
 - Project: P021 ゲーム開発
 - Task: GAME-031
-- Target: GAME-G003「風読みグライダー」
+- Target: GAME-G007「風読みグライダー」
 - Evaluation rule: project_rule.md §10.5 / §10.6
 - Evaluated develop head before this review artifact: `e5d3b8ef61c2780252f3227f6e4f880b144a04a3`
 - Source implementation parent: `9b302c7336cfb44b38820d834e4ec8d9e297f11b`
@@ -59,4 +61,4 @@ developの評価対象build `e5d3b8ef61c2780252f3227f6e4f880b144a04a3` に対す
 
 ## 結論
 
-GAME-G003は主要ゲームループとWeb/モバイル技術基盤が成立しており、**70/100の公開候補**。一般公開完了とはせず、音声・演出・アート品質をまとめて改善する次タスクを登録して継続する。
+GAME-G007は主要ゲームループとWeb/モバイル技術基盤が成立しており、**70/100の公開候補**。一般公開完了とはせず、音声・演出・アート品質をまとめて改善する次タスクを登録して継続する。

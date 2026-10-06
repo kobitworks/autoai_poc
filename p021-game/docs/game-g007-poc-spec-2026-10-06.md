@@ -1,7 +1,9 @@
-# GAME-G003「風読みグライダー」PoC仕様 v1.0
+# GAME-G007「風読みグライダー」PoC仕様 v1.0
 
+
+> ID correction (GAME-034, 2026-10-07): 風読みグライダーの正しい孫プロジェクトIDは `GAME-G007`。旧 `GAME-G003` は CityCraft 3D の正本IDとして維持する。過去のActions run / artifact / commit等に残る `g003` 表記は、訂正前に生成された不変の監査証跡としてそのまま参照する。
 - Project: P021 ゲーム開発
-- Game ID: GAME-G003
+- Game ID: GAME-G007
 - Slug: `wind-reader-glider`
 - Engine: Godot 4.7.2 / GDScript / Compatibility renderer / Web single-thread
 - Primary devices: smartphone / tablet

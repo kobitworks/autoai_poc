@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 const baseUrl = "http://127.0.0.1:4173/p021-game/games/wind-reader-glider/?qa=1";
-const outDir = "p021-game/test-artifacts/game-g003-stage-flow";
+const outDir = "p021-game/test-artifacts/game-g007-stage-flow";
 const cases = [
   { name: "phone-portrait", width: 390, height: 844 },
   { name: "phone-landscape", width: 844, height: 390 },

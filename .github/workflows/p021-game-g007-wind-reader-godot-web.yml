@@ -1,16 +1,16 @@
-name: P021 Build GAME-G003 Wind Reader Glider
+name: P021 Build GAME-G007 Wind Reader Glider
 
 on:
   push:
     branches: [develop]
     paths:
       - 'p021-game/sources/wind-reader-glider/**'
-      - 'p021-game/tests/g003-stage1-responsive-qa.mjs'
-      - '.github/workflows/p021-game-g003-wind-reader-godot-web.yml'
+      - 'p021-game/tests/g007-stage1-responsive-qa.mjs'
+      - '.github/workflows/p021-game-g007-wind-reader-godot-web.yml'
   workflow_dispatch:
 
 concurrency:
-  group: p021-game-g003-wind-reader-develop
+  group: p021-game-g007-wind-reader-develop
   cancel-in-progress: true
 
 permissions:
@@ -42,7 +42,7 @@ jobs:
           wget -q -O fonts/NotoSansJP.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/NotoSansJP%5Bwght%5D.ttf"
           test -s fonts/NotoSansJP.ttf
 
-      - name: Validate GAME-G003 contracts
+      - name: Validate GAME-G007 contracts
         working-directory: p021-game/sources/wind-reader-glider
         run: |
           grep -q 'class_name WindReaderFlightModel' scripts/FlightModel.gd
@@ -73,12 +73,12 @@ jobs:
       - name: Runtime smoke
         working-directory: p021-game/sources/wind-reader-glider
         run: |
-          godot --headless --path . --quit-after 4 > /tmp/g003-runtime.log 2>&1 || {
-            cat /tmp/g003-runtime.log
+          godot --headless --path . --quit-after 4 > /tmp/g007-runtime.log 2>&1 || {
+            cat /tmp/g007-runtime.log
             exit 1
           }
-          cat /tmp/g003-runtime.log
-          if grep -E "SCRIPT ERROR|Parse Error|Invalid (call|assignment|access)" /tmp/g003-runtime.log; then
+          cat /tmp/g007-runtime.log
+          if grep -E "SCRIPT ERROR|Parse Error|Invalid (call|assignment|access)" /tmp/g007-runtime.log; then
             echo "Runtime script error detected."
             exit 1
           fi
@@ -86,22 +86,22 @@ jobs:
       - name: Export Web build
         working-directory: p021-game/sources/wind-reader-glider
         run: |
-          rm -rf /tmp/g003-export
-          mkdir -p /tmp/g003-export
-          godot --headless --export-release "Web" /tmp/g003-export/index.html
-          test -s /tmp/g003-export/index.js
-          test -s /tmp/g003-export/index.wasm
-          test -s /tmp/g003-export/index.pck
+          rm -rf /tmp/g007-export
+          mkdir -p /tmp/g007-export
+          godot --headless --export-release "Web" /tmp/g007-export/index.html
+          test -s /tmp/g007-export/index.js
+          test -s /tmp/g007-export/index.wasm
+          test -s /tmp/g007-export/index.pck
 
       - name: Build shared Game Hub runtime layout
         run: |
           mkdir -p p021-game/runtime/godot-4.7.2
           mkdir -p p021-game/games/wind-reader-glider
-          cp /tmp/g003-export/index.js p021-game/runtime/godot-4.7.2/godot.js
-          cp /tmp/g003-export/index.wasm p021-game/runtime/godot-4.7.2/godot.wasm
-          cp /tmp/g003-export/index.pck p021-game/games/wind-reader-glider/wind-reader-glider.pck
-          if [ -f /tmp/g003-export/index.png ]; then
-            cp /tmp/g003-export/index.png p021-game/games/wind-reader-glider/splash.png
+          cp /tmp/g007-export/index.js p021-game/runtime/godot-4.7.2/godot.js
+          cp /tmp/g007-export/index.wasm p021-game/runtime/godot-4.7.2/godot.wasm
+          cp /tmp/g007-export/index.pck p021-game/games/wind-reader-glider/wind-reader-glider.pck
+          if [ -f /tmp/g007-export/index.png ]; then
+            cp /tmp/g007-export/index.png p021-game/games/wind-reader-glider/splash.png
           fi
           cat > p021-game/games/wind-reader-glider/index.html <<'HTML'
           <!doctype html>
@@ -109,7 +109,7 @@ jobs:
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,viewport-fit=cover">
-            <title>風読みグライダー | GAME-G003</title>
+            <title>風読みグライダー | GAME-G007</title>
             <style>
               html,body,#canvas{margin:0;width:100%;height:100%;overflow:hidden;background:#123c5d;touch-action:none}
               #canvas{display:block}
@@ -161,7 +161,7 @@ jobs:
             exit 1
           fi
 
-      - name: Commit exported GAME-G003 and shared runtime
+      - name: Commit exported GAME-G007 and shared runtime
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git config user.name "github-actions[bot]"
@@ -170,7 +170,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No exported changes."
           else
-            git commit -m "P021: build GAME-G003 shared-runtime Web"
+            git commit -m "P021: build GAME-G007 shared-runtime Web"
             pushed=0
             for attempt in 1 2 3 4; do
               git pull --rebase origin develop
@@ -198,16 +198,16 @@ jobs:
         run: |
           npm install --no-save playwright@1.55.0
           npx playwright install --with-deps chromium
-      - name: Serve GAME-G003
+      - name: Serve GAME-G007
         run: |
-          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/g003-http.log 2>&1 &
-          echo $! > /tmp/g003-http.pid
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/g007-http.log 2>&1 &
+          echo $! > /tmp/g007-http.pid
       - name: Run four-viewport three-stage flow QA
-        run: node p021-game/tests/g003-stage1-responsive-qa.mjs
-      - name: Upload GAME-G003 QA evidence
+        run: node p021-game/tests/g007-stage1-responsive-qa.mjs
+      - name: Upload GAME-G007 QA evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: game-g003-three-stage-responsive-qa
-          path: p021-game/test-artifacts/game-g003-stage-flow/
+          name: game-g007-three-stage-responsive-qa
+          path: p021-game/test-artifacts/game-g007-stage-flow/
           if-no-files-found: warn

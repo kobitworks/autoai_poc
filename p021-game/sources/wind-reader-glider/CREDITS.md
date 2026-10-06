@@ -1,4 +1,4 @@
-# Credits — GAME-G003 Wind Reader Glider
+# Credits — GAME-G007 Wind Reader Glider
 
 Updated: 2026-10-07 (GAME-032)
 

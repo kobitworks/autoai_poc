@@ -46,9 +46,9 @@ func _initialize() -> void:
 		_fail("collision damage")
 		return
 
-	print("GAME-G003 FlightModel smoke PASS")
+	print("GAME-G007 FlightModel smoke PASS")
 	quit(0)
 
 func _fail(label: String) -> void:
-	push_error("GAME-G003 FlightModel smoke FAIL: " + label)
+	push_error("GAME-G007 FlightModel smoke FAIL: " + label)
 	quit(1)

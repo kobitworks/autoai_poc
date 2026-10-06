@@ -1,8 +1,8 @@
-# GAME-G003 Asset Register
+# GAME-G007 Asset Register
 
 Updated: 2026-10-07 (GAME-032)
 
-GAME-G003「風読みグライダー」は、3ステージすべてで外部有料素材を使わず、Godotの独自描画とランタイム生成SFXを使用する。
+GAME-G007「風読みグライダー」は、3ステージすべてで外部有料素材を使わず、Godotの独自描画とランタイム生成SFXを使用する。
 
 | asset_id | asset | source | license / rights | use |
 |---|---|---|---|---|

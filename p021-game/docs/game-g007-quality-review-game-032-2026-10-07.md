@@ -1,11 +1,13 @@
-# GAME-G003 品質レビュー — GAME-032
+# GAME-G007 品質レビュー — GAME-032
 
-- 対象: GAME-G003「風読みグライダー」
+
+> ID correction (GAME-034, 2026-10-07): 風読みグライダーの正しい孫プロジェクトIDは `GAME-G007`。旧 `GAME-G003` は CityCraft 3D の正本IDとして維持する。過去のActions run / artifact / commit等に残る `g003` 表記は、訂正前に生成された不変の監査証跡としてそのまま参照する。
+- 対象: GAME-G007「風読みグライダー」
 - 実施日: 2026-10-07
 - 基準: P021 project_rule §10.5 / §10.6
 - 改善ソースコミット: `42674618e04b2cbc700a33aa8356291713b9a5aa`
 - Web出力コミット: `859d27c7416608b541e7fc1d099f0d21199088da`
-- GAME-G003 Actions run: 37488716406
+- GAME-G007 Actions run: 37488716406
 - GitHub Pages run: 37488880386
 - QA artifact: 11425025583 (`game-g003-three-stage-responsive-qa`)
 
