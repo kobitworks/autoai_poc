@@ -39,6 +39,7 @@ button{font:inherit}button:focus-visible,[role="button"]:focus-visible,summary:f
 .map-status strong{display:block;color:#123f6b}.map-status .actions{margin-top:6px}.map-status .btn{min-height:32px;padding:6px 10px}.map-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px;color:#46565a}.map-legend-item{display:inline-flex;align-items:center;gap:4px}.map-legend-dot{width:9px;height:9px;border-radius:50%;background:#176fa6;display:inline-block}.map-legend-dot.friend{background:#7469b6}.map-text-alt{margin-top:5px;color:#41535a}.map-current{font-weight:700;color:#5c6870}
 .map-pin{width:24px;height:24px;border-radius:50% 50% 50% 0;background:#176fa6;border:3px solid #fff;box-shadow:0 1px 4px #0005;transform:rotate(-45deg)}.map-pin.friend{background:#7469b6}.leaflet-control-attribution{font-size:9px}
 .ops-grid{display:grid;grid-template-columns:280px 1fr;gap:12px}.ops-list button{display:block;width:100%;text-align:left;padding:9px;margin:5px 0;background:white;border:1px solid #bbb;border-radius:4px}
+.user-table-wrap{overflow-x:auto}.user-table{width:100%;border-collapse:collapse;background:#fff}.user-table th,.user-table td{padding:10px 8px;border-bottom:1px solid #d9e2e4;text-align:left;vertical-align:middle}.user-table th{font-size:12px;color:#526269;background:#f4f8f9}.role-badge{display:inline-block;min-width:72px;padding:3px 8px;border:1px solid #9bb7c0;border-radius:999px;text-align:center;font-size:12px;font-weight:800;background:#eef7fa;color:#254a5b}.role-badge.admin{background:#e9efff;border-color:#94a7d8;color:#27416f}.role-note{font-size:11px;color:#687577;margin-top:3px}.user-email{font-weight:700;word-break:break-all}.user-actions{white-space:nowrap}
 .banner{position:fixed;left:0;right:0;bottom:calc(64px + var(--safe-bottom));height:54px;background:#e4f3f3;z-index:30;display:grid;place-items:center;border-top:1px solid #c6dcdc}.adbox{width:min(640px,86vw);height:50px;border:1px solid #bbb;background:#fff;display:grid;grid-template-columns:1.1fr 1fr 1.1fr 1fr 1.2fr;color:#444;font-size:9px;overflow:hidden}.adcell{display:grid;place-items:center;border-right:1px solid #ddd;text-align:center;padding:2px}.adcell strong{color:#c40000;font-size:13px}.adcell.rakuten{color:#bf0000;font-size:18px;font-weight:800}
 .bottomnav{position:fixed;left:0;right:0;bottom:0;height:calc(64px + var(--safe-bottom));padding-bottom:var(--safe-bottom);background:#d8eeee;z-index:31;border-top:1px solid #c4dddd;display:flex;justify-content:space-around;align-items:center}.bottomnav button{width:20%;height:100%;border:0;background:transparent;color:#00008a;font-weight:700;font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:3px 0 2px;gap:0}.bottomnav button.current{text-decoration:underline;color:#00008a}.navicon{width:38px;height:38px;object-fit:contain;display:block}.ico{font-size:24px}.info-wrap{position:relative}.badge70{position:absolute;right:-12px;top:-8px;background:#ff5e63;color:white;border-radius:999px;min-width:34px;height:34px;display:grid;place-items:center;font-size:13px;font-weight:700}
 .reviewbar{display:none;position:fixed;right:8px;top:calc(137px + var(--safe-top));z-index:40}body.review-mode .reviewbar{display:block}.reviewbar details{background:#fff;border:1px solid #aaa;border-radius:5px;box-shadow:0 2px 8px #0003}.reviewbar summary{cursor:pointer;padding:5px 8px;font-size:11px;color:#555}.review-buttons{max-width:260px;padding:6px;display:flex;flex-wrap:wrap;gap:4px}.review-buttons button{font-size:10px;padding:4px;background:#eef6f8;border:1px solid #9bb;color:#345;border-radius:3px}
@@ -52,7 +53,7 @@ dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(10
 <body data-ui-baseline="biblio-v2-mobile-20261005">
 <header class="app-header">
   <div class="head-top"><div class="logo"><span class="logo-mark">B</span><span>Biblio</span></div><div class="mode"><div class="mobian-world">Mobian’s<br>World</div></div></div>
-  <nav class="desktop-nav"><button onclick="go('U04')">Map</button><button onclick="go('U01')">List</button><button onclick="go('U01')">Book</button><button onclick="go('U09')">Info</button><button onclick="go('U01')">Config</button></nav>
+  <nav class="desktop-nav"><button onclick="go('U04')">Map</button><button onclick="go('U01')">List</button><button onclick="go('U01')">Book</button><button onclick="go('U09')">Info</button><button onclick="openUserAdmin()">Config</button></nav>
   <nav class="subnav" id="subnav"></nav>
 </header>
 <div class="page-title" id="pageTitle"></div>
@@ -65,16 +66,43 @@ dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(10
   <button data-menu="list" onclick="go('U01')"><img class="navicon" src="https://img.icons8.com/office/40/000000/List-of-parts.png" alt=""><span>List</span></button>
   <button data-menu="book" onclick="go('U01')"><img class="navicon" src="https://img.icons8.com/office/40/000000/book-shelf.png" alt=""><span>Book</span></button>
   <button data-menu="info" onclick="go('U09')"><span class="info-wrap"><img class="navicon" src="https://img.icons8.com/office/40/000000/info--v1.png" alt=""><span class="badge70">70</span></span><span>Info</span></button>
-  <button data-menu="config" onclick="go('U01')"><img class="navicon" src="https://img.icons8.com/office/40/000000/settings.png" alt=""><span>Config</span></button>
+  <button data-menu="config" onclick="openUserAdmin()"><img class="navicon" src="https://img.icons8.com/office/40/000000/settings.png" alt=""><span>Config</span></button>
 </nav>
 <dialog id="confirm" aria-labelledby="confirmTitle" aria-describedby="confirmText"><div class="dlg"><h3 id="confirmTitle">確認</h3><p id="confirmText"></p><div class="actions"><button class="btn secondary" id="cancelDlg" autofocus>キャンセル</button><button class="btn" id="okDlg">実行</button></div></div></dialog>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js?v=20261005-1153"></script>
 <script>
 const SESSION_KEY='biblio_poc_session_v1';
 const PROGRESS_KEY='biblio_poc_progress_v1';
+const USER_ROLE_KEY='biblio_poc_user_roles_v1';
+const DEFAULT_ADMIN_EMAIL='shinozaki@410831.com';
+const DEFAULT_USER_DIRECTORY=[
+ {email:DEFAULT_ADMIN_EMAIL,displayName:'Default Admin',role:'admin',fixed:true},
+ {email:'player-one@example.com',displayName:'Player One',role:'player',fixed:false},
+ {email:'player-two@example.com',displayName:'Player Two',role:'player',fixed:false}
+];
+function loadUserDirectory(){
+ let saved=[];try{const raw=localStorage.getItem(USER_ROLE_KEY);if(raw){const parsed=JSON.parse(raw);if(Array.isArray(parsed))saved=parsed}}catch(e){}
+ const byEmail=new Map(DEFAULT_USER_DIRECTORY.map(x=>[x.email,{...x}]));
+ saved.forEach(x=>{if(x&&x.email&&x.email!==DEFAULT_ADMIN_EMAIL&&['admin','player'].includes(x.role))byEmail.set(x.email,{email:x.email,displayName:x.displayName||x.email,role:x.role,fixed:false})});
+ byEmail.set(DEFAULT_ADMIN_EMAIL,{email:DEFAULT_ADMIN_EMAIL,displayName:'Default Admin',role:'admin',fixed:true});
+ return [...byEmail.values()];
+}
+let registeredUsers=loadUserDirectory();
+let userRoleNotice='';
+function persistUserDirectory(){localStorage.setItem(USER_ROLE_KEY,JSON.stringify(registeredUsers))}
+function resolvedRole(email){return registeredUsers.find(x=>x.email===email)?.role||'player'}
+function adminCount(){return registeredUsers.filter(x=>x.role==='admin').length}
+function changeUserRole(email,nextRole){
+ if(!hasAdminRole()||!['admin','player'].includes(nextRole))return;
+ const u=registeredUsers.find(x=>x.email===email);if(!u)return;
+ if(u.email===state.auth.user?.email){userRoleNotice='自分自身の権限は変更できません。';render();return}
+ if(u.fixed){userRoleNotice='デフォルト管理者の権限は変更できません。';render();return}
+ if(u.role==='admin'&&nextRole==='player'&&adminCount()<=1){userRoleNotice='管理者が0人になる変更はできません。';render();return}
+ u.role=nextRole;persistUserDirectory();userRoleNotice=u.email+' を '+nextRole+' に変更しました。';render();
+}
 const API_BASE=(window.BIBLIO_API_BASE||'').replace(/\/$/,'');
 function serverEnabled(){return !!API_BASE}
-function apiHeaders(idempotencyKey=''){const h={'Content-Type':'application/json'};if(idempotencyKey)h['Idempotency-Key']=idempotencyKey;if(state?.auth?.user?.email)h['X-PoC-User']=state.auth.user.email;if(state?.auth?.user?.role)h['X-PoC-Role']=state.auth.user.role;return h}
+function apiHeaders(idempotencyKey=''){const h={'Content-Type':'application/json'};if(idempotencyKey)h['Idempotency-Key']=idempotencyKey;if(state?.auth?.user?.email)h['X-PoC-User']=state.auth.user.email;if(state?.auth?.user?.role){const wireRole=state.auth.user.role==='admin'?'operator':state.auth.user.role==='player'?'user':state.auth.user.role;h['X-PoC-Role']=wireRole}return h}
 async function apiRequest(path,options={}){const r=await fetch(API_BASE+path,{method:options.method||'GET',headers:apiHeaders(options.idempotencyKey||''),body:options.body?JSON.stringify(options.body):undefined});const j=await r.json().catch(()=>({error:'INVALID_JSON'}));if(!r.ok)throw new Error(j.error||('HTTP_'+r.status));return j}
 
 const STORY_SCENES=Object.freeze({
@@ -89,7 +117,7 @@ const state={screen:'U01',book:'walk-shibuya',locationResult:null,locationReache
  {bookKey:'walk-shibuya',chapter:1,scene:1,sceneKey:'scene-1',sceneTitle:'街角のはじまり',updatedAt:'2026-10-05T08:00:00+09:00',resumable:true},
  {bookKey:'walk-shibuya',chapter:1,scene:2,sceneKey:'scene-2',sceneTitle:'交差点の小さな違和感',updatedAt:'2026-10-05T10:30:00+09:00',resumable:true}
 ]};
-const labels={LOGIN:'Login',U01:'Book',U02:'Book Detail',U03:'Story',U04:'Map',U05:'Location Check',U06:'Safety',U08:'Book Complete',U09:'Next Book',U10:'Book Select',O01:'Publication'};
+const labels={LOGIN:'Login',U01:'Book',U02:'Book Detail',U03:'Story',U04:'Map',U05:'Location Check',U06:'Safety',U08:'Book Complete',U09:'Next Book',U10:'Book Select',O01:'Publication',A01:'User Roles'};
 const app=document.getElementById('app'), jump=document.getElementById('jump'), subnav=document.getElementById('subnav'), title=document.getElementById('pageTitle'), sessionChip=document.getElementById('sessionChip');
 const LEGACY_UI_BASELINE=Object.freeze({
  id:'biblio-v2-mobile-20261005',
@@ -132,9 +160,11 @@ async function advanceStory(){
 }
 function applyStartedBook(book,serverRes=null){const progress={bookKey:book.key,chapter:1,scene:1,sceneKey:'scene-1',sceneTitle:'街角のはじまり',updatedAt:new Date().toISOString(),resumable:true};upsertProgress(progress);state.book=book.key;state.server.progressId=serverRes?.progress_id||state.server.progressId;state.server.bookVersion=serverRes?.book_version||null;state.story={chapter:progress.chapter,scene:progress.scene,sceneKey:progress.sceneKey,title:progress.sceneTitle};state.storyAdvance={status:'idle',error:'',notice:'',mode:'success',lastRequestKey:''};state.start={status:'idle',error:'',mode:'success'};state.screen='U03';history.replaceState({s:'U03'},'','#U03');render()}
 async function startBook(bookKey){if(state.start.status==='starting')return;const visible=startAvailability(bookKey);if(!visible.allowed){state.start.status='blocked';state.start.error=visible.reason;render();return}state.start.status='starting';state.start.error='';render();const book=state.books.find(x=>x.key===bookKey);if(serverEnabled()){try{const res=await apiRequest('/api/v1/books/'+encodeURIComponent(bookKey)+'/start',{method:'POST',idempotencyKey:'start:'+bookKey,body:{start_context:{kind:state.complete?'NEXT_BOOK':'NORMAL'}}});applyStartedBook(book,res);return}catch(e){state.start.status='error';state.start.error='Bookを開始できませんでした。'+e.message;render();return}}setTimeout(()=>{if(state.start.mode==='error'){state.start.status='error';state.start.error='Bookを開始できませんでした。通信状態を確認して、もう一度お試しください。';render();return}if(state.start.mode==='blocked'||!book||!book.available){state.start.status='blocked';state.start.error='現在、このBookは開始できません。'+(book?.unavailableReason?' 開始できない理由: '+book.unavailableReason:' サーバー側の最新状態を確認してください。');render();return}applyStartedBook(book)},300)}
-function hasOpsRole(){return state.auth.status==='logged_in'&&state.auth.user?.role==='operator'}
-function openOps(){if(!hasOpsRole()){state.auth.error='公開管理には運用権限が必要です。';state.screen='U01';history.replaceState({s:'U01'},'','#U01');render();return}go('O01')}
-function go(s){if(s!=='LOGIN'&&state.auth.status!=='logged_in'){state.screen='LOGIN';state.auth.error='ログインが必要です。';history.replaceState({s:'LOGIN'},'','#LOGIN');render();return}if(s==='O01'&&!hasOpsRole()){state.auth.error='公開管理には運用権限が必要です。';state.screen='U01';history.replaceState({s:'U01'},'','#U01');render();return}if(s==='U05'&&state.screen!=='U05')resetLocationCheck();state.screen=s;history.replaceState({s},'', '#'+s);render()}
+function hasAdminRole(){return state.auth.status==='logged_in'&&state.auth.user?.role==='admin'}
+function hasOpsRole(){return hasAdminRole()}
+function openOps(){if(!hasAdminRole()){state.auth.error='公開管理には管理者権限が必要です。';state.screen='U01';history.replaceState({s:'U01'},'','#U01');render();return}go('O01')}
+function openUserAdmin(){if(!hasAdminRole()){state.auth.error='ユーザー権限管理には管理者権限が必要です。';state.screen='U01';history.replaceState({s:'U01'},'','#U01');render();return}go('A01')}
+function go(s){if(s!=='LOGIN'&&state.auth.status!=='logged_in'){state.screen='LOGIN';state.auth.error='ログインが必要です。';history.replaceState({s:'LOGIN'},'','#LOGIN');render();return}if((s==='O01'||s==='A01')&&!hasAdminRole()){state.auth.error='この画面には管理者権限が必要です。';state.screen='U01';history.replaceState({s:'U01'},'','#U01');render();return}if(s==='U05'&&state.screen!=='U05')resetLocationCheck();state.screen=s;history.replaceState({s},'', '#'+s);render()}
 function btn(t,a,c=''){return '<button class="btn '+c+'" onclick="'+a+'">'+t+'</button>'}
 function page(body){return '<div class="paper">'+body+'<div class="dev">実行モード: '+(serverEnabled()?'PHP API / MySQL':'GitHub Pages mock')+'。Clientは表示/入力、確定判定はServer権威境界へ接続します。</div></div>'}
 function renderNav(){
@@ -142,23 +172,23 @@ function renderNav(){
  document.body.classList.toggle('login-mode',isLogin);
  document.body.classList.toggle('safety-mode',['U04','U05','U06'].includes(state.screen));
  app.classList.toggle('map-mode',state.screen==='U04');
- const tabs=state.screen==='O01'?['Publication','Version']:(isLogin?[]:LEGACY_UI_BASELINE.tabs);
+ const tabs=state.screen==='O01'?['Publication','Version']:state.screen==='A01'?['Users','Roles']:(isLogin?[]:LEGACY_UI_BASELINE.tabs);
  subnav.innerHTML=tabs.map((x,i)=>'<button class="'+(i===0?'active':'')+'" type="button">'+x+'</button>').join('');
  title.textContent=labels[state.screen]||'Biblio';
  if(reviewMode){
-  jump.innerHTML=Object.keys(labels).map(k=>'<button onclick="'+(k==='O01'?'openOps()':"go(\'"+k+"\')")+'">'+k+' '+labels[k]+'</button>').join('');
+  jump.innerHTML=Object.keys(labels).map(k=>'<button onclick="'+(k==='O01'?'openOps()':k==='A01'?'openUserAdmin()':"go(\'"+k+"\')")+'">'+k+' '+labels[k]+'</button>').join('');
  }
  document.querySelectorAll('.bottomnav button').forEach(x=>{x.classList.remove('current');x.removeAttribute('aria-current')});
- const menu=state.screen==='U04'||state.screen==='U05'||state.screen==='U06'?'map':state.screen==='O01'?'config':state.screen==='U09'||state.screen==='U10'?'info':'book';
+ const menu=state.screen==='U04'||state.screen==='U05'||state.screen==='U06'?'map':state.screen==='O01'||state.screen==='A01'?'config':state.screen==='U09'||state.screen==='U10'?'info':'book';
  const el=document.querySelector('.bottomnav [data-menu="'+menu+'"]');if(el){el.classList.add('current');el.setAttribute('aria-current','page')}
- const loggedIn=state.auth.status==='logged_in';sessionChip.hidden=isLogin||!loggedIn;sessionChip.innerHTML=loggedIn?'Google mock: '+state.auth.user.email+(state.auth.restored?' / 復元済み':'')+' <button onclick="logoutMock()">ログアウト</button>':'';
+ const loggedIn=state.auth.status==='logged_in';sessionChip.hidden=isLogin||!loggedIn;sessionChip.innerHTML=loggedIn?'Google mock: '+state.auth.user.email+' / '+state.auth.user.role+(state.auth.restored?' / 復元済み':'')+' <button onclick="logoutMock()">ログアウト</button>':'';
 }
 function cover(x,idx){const p=latestProgress(x.key),availability=!x.available?'利用不可':p?'進行中':'利用可';return '<div class="book-card" tabindex="0" role="button" aria-label="'+x.title+' '+availability+'" onclick="state.book=\''+x.key+'\';go(\'U02\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){this.click()}"><div class="cover '+x.cls+'"><div class="cover-title">'+x.title+'</div><div class="cover-region">'+x.region+' / '+x.time+'</div></div><span class="status">'+availability+'</span>'+(x.key===state.book?'<span class="selected">選択中</span>':'')+'</div>'}
 function nextBookCover(x){return '<div class="book-card" tabindex="0" role="button" aria-label="次Book候補 '+x.title+'" onclick="previewNextBook(\''+x.key+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){this.click()}"><div class="cover '+x.cls+'"><div class="cover-title">'+x.title+'</div><div class="cover-region">'+x.region+' / '+x.time+'</div></div><span class="status">候補</span></div>'}
 function render(){
  renderNav();const book=b();
  if(state.screen==='LOGIN'){
-  app.innerHTML='<div class="login-screen"><div class="login-logo"><span class="login-logo-book">▯</span><span>Biblio</span></div><div class="login-copy"><p>ゲームを遊ぶにはGoogleアカウントが必要です。</p><p>スマートフォンまたはタブレットの使用を推奨しております。</p></div><button class="google-login" onclick="loginMock(\'success\')" '+(state.auth.status==='authenticating'?'disabled':'')+'><span class="gmark">G</span><span>'+(state.auth.status==='authenticating'?'Google 認証中…':'Google でログイン')+'</span></button>'+(state.auth.error?'<div class="login-error" role="alert">'+state.auth.error+'</div>':'')+'<div class="login-note">PoC：Google OAuthの資格情報は使用せず、認証結果のみmockします</div>'+(reviewMode?'<div class="login-dev-actions"><button class="btn secondary" onclick="loginMock(\'operator\')">運用権限でログイン</button><button class="btn secondary" onclick="loginMock(\'error\')">認証エラーを試す</button><button class="btn secondary" onclick="clearSessionMock()">保存セッションを消去</button></div>':'')+'</div>';
+  app.innerHTML='<div class="login-screen"><div class="login-logo"><span class="login-logo-book">▯</span><span>Biblio</span></div><div class="login-copy"><p>ゲームを遊ぶにはGoogleアカウントが必要です。</p><p>スマートフォンまたはタブレットの使用を推奨しております。</p></div><button class="google-login" onclick="loginMock(\'success\')" '+(state.auth.status==='authenticating'?'disabled':'')+'><span class="gmark">G</span><span>'+(state.auth.status==='authenticating'?'Google 認証中…':'Google でログイン')+'</span></button>'+(state.auth.error?'<div class="login-error" role="alert">'+state.auth.error+'</div>':'')+'<div class="login-note">PoC：Google OAuthの資格情報は使用せず、認証結果のみmockします</div>'+(reviewMode?'<div class="login-dev-actions"><button class="btn secondary" onclick="loginMock(\'admin\')">管理者でログイン</button><button class="btn secondary" onclick="loginMock(\'error\')">認証エラーを試す</button><button class="btn secondary" onclick="clearSessionMock()">保存セッションを消去</button></div>':'')+'</div>';
  }else if(state.screen==='U01'){
   const resume=latestResumeCandidate();
   app.innerHTML=page((state.resumeNotice?'<div class="notice warn">'+state.resumeNotice+'</div>':'')+(resume?'<div class="panel"><strong>つづきから</strong><p>'+resume.book.title+' — Chapter '+resume.progress.chapter+' / Scene '+resume.progress.scene+'</p><p class="muted">'+resume.progress.sceneTitle+'</p>'+btn('つづきから',"resumeBook('"+resume.book.key+"')")+'</div>':'<div class="panel muted">再開できる進行中Bookはありません。</div>')+'<h3>Book一覧</h3><div class="book-container">'+state.books.map(cover).join('')+'</div><p class="muted">旧BiblioのBook表紙一覧を維持し、利用可能・進行中・利用不可を表示しています。</p>'+(reviewMode?'<div class="panel"><strong>U07 Resume Resolver 確認</strong><p class="muted">U07は独立画面を表示せず、最新の再開可能Sceneを解決してU03へreplaceします。</p><div class="actions">'+btn('再開データあり',"setResumeMock(true)",'secondary')+btn('再開データなし',"setResumeMock(false)",'secondary')+'</div></div>':''));
@@ -198,9 +228,20 @@ function render(){
   const completedBookKey=state.completion.record?.bookKey||book.key,x=state.books.find(v=>v.key===state.selectedNext&&v.key!==completedBookKey&&v.available);
   if(!x){app.innerHTML=page('<h2>次に読むBook</h2><div class="notice warn">確認する候補が選ばれていません。</div><div class="actions">'+btn('候補へ戻る',"go('U09')")+'</div>');}
   else{app.innerHTML=page('<h2>次に読むBook</h2><div class="panel"><strong>'+x.title+'</strong><p>'+x.region+' / '+x.time+'</p><p>'+x.desc+'</p><div class="notice warn"><strong>開始前に確認</strong><br>'+x.safety+'</div></div><p class="muted">ここではまだBookは切り替わっていません。「このBookを選ぶ」で確定後、開始前確認画面へ進みます。</p><div class="actions">'+btn('このBookを選ぶ',"confirmNextBookSelection()")+btn('候補へ戻る',"go('U09')",'secondary')+'</div>');}
+ }else if(state.screen==='A01'){
+  if(!hasAdminRole()){app.innerHTML=page('<h2>ユーザー権限管理</h2><div class="notice danger" role="alert"><strong>管理者権限が必要です。</strong><br>プレーヤーはこの画面を操作できません。</div><div class="actions">'+btn('Bookへ戻る',"go('U01')")+'</div>');}
+  else{
+   const me=state.auth.user?.email||'',count=adminCount();
+   const rows=registeredUsers.map(u=>{
+    const self=u.email===me,locked=self||u.fixed||(u.role==='admin'&&count<=1),next=u.role==='admin'?'player':'admin';
+    const note=self?'自分自身は変更不可':u.fixed?'デフォルト管理者':(u.role==='admin'&&count<=1?'最後の管理者は変更不可':'登録済みユーザー');
+    return '<tr><td><div class="user-email">'+u.email+'</div><div class="role-note">'+note+'</div></td><td><span class="role-badge '+(u.role==='admin'?'admin':'')+'">'+u.role+'</span></td><td class="user-actions"><button class="btn secondary" '+(locked?'disabled':'')+' onclick="changeUserRole(\''+u.email+'\',\''+next+'\')">'+(u.role==='admin'?'プレーヤーに変更':'管理者に変更')+'</button></td></tr>';
+   }).join('');
+   app.innerHTML=page('<h2>ユーザー権限管理</h2><p>登録済みメールアドレスの権限を管理します。未登録ユーザーはプレーヤー権限として扱います。</p>'+(userRoleNotice?'<div class="notice" role="status">'+userRoleNotice+'</div>':'')+'<div class="panel"><div class="fact"><span>管理者数</span><strong>'+count+'</strong></div><div class="fact"><span>現在のログイン</span><strong>'+me+'</strong></div></div><div class="panel user-table-wrap"><table class="user-table"><thead><tr><th>メールアドレス</th><th>権限</th><th>操作</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="notice warn"><strong>変更制約</strong><br>自分自身の権限変更、デフォルト管理者の変更、管理者が0人になる変更はできません。</div><div class="actions">'+btn('公開管理へ',"openOps()", 'secondary')+btn('Bookへ戻る',"go('U01')",'secondary')+'</div>');
+  }
  }else if(state.screen==='O01'){
   if(!hasOpsRole()){app.innerHTML=page('<h2>公開管理</h2><div class="notice danger" role="alert"><strong>運用権限が必要です。</strong><br>一般利用者はこの画面を操作できません。</div><div class="actions">'+btn('Bookへ戻る',"go('U01')")+'</div>');}
-  else{const busy=state.ops.status==='saving';app.innerHTML=page('<h2>公開管理</h2><p>一般利用UIから分離した運用PoCです。公開状態の確定はServer権威相当APIの応答後に反映します。</p>'+(state.ops.result?'<div class="notice" role="status"><strong>操作結果</strong><br>'+state.ops.result+'</div>':'')+(state.ops.error?'<div class="notice danger" role="alert">'+state.ops.error+'</div>':'')+'<div class="ops-grid"><div class="panel ops-list">'+state.books.map(x=>'<button onclick="state.book=\''+x.key+'\';state.ops.result=\'\';state.ops.error=\'\';render()"><strong>'+x.title+'</strong><br><small>'+x.pub+'</small></button>').join('')+'</div><div class="panel"><h3>'+book.title+'</h3><div class="fact"><span>対象版</span><strong>'+state.ops.version+'</strong></div><div class="fact"><span>公開状態</span><strong>'+book.pub+'</strong></div><div class="fact"><span>運用権限</span><strong>operator</strong></div><div class="actions"><button class="btn secondary" '+(busy?'disabled':'')+' onclick="opsConfirm(\'TEST\')">Test公開</button><button class="btn" '+(busy?'disabled':'')+' onclick="opsConfirm(\'LIVE\')">本公開</button><button class="btn danger" '+(busy?'disabled':'')+' onclick="opsConfirm(\'STOP\')">公開停止</button><button class="btn secondary" '+(busy?'disabled':'')+' onclick="opsConfirm(\'REPLACE\')">版を差し替え</button></div></div></div>');}
+  else{const busy=state.ops.status==='saving';app.innerHTML=page('<h2>公開管理</h2><p>一般利用UIから分離した運用PoCです。公開状態の確定はServer権威相当APIの応答後に反映します。</p>'+(state.ops.result?'<div class="notice" role="status"><strong>操作結果</strong><br>'+state.ops.result+'</div>':'')+(state.ops.error?'<div class="notice danger" role="alert">'+state.ops.error+'</div>':'')+'<div class="ops-grid"><div class="panel ops-list">'+state.books.map(x=>'<button onclick="state.book=\''+x.key+'\';state.ops.result=\'\';state.ops.error=\'\';render()"><strong>'+x.title+'</strong><br><small>'+x.pub+'</small></button>').join('')+'</div><div class="panel"><h3>'+book.title+'</h3><div class="fact"><span>対象版</span><strong>'+state.ops.version+'</strong></div><div class="fact"><span>公開状態</span><strong>'+book.pub+'</strong></div><div class="fact"><span>管理権限</span><strong>admin</strong></div><div class="actions"><button class="btn secondary" '+(busy?'disabled':'')+' onclick="opsConfirm(\'TEST\')">Test公開</button><button class="btn" '+(busy?'disabled':'')+' onclick="opsConfirm(\'LIVE\')">本公開</button><button class="btn danger" '+(busy?'disabled':'')+' onclick="opsConfirm(\'STOP\')">公開停止</button><button class="btn secondary" '+(busy?'disabled':'')+' onclick="opsConfirm(\'REPLACE\')">版を差し替え</button></div></div></div>');}
  }
 }
 let leafletMapInstance=null;
@@ -232,8 +273,8 @@ function initLeafletMap(){
  }
 }
 window.addEventListener('resize',()=>{if(leafletMapInstance)leafletMapInstance.invalidateSize()});
-function loginMock(mode){state.auth.status='authenticating';state.auth.error='';render();setTimeout(()=>{if(mode==='error'){state.auth.status='logged_out';state.auth.user=null;state.auth.error='Google認証に失敗しました。時間をおいてもう一度お試しください。';render();return}const isOperator=mode==='operator'&&reviewMode;const session={provider:'google',email:isOperator?'ops-user@example.com':'poc-user@example.com',displayName:isOperator?'PoC Operator':'PoC User',role:isOperator?'operator':'user',issuedAt:new Date().toISOString()};localStorage.setItem(SESSION_KEY,JSON.stringify(session));state.auth.status='logged_in';state.auth.user=session;state.auth.restored=false;state.auth.error='';state.screen=isOperator?'O01':'U04';history.replaceState({s:state.screen},'','#'+state.screen);render()},250)}
-function restoreSessionMock(){try{const raw=localStorage.getItem(SESSION_KEY);if(!raw)return false;const session=JSON.parse(raw);if(session?.provider!=='google'||!session?.email)throw new Error('invalid session');if(!session.role)session.role='user';state.auth.status='logged_in';state.auth.user=session;state.auth.restored=true;state.auth.error='';return true}catch(e){localStorage.removeItem(SESSION_KEY);state.auth.status='logged_out';state.auth.user=null;state.auth.error='保存されたセッションを復元できませんでした。もう一度ログインしてください。';return false}}
+function loginMock(mode){state.auth.status='authenticating';state.auth.error='';render();setTimeout(()=>{if(mode==='error'){state.auth.status='logged_out';state.auth.user=null;state.auth.error='Google認証に失敗しました。時間をおいてもう一度お試しください。';render();return}const isAdmin=mode==='admin'&&reviewMode;const email=isAdmin?DEFAULT_ADMIN_EMAIL:'poc-user@example.com';const session={provider:'google',email,displayName:isAdmin?'PoC Admin':'PoC Player',role:resolvedRole(email),issuedAt:new Date().toISOString()};localStorage.setItem(SESSION_KEY,JSON.stringify(session));state.auth.status='logged_in';state.auth.user=session;state.auth.restored=false;state.auth.error='';state.screen=isAdmin?'A01':'U04';history.replaceState({s:state.screen},'','#'+state.screen);render()},250)}
+function restoreSessionMock(){try{const raw=localStorage.getItem(SESSION_KEY);if(!raw)return false;const session=JSON.parse(raw);if(session?.provider!=='google'||!session?.email)throw new Error('invalid session');session.role=resolvedRole(session.email);state.auth.status='logged_in';state.auth.user=session;state.auth.restored=true;state.auth.error='';return true}catch(e){localStorage.removeItem(SESSION_KEY);state.auth.status='logged_out';state.auth.user=null;state.auth.error='保存されたセッションを復元できませんでした。もう一度ログインしてください。';return false}}
 function logoutMock(){localStorage.removeItem(SESSION_KEY);state.auth.status='logged_out';state.auth.user=null;state.auth.restored=false;state.auth.error='';state.screen='LOGIN';history.replaceState({s:'LOGIN'},'','#LOGIN');render()}
 function clearSessionMock(){localStorage.removeItem(SESSION_KEY);state.auth.status='logged_out';state.auth.user=null;state.auth.restored=false;state.auth.error='保存セッションを消去しました。';render()}
 const LOCATION_RULES=Object.freeze({arrivalRadiusM:60,maxAccuracyM:50,maxAgeMs:30000,futureSkewMs:5000,timeoutMs:10000,minRetryMs:3000,maxAttempts:3});
@@ -347,7 +388,7 @@ window.addEventListener('popstate',e=>{if(e.state?.s){state.screen=e.state.s;ren
 restoreProgress();
 const restored=restoreSessionMock();
 const requested=location.hash&&labels[location.hash.slice(1)]?location.hash.slice(1):null;
-if(restored)state.screen=requested&&requested!=='LOGIN'?(requested==='O01'&& !hasOpsRole()?'U04':requested):'U04';
+if(restored)state.screen=requested&&requested!=='LOGIN'?((requested==='O01'||requested==='A01')&&!hasAdminRole()?'U04':requested):'U04';
 else state.screen='LOGIN';
 render();
 </script>
