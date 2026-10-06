@@ -34,9 +34,9 @@ func _init() -> void:
 	check(VisibilityModelScript.is_visible(origin, 0.0, 0.4, 10.0, point, []), "unoccluded point visible")
 
 	var alert = AlertModelScript.new()
-	alert.update(1.0, true, false)
-	check(alert.value > 30.0 and alert.state() == "SUSPICIOUS", "alert rises in light")
-	alert.update(1.0, false, false)
+	alert.update(1.1, true, false)
+	check(alert.value >= 35.0 and alert.state() == "SUSPICIOUS", "alert rises into suspicious state")
+	alert.update(1.1, false, false)
 	check(alert.value < 5.0 and alert.state() == "HIDDEN", "alert recovers in shadow")
 	for i in range(4):
 		alert.update(1.0, true, true)
