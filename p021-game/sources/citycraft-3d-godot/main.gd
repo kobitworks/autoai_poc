@@ -10,6 +10,15 @@ const COSTS := {
 	"park": 800
 }
 
+const TILE_COLORS := {
+	"empty": Color("e8d8b8"),
+	"road": Color("d6d9de"),
+	"home": Color("4f9fe8"),
+	"shop": Color("8b939e"),
+	"park": Color("50ad62"),
+	"city": Color("78cbe8")
+}
+
 var money := 18000
 var population_f := 12.0
 var population := 12
@@ -21,6 +30,7 @@ var camera_angle := PI / 4.0
 var camera_zoom := 1.0
 
 var cells: Dictionary = {}
+var tile_nodes: Dictionary = {}
 var object_root: Node3D
 var camera: Camera3D
 var money_label: Label
@@ -121,10 +131,16 @@ func _build_world() -> void:
 
 	for z in GRID_SIZE:
 		for x in GRID_SIZE:
-			var c := Color("86c978") if (x + z) % 2 == 0 else Color("78bc6c")
-			var tile := _box(Vector3(0.96, 0.08, 0.96), c)
+			var cell := Vector2i(x, z)
+			var tile_color: Color = TILE_COLORS["empty"]
+			# A very small checker variation keeps the grid readable without
+			# competing with the semantic zoning colors.
+			if (x + z) % 2 == 1:
+				tile_color = tile_color.darkened(0.035)
+			var tile := _box(Vector3(0.96, 0.08, 0.96), tile_color)
 			tile.position = Vector3(x - HALF, 0.0, z - HALF)
 			add_child(tile)
+			tile_nodes[cell] = tile
 
 	object_root = Node3D.new()
 	object_root.name = "CityObjects"
@@ -167,6 +183,30 @@ func _box(size: Vector3, color: Color) -> MeshInstance3D:
 	return node
 
 
+func _tile_material(color: Color) -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color
+	material.roughness = 0.90
+	material.metallic = 0.0
+	return material
+
+
+func _set_tile_color(cell: Vector2i, kind: String) -> void:
+	if not tile_nodes.has(cell):
+		return
+	var tile: MeshInstance3D = tile_nodes[cell] as MeshInstance3D
+	var color: Color = TILE_COLORS.get(kind, TILE_COLORS["empty"])
+	if kind == "empty" and (cell.x + cell.y) % 2 == 1:
+		color = color.darkened(0.035)
+	tile.material_override = _tile_material(color)
+
+
+func _reset_all_tile_colors() -> void:
+	for z in GRID_SIZE:
+		for x in GRID_SIZE:
+			_set_tile_color(Vector2i(x, z), "empty")
+
+
 func _make_tree(scale_factor := 1.0) -> Node3D:
 	var root := Node3D.new()
 	var trunk := _box(Vector3(0.12, 0.52, 0.12), Color("795338"))
@@ -189,10 +229,10 @@ func _make_tree(scale_factor := 1.0) -> Node3D:
 
 func _make_road() -> Node3D:
 	var root := Node3D.new()
-	var slab := _box(Vector3(0.94, 0.11, 0.94), Color("65707d"))
+	var slab := _box(Vector3(0.94, 0.11, 0.94), Color("b7bec7"))
 	slab.position.y = 0.07
 	root.add_child(slab)
-	var line := _box(Vector3(0.06, 0.012, 0.50), Color("cbd5e1"))
+	var line := _box(Vector3(0.06, 0.012, 0.50), Color("f8fafc"))
 	line.position.y = 0.132
 	root.add_child(line)
 	return root
@@ -200,11 +240,11 @@ func _make_road() -> Node3D:
 
 func _make_home() -> Node3D:
 	var root := Node3D.new()
-	var foundation := _box(Vector3(0.76, 0.12, 0.76), Color("e6d1b2"))
+	var foundation := _box(Vector3(0.76, 0.12, 0.76), Color("b9ddff"))
 	foundation.position.y = 0.08
 	root.add_child(foundation)
 
-	var body := _box(Vector3(0.66, 0.63, 0.62), Color("f5b971"))
+	var body := _box(Vector3(0.66, 0.63, 0.62), Color("4f9fe8"))
 	body.position.y = 0.44
 	root.add_child(body)
 
@@ -216,14 +256,14 @@ func _make_home() -> Node3D:
 	roof_mesh.radial_segments = 4
 	roof.mesh = roof_mesh
 	var roof_mat := StandardMaterial3D.new()
-	roof_mat.albedo_color = Color("c85d48")
+	roof_mat.albedo_color = Color("2563a6")
 	roof_mat.roughness = 0.85
 	roof.material_override = roof_mat
 	roof.rotation.y = PI / 4.0
 	roof.position.y = 0.96
 	root.add_child(roof)
 
-	var door := _box(Vector3(0.16, 0.30, 0.03), Color("704d3a"))
+	var door := _box(Vector3(0.16, 0.30, 0.03), Color("234c72"))
 	door.position = Vector3(0.0, 0.36, 0.326)
 	root.add_child(door)
 
@@ -236,19 +276,19 @@ func _make_home() -> Node3D:
 
 func _make_shop() -> Node3D:
 	var root := Node3D.new()
-	var body := _box(Vector3(0.78, 0.72, 0.70), Color("44c5d4"))
+	var body := _box(Vector3(0.78, 0.72, 0.70), Color("8b939e"))
 	body.position.y = 0.40
 	root.add_child(body)
 
-	var roof := _box(Vector3(0.86, 0.08, 0.78), Color("effbfd"))
+	var roof := _box(Vector3(0.86, 0.08, 0.78), Color("5f6874"))
 	roof.position.y = 0.81
 	root.add_child(roof)
 
-	var glass := _box(Vector3(0.55, 0.30, 0.02), Color("c9f5ff"))
+	var glass := _box(Vector3(0.55, 0.30, 0.02), Color("dbe4ec"))
 	glass.position = Vector3(0.0, 0.43, 0.361)
 	root.add_child(glass)
 
-	var awning := _box(Vector3(0.62, 0.08, 0.16), Color("ffe082"))
+	var awning := _box(Vector3(0.62, 0.08, 0.16), Color("374151"))
 	awning.position = Vector3(0.0, 0.66, 0.42)
 	root.add_child(awning)
 	return root
@@ -256,7 +296,7 @@ func _make_shop() -> Node3D:
 
 func _make_park() -> Node3D:
 	var root := Node3D.new()
-	var base := _box(Vector3(0.90, 0.08, 0.90), Color("55b962"))
+	var base := _box(Vector3(0.90, 0.08, 0.90), Color("43a557"))
 	base.position.y = 0.06
 	root.add_child(base)
 
@@ -336,21 +376,26 @@ func _spawn(kind: String, cell: Vector2i) -> void:
 		"node": node,
 		"cost": COSTS.get(kind, 0)
 	}
+	_set_tile_color(cell, kind)
 
 
 func _clear_cell(cell: Vector2i) -> void:
 	if not cells.has(cell):
 		return
 	var node: Node = cells[cell]["node"]
-	node.queue_free()
+	if node:
+		node.queue_free()
 	cells.erase(cell)
+	_set_tile_color(cell, "empty")
 
 
 func _clear_city() -> void:
 	for key in cells.keys():
 		var node: Node = cells[key]["node"]
-		node.queue_free()
+		if node:
+			node.queue_free()
 	cells.clear()
+	_reset_all_tile_colors()
 
 
 func _seed_city() -> void:
