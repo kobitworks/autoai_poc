@@ -1,0 +1,47 @@
+name: Build SKYBOUND Godot Web
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "skybound-flight/godot/**"
+      - ".github/workflows/build-skybound-godot.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Godot
+        uses: chickensoft-games/setup-godot@v2
+        with:
+          version: 4.3.0
+          use-dotnet: false
+          include-templates: true
+
+      - name: Import project
+        run: godot --headless --path skybound-flight/godot --import --quit
+
+      - name: Export Web build
+        run: |
+          mkdir -p skybound-flight/godot-web
+          godot --headless --path skybound-flight/godot --export-release "Web" ../godot-web/index.html
+
+      - name: Commit Web build
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add skybound-flight/godot-web
+          if git diff --cached --quiet; then
+            echo "No build changes."
+          else
+            git commit -m "Build SKYBOUND Godot Web"
+            git push
+          fi
