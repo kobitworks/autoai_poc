@@ -45,8 +45,49 @@ button{font:inherit}button:focus-visible,[role="button"]:focus-visible,summary:f
 .reviewbar{display:none;position:fixed;right:8px;top:calc(137px + var(--safe-top));z-index:40}body.review-mode .reviewbar{display:block}.reviewbar details{background:#fff;border:1px solid #aaa;border-radius:5px;box-shadow:0 2px 8px #0003}.reviewbar summary{cursor:pointer;padding:5px 8px;font-size:11px;color:#555}.review-buttons{max-width:260px;padding:6px;display:flex;flex-wrap:wrap;gap:4px}.review-buttons button{font-size:10px;padding:4px;background:#eef6f8;border:1px solid #9bb;color:#345;border-radius:3px}
 dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(100% - 30px));box-shadow:0 15px 45px #0006}dialog::backdrop{background:#0006}.dlg{padding:16px}
 .dev{font-size:11px;color:#687577;border-top:1px dotted #aaa;margin-top:14px;padding-top:8px}
+@media(max-width:599px){
+  .main{padding:6px;-webkit-overflow-scrolling:touch}
+  .paper{width:100%;margin:0 auto;padding:14px 12px 18px;border-radius:6px;box-shadow:4px 4px 10px #0002}
+  .panel{padding:12px 11px;margin:9px 0}
+  .notice{font-size:14px;line-height:1.55}
+  .btn{min-height:44px;padding:10px 13px;font-size:15px;line-height:1.25}
+  .actions{gap:9px}
+  .actions .btn{flex:1 1 140px}
+  .head-top{padding-left:6px;padding-right:6px}
+  .logo-mark{width:54px;height:54px}
+  .logo-mark:before{font-size:43px}
+  .logo-mark:after{font-size:16px}
+  .mobian-world{min-width:138px;padding:7px 9px 6px;font-size:20px}
+  .page-title{padding-right:min(58vw,220px);font-size:14px}
+  .session-chip{top:calc(103px + var(--safe-top));right:5px;max-width:min(56vw,215px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:3px 7px}
+  body[data-screen="U01"] .book-container,body[data-screen="U09"] .book-container{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:8px 2px 14px}
+  body[data-screen="U01"] .book-card,body[data-screen="U09"] .book-card{width:100%;height:178px;margin:0}
+  body[data-screen="U01"] .cover-title,body[data-screen="U09"] .cover-title{font-size:15px;line-height:1.45;padding-right:24px}
+  body[data-screen="U01"] .cover-region,body[data-screen="U09"] .cover-region{font-size:12px;line-height:1.35}
+  body[data-screen="U01"] .status,body[data-screen="U09"] .status{font-size:10px;padding:2px 5px}
+  body[data-screen="U02"] .paper>h2,body[data-screen="U03"] .paper>h2{font-size:23px;line-height:1.35;margin:5px 0 12px}
+  body[data-screen="U02"] .fact{align-items:flex-start;line-height:1.4}
+  body[data-screen="U02"] .actions .btn,body[data-screen="U03"] .actions .btn{flex-basis:100%;width:100%}
+  body[data-screen="U03"] .story{font-size:18px;line-height:1.9;letter-spacing:.01em}
+  body[data-screen="U03"] .story p{margin:0 0 1.1em}
+  body[data-screen="U03"] .muted{line-height:1.45}
+  body[data-screen="U04"] .map-overlay{width:calc(100% - 16px);bottom:8px}
+  body[data-screen="U04"] .map-status{max-height:46vh;overflow:auto;padding:10px 11px;font-size:14px;line-height:1.5;-webkit-overflow-scrolling:touch}
+  body[data-screen="U04"] .map-text-alt{font-size:13px;line-height:1.5;margin-top:6px}
+  body[data-screen="U04"] .map-current{font-size:13px;margin-top:5px}
+  body[data-screen="U04"] .map-legend{font-size:12px;gap:8px}
+  body[data-screen="U04"] .map-status .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  body[data-screen="U04"] .map-status .actions .btn{width:100%;min-height:44px;padding:8px 7px;font-size:13px}
+  .bottomnav button{min-height:56px;font-size:12px}
+  .navicon{width:36px;height:36px}
+}
+@media(max-width:359px){
+  body[data-screen="U01"] .book-container,body[data-screen="U09"] .book-container{grid-template-columns:1fr 1fr;gap:8px}
+  body[data-screen="U01"] .book-card,body[data-screen="U09"] .book-card{height:166px}
+  .mobian-world{min-width:124px;font-size:18px}
+}
 @media(min-width:1024px){.app-header{height:calc(140px + var(--safe-top))}.desktop-nav{display:flex;height:40px;background:color-mix(in srgb,var(--main) 50%,white);align-items:center;gap:2px;padding:0 10px}.desktop-nav button{background:transparent;border:0;border-right:1px solid #777;padding:0 12px;font-size:17px;font-weight:800;color:var(--link)}.page-title{top:calc(140px + var(--safe-top))}.main{top:calc(170px + var(--safe-top));bottom:calc(64px + var(--safe-bottom))}.banner{bottom:0;height:calc(64px + var(--safe-bottom));padding-bottom:var(--safe-bottom)}.bottomnav{display:none}.book-card{width:125px;height:165px}.ops-grid{grid-template-columns:340px 1fr}body.safety-mode .main{bottom:0}.reviewbar{top:calc(177px + var(--safe-top))}}
-@media(max-width:1023px){.desktop-nav{display:none}.ops-grid{grid-template-columns:1fr}.reviewbar{top:calc(134px + var(--safe-top))}#leafletMap{min-height:100%!important}}@media(max-width:599px){.paper{width:100%;padding:12px 10px}}@media(min-width:600px) and (max-width:1023px){body:not(.login-mode) .main:not(.map-mode){padding-left:24px;padding-right:24px}.paper{width:100%}}
+@media(max-width:1023px){.desktop-nav{display:none}.ops-grid{grid-template-columns:1fr}.reviewbar{top:calc(134px + var(--safe-top))}#leafletMap{min-height:100%!important}}@media(min-width:600px) and (max-width:1023px){body:not(.login-mode) .main:not(.map-mode){padding-left:24px;padding-right:24px}.paper{width:100%}.btn{min-height:42px}.story{font-size:18px;line-height:1.9}.map-status{font-size:14px;line-height:1.5}.map-status .btn{min-height:42px}}
 .login-screen{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 26px 82px;text-align:center}.login-logo{display:flex;align-items:center;gap:0;font:700 54px/1 Georgia,serif;color:#000;margin-top:-80px;margin-bottom:44px}.login-logo-book{width:78px;height:72px;border-radius:7px;background:#183b69;color:#f4f4f4;display:grid;place-items:center;font-size:66px;line-height:1;margin-right:-3px;text-shadow:0 1px 2px #333}.login-copy{font-size:16px;line-height:1.55;max-width:560px;color:#333}.google-login{margin-top:28px;width:min(400px,82vw);height:54px;border:1.5px solid #444;border-radius:6px;background:#fff;display:flex;align-items:center;justify-content:center;gap:28px;font-size:18px}.gmark{font:800 30px Arial;color:#4285f4}.login-note{font-size:11px;color:#718080;margin-top:12px}.login-error{margin-top:16px;padding:10px 12px;max-width:440px;border:1px solid #e3a1a1;background:#fff0f0;border-radius:6px;color:#8a1f1f;font-size:13px}.login-dev-actions{margin-top:14px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap}.session-chip{position:fixed;right:8px;top:105px;z-index:26;background:#fff;border:1px solid #a9c8cf;border-radius:14px;padding:3px 9px;font-size:10px;color:#345;box-shadow:0 1px 3px #0002}.session-chip button{border:0;background:transparent;color:#004797;text-decoration:underline;padding:0 0 0 6px;font-size:10px;cursor:pointer}@media(min-width:1024px){.session-chip{top:calc(145px + var(--safe-top))}}
 </style>
 </head>
@@ -169,6 +210,7 @@ function btn(t,a,c=''){return '<button class="btn '+c+'" onclick="'+a+'">'+t+'</
 function page(body){return '<div class="paper">'+body+'<div class="dev">実行モード: '+(serverEnabled()?'PHP API / MySQL':'GitHub Pages mock')+'。Clientは表示/入力、確定判定はServer権威境界へ接続します。</div></div>'}
 function renderNav(){
  const isLogin=state.screen==='LOGIN';
+ document.body.dataset.screen=state.screen;
  document.body.classList.toggle('login-mode',isLogin);
  document.body.classList.toggle('safety-mode',['U04','U05','U06'].includes(state.screen));
  app.classList.toggle('map-mode',state.screen==='U04');
