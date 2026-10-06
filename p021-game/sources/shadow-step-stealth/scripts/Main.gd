@@ -86,9 +86,9 @@ func _process(delta: float) -> void:
 		if t >= 1.0:
 			_complete_move()
 	var visible := _player_visible()
-	var old_state := alert_model.state()
+	var old_state: String = str(alert_model.state())
 	alert_model.update(delta, visible, moving, 1.0)
-	var new_state := alert_model.state()
+	var new_state: String = str(alert_model.state())
 	if new_state == "DANGER" and old_state != "DANGER" and not danger_latched:
 		danger_latched = true
 		audio_manager.play_sfx("danger")
@@ -267,7 +267,7 @@ func _target_at(position: Vector2) -> String:
 	return ""
 
 func _exposure_label(target: String) -> String:
-	var travel := graph.edge_time(current_node, target)
+	var travel: float = float(graph.edge_time(current_node, target))
 	if travel >= 0.75:
 		return "危険度 HIGH"
 	if travel >= 0.62:
@@ -485,7 +485,7 @@ func _draw_play() -> void:
 func _draw_hud() -> void:
 	var portrait := size.y > size.x
 	var fs := _font_size(22, 36)
-	var alert_state := alert_model.state()
+	var alert_state: String = str(alert_model.state())
 	var state_color := Color(0.30, 0.92, 0.72)
 	if alert_state == "SUSPICIOUS":
 		state_color = Color(1.0, 0.78, 0.24)
@@ -509,12 +509,12 @@ func _draw_edges() -> void:
 		draw_line(a, b, Color(0.18, 0.42, 0.48, 0.52), 8.0, true)
 
 func _draw_nodes() -> void:
-	var neighbors := graph.neighbors(current_node)
+	var neighbors: Array = graph.neighbors(current_node)
 	for raw in stage.get("nodes", []):
 		var item: Dictionary = raw as Dictionary
 		var id := str(item.get("id", ""))
 		var p := _node_screen(id)
-		var is_neighbor := neighbors.has(id) and not moving
+		var is_neighbor: bool = neighbors.has(id) and not moving
 		var node_color := Color(0.10, 0.19, 0.23)
 		if id == current_node and not moving:
 			node_color = Color(0.12, 0.38, 0.42)
