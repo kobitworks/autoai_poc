@@ -214,8 +214,8 @@ func _draw_ridge(base_y: float, height: float, step: float, jagged: float, color
 	var x := -1100.0
 	var i := 0
 	while x < 5200:
-		var local_h := height * (0.55 + 0.45 * abs(sin(i * 1.73 + offset * 0.001)))
-		var y := base_y - local_h * (0.55 + 0.45 * abs(sin(i * jagged)))
+		var local_h: float = height * (0.55 + 0.45 * absf(sin(float(i) * 1.73 + offset * 0.001)))
+		var y: float = base_y - local_h * (0.55 + 0.45 * absf(sin(float(i) * jagged)))
 		pts.append(Vector2(x, y))
 		x += step
 		i += 1
@@ -315,7 +315,7 @@ func _draw_plateau(origin: Vector2, width: float, depth: float, scale_value: flo
 	for i in range(11):
 		var x := origin.x - width * 0.38 + i * width * 0.075
 		var y0 := origin.y + 18 + float((i * 19) % 38)
-		var len := depth * (0.45 + 0.45 * abs(sin(i * 1.5)))
+		var len: float = depth * (0.45 + 0.45 * absf(sin(float(i) * 1.5)))
 		draw_line(Vector2(x, y0), Vector2(x - 10, y0 + len), Color(rock_dark.r, rock_dark.g, rock_dark.b, 0.35), 6.0)
 	for i in range(18):
 		var xg := origin.x - width * 0.44 + i * width * 0.05
@@ -355,11 +355,12 @@ func _draw_ruin_cluster(origin: Vector2, scale_value: float, color: Color) -> vo
 		Vector4(16, -7, 38, 184),
 		Vector4(78, 12, 30, 128)
 	]
-	for t in towers:
-		var x := origin.x + t.x * scale_value
-		var bottom := origin.y + t.y * scale_value
-		var w := t.z * scale_value
-		var h := t.w * scale_value
+	for raw_tower in towers:
+		var t: Vector4 = raw_tower
+		var x: float = origin.x + t.x * scale_value
+		var bottom: float = origin.y + t.y * scale_value
+		var w: float = t.z * scale_value
+		var h: float = t.w * scale_value
 		draw_rect(Rect2(x - w * 0.5, bottom - h, w, h), color, true)
 		draw_colored_polygon(PackedVector2Array([
 			Vector2(x - w * 0.62, bottom - h),
@@ -367,7 +368,7 @@ func _draw_ruin_cluster(origin: Vector2, scale_value: float, color: Color) -> vo
 			Vector2(x + w * 0.62, bottom - h)
 		]), color)
 		for k in range(3):
-			var wy := bottom - h * (0.25 + k * 0.23)
+			var wy: float = bottom - h * (0.25 + float(k) * 0.23)
 			draw_rect(Rect2(x - 3 * scale_value, wy - 7 * scale_value, 6 * scale_value, 14 * scale_value), Color(0.05, 0.10, 0.10, 0.42), true)
 
 	# Broken arches.
@@ -484,5 +485,5 @@ func _draw_birds() -> void:
 
 
 func _smooth(value: float) -> float:
-	var v := clamp(value, 0.0, 1.0)
+	var v: float = clampf(value, 0.0, 1.0)
 	return v * v * (3.0 - 2.0 * v)
