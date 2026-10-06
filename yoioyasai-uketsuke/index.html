@@ -197,6 +197,56 @@ body{
   border-left-color:var(--grav-accent)!important;
   box-shadow:none!important;
 }
+.admin-nav{
+  margin-top:14px!important;
+  padding:12px 0 4px!important;
+  border-top:1px solid rgba(255,255,255,.12)!important;
+}
+.admin-nav-title{
+  display:flex!important;
+  align-items:center!important;
+  gap:8px!important;
+  padding:0 18px 8px!important;
+  color:#91a6b7!important;
+  font-size:9px!important;
+  font-weight:800!important;
+  letter-spacing:.08em!important;
+  text-transform:uppercase!important;
+}
+.admin-nav-title i{color:#8fdde2!important}
+.admin-nav-item{
+  width:100%!important;
+  min-height:38px!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  padding:0 18px 0 24px!important;
+  border:0!important;
+  border-left:4px solid transparent!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:#c8d3dc!important;
+  font-size:10px!important;
+  font-weight:600!important;
+  text-align:left!important;
+  box-shadow:none!important;
+}
+.admin-nav-item i{
+  width:16px!important;
+  text-align:center!important;
+  color:#9fb1bf!important;
+}
+.admin-nav-item:hover{
+  background:#34495e!important;
+  color:#fff!important;
+  border-left-color:#557186!important;
+}
+.admin-nav-item:hover i{color:#fff!important}
+.setting-focus{
+  outline:3px solid rgba(0,166,178,.24)!important;
+  border-color:var(--grav-accent)!important;
+  box-shadow:0 0 0 4px rgba(0,166,178,.08)!important;
+}
 main{
   max-width:none!important;
   margin:0!important;
@@ -350,6 +400,7 @@ tbody tr:hover{background:#f7fbfc!important}
   }
   .tab i{font-size:16px!important;width:auto!important}
   .tab.active{border-top-color:var(--grav-accent)!important;border-left:0!important}
+  .admin-nav{display:none!important}
   main{
     margin-left:0!important;
     padding:calc(var(--grav-header-h) + 12px) 10px 82px!important;
@@ -393,6 +444,15 @@ tbody tr:hover{background:#f7fbfc!important}
       <button class="tab office-menu" data-screen="analytics"><i class="bi bi-bar-chart"></i>分析</button>
       <button class="tab office-menu" data-screen="mail"><i class="bi bi-envelope-paper"></i>メール履歴</button>
       <button class="tab admin-office-menu" data-screen="settings"><i class="bi bi-gear"></i>設定</button>
+
+      <div class="admin-nav admin-only" aria-label="管理者メニュー">
+        <div class="admin-nav-title"><i class="bi bi-shield-lock"></i> 管理者メニュー</div>
+        <button class="admin-nav-item" type="button" data-admin-target="memberBtn"><i class="bi bi-people"></i><span>メンバー管理</span></button>
+        <button class="admin-nav-item" type="button" data-admin-target="mailTemplateBtn"><i class="bi bi-envelope-gear"></i><span>メールテンプレート</span></button>
+        <button class="admin-nav-item" type="button" data-admin-target="topMessageBtn"><i class="bi bi-card-text"></i><span>TOPメッセージ</span></button>
+        <button class="admin-nav-item" type="button" data-admin-target="meetingPointBtn"><i class="bi bi-geo"></i><span>集合場所マスタ</span></button>
+        <button class="admin-nav-item" type="button" data-admin-target="qrSettingBtn"><i class="bi bi-qr-code"></i><span>QR表示</span></button>
+      </div>
     </nav>
   </div>
 </header>
@@ -545,10 +605,10 @@ tbody tr:hover{background:#f7fbfc!important}
     <div class="role-note">事務スタッフは「メールテンプレート」「TOPメッセージ」のみ。管理者はすべて利用できます。</div>
     <div class="settings-grid">
       <button class="setting admin-only" id="memberBtn"><i class="bi bi-people"></i><strong>メンバー管理</strong><span>管理者／事務／運営、事務相当追加権限、有効・無効を管理</span></button>
-      <button class="setting"><i class="bi bi-envelope-gear"></i><strong>メールテンプレート管理</strong><span>件名・本文・署名を管理</span></button>
-      <button class="setting"><i class="bi bi-card-text"></i><strong>TOPメッセージ</strong><span>全スタッフ共通のお知らせを編集</span></button>
-      <button class="setting admin-only"><i class="bi bi-geo"></i><strong>集合場所マスタ</strong><span>コード・名称・利用中・表示順・参加費区分</span></button>
-      <button class="setting admin-only"><i class="bi bi-qr-code"></i><strong>QR表示</strong><span>既存3サイトを固定表示</span></button>
+      <button class="setting" id="mailTemplateBtn"><i class="bi bi-envelope-gear"></i><strong>メールテンプレート管理</strong><span>件名・本文・署名を管理</span></button>
+      <button class="setting" id="topMessageBtn"><i class="bi bi-card-text"></i><strong>TOPメッセージ</strong><span>全スタッフ共通のお知らせを編集</span></button>
+      <button class="setting admin-only" id="meetingPointBtn"><i class="bi bi-geo"></i><strong>集合場所マスタ</strong><span>コード・名称・利用中・表示順・参加費区分</span></button>
+      <button class="setting admin-only" id="qrSettingBtn"><i class="bi bi-qr-code"></i><strong>QR表示</strong><span>既存3サイトを固定表示</span></button>
     </div>
   </section>
 </main>
@@ -610,7 +670,19 @@ function showScreen(name){
   $$('.tab').forEach(b=>b.classList.toggle('active',b.dataset.screen===name)); window.scrollTo({top:0,behavior:'smooth'});
 }
 $$('[data-screen]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.screen)));
-$$('[data-jump]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.jump)));
+$('[data-jump]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.jump)));
+$('[data-admin-target]').forEach(b=>b.addEventListener('click',()=>{
+  if(!isAdmin()) return;
+  showScreen('settings');
+  requestAnimationFrame(()=>{
+    const target=document.getElementById(b.dataset.adminTarget);
+    if(!target) return;
+    document.querySelectorAll('.setting-focus').forEach(x=>x.classList.remove('setting-focus'));
+    target.classList.add('setting-focus');
+    target.scrollIntoView({behavior:'smooth',block:'center'});
+    setTimeout(()=>target.classList.remove('setting-focus'),1600);
+  });
+}));
 function statusClass(p){
   if(p.status.includes('キャンセル')||p.status.includes('不参加'))return 'state-cancel';
   if(p.staff)return 'state-staff';
