@@ -6,6 +6,7 @@ on:
     paths:
       - 'p021-game/sources/past-self-coop-godot/**'
       - '.github/workflows/p021-game-g002-godot-web.yml'
+      - 'p021-game/tests/g002-responsive-qa.mjs'
   workflow_dispatch:
 
 concurrency:
@@ -61,6 +62,15 @@ jobs:
           test -s assets/kenney/ui_panel.png
           test -s assets/kenney/ui_button.png
           test -s assets/kenney/ui_icon.png
+      - name: Validate GAME-G002 feature contracts
+        working-directory: p021-game/sources/past-self-coop-godot
+        run: |
+          grep -q 'ConfigFile' Main.gd
+          grep -q 'restart_rect' Main.gd
+          grep -q 'SFX_LABELS' Main.gd
+          grep -q '_best_summary' Main.gd
+          grep -q 'qa_mode' Main.gd
+          grep -q '最初からもう一度' Main.gd
       - name: Validate project
         working-directory: p021-game/sources/past-self-coop-godot
         run: |
@@ -86,3 +96,32 @@ jobs:
             git pull --rebase origin develop
             git push origin HEAD:develop
           fi
+
+  browser-responsive:
+    needs: export-web
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Serve exported GAME-G002
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/g002-http.log 2>&1 &
+          echo $! > /tmp/g002-http.pid
+      - name: Run four-viewport complete-loop QA
+        run: node p021-game/tests/g002-responsive-qa.mjs
+      - name: Upload GAME-G002 QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: game-g002-responsive-qa
+          path: p021-game/test-artifacts/game-g002-responsive/
+          if-no-files-found: warn
