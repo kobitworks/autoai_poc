@@ -7,9 +7,9 @@ const SaveManagerScript = preload("res://scripts/SaveManager.gd")
 enum ScreenState { TITLE, RUNNING, RESULT }
 
 var state: ScreenState = ScreenState.TITLE
-var model
+var model: WindReaderFlightModel
 var stage: Dictionary
-var saves
+var saves: WindReaderSaveManager
 var font: Font
 var qa_mode := false
 var paused := false
@@ -421,7 +421,7 @@ func _draw_course() -> void:
 		if sx < -80.0 or sx > w + 80.0:
 			continue
 		var sy := ground_y - float(gate["altitude"]) * altitude_scale + float(gate["depth"]) * depth_offset
-		var passed := processed_gates.get(str(gate["id"]), null)
+		var passed: Variant = processed_gates.get(str(gate["id"]), null)
 		var c := Color("#55f1c4") if bool(gate["required"]) else Color("#ffd96b")
 		if passed != null and not bool(passed):
 			c = Color("#8195a0")
