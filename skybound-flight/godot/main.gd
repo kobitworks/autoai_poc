@@ -150,10 +150,10 @@ func _build_fade() -> void:
 	add_child(layer)
 
 	fade_rect = ColorRect.new()
+	layer.add_child(fade_rect)
 	fade_rect.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	fade_rect.color = Color(0.02, 0.045, 0.055, 1.0)
-	layer.add_child(fade_rect)
 
 
 func _update_hero(t: float) -> void:
@@ -276,7 +276,11 @@ func _draw_mountains(base_y: float, amp: float, freq: float, color: Color, phase
 	points.append(Vector2(-1200, 1600))
 	for i in range(48):
 		var x := -1000.0 + float(i) * 115.0
-		var y := base_y 			+ sin((x + phase) * freq * 0.12) * amp 			+ sin((x + phase * 0.55) * freq * 0.31) * amp * 0.34
+		var y := (
+			base_y
+			+ sin((x + phase) * freq * 0.12) * amp
+			+ sin((x + phase * 0.55) * freq * 0.31) * amp * 0.34
+		)
 		points.append(Vector2(x, y))
 	points.append(Vector2(4400, 1600))
 	draw_colored_polygon(points, color)
