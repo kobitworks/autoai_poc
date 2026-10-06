@@ -56,6 +56,11 @@ jobs:
           grep -q 'InputEventScreenDrag' scripts/Main.gd
           grep -q 'KEY_SPACE' scripts/Main.gd
           grep -q 'qa_mode' scripts/Main.gd
+          grep -q 'AudioStreamWAV' scripts/Main.gd
+          grep -q '_play_sfx("gate")' scripts/Main.gd
+          grep -q '_draw_course_fx' scripts/Main.gd
+          grep -q 'feedback_text' scripts/Main.gd
+          grep -q 'Original procedural synthesis' ASSETS.md
 
       - name: Headless FlightModel smoke
         working-directory: p021-game/sources/wind-reader-glider

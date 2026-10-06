@@ -1,11 +1,13 @@
 # GAME-G003 Asset Register
 
-## Stage 1
+Updated: 2026-10-07 (GAME-032)
 
-The Stage 1 implementation intentionally uses Godot CanvasItem drawing for the glider, gates, wind zones, obstacles and background so that gameplay can be validated before final art selection.
+GAME-G003「風読みグライダー」は、3ステージすべてで外部有料素材を使わず、Godotの独自描画とランタイム生成SFXを使用する。
 
-| asset_id | asset | source | license | use |
+| asset_id | asset | source | license / rights | use |
 |---|---|---|---|---|
-| font-notosansjp | Noto Sans JP variable font | https://github.com/google/fonts/tree/main/ofl/notosansjp | SIL Open Font License 1.1 | Japanese UI text, downloaded by CI |
+| font-notosansjp | Noto Sans JP variable font | https://github.com/google/fonts/tree/main/ofl/notosansjp | SIL Open Font License 1.1 | Japanese UI text; CI downloads and bundles the font |
+| procedural-flight-art | Sky gradient, sun/clouds, mountain layers, glider, gates, wind-flow trails, obstacles, boost trail, feedback flashes | `scripts/Main.gd` | Project-original procedural drawing; no third-party asset license | Stage 1「朝凪の丘」/ Stage 2「峡谷の横風」/ Stage 3「雷雲の切れ間」 |
+| procedural-sfx | UI, gate, bonus, miss, boost, collision, clear, fail PCM tones | `scripts/Main.gd` `AudioStreamWAV` runtime synthesis | Original procedural synthesis; no third-party audio asset license | Actual in-game SFX connected to SFX 100% / 70% / 40% / OFF |
 
-No paid assets, NC assets, external APIs, or unverified image-search assets are used in GAME-029.
+No paid assets, NC assets, external runtime APIs, unverified image-search assets, or separately downloaded sound packs are used by GAME-032.

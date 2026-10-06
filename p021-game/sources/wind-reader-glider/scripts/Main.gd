@@ -35,6 +35,14 @@ var current_wind_label := "CALM"
 var wind_strength := 0.0
 var tutorial_step := 0
 var tutorial_timer := 0.0
+var sfx_player: AudioStreamPlayer
+var sfx_streams: Dictionary = {}
+var last_boost_active := false
+var feedback_text := ""
+var feedback_color := Color.WHITE
+var feedback_timer := 0.0
+var screen_flash := 0.0
+var scene_time := 0.0
 
 var play_rect := Rect2()
 var stage_select_rect := Rect2()
@@ -53,6 +61,7 @@ func _ready() -> void:
 	model.reset(stage)
 	saves = SaveManagerScript.new()
 	saves.load_state()
+	_setup_audio()
 	if ResourceLoader.exists("res://fonts/NotoSansJP.ttf"):
 		font = load("res://fonts/NotoSansJP.ttf") as Font
 	else:
@@ -60,6 +69,67 @@ func _ready() -> void:
 	qa_mode = _detect_qa_mode()
 	set_process_input(true)
 	queue_redraw()
+
+func _setup_audio() -> void:
+	sfx_player = AudioStreamPlayer.new()
+	sfx_player.name = "SFXPlayer"
+	add_child(sfx_player)
+	sfx_streams = {
+		"ui": _make_tone(520.0, 720.0, 0.07, 0.18),
+		"gate": _make_tone(620.0, 980.0, 0.13, 0.24),
+		"bonus": _make_tone(780.0, 1320.0, 0.17, 0.22),
+		"miss": _make_tone(240.0, 170.0, 0.12, 0.16),
+		"boost": _make_tone(180.0, 520.0, 0.16, 0.16),
+		"collision": _make_tone(150.0, 72.0, 0.20, 0.26),
+		"clear": _make_tone(520.0, 1180.0, 0.34, 0.22),
+		"fail": _make_tone(310.0, 105.0, 0.30, 0.20)
+	}
+
+func _make_tone(start_hz: float, end_hz: float, duration: float, gain: float) -> AudioStreamWAV:
+	var mix_rate := 22050
+	var sample_count := maxi(128, int(duration * float(mix_rate)))
+	var pcm := PackedByteArray()
+	pcm.resize(sample_count * 2)
+	for i in range(sample_count):
+		var t := float(i) / float(maxi(1, sample_count - 1))
+		var hz := lerpf(start_hz, end_hz, t)
+		var envelope := sin(PI * t)
+		var phase := TAU * hz * float(i) / float(mix_rate)
+		var wave := sin(phase) * 0.76 + sin(phase * 2.0) * 0.24
+		var sample := clampi(int(wave * envelope * gain * 32767.0), -32768, 32767)
+		var unsigned_sample := sample if sample >= 0 else sample + 65536
+		pcm[i * 2] = unsigned_sample & 0xff
+		pcm[i * 2 + 1] = (unsigned_sample >> 8) & 0xff
+	var stream := AudioStreamWAV.new()
+	stream.format = AudioStreamWAV.FORMAT_16_BITS
+	stream.mix_rate = mix_rate
+	stream.stereo = false
+	stream.data = pcm
+	return stream
+
+func _play_sfx(name: String) -> void:
+	if sfx_player == null or saves == null or not sfx_streams.has(name):
+		return
+	var levels := [1.0, 0.7, 0.4, 0.0]
+	var level := float(levels[clampi(saves.sfx_step, 0, levels.size() - 1)])
+	if level <= 0.0:
+		return
+	sfx_player.stop()
+	sfx_player.stream = sfx_streams[name] as AudioStream
+	sfx_player.volume_db = linear_to_db(level)
+	sfx_player.play()
+
+func _cycle_sfx() -> void:
+	saves.cycle_sfx()
+	_play_sfx("ui")
+	_set_feedback(saves.sfx_label(), Color("#bceeff"), 0.08)
+	queue_redraw()
+
+func _set_feedback(text_value: String, color_value: Color, flash_strength: float = 0.18) -> void:
+	feedback_text = text_value
+	feedback_color = color_value
+	feedback_timer = 1.05
+	screen_flash = maxf(screen_flash, flash_strength)
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_RESIZED and is_inside_tree():
@@ -75,10 +145,12 @@ func _load_stage(stage_id: int) -> void:
 	stage = StageDefinitionScript.get_stage(selected_stage_id)
 
 func _open_stage_select() -> void:
+	_play_sfx("ui")
 	state = ScreenState.STAGE_SELECT
 	queue_redraw()
 
 func _start_run() -> void:
+	_play_sfx("ui")
 	stage = StageDefinitionScript.get_stage(selected_stage_id)
 	model = FlightModelScript.new()
 	model.reset(stage)
@@ -100,9 +172,16 @@ func _start_run() -> void:
 	result_best = false
 	tutorial_step = 0 if not saves.tutorial_completed else 3
 	tutorial_timer = 0.0
+	last_boost_active = false
+	feedback_text = ""
+	feedback_timer = 0.0
+	screen_flash = 0.0
 	queue_redraw()
 
 func _physics_process(delta: float) -> void:
+	scene_time += delta
+	feedback_timer = maxf(0.0, feedback_timer - delta)
+	screen_flash = maxf(0.0, screen_flash - delta * 2.8)
 	if state != ScreenState.RUNNING or paused:
 		queue_redraw()
 		return
@@ -120,6 +199,10 @@ func _physics_process(delta: float) -> void:
 	var boost_pressed := Input.is_key_pressed(KEY_SPACE) or boost_touch_id >= 0 or mouse_boost
 	var wind := _current_wind()
 	model.step(delta, steer, boost_pressed, wind)
+	if model.boosting and not last_boost_active:
+		_play_sfx("boost")
+		_set_feedback("BOOST!", Color("#73e8ff"), 0.10)
+	last_boost_active = model.boosting
 	_process_gates()
 	_process_obstacles()
 
@@ -186,12 +269,18 @@ func _process_gates() -> void:
 			if bool(gate["required"]):
 				required_passed += 1
 				score += 1000
+				_play_sfx("gate")
+				_set_feedback("GATE +1000", Color("#72f1c8"), 0.18)
 			else:
 				bonus_passed += 1
 				score += 1500
+				_play_sfx("bonus")
+				_set_feedback("BONUS +1500", Color("#ffe58a"), 0.24)
 			score += mini(1000, 250 * maxi(0, combo - 1))
 		else:
 			combo = 0
+			_play_sfx("miss")
+			_set_feedback("GATE MISSED", Color("#c5d3dc"), 0.10)
 
 func _process_obstacles() -> void:
 	var index := 0
@@ -207,6 +296,8 @@ func _process_obstacles() -> void:
 		hit = hit and absf(model.position.z - float(obstacle["depth"])) <= float(obstacle["depth_radius"])
 		if hit and model.apply_collision(float(obstacle["damage"])):
 			combo = 0
+			_play_sfx("collision")
+			_set_feedback("HIT!  DURABILITY DOWN", Color("#ff9b91"), 0.34)
 
 func _finish_run(clear: bool, reason: String) -> void:
 	if state != ScreenState.RUNNING:
@@ -226,10 +317,16 @@ func _finish_run(clear: bool, reason: String) -> void:
 		result_best = saves.record_stage(selected_stage_id, score, int(model.elapsed * 1000.0), result_medal)
 		if selected_stage_id < 3:
 			saves.unlock_stage(selected_stage_id + 1)
+		_play_sfx("clear")
+		_set_feedback("CLEAR!  %s" % result_medal, Color("#78f4ce"), 0.38)
+	else:
+		_play_sfx("fail")
+		_set_feedback("FAILED", Color("#ff9b91"), 0.34)
 	touch_steer = Vector2.ZERO
 	steer_touch_id = -1
 	boost_touch_id = -1
 	mouse_boost = false
+	last_boost_active = false
 	queue_redraw()
 
 func _medal_for_score(value: int) -> String:
@@ -272,7 +369,7 @@ func _input(event: InputEvent) -> void:
 				_start_run()
 				return
 			if key.keycode == KEY_M:
-				saves.cycle_sfx()
+				_cycle_sfx()
 				queue_redraw()
 				return
 			if (key.keycode == KEY_P or key.keycode == KEY_ESCAPE) and state == ScreenState.RUNNING:
@@ -292,7 +389,7 @@ func _input(event: InputEvent) -> void:
 				elif stage_select_rect.has_point(touch.position):
 					_open_stage_select()
 				elif sound_rect.has_point(touch.position):
-					saves.cycle_sfx()
+					_cycle_sfx()
 					queue_redraw()
 				return
 			if state == ScreenState.STAGE_SELECT:
@@ -355,7 +452,7 @@ func _input(event: InputEvent) -> void:
 			elif stage_select_rect.has_point(mouse.position):
 				_open_stage_select()
 			elif sound_rect.has_point(mouse.position):
-				saves.cycle_sfx()
+				_cycle_sfx()
 				queue_redraw()
 		elif state == ScreenState.STAGE_SELECT and mouse.pressed:
 			for i in range(stage_buttons.size()):
@@ -408,6 +505,7 @@ func _draw() -> void:
 		_draw_running()
 	else:
 		_draw_result()
+	_draw_feedback_overlay()
 	if qa_mode:
 		_draw_qa_overlay()
 
@@ -443,13 +541,56 @@ func _update_ui_rects() -> void:
 func _draw_sky() -> void:
 	var w := size.x
 	var h := size.y
-	draw_rect(Rect2(Vector2.ZERO, size), Color("#72c8ee"), true)
-	draw_rect(Rect2(0, h * 0.55, w, h * 0.45), Color("#9cdb9a"), true)
-	draw_rect(Rect2(0, h * 0.73, w, h * 0.27), Color("#4f9d68"), true)
-	for i in range(9):
-		var cx := fmod(float(i * 211) + model.position.x * (0.08 + i * 0.006), w + 220.0) - 110.0
+	var top := Color("#14547d")
+	var horizon := Color("#8bd4ee")
+	var far_mountain := Color("#497a8e")
+	var near_mountain := Color("#2d6872")
+	if selected_stage_id == 2:
+		top = Color("#214b72")
+		horizon = Color("#9dc8d8")
+		far_mountain = Color("#5c7080")
+		near_mountain = Color("#384f5d")
+	elif selected_stage_id == 3:
+		top = Color("#27365d")
+		horizon = Color("#7c91b1")
+		far_mountain = Color("#50536d")
+		near_mountain = Color("#35394f")
+	for i in range(16):
+		var t := float(i) / 15.0
+		var band_y := h * 0.055 * float(i)
+		draw_rect(Rect2(0, band_y, w, h * 0.06 + 1.0), top.lerp(horizon, t), true)
+	if selected_stage_id < 3:
+		var sun := Vector2(w * 0.80, h * 0.18)
+		draw_circle(sun, maxf(30.0, minf(w, h) * 0.055), Color(1.0, 0.91, 0.58, 0.28))
+		draw_circle(sun, maxf(20.0, minf(w, h) * 0.038), Color("#fff2a6"))
+	var far_points := PackedVector2Array([
+		Vector2(0, h * 0.67), Vector2(w * 0.12, h * 0.48), Vector2(w * 0.25, h * 0.64),
+		Vector2(w * 0.39, h * 0.43), Vector2(w * 0.56, h * 0.66), Vector2(w * 0.72, h * 0.46),
+		Vector2(w * 0.88, h * 0.63), Vector2(w, h * 0.50), Vector2(w, h * 0.78), Vector2(0, h * 0.78)
+	])
+	draw_colored_polygon(far_points, far_mountain)
+	var parallax := fmod(model.position.x * 0.035, maxf(1.0, w))
+	var near_points := PackedVector2Array([
+		Vector2(-parallax, h * 0.75), Vector2(w * 0.16 - parallax, h * 0.59),
+		Vector2(w * 0.32 - parallax, h * 0.73), Vector2(w * 0.49 - parallax, h * 0.56),
+		Vector2(w * 0.67 - parallax, h * 0.74), Vector2(w * 0.84 - parallax, h * 0.60),
+		Vector2(w * 1.08 - parallax, h * 0.72), Vector2(w * 1.08 - parallax, h), Vector2(-parallax, h)
+	])
+	draw_colored_polygon(near_points, near_mountain)
+	draw_rect(Rect2(0, h * 0.73, w, h * 0.27), Color("#3f855f"), true)
+	for i in range(8):
+		var cx := fmod(float(i * 223) - model.position.x * (0.04 + i * 0.004) + w * 1.5, w + 240.0) - 120.0
 		var cy := h * (0.12 + 0.045 * float(i % 4))
-		draw_circle(Vector2(cx, cy), 34.0 + float((i * 7) % 24), Color(1, 1, 1, 0.42))
+		var cloud := Color(1.0, 1.0, 1.0, 0.40 if selected_stage_id < 3 else 0.22)
+		draw_circle(Vector2(cx - 28, cy + 6), 24.0, cloud)
+		draw_circle(Vector2(cx, cy), 34.0, cloud)
+		draw_circle(Vector2(cx + 31, cy + 8), 22.0, cloud)
+	if selected_stage_id == 3:
+		var lightning_x := w * (0.72 + sin(scene_time * 0.8) * 0.02)
+		draw_polyline(PackedVector2Array([
+			Vector2(lightning_x, h * 0.18), Vector2(lightning_x - 18, h * 0.31),
+			Vector2(lightning_x + 4, h * 0.30), Vector2(lightning_x - 12, h * 0.44)
+		]), Color(0.84, 0.91, 1.0, 0.42), 3.0)
 
 func _draw_title() -> void:
 	var w := size.x
@@ -509,6 +650,7 @@ func _draw_stage_select() -> void:
 
 func _draw_running() -> void:
 	_draw_course()
+	_draw_course_fx()
 	_draw_hud()
 	_draw_touch_controls()
 	if selected_stage_id == 1 and tutorial_step < 3:
@@ -584,6 +726,98 @@ func _draw_course() -> void:
 	if model.boosting:
 		draw_line(glider + Vector2(-30, 6), glider + Vector2(-64, 10), Color("#e8fbff"), 6.0)
 		draw_line(glider + Vector2(-30, 2), glider + Vector2(-52, -4), Color("#63ddff"), 3.0)
+
+func _draw_course_fx() -> void:
+	var w := size.x
+	var h := size.y
+	var anchor_x := w * 0.28
+	var ground_y := h * 0.82
+	var ppm := maxf(0.45, w / 760.0)
+	var altitude_scale := h * 0.0057
+	var depth_offset := h * 0.060
+	for zone in stage["wind_zones"]:
+		var sx := anchor_x + (float(zone["x_start"]) - model.position.x) * ppm
+		var ex := anchor_x + (float(zone["x_end"]) - model.position.x) * ppm
+		if ex < 0.0 or sx > w:
+			continue
+		var flow_color := Color(0.65, 0.94, 1.0, 0.34)
+		if str(zone["type"]) == "TAILWIND":
+			flow_color = Color(0.58, 1.0, 0.72, 0.34)
+		elif str(zone["type"]) == "CROSSWIND":
+			flow_color = Color(1.0, 0.88, 0.48, 0.34)
+		elif str(zone["type"]) == "TURBULENCE":
+			flow_color = Color(0.83, 0.65, 1.0, 0.34)
+		var span := maxf(1.0, ex - sx)
+		for i in range(6):
+			var phase := fmod(scene_time * (32.0 + float(i) * 5.0) + float(i) * 71.0, span)
+			var px := sx + phase
+			var py := h * (0.28 + 0.072 * float(i))
+			draw_line(Vector2(px - 18, py), Vector2(px + 18, py), flow_color, 2.0)
+			draw_line(Vector2(px + 18, py), Vector2(px + 10, py - 6), flow_color, 2.0)
+	for gate in stage["gates"]:
+		var gx := anchor_x + (float(gate["x"]) - model.position.x) * ppm
+		if gx < -90.0 or gx > w + 90.0:
+			continue
+		var gy := ground_y - float(gate["altitude"]) * altitude_scale + float(gate["depth"]) * depth_offset
+		var gate_id := str(gate["id"])
+		var passed: Variant = processed_gates.get(gate_id, null)
+		var c := Color("#5ef4c8") if bool(gate["required"]) else Color("#ffe16f")
+		if passed != null and not bool(passed):
+			c = Color("#82939c")
+		var pulse := 2.0 + sin(scene_time * 5.0 + float(gate_id.length())) * 2.0
+		draw_arc(Vector2(gx, gy), 40.0 + pulse, 0.0, TAU, 40, Color(c, 0.24), 7.0)
+		draw_arc(Vector2(gx, gy), 48.0 + pulse, 0.0, TAU, 40, Color(c, 0.10), 4.0)
+		if passed != null and bool(passed):
+			for ray in range(6):
+				var angle := TAU * float(ray) / 6.0 + scene_time
+				var p1 := Vector2(gx, gy) + Vector2(cos(angle), sin(angle)) * 50.0
+				var p2 := Vector2(gx, gy) + Vector2(cos(angle), sin(angle)) * 64.0
+				draw_line(p1, p2, Color(c, 0.55), 2.0)
+	for obstacle in stage["obstacles"]:
+		var ox := anchor_x + (float(obstacle["x"]) - model.position.x) * ppm
+		if ox < -60.0 or ox > w + 60.0:
+			continue
+		var oy := ground_y - float(obstacle["altitude"]) * altitude_scale + float(obstacle["depth"]) * depth_offset
+		var rock := PackedVector2Array([
+			Vector2(ox - 24, oy + 15), Vector2(ox - 17, oy - 14), Vector2(ox - 2, oy - 24),
+			Vector2(ox + 20, oy - 11), Vector2(ox + 27, oy + 14), Vector2(ox + 8, oy + 25),
+			Vector2(ox - 14, oy + 23)
+		])
+		draw_colored_polygon(rock, Color("#364954"))
+		draw_line(Vector2(ox - 13, oy - 11), Vector2(ox + 11, oy - 16), Color(0.72, 0.82, 0.86, 0.42), 3.0)
+	var glider_y := ground_y - model.position.y * altitude_scale + model.position.z * depth_offset
+	var glider := Vector2(anchor_x, glider_y)
+	var wing_shadow := PackedVector2Array([
+		glider + Vector2(-38, 9), glider + Vector2(-7, -10), glider + Vector2(38, 7),
+		glider + Vector2(10, 15), glider + Vector2(-8, 15)
+	])
+	draw_colored_polygon(wing_shadow, Color(0.02, 0.13, 0.20, 0.36))
+	var wing := PackedVector2Array([
+		glider + Vector2(-35, 3), glider + Vector2(-5, -15), glider + Vector2(38, 4),
+		glider + Vector2(7, 11), glider + Vector2(-10, 10)
+	])
+	draw_colored_polygon(wing, Color("#f7e7a1"))
+	draw_line(glider + Vector2(-30, 2), glider + Vector2(34, 4), Color("#174b67"), 3.0)
+	draw_circle(glider + Vector2(2, 1), 7.0, Color("#e85b55"))
+	draw_circle(glider + Vector2(2, -1), 3.0, Color("#bceeff"))
+	if model.boosting:
+		for i in range(4):
+			var trail_len := 26.0 + float(i) * 14.0
+			var trail_y := float(i - 2) * 5.0 + sin(scene_time * 13.0 + float(i)) * 2.0
+			draw_line(glider + Vector2(-31, trail_y), glider + Vector2(-31 - trail_len, trail_y + 3), Color(0.60, 0.94, 1.0, 0.68 - float(i) * 0.11), 3.0)
+
+func _draw_feedback_overlay() -> void:
+	if screen_flash > 0.0:
+		draw_rect(Rect2(Vector2.ZERO, size), Color(feedback_color, minf(0.16, screen_flash * 0.42)), true)
+	if feedback_timer <= 0.0 or feedback_text == "":
+		return
+	var alpha := clampf(feedback_timer, 0.0, 1.0)
+	var box_w := minf(size.x * 0.68, 430.0)
+	var box_h := maxf(48.0, minf(size.y * 0.075, 68.0))
+	var box := Rect2((size.x - box_w) * 0.5, size.y * 0.18, box_w, box_h)
+	draw_rect(box, Color(0.02, 0.10, 0.17, 0.72 * alpha), true)
+	draw_rect(box, Color(feedback_color, 0.90 * alpha), false, 2.0)
+	_text(box.position + Vector2(18, box.size.y * 0.64), feedback_text, int(clampf(box.size.y * 0.36, 16.0, 24.0)), Color(feedback_color, alpha))
 
 func _draw_hud() -> void:
 	var w := size.x
@@ -672,7 +906,10 @@ func _draw_qa_overlay() -> void:
 	_text(rect.position + Vector2(8, 20), text_value, 12, Color("#a7ffce"))
 
 func _button(rect: Rect2, label: String, color: Color) -> void:
-	draw_rect(rect, Color(color, 0.92), true)
+	var shadow := Rect2(rect.position + Vector2(0, 4), rect.size)
+	draw_rect(shadow, Color(0.01, 0.06, 0.09, 0.42), true)
+	draw_rect(rect, Color(color, 0.94), true)
+	draw_rect(Rect2(rect.position + Vector2(2, 2), rect.size - Vector2(4, 4)), Color(1, 1, 1, 0.08), false, 2.0)
 	draw_rect(rect, Color("#e1f8ff"), false, 2.0)
 	var fs := int(clampf(rect.size.y * 0.34, 14.0, 22.0))
 	_text(rect.position + Vector2(16, rect.size.y * 0.62), label, fs, Color.WHITE)

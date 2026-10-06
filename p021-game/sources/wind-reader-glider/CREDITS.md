@@ -1,6 +1,10 @@
 # Credits — GAME-G003 Wind Reader Glider
 
-- Noto Sans JP — Google Fonts contributors — SIL Open Font License 1.1.
-- Stage 1 gameplay art is original procedural CanvasItem drawing created for this PoC.
+Updated: 2026-10-07 (GAME-032)
 
-External production art and sound packs are intentionally deferred until the Stage 1 flight model and controls are validated.
+- Noto Sans JP — Google Fonts contributors — SIL Open Font License 1.1.
+- Visual art for all three stages — original procedural Godot CanvasItem drawing in this project.
+- Sound effects (UI / gate / bonus / miss / boost / collision / clear / fail) — original procedural PCM synthesis in this project; no third-party sound pack is bundled.
+- Stage 1「朝凪の丘」, Stage 2「峡谷の横風」, Stage 3「雷雲の切れ間」 use the same source-tracked visual/audio policy.
+
+No attribution-required third-party game-art or audio package is included beyond the font credit above.
