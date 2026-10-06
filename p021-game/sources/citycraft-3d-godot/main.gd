@@ -11,12 +11,12 @@ const COSTS := {
 }
 
 const TILE_COLORS := {
-	"empty": Color("e8d8b8"),
-	"road": Color("d6d9de"),
-	"home": Color("4f9fe8"),
-	"shop": Color("8b939e"),
-	"park": Color("50ad62"),
-	"city": Color("78cbe8")
+	"empty": Color("d9bd8f"),  # 空き地: はっきり分かる薄茶
+	"road": Color("b8c0ca"),   # 道路: 中間グレー
+	"home": Color("6aaee8"),   # 住宅: 青
+	"shop": Color("8f98a3"),   # 商業: グレー
+	"park": Color("62b86f"),   # 公園: 緑
+	"city": Color("66c2df")    # 市役所
 }
 
 var money := 18000
@@ -108,14 +108,14 @@ func _build_world() -> void:
 	environment.background_color = Color("9fdcff")
 	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	environment.ambient_light_color = Color("dff8ff")
-	environment.ambient_light_energy = 0.8
+	environment.ambient_light_energy = 0.48
 	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	env.environment = environment
 	add_child(env)
 
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-52, -34, 0)
-	sun.light_energy = 1.4
+	sun.light_energy = 1.02
 	sun.shadow_enabled = true
 	add_child(sun)
 
@@ -136,7 +136,7 @@ func _build_world() -> void:
 			# A very small checker variation keeps the grid readable without
 			# competing with the semantic zoning colors.
 			if (x + z) % 2 == 1:
-				tile_color = tile_color.darkened(0.035)
+				tile_color = tile_color.darkened(0.07)
 			var tile := _box(Vector3(0.96, 0.08, 0.96), tile_color)
 			tile.position = Vector3(x - HALF, 0.0, z - HALF)
 			add_child(tile)
@@ -197,7 +197,7 @@ func _set_tile_color(cell: Vector2i, kind: String) -> void:
 	var tile: MeshInstance3D = tile_nodes[cell] as MeshInstance3D
 	var color: Color = TILE_COLORS.get(kind, TILE_COLORS["empty"])
 	if kind == "empty" and (cell.x + cell.y) % 2 == 1:
-		color = color.darkened(0.035)
+		color = color.darkened(0.07)
 	tile.material_override = _tile_material(color)
 
 
@@ -229,10 +229,10 @@ func _make_tree(scale_factor := 1.0) -> Node3D:
 
 func _make_road() -> Node3D:
 	var root := Node3D.new()
-	var slab := _box(Vector3(0.94, 0.11, 0.94), Color("b7bec7"))
+	var slab := _box(Vector3(0.94, 0.11, 0.94), Color("aab3bd"))
 	slab.position.y = 0.07
 	root.add_child(slab)
-	var line := _box(Vector3(0.06, 0.012, 0.50), Color("f8fafc"))
+	var line := _box(Vector3(0.06, 0.012, 0.50), Color("eef2f7"))
 	line.position.y = 0.132
 	root.add_child(line)
 	return root
@@ -240,11 +240,11 @@ func _make_road() -> Node3D:
 
 func _make_home() -> Node3D:
 	var root := Node3D.new()
-	var foundation := _box(Vector3(0.76, 0.12, 0.76), Color("b9ddff"))
+	var foundation := _box(Vector3(0.76, 0.12, 0.76), Color("8fc5f1"))
 	foundation.position.y = 0.08
 	root.add_child(foundation)
 
-	var body := _box(Vector3(0.66, 0.63, 0.62), Color("4f9fe8"))
+	var body := _box(Vector3(0.66, 0.63, 0.62), Color("2f7fc4"))
 	body.position.y = 0.44
 	root.add_child(body)
 
@@ -256,7 +256,7 @@ func _make_home() -> Node3D:
 	roof_mesh.radial_segments = 4
 	roof.mesh = roof_mesh
 	var roof_mat := StandardMaterial3D.new()
-	roof_mat.albedo_color = Color("2563a6")
+	roof_mat.albedo_color = Color("1e5f96")
 	roof_mat.roughness = 0.85
 	roof.material_override = roof_mat
 	roof.rotation.y = PI / 4.0
@@ -276,19 +276,19 @@ func _make_home() -> Node3D:
 
 func _make_shop() -> Node3D:
 	var root := Node3D.new()
-	var body := _box(Vector3(0.78, 0.72, 0.70), Color("8b939e"))
+	var body := _box(Vector3(0.78, 0.72, 0.70), Color("747f8b"))
 	body.position.y = 0.40
 	root.add_child(body)
 
-	var roof := _box(Vector3(0.86, 0.08, 0.78), Color("5f6874"))
+	var roof := _box(Vector3(0.86, 0.08, 0.78), Color("4b5563"))
 	roof.position.y = 0.81
 	root.add_child(roof)
 
-	var glass := _box(Vector3(0.55, 0.30, 0.02), Color("dbe4ec"))
+	var glass := _box(Vector3(0.55, 0.30, 0.02), Color("c9d2db"))
 	glass.position = Vector3(0.0, 0.43, 0.361)
 	root.add_child(glass)
 
-	var awning := _box(Vector3(0.62, 0.08, 0.16), Color("374151"))
+	var awning := _box(Vector3(0.62, 0.08, 0.16), Color("303744"))
 	awning.position = Vector3(0.0, 0.66, 0.42)
 	root.add_child(awning)
 	return root
@@ -296,7 +296,7 @@ func _make_shop() -> Node3D:
 
 func _make_park() -> Node3D:
 	var root := Node3D.new()
-	var base := _box(Vector3(0.90, 0.08, 0.90), Color("43a557"))
+	var base := _box(Vector3(0.90, 0.08, 0.90), Color("3e9a52"))
 	base.position.y = 0.06
 	root.add_child(base)
 
