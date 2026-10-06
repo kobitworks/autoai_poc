@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,viewport-fit=cover">
+  <title>影渡りステルス | GAME-G008</title>
+  <style>
+    html,body,#canvas{margin:0;width:100%;height:100%;overflow:hidden;background:#06101c;touch-action:none}
+    #canvas{display:block}
+    #status{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#06101c;color:#e8fbff;font:600 16px system-ui,sans-serif}
+    #status progress{width:min(62vw,420px)}
+  </style>
+</head>
+<body>
+  <canvas id="canvas">Canvas is required.</canvas>
+  <div id="status"><div>影渡りステルスを読み込み中…</div><progress id="progress"></progress></div>
+  <script src="../../runtime/godot-4.7.2/godot.js"></script>
+  <script>
+    const status = document.getElementById("status");
+    const progress = document.getElementById("progress");
+    const config = {
+      executable: "../../runtime/godot-4.7.2/godot",
+      mainPack: "./shadow-step-stealth.pck",
+      canvasResizePolicy: 2,
+      focusCanvas: true,
+      ensureCrossOriginIsolationHeaders: true,
+      experimentalVK: false
+    };
+    const missing = Engine.getMissingFeatures({threads:false});
+    if (missing.length) {
+      status.innerHTML = "<div>このブラウザでは起動できません: " + missing.join(", ") + "</div>";
+      console.error("Missing Godot Web features", missing);
+    } else {
+      const engine = new Engine(config);
+      engine.startGame({
+        onProgress(current,total){
+          if(current>0 && total>0){progress.value=current;progress.max=total}else{progress.removeAttribute("value")}
+        }
+      }).then(()=>status.remove()).catch(err=>{
+        console.error(err);
+        status.innerHTML="<div>起動に失敗しました</div>";
+      });
+    }
+  </script>
+</body>
+</html>
