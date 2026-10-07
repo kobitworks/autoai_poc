@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <title>Number Sum | GAME-G009</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <section id="screenTop" class="screen screen-top" aria-label="ゲーム開始">
+    <div class="topCard">
+      <div class="topBrand">
+        <div class="topTitle">Number Sum</div>
+        <div class="topSub">行・列・領域の合計がターゲットに一致するように、数字を採用／除外して解くロジックパズルです。</div>
+      </div>
+      <div class="topForm">
+        <label class="field"><span class="label">難易度</span>
+          <select id="topLevel" class="select" aria-label="難易度">
+            <option value="easy">Easy 5×5</option>
+            <option value="normal" selected>Normal 6×6</option>
+            <option value="hard">Hard 7×7</option>
+          </select>
+        </label>
+        <div class="topActions"><button id="btnStart" class="btn primary" type="button">ゲーム開始</button></div>
+        <a class="portalLink" href="../../">P021 ゲーム一覧へ戻る</a>
+      </div>
+    </div>
+  </section>
+
+  <section id="screenGame" class="screen screen-game hidden" aria-label="ゲーム">
+    <header class="top">
+      <div class="title"><div class="h1 h1-inline"><span aria-hidden="true">∑</span><span>Number Sum</span></div></div>
+      <div class="statusline"><div id="status" class="status">TOPで開始してください</div><div id="meta" class="meta"></div></div>
+    </header>
+    <main class="main">
+      <div id="gameArea" class="gameArea">
+        <div id="boardWrap" class="boardWrap" aria-label="盤面"></div>
+        <div class="controlsRow" aria-label="操作">
+          <button id="modePencil" class="ctl wide is-active" type="button" aria-label="採用">● <span>採用</span></button>
+          <button id="modeEraser" class="ctl wide" type="button" aria-label="除外">／ <span>除外</span></button>
+          <button id="btnReset" class="ctl" type="button" aria-label="リセット">↻</button>
+          <button id="btnTop" class="ctl" type="button" aria-label="ゲーム一覧へ戻る">⌂</button>
+        </div>
+      </div>
+    </main>
+  </section>
+
+  <div id="overlay" class="overlay hidden" aria-live="polite">
+    <div class="panel">
+      <div class="spinner" aria-hidden="true"></div>
+      <div class="ovText"><div class="ovTitle">問題生成中…</div><div id="ovDetail" class="ovDetail">条件を満たす盤面を探索しています。</div></div>
+      <button id="btnCancel" class="btn ghost" type="button">キャンセル</button>
+    </div>
+  </div>
+</div>
+<script src="platform-adapter.js"></script>
+<script src="main.js"></script>
+</body>
+</html>
