@@ -1,4 +1,4 @@
-name: P021 Build GAME-G008 Shadow Step Stealth\n# GAME-040 CI revision 4
+name: P021 Build GAME-G008 Shadow Step Stealth\n# GAME-040 CI revision 5
 
 on:
   push:
@@ -64,6 +64,10 @@ jobs:
       - name: Headless stealth logic tests
         working-directory: p021-game/sources/shadow-step-stealth
         run: godot --headless --path . --script res://tests/test_logic.gd
+
+      - name: Normal-rule three-stage playthrough
+        working-directory: p021-game/sources/shadow-step-stealth
+        run: godot --headless --path . --script res://tests/test_playthrough.gd
 
       - name: Validate project
         working-directory: p021-game/sources/shadow-step-stealth
