@@ -37,10 +37,15 @@ func _run_stage(main, stage_id: int, route: Array[String]) -> void:
 	check(main.alert_model.peak < 100.0, "stage %d route avoids SPOTTED" % stage_id)
 
 func _init() -> void:
+	call_deferred("_run")
+
+func _run() -> void:
 	var main = MainScene.instantiate()
 	root.add_child(main)
+	await process_frame
 	main.set_process(false)
-	main.qa_mode = false
+	main.save_manager.reset_progress()
+	main._configure_stage(1)
 
 	_run_stage(main, 1, ["N2", "N4", "N6", "N8", "N9"])
 	check(main.save_manager.is_unlocked(2), "stage 1 clear unlocks stage 2")
