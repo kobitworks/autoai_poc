@@ -249,8 +249,9 @@ const state={screen:'U01',book:'walk-shibuya',locationResult:null,locationReache
 const labels={LOGIN:'Login',U01:'Book',U02:'Book Detail',U03:'Story',U04:'Map',U05:'Location Check',U06:'Safety',U08:'Book Complete',U09:'Next Book',U10:'Book Select',U11:'Config',U12:'List',U13:'Info',O01:'Publication',A01:'User Roles'};
 const SCREEN_ICONS=Object.freeze({LOGIN:'fa-right-to-bracket',U01:'fa-book-open',U02:'fa-book',U03:'fa-book-open-reader',U04:'fa-map-location-dot',U05:'fa-location-crosshairs',U06:'fa-triangle-exclamation',U08:'fa-circle-check',U09:'fa-book-open',U10:'fa-check-double',U11:'fa-gear',U12:'fa-list',U13:'fa-circle-info',O01:'fa-cloud-arrow-up',A01:'fa-users-gear'});
 const INFO_ITEMS=Object.freeze([
- {icon:'fa-layer-group',title:'メニューを整理しました',body:'Listは状態一覧、Bookは本棚表示として分けています。目的に合わせて切り替えられます。'},
- {icon:'fa-person-walking',title:'安全に遊ぶために',body:'移動中は画面を見続けず、地図やStoryの操作は安全な場所で行ってください。'}
+ {icon:'fa-map-location-dot',title:'MapとNearby List',body:'Mapは現在地周辺のGIS地点を地図で確認し、Listは同じ地点を検索・絞り込み・並び替えして確認できます。Listの地点を選ぶとMapでその地点へフォーカスします。'},
+ {icon:'fa-location-crosshairs',title:'位置情報の使い方',body:'位置情報はMapの初期表示や「現在地を更新」の明示操作時に取得します。常時追跡はせず、Bookの到着判定に使う位置確認とは別用途です。'},
+ {icon:'fa-person-walking',title:'安全に遊ぶために',body:'移動中は画面を見続けず、Map・List・Storyの操作は安全な場所で行ってください。'}
 ]);
 const app=document.getElementById('app'), jump=document.getElementById('jump'), subnav=document.getElementById('subnav'), title=document.getElementById('pageTitle'), sessionChip=document.getElementById('sessionChip');
 const LEGACY_UI_BASELINE=Object.freeze({
@@ -372,8 +373,10 @@ function render(){
  }else if(state.screen==='U13'){
   const resume=latestResumeCandidate(),availableCount=state.books.filter(x=>x.available).length;
   const progressText=resume?resume.book.title+' / Chapter '+resume.progress.chapter+' / Scene '+resume.progress.scene:'進行中のBookはありません';
+  const gpsText=typeof mapGpsStatusText==='function'?mapGpsStatusText():(state.mapLocation.status||'未取得');
+  const gisText=state.gis.status==='ready'?'取得済み '+state.gis.items.length+'件':state.gis.status==='loading'?'読み込み中':state.gis.status==='empty'?'周辺データなし':state.gis.status==='unavailable'?'取得失敗':'未取得';
   const infoCards=INFO_ITEMS.map(item=>'<div class="info-item"><div class="info-icon" aria-hidden="true"><i class="fa-solid '+item.icon+'"></i></div><div><strong>'+item.title+'</strong><p>'+item.body+'</p></div></div>').join('');
-  app.innerHTML=page('<div class="screen-lead"><div class="screen-lead-icon" aria-hidden="true"><i class="fa-solid fa-circle-info"></i></div><div><h2>Info</h2><p>Biblioのお知らせと現在の状態を確認できます。</p></div></div><div class="info-list">'+infoCards+'</div><div class="panel"><h3>ゲーム情報</h3><div class="fact"><span>進行中</span><strong>'+progressText+'</strong></div><div class="fact"><span>利用可能Book</span><strong>'+availableCount+'冊</strong></div><div class="fact"><span>現在の権限</span><strong>'+(state.auth.user?.role||'player')+'</strong></div></div><div class="actions">'+btn('Listを開く',"go('U12')",'secondary')+btn('Bookを開く',"go('U01')",'secondary')+'</div>');
+  app.innerHTML=page('<div class="screen-lead"><div class="screen-lead-icon" aria-hidden="true"><i class="fa-solid fa-circle-info"></i></div><div><h2>Info</h2><p>Biblioの使い方と現在の状態を確認できます。</p></div></div><div class="info-list">'+infoCards+'</div><div class="panel"><h3>現在の状態</h3><div class="fact"><span>現在地</span><strong>'+gpsText+'</strong></div><div class="fact"><span>周辺GIS</span><strong>'+gisText+'</strong></div><div class="fact"><span>進行中</span><strong>'+progressText+'</strong></div><div class="fact"><span>利用可能Book</span><strong>'+availableCount+'冊</strong></div><div class="fact"><span>現在の権限</span><strong>'+(state.auth.user?.role||'player')+'</strong></div></div><div class="actions">'+btn('Mapを開く',"go('U04')",'secondary')+btn('Nearby Listを開く',"go('U12')",'secondary')+btn('Bookを開く',"go('U01')",'secondary')+'</div>');
  }else if(state.screen==='U02'){
   const availability=startAvailability(book.key),starting=state.start.status==='starting',progress=latestProgress(book.key),startError=state.start.error;
   const stateTone=startError?'error':availability.resume?'progress':availability.allowed?'':'blocked';
