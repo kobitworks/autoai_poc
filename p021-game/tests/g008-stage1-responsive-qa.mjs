@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 const baseUrl = "http://127.0.0.1:4173/p021-game/games/shadow-step-stealth/?qa=1";
-const outDir = "p021-game/test-artifacts/game-g008-stage1";
+const outDir = "p021-game/test-artifacts/game-g008-three-stage";
 const cases = [
   { name: "phone-portrait", width: 390, height: 844 },
   { name: "phone-landscape", width: 844, height: 390 },
@@ -48,28 +48,53 @@ for (const c of cases) {
   const images = [];
   images.push(await shot(page, c.name + "-title"));
 
+  await page.keyboard.press("F4");
+  await page.waitForTimeout(250);
+  images.push(await shot(page, c.name + "-stage-select"));
+
   await page.keyboard.press("F9");
-  await page.waitForTimeout(400);
+  await page.waitForTimeout(350);
   images.push(await shot(page, c.name + "-stage1"));
 
   await page.keyboard.press("ArrowRight");
-  await page.waitForTimeout(900);
-  images.push(await shot(page, c.name + "-move"));
+  await page.waitForTimeout(850);
+  images.push(await shot(page, c.name + "-stage1-move"));
 
   await page.keyboard.press("F8");
-  await page.waitForTimeout(180);
-  images.push(await shot(page, c.name + "-alert"));
+  await page.waitForTimeout(160);
+  images.push(await shot(page, c.name + "-stage1-alert"));
 
   await page.keyboard.press("F9");
-  await page.waitForTimeout(250);
-  images.push(await shot(page, c.name + "-result"));
+  await page.waitForTimeout(220);
+  images.push(await shot(page, c.name + "-stage1-result"));
+
+  await page.keyboard.press("F6");
+  await page.waitForTimeout(280);
+  images.push(await shot(page, c.name + "-stage2"));
+
+  await page.keyboard.press("F9");
+  await page.waitForTimeout(220);
+  images.push(await shot(page, c.name + "-stage2-result"));
+
+  await page.keyboard.press("F6");
+  await page.waitForTimeout(280);
+  images.push(await shot(page, c.name + "-stage3"));
+
+  await page.keyboard.press("F7");
+  await page.waitForTimeout(180);
+  images.push(await shot(page, c.name + "-stage3-phase2"));
+
+  await page.keyboard.press("F9");
+  await page.waitForTimeout(220);
+  images.push(await shot(page, c.name + "-stage3-result"));
 
   await page.keyboard.press("r");
-  await page.waitForTimeout(250);
-  images.push(await shot(page, c.name + "-retry"));
+  await page.waitForTimeout(220);
+  images.push(await shot(page, c.name + "-stage3-retry"));
 
   const hashes = images.map(digest);
-  const distinctScreens = new Set(hashes).size >= 5;
+  const screenCount = new Set(hashes).size;
+  const distinctScreens = screenCount >= 9;
   const canvasFits =
     box.x >= -1 &&
     box.y >= -1 &&
@@ -86,7 +111,21 @@ for (const c of cases) {
     viewport: c.width + "x" + c.height,
     canvasFits,
     distinctScreens,
-    screenCount: new Set(hashes).size,
+    screenCount,
+    testedFlow: [
+      "title",
+      "stage-select",
+      "stage1",
+      "stage1-move",
+      "stage1-alert",
+      "stage1-result",
+      "stage2",
+      "stage2-result",
+      "stage3",
+      "stage3-phase2",
+      "stage3-result",
+      "stage3-retry",
+    ],
     consoleErrors,
     pageErrors,
     pass,
