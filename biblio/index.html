@@ -267,15 +267,37 @@ const LEGACY_UI_BASELINE=Object.freeze({
 const reviewMode=new URLSearchParams(location.search).get('review')==='1';
 document.body.classList.toggle('review-mode',reviewMode);
 function b(){return state.books.find(x=>x.key===state.book)||state.books[0]}
+function normalizeProgressRecord(record={}){
+ return {
+  ...record,
+  clueIds:Array.isArray(record.clueIds)?[...new Set(record.clueIds.map(String))]:[],
+  questStates:record.questStates&&typeof record.questStates==='object'&&!Array.isArray(record.questStates)?{...record.questStates}:{},
+  triggerStates:record.triggerStates&&typeof record.triggerStates==='object'&&!Array.isArray(record.triggerStates)?{...record.triggerStates}:{},
+  witnessStates:record.witnessStates&&typeof record.witnessStates==='object'&&!Array.isArray(record.witnessStates)?{...record.witnessStates}:{},
+  timelineMode:typeof record.timelineMode==='string'&&record.timelineMode?record.timelineMode:'present',
+  currentLocationRole:record.currentLocationRole??null
+ };
+}
 function latestProgress(bookKey){return state.progressRecords.filter(x=>x.bookKey===bookKey&&x.resumable).sort((a,b)=>Date.parse(b.updatedAt)-Date.parse(a.updatedAt))[0]||null}
-function persistProgress(){localStorage.setItem(PROGRESS_KEY,JSON.stringify(state.progressRecords))}
-function restoreProgress(){try{const raw=localStorage.getItem(PROGRESS_KEY);if(!raw)return false;const parsed=JSON.parse(raw);if(!Array.isArray(parsed))throw new Error('invalid progress');state.progressRecords=parsed.filter(x=>x&&x.bookKey&&x.sceneKey&&x.resumable!==false);return true}catch(e){localStorage.removeItem(PROGRESS_KEY);return false}}
-function upsertProgress(progress){state.progressRecords=state.progressRecords.filter(x=>x.bookKey!==progress.bookKey);state.progressRecords.push(progress);persistProgress();return progress}
+function persistProgress(){localStorage.setItem(PROGRESS_KEY,JSON.stringify(state.progressRecords.map(normalizeProgressRecord)))}
+function restoreProgress(){try{const raw=localStorage.getItem(PROGRESS_KEY);if(!raw)return false;const parsed=JSON.parse(raw);if(!Array.isArray(parsed))throw new Error('invalid progress');state.progressRecords=parsed.filter(x=>x&&x.bookKey&&x.sceneKey&&x.resumable!==false).map(normalizeProgressRecord);return true}catch(e){localStorage.removeItem(PROGRESS_KEY);return false}}
+function upsertProgress(progress){
+ const previous=state.progressRecords.find(x=>x.bookKey===progress.bookKey)||{};
+ const normalized=normalizeProgressRecord({...previous,...progress,
+  clueIds:progress.clueIds??previous.clueIds,
+  questStates:progress.questStates??previous.questStates,
+  triggerStates:progress.triggerStates??previous.triggerStates,
+  witnessStates:progress.witnessStates??previous.witnessStates,
+  timelineMode:progress.timelineMode??previous.timelineMode,
+  currentLocationRole:progress.currentLocationRole!==undefined?progress.currentLocationRole:previous.currentLocationRole
+ });
+ state.progressRecords=state.progressRecords.filter(x=>x.bookKey!==normalized.bookKey);state.progressRecords.push(normalized);persistProgress();return normalized;
+}
 function sceneData(sceneKey){return STORY_SCENES[sceneKey]||STORY_SCENES['scene-1']}
 function applyAuthoritativeProgress(progress,notice=''){state.book=progress.bookKey;state.story={chapter:progress.chapter,scene:progress.scene,sceneKey:progress.sceneKey,title:progress.sceneTitle};state.storyAdvance.status='idle';state.storyAdvance.error='';state.storyAdvance.notice=notice}
 function latestResumeCandidate(){return state.books.map(book=>({book,progress:latestProgress(book.key)})).filter(x=>x.book.available&&x.progress).sort((a,b)=>Date.parse(b.progress.updatedAt)-Date.parse(a.progress.updatedAt))[0]||null}
 function resumeBook(bookKey){const book=state.books.find(x=>x.key===bookKey),progress=latestProgress(bookKey);if(!book||!book.available||!progress){state.resumeNotice='再開できる進行データがありません。Book一覧から選び直してください。';state.screen='U01';history.replaceState({s:'U01'},'','#U01');render();return}state.book=book.key;state.story={chapter:progress.chapter,scene:progress.scene,sceneKey:progress.sceneKey,title:progress.sceneTitle};state.resumeNotice='';state.screen='U03';history.replaceState({s:'U03'},'','#U03');render()}
-function setResumeMock(enabled){state.progressRecords=enabled?[{bookKey:'walk-shibuya',chapter:1,scene:2,sceneKey:'scene-2',sceneTitle:'交差点の小さな違和感',updatedAt:new Date().toISOString(),resumable:true}]:[];persistProgress();state.resumeNotice='';state.screen='U01';history.replaceState({s:'U01'},'','#U01');render()}
+function setResumeMock(enabled){state.progressRecords=enabled?[normalizeProgressRecord({bookKey:'walk-shibuya',chapter:1,scene:2,sceneKey:'scene-2',sceneTitle:'交差点の小さな違和感',updatedAt:new Date().toISOString(),resumable:true})]:[];persistProgress();state.resumeNotice='';state.screen='U01';history.replaceState({s:'U01'},'','#U01');render()}
 function startAvailability(bookKey){const book=state.books.find(x=>x.key===bookKey);if(!book)return{allowed:false,reason:'Book情報を確認できません。',resume:false};if(!book.available)return{allowed:false,reason:book.unavailableReason||'現在、このBookは開始できません。',resume:false};const progress=latestProgress(bookKey);if(progress)return{allowed:false,reason:'このBookは進行中です。「つづきから」を利用してください。',resume:true};return{allowed:true,reason:'このBookは開始できます。',resume:false}}
 function setStartMockMode(mode){state.start.mode=mode;state.start.status='idle';state.start.error='';render()}
 function setStoryMockMode(mode){state.storyAdvance.mode=mode;state.storyAdvance.error='';state.storyAdvance.notice='';render()}
@@ -285,18 +307,18 @@ async function advanceStory(){
  const scene=sceneData(current.sceneKey);if(!scene.nextSceneKey){if(scene.nextScreen)go(scene.nextScreen);return}
  const next=sceneData(scene.nextSceneKey),requestKey=state.book+':'+current.sceneKey+'>'+next.sceneKey;
  state.storyAdvance.status='saving';state.storyAdvance.error='';state.storyAdvance.notice='';render();
- if(serverEnabled()&&state.server.progressId){try{const res=await apiRequest('/api/v1/progress/'+encodeURIComponent(state.server.progressId)+'/advance',{method:'POST',idempotencyKey:requestKey,body:{from_scene_key:current.sceneKey}});const nextProgress={bookKey:state.book,chapter:next.chapter,scene:next.scene,sceneKey:res.scene_key||next.sceneKey,sceneTitle:sceneData(res.scene_key||next.sceneKey).title,updatedAt:new Date().toISOString(),resumable:true};upsertProgress(nextProgress);applyAuthoritativeProgress(nextProgress,'PHP APIで進捗を保存しました。');render();return}catch(e){state.storyAdvance.status='idle';state.storyAdvance.error='進捗を保存できませんでした。'+e.message;render();return}}
+ if(serverEnabled()&&state.server.progressId){try{const res=await apiRequest('/api/v1/progress/'+encodeURIComponent(state.server.progressId)+'/advance',{method:'POST',idempotencyKey:requestKey,body:{from_scene_key:current.sceneKey}});const nextProgress=normalizeProgressRecord({...current,bookKey:state.book,chapter:next.chapter,scene:next.scene,sceneKey:res.scene_key||next.sceneKey,sceneTitle:sceneData(res.scene_key||next.sceneKey).title,updatedAt:new Date().toISOString(),resumable:true});upsertProgress(nextProgress);applyAuthoritativeProgress(nextProgress,'PHP APIで進捗を保存しました。');render();return}catch(e){state.storyAdvance.status='idle';state.storyAdvance.error='進捗を保存できませんでした。'+e.message;render();return}}
  setTimeout(()=>{
   if(state.storyAdvance.mode==='error'){state.storyAdvance.status='idle';state.storyAdvance.error='進捗を保存できませんでした。通信状態を確認して、もう一度お試しください。';render();return}
   const serverCurrent=latestProgress(state.book);
-  if(state.storyAdvance.mode==='conflict'&&serverCurrent&&serverCurrent.sceneKey===current.sceneKey){const serverProgress={bookKey:state.book,chapter:next.chapter,scene:next.scene,sceneKey:next.sceneKey,sceneTitle:next.title,updatedAt:new Date().toISOString(),resumable:true};upsertProgress(serverProgress);applyAuthoritativeProgress(serverProgress,'別の操作で進捗が更新されていたため、サーバー側の最新Sceneを反映しました。');state.storyAdvance.mode='success';render();return}
+  if(state.storyAdvance.mode==='conflict'&&serverCurrent&&serverCurrent.sceneKey===current.sceneKey){const serverProgress=normalizeProgressRecord({...current,bookKey:state.book,chapter:next.chapter,scene:next.scene,sceneKey:next.sceneKey,sceneTitle:next.title,updatedAt:new Date().toISOString(),resumable:true});upsertProgress(serverProgress);applyAuthoritativeProgress(serverProgress,'別の操作で進捗が更新されていたため、サーバー側の最新Sceneを反映しました。');state.storyAdvance.mode='success';render();return}
   if(serverCurrent&&serverCurrent.sceneKey!==current.sceneKey){applyAuthoritativeProgress(serverCurrent,'進捗の競合を検出したため、サーバー側の最新Sceneを反映しました。');render();return}
-  const nextProgress={bookKey:state.book,chapter:next.chapter,scene:next.scene,sceneKey:next.sceneKey,sceneTitle:next.title,updatedAt:new Date().toISOString(),resumable:true};
+  const nextProgress=normalizeProgressRecord({...current,bookKey:state.book,chapter:next.chapter,scene:next.scene,sceneKey:next.sceneKey,sceneTitle:next.title,updatedAt:new Date().toISOString(),resumable:true});
   if(state.storyAdvance.lastRequestKey!==requestKey){upsertProgress(nextProgress);state.storyAdvance.lastRequestKey=requestKey}
   applyAuthoritativeProgress(latestProgress(state.book)||nextProgress,'進捗を保存しました。');render();
  },300)
 }
-function applyStartedBook(book,serverRes=null){const progress={bookKey:book.key,chapter:1,scene:1,sceneKey:'scene-1',sceneTitle:'街角のはじまり',updatedAt:new Date().toISOString(),resumable:true};upsertProgress(progress);state.book=book.key;state.server.progressId=serverRes?.progress_id||state.server.progressId;state.server.bookVersion=serverRes?.book_version||null;state.story={chapter:progress.chapter,scene:progress.scene,sceneKey:progress.sceneKey,title:progress.sceneTitle};state.storyAdvance={status:'idle',error:'',notice:'',mode:'success',lastRequestKey:''};state.start={status:'idle',error:'',mode:'success'};state.screen='U03';history.replaceState({s:'U03'},'','#U03');render()}
+function applyStartedBook(book,serverRes=null){const progress=normalizeProgressRecord({bookKey:book.key,chapter:1,scene:1,sceneKey:'scene-1',sceneTitle:'街角のはじまり',updatedAt:new Date().toISOString(),resumable:true});upsertProgress(progress);state.book=book.key;state.server.progressId=serverRes?.progress_id||state.server.progressId;state.server.bookVersion=serverRes?.book_version||null;state.story={chapter:progress.chapter,scene:progress.scene,sceneKey:progress.sceneKey,title:progress.sceneTitle};state.storyAdvance={status:'idle',error:'',notice:'',mode:'success',lastRequestKey:''};state.start={status:'idle',error:'',mode:'success'};state.screen='U03';history.replaceState({s:'U03'},'','#U03');render()}
 async function startBook(bookKey){if(state.start.status==='starting')return;const visible=startAvailability(bookKey);if(!visible.allowed){state.start.status='blocked';state.start.error=visible.reason;render();return}state.start.status='starting';state.start.error='';render();const book=state.books.find(x=>x.key===bookKey);if(serverEnabled()){try{const res=await apiRequest('/api/v1/books/'+encodeURIComponent(bookKey)+'/start',{method:'POST',idempotencyKey:'start:'+bookKey,body:{start_context:{kind:state.complete?'NEXT_BOOK':'NORMAL'}}});applyStartedBook(book,res);return}catch(e){state.start.status='error';state.start.error='Bookを開始できませんでした。'+e.message;render();return}}setTimeout(()=>{if(state.start.mode==='error'){state.start.status='error';state.start.error='Bookを開始できませんでした。通信状態を確認して、もう一度お試しください。';render();return}if(state.start.mode==='blocked'||!book||!book.available){state.start.status='blocked';state.start.error='現在、このBookは開始できません。'+(book?.unavailableReason?' 開始できない理由: '+book.unavailableReason:' サーバー側の最新状態を確認してください。');render();return}applyStartedBook(book)},300)}
 function hasAdminRole(){return state.auth.status==='logged_in'&&state.auth.user?.role==='admin'}
 function hasOpsRole(){return hasAdminRole()}
