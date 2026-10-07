@@ -525,7 +525,7 @@ function requestStartupMapLocation(force=false){
   const lat=Number(position.coords.latitude),lon=Number(position.coords.longitude),accuracy=Number(position.coords.accuracy);
   if(!Number.isFinite(lat)||!Number.isFinite(lon)){loc.status='unavailable';loc.errorCode='INVALID_POSITION';loc.message='取得した位置情報を利用できませんでした。';updateMapGpsStatusUi();if(state.screen==='U12')render();return}
   loc.status='ready';loc.lat=lat;loc.lon=lon;loc.accuracy=Number.isFinite(accuracy)?accuracy:null;loc.errorCode='';loc.message='現在地を取得しました。';
-  if(state.screen==='U04'&&leafletMapInstance)showMapCurrentLocation([lat,lon],true);
+  if(state.screen==='U04'){if(leafletMapInstance)showMapCurrentLocation([lat,lon],true);else initLeafletMap();}
   updateMapGpsStatusUi();
   if(state.screen==='U12')render();
  },error=>{
@@ -534,6 +534,7 @@ function requestStartupMapLocation(force=false){
   else if(error&&error.code===3){loc.status='timeout';loc.errorCode='TIMEOUT';loc.message='GPS取得がタイムアウトしました。'}
   else{loc.status='unavailable';loc.errorCode='POSITION_UNAVAILABLE';loc.message='現在地を取得できませんでした。'}
   updateMapGpsStatusUi();
+  if(state.screen==='U04'&&!leafletMapInstance)initLeafletMap();
   if(state.screen==='U12')render();
  },{enableHighAccuracy:true,maximumAge:60000,timeout:10000});
 }
@@ -558,7 +559,8 @@ function initLeafletMap(){
  const el=document.getElementById('leafletMap');
  if(!el||typeof L==='undefined')return;
  if(leafletMapInstance){leafletMapInstance.remove();leafletMapInstance=null;leafletCurrentMarker=null}
- const target=MAP_TARGET,current=startupMapPosition();
+ const target=MAP_TARGET,current=startupMapPosition(),loc=state.mapLocation;
+ if(!current&&!['denied','timeout','unsupported','unavailable'].includes(loc.status)){requestStartupMapLocation(false);return}
  leafletMapInstance=L.map(el,{zoomControl:true,attributionControl:true,minZoom:3,maxZoom:19}).setView(current||target,16);
  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(leafletMapInstance);
  L.marker(target,{icon:mapMarkerIcon('target'),title:'目的地：青い壁の広場'}).addTo(leafletMapInstance).bindPopup('<strong>青い壁の広場</strong><br>物語上の目的地（PoC）');
