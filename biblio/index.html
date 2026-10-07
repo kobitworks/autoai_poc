@@ -41,6 +41,8 @@ button{font:inherit}button:focus-visible,[role="button"]:focus-visible,summary:f
 .map-pin{width:28px;height:28px;display:grid;place-items:center;color:#176fa6;font-size:28px;filter:drop-shadow(0 1px 3px #0006)}.map-pin.friend{color:#7469b6}.map-pin i{line-height:1}.leaflet-control-attribution{font-size:9px}
 .ops-grid{display:grid;grid-template-columns:280px 1fr;gap:12px}.ops-list button{display:block;width:100%;text-align:left;padding:9px;margin:5px 0;background:white;border:1px solid #bbb;border-radius:4px}
 .user-table-wrap{overflow-x:auto}.user-table{width:100%;border-collapse:collapse;background:#fff}.user-table th,.user-table td{padding:10px 8px;border-bottom:1px solid #d9e2e4;text-align:left;vertical-align:middle}.user-table th{font-size:12px;color:#526269;background:#f4f8f9}.role-badge{display:inline-block;min-width:72px;padding:3px 8px;border:1px solid #9bb7c0;border-radius:999px;text-align:center;font-size:12px;font-weight:800;background:#eef7fa;color:#254a5b}.role-badge.admin{background:#e9efff;border-color:#94a7d8;color:#27416f}.role-note{font-size:11px;color:#687577;margin-top:3px}.user-email{font-weight:700;word-break:break-all}.user-actions{white-space:nowrap}
+.book-list{display:grid;gap:10px;margin:12px 0}.book-list-item{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px;background:#fff;border:1px solid #d9e2e4;border-radius:7px;box-shadow:1px 2px 5px #0001}.book-list-icon{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:#eef7fa;color:#365486;font-size:18px}.book-list-icon.progress{background:#eaf4ff;color:#176fa6}.book-list-icon.done{background:#eaf8ee;color:#26713b}.book-list-icon.unavailable{background:#f2f2f2;color:#777}.book-list-main{min-width:0}.book-list-main>strong{display:block;font-size:16px;line-height:1.4}.book-list-meta{margin-top:3px;color:#667579;font-size:12px;line-height:1.45}.book-list-status{display:inline-block;margin-top:6px;padding:2px 7px;border-radius:999px;background:#eef7fa;border:1px solid #adcbd3;color:#365486;font-size:11px;font-weight:800}.book-list-status.progress{background:#eaf4ff;border-color:#99bdd5;color:#176fa6}.book-list-status.done{background:#eaf8ee;border-color:#a9cfb4;color:#26713b}.book-list-status.unavailable{background:#f2f2f2;border-color:#ccc;color:#666}.book-list-actions{white-space:nowrap}.info-list{display:grid;gap:10px;margin:12px 0}.info-item{display:grid;grid-template-columns:42px minmax(0,1fr);gap:10px;padding:12px;background:#fff;border:1px solid #d9e2e4;border-radius:7px}.info-item p{margin:5px 0 0;line-height:1.55}.info-icon{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#eef7fa;color:#365486;font-size:17px}
+@media(max-width:599px){.book-list-item{grid-template-columns:40px minmax(0,1fr);gap:10px;padding:11px}.book-list-actions{grid-column:1/-1}.book-list-actions .btn{width:100%;min-height:44px}.info-item{grid-template-columns:38px minmax(0,1fr);padding:11px}.info-icon{width:34px;height:34px}}
 .banner{position:fixed;left:0;right:0;bottom:calc(64px + var(--safe-bottom));height:54px;background:#e4f3f3;z-index:30;display:grid;place-items:center;border-top:1px solid #c6dcdc}.adbox{width:min(640px,86vw);height:50px;border:1px solid #bbb;background:#fff;display:grid;grid-template-columns:1.1fr 1fr 1.1fr 1fr 1.2fr;color:#444;font-size:9px;overflow:hidden}.adcell{display:grid;place-items:center;border-right:1px solid #ddd;text-align:center;padding:2px}.adcell strong{color:#c40000;font-size:13px}.adcell.rakuten{color:#bf0000;font-size:18px;font-weight:800}
 .bottomnav{position:fixed;left:0;right:0;bottom:0;height:calc(64px + var(--safe-bottom));padding-bottom:var(--safe-bottom);background:#d8eeee;z-index:31;border-top:1px solid #c4dddd;display:flex;justify-content:space-around;align-items:center}.bottomnav button{width:20%;height:100%;border:0;background:transparent;color:#00008a;font-weight:700;font-size:11px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:3px 0 2px;gap:0}.bottomnav button.current{text-decoration:underline;color:#00008a}.navicon{width:38px;height:38px;display:grid;place-items:center;font-size:31px;line-height:38px;color:#365486}.ico{font-size:24px}.info-wrap{position:relative}.badge70{position:absolute;right:-12px;top:-8px;background:#ff5e63;color:white;border-radius:999px;min-width:34px;height:34px;display:grid;place-items:center;font-size:13px;font-weight:700}
 .reviewbar{display:none;position:fixed;right:8px;top:calc(137px + var(--safe-top));z-index:40}body.review-mode .reviewbar{display:block}.reviewbar details{background:#fff;border:1px solid #aaa;border-radius:5px;box-shadow:0 2px 8px #0003}.reviewbar summary{cursor:pointer;padding:5px 8px;font-size:11px;color:#555}.review-buttons{max-width:260px;padding:6px;display:flex;flex-wrap:wrap;gap:4px}.review-buttons button{font-size:10px;padding:4px;background:#eef6f8;border:1px solid #9bb;color:#345;border-radius:3px}
@@ -135,7 +137,7 @@ dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(10
 <body data-ui-baseline="biblio-v2-mobile-20261005">
 <header class="app-header">
   <div class="head-top"><div class="logo"><span class="logo-mark" aria-hidden="true"><i class="fa-solid fa-book-open"></i></span><span>Biblio</span></div><div class="mode"><div class="mobian-world">Mobian’s<br>World</div></div></div>
-  <nav class="desktop-nav"><button onclick="go('U04')">Map</button><button onclick="go('U01')">List</button><button onclick="go('U01')">Book</button><button onclick="go('U09')">Info</button><button onclick="go('U11')">Config</button></nav>
+  <nav class="desktop-nav"><button onclick="go('U04')">Map</button><button onclick="go('U12')">List</button><button onclick="go('U01')">Book</button><button onclick="go('U13')">Info</button><button onclick="go('U11')">Config</button></nav>
   <nav class="subnav" id="subnav"></nav>
 </header>
 <div class="page-title" id="pageTitle"></div>
@@ -145,9 +147,9 @@ dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(10
 <footer class="banner"><div class="adbox" aria-label="広告モック"><div class="adcell">おすすめ商品<br><strong>+1箱無料</strong></div><div class="adcell">特集<br>ポイントUP</div><div class="adcell">和の逸品<br>期間限定</div><div class="adcell">ビューティー<br>キャンペーン</div><div class="adcell rakuten">Rakuten</div></div></footer>
 <nav class="bottomnav" aria-label="メインメニュー">
   <button data-menu="map" onclick="go('U04')"><i class="navicon fa-solid fa-map-location-dot" aria-hidden="true"></i><span>Map</span></button>
-  <button data-menu="list" onclick="go('U01')"><i class="navicon fa-solid fa-list" aria-hidden="true"></i><span>List</span></button>
+  <button data-menu="list" onclick="go('U12')"><i class="navicon fa-solid fa-list" aria-hidden="true"></i><span>List</span></button>
   <button data-menu="book" onclick="go('U01')"><i class="navicon fa-solid fa-book-open" aria-hidden="true"></i><span>Book</span></button>
-  <button data-menu="info" onclick="go('U09')"><span class="info-wrap"><i class="navicon fa-solid fa-circle-info" aria-hidden="true"></i><span class="badge70">70</span></span><span>Info</span></button>
+  <button data-menu="info" onclick="go('U13')"><span class="info-wrap"><i class="navicon fa-solid fa-circle-info" aria-hidden="true"></i><span class="badge70">2</span></span><span>Info</span></button>
   <button data-menu="config" onclick="go('U11')"><i class="navicon fa-solid fa-gear" aria-hidden="true"></i><span>Config</span></button>
 </nav>
 <dialog id="confirm" aria-labelledby="confirmTitle" aria-describedby="confirmText"><div class="dlg"><h3 id="confirmTitle">確認</h3><p id="confirmText"></p><div class="actions"><button class="btn secondary" id="cancelDlg" autofocus>キャンセル</button><button class="btn" id="okDlg">実行</button></div></div></dialog>
@@ -199,7 +201,7 @@ const state={screen:'U01',book:'walk-shibuya',locationResult:null,locationReache
  {bookKey:'walk-shibuya',chapter:1,scene:1,sceneKey:'scene-1',sceneTitle:'街角のはじまり',updatedAt:'2026-10-05T08:00:00+09:00',resumable:true},
  {bookKey:'walk-shibuya',chapter:1,scene:2,sceneKey:'scene-2',sceneTitle:'交差点の小さな違和感',updatedAt:'2026-10-05T10:30:00+09:00',resumable:true}
 ]};
-const labels={LOGIN:'Login',U01:'Book',U02:'Book Detail',U03:'Story',U04:'Map',U05:'Location Check',U06:'Safety',U08:'Book Complete',U09:'Next Book',U10:'Book Select',U11:'Config',O01:'Publication',A01:'User Roles'};
+const labels={LOGIN:'Login',U01:'Book',U02:'Book Detail',U03:'Story',U04:'Map',U05:'Location Check',U06:'Safety',U08:'Book Complete',U09:'Next Book',U10:'Book Select',U11:'Config',U12:'List',U13:'Info',O01:'Publication',A01:'User Roles'};
 const app=document.getElementById('app'), jump=document.getElementById('jump'), subnav=document.getElementById('subnav'), title=document.getElementById('pageTitle'), sessionChip=document.getElementById('sessionChip');
 const LEGACY_UI_BASELINE=Object.freeze({
  id:'biblio-v2-mobile-20261005',
@@ -255,19 +257,36 @@ function renderNav(){
  document.body.classList.toggle('login-mode',isLogin);
  document.body.classList.toggle('safety-mode',['U04','U05','U06'].includes(state.screen));
  app.classList.toggle('map-mode',state.screen==='U04');
- const tabs=state.screen==='O01'?['Publication','Version']:state.screen==='A01'?['Users','Roles']:state.screen==='U11'?['Config']:(isLogin?[]:LEGACY_UI_BASELINE.tabs);
+ const tabs=state.screen==='O01'?['Publication','Version']:state.screen==='A01'?['Users','Roles']:state.screen==='U11'?['Config']:state.screen==='U12'?['Book List']:state.screen==='U13'?['Information']:(isLogin?[]:LEGACY_UI_BASELINE.tabs);
  subnav.innerHTML=tabs.map((x,i)=>'<button class="'+(i===0?'active':'')+'" type="button">'+x+'</button>').join('');
  title.textContent=labels[state.screen]||'Biblio';
  if(reviewMode){
   jump.innerHTML=Object.keys(labels).map(k=>'<button onclick="'+(k==='O01'?'openOps()':k==='A01'?'openUserAdmin()':"go(\'"+k+"\')")+'">'+k+' '+labels[k]+'</button>').join('');
  }
  document.querySelectorAll('.bottomnav button').forEach(x=>{x.classList.remove('current');x.removeAttribute('aria-current')});
- const menu=state.screen==='U04'||state.screen==='U05'||state.screen==='U06'?'map':state.screen==='O01'||state.screen==='A01'||state.screen==='U11'?'config':state.screen==='U09'||state.screen==='U10'?'info':'book';
+ const menu=state.screen==='U04'||state.screen==='U05'||state.screen==='U06'?'map':state.screen==='U12'?'list':state.screen==='U13'?'info':state.screen==='O01'||state.screen==='A01'||state.screen==='U11'?'config':'book';
  const el=document.querySelector('.bottomnav [data-menu="'+menu+'"]');if(el){el.classList.add('current');el.setAttribute('aria-current','page')}
  const loggedIn=state.auth.status==='logged_in';sessionChip.hidden=isLogin||!loggedIn;sessionChip.innerHTML=loggedIn?'Google mock: '+state.auth.user.email+' / '+state.auth.user.role+(state.auth.restored?' / 復元済み':'')+' <button onclick="logoutMock()">ログアウト</button>':'';
 }
 function cover(x,idx){const p=latestProgress(x.key),availability=!x.available?'利用不可':p?'進行中':'利用可';return '<div class="book-card" tabindex="0" role="button" aria-label="'+x.title+' '+availability+'" onclick="state.book=\''+x.key+'\';go(\'U02\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){this.click()}"><div class="cover '+x.cls+'"><div class="cover-title">'+x.title+'</div><div class="cover-region">'+x.region+' / '+x.time+'</div></div><span class="status">'+availability+'</span>'+(x.key===state.book?'<span class="selected">選択中</span>':'')+'</div>'}
 function nextBookCover(x){return '<div class="book-card" tabindex="0" role="button" aria-label="次Book候補 '+x.title+'" onclick="previewNextBook(\''+x.key+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){this.click()}"><div class="cover '+x.cls+'"><div class="cover-title">'+x.title+'</div><div class="cover-region">'+x.region+' / '+x.time+'</div></div><span class="status">候補</span></div>'}
+function bookListState(x){
+ const completed=state.completion.status==='confirmed'&&state.completion.record?.bookKey===x.key;
+ if(completed)return{key:'done',label:'完了済み',icon:'fa-circle-check'};
+ const p=latestProgress(x.key);
+ if(p)return{key:'progress',label:'進行中',icon:'fa-play'};
+ if(!x.available)return{key:'unavailable',label:'利用不可',icon:'fa-lock'};
+ return{key:'available',label:'利用可能',icon:'fa-bookmark'};
+}
+function bookListAction(x,s){
+ if(s.key==='progress')return btn('つづきから',"resumeBook('"+x.key+"')");
+ if(s.key==='unavailable')return '<button class="btn secondary" disabled>利用不可</button>';
+ return btn('詳細を見る',"state.book='"+x.key+"';go('U02')",'secondary');
+}
+function bookListRow(x){
+ const s=bookListState(x),p=latestProgress(x.key),detail=p?'Chapter '+p.chapter+' / Scene '+p.scene+' · '+p.sceneTitle:x.region+' / '+x.time;
+ return '<div class="book-list-item"><div class="book-list-icon '+s.key+'" aria-hidden="true"><i class="fa-solid '+s.icon+'"></i></div><div class="book-list-main"><strong>'+x.title+'</strong><div class="book-list-meta">'+detail+'</div><span class="book-list-status '+s.key+'">'+s.label+'</span></div><div class="book-list-actions">'+bookListAction(x,s)+'</div></div>';
+}
 function render(){
  renderNav();const book=b();
  if(state.screen==='LOGIN'){
@@ -275,6 +294,12 @@ function render(){
  }else if(state.screen==='U01'){
   const resume=latestResumeCandidate();
   app.innerHTML=page((state.resumeNotice?'<div class="notice warn">'+state.resumeNotice+'</div>':'')+(resume?'<div class="panel"><strong>つづきから</strong><p>'+resume.book.title+' — Chapter '+resume.progress.chapter+' / Scene '+resume.progress.scene+'</p><p class="muted">'+resume.progress.sceneTitle+'</p>'+btn('つづきから',"resumeBook('"+resume.book.key+"')")+'</div>':'<div class="panel muted">再開できる進行中Bookはありません。</div>')+'<h3>Book一覧</h3><div class="book-container">'+state.books.map(cover).join('')+'</div><p class="muted">旧BiblioのBook表紙一覧を維持し、利用可能・進行中・利用不可を表示しています。</p>'+(reviewMode?'<div class="panel"><strong>U07 Resume Resolver 確認</strong><p class="muted">U07は独立画面を表示せず、最新の再開可能Sceneを解決してU03へreplaceします。</p><div class="actions">'+btn('再開データあり',"setResumeMock(true)",'secondary')+btn('再開データなし',"setResumeMock(false)",'secondary')+'</div></div>':''));
+ }else if(state.screen==='U12'){
+  app.innerHTML=page('<h2>Book List</h2><p class="muted">Bookの状態を一覧で確認できます。表紙から選ぶ場合はBookメニューを利用してください。</p><div class="book-list">'+state.books.map(bookListRow).join('')+'</div><div class="actions">'+btn('本棚を開く',"go('U01')",'secondary')+'</div>');
+ }else if(state.screen==='U13'){
+  const resume=latestResumeCandidate(),availableCount=state.books.filter(x=>x.available).length;
+  const progressText=resume?resume.book.title+' / Chapter '+resume.progress.chapter+' / Scene '+resume.progress.scene:'進行中のBookはありません';
+  app.innerHTML=page('<h2>Info</h2><div class="info-list"><div class="info-item"><div class="info-icon" aria-hidden="true"><i class="fa-solid fa-layer-group"></i></div><div><strong>メニューを整理しました</strong><p>Listは状態一覧、Bookは本棚表示として分けています。目的に合わせて切り替えられます。</p></div></div><div class="info-item"><div class="info-icon" aria-hidden="true"><i class="fa-solid fa-person-walking"></i></div><div><strong>安全に遊ぶために</strong><p>移動中は画面を見続けず、地図やStoryの操作は安全な場所で行ってください。</p></div></div></div><div class="panel"><h3>ゲーム情報</h3><div class="fact"><span>進行中</span><strong>'+progressText+'</strong></div><div class="fact"><span>利用可能Book</span><strong>'+availableCount+'冊</strong></div><div class="fact"><span>現在の権限</span><strong>'+(state.auth.user?.role||'player')+'</strong></div></div><div class="actions">'+btn('Listを開く',"go('U12')",'secondary')+btn('Bookを開く',"go('U01')",'secondary')+'</div>');
  }else if(state.screen==='U02'){
   const availability=startAvailability(book.key),starting=state.start.status==='starting';
   const availabilityPanel=availability.allowed?'<div class="notice"><strong>開始可能</strong><br>'+availability.reason+'</div>':'<div class="notice warn"><strong>現在、このBookは開始できません。</strong><br>開始できない理由: '+availability.reason+'</div>';
