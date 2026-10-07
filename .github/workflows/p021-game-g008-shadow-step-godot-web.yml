@@ -1,4 +1,4 @@
-name: P021 Build GAME-G008 Shadow Step Stealth\n# GAME-037 CI revision 3
+name: P021 Build GAME-G008 Shadow Step Stealth\n# GAME-040 CI revision 4
 
 on:
   push:
@@ -51,6 +51,12 @@ jobs:
           grep -q 'InputEventScreenTouch' scripts/Main.gd
           grep -q 'press_started_ms' scripts/Main.gd
           grep -q '薄明の資料庫' scripts/StageDefinition.gd
+          grep -q '交差する警備区画' scripts/StageDefinition.gd
+          grep -q '零時の中枢保管室' scripts/StageDefinition.gd
+          grep -q 'one_way' scripts/CoverGraph.gd
+          grep -q 'phase_switch_sec' scripts/StageDefinition.gd
+          grep -q 'stage_2' scripts/SaveManager.gd
+          grep -q 'stage_3' scripts/SaveManager.gd
           grep -q 'ConfigFile' scripts/SaveManager.gd
           grep -q 'AudioStreamWAV' scripts/AudioManager.gd
           grep -q 'Original procedural synthesis' ASSETS.md
@@ -194,12 +200,12 @@ jobs:
         run: |
           python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/g008-http.log 2>&1 &
           echo $! > /tmp/g008-http.pid
-      - name: Run four-viewport Stage 1 QA
+      - name: Run four-viewport three-stage QA
         run: node p021-game/tests/g008-stage1-responsive-qa.mjs
       - name: Upload GAME-G008 QA evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: game-g008-stage1-responsive-qa
-          path: p021-game/test-artifacts/game-g008-stage1/
+          name: game-g008-three-stage-responsive-qa
+          path: p021-game/test-artifacts/game-g008-three-stage/
           if-no-files-found: warn
