@@ -81,6 +81,46 @@ dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(10
   .bottomnav button{min-height:56px;font-size:12px}
   .navicon{width:36px;height:36px}
 }
+@media(max-width:1023px){
+  body[data-screen="U11"] .fact strong,body[data-screen="A01"] .fact strong,body[data-screen="O01"] .fact strong{overflow-wrap:anywhere;word-break:break-word}
+  body[data-screen="A01"] .user-table{table-layout:fixed}
+  body[data-screen="A01"] .user-table th:nth-child(1),body[data-screen="A01"] .user-table td:nth-child(1){width:48%}
+  body[data-screen="A01"] .user-table th:nth-child(2),body[data-screen="A01"] .user-table td:nth-child(2){width:18%}
+  body[data-screen="A01"] .user-table th:nth-child(3),body[data-screen="A01"] .user-table td:nth-child(3){width:34%}
+  body[data-screen="A01"] .user-actions{white-space:normal}
+  body[data-screen="A01"] .user-actions .btn{width:100%;min-height:44px;white-space:normal;padding-left:8px;padding-right:8px}
+  body[data-screen="O01"] .ops-list button{min-height:48px}
+  body[data-screen="U11"] .nav-back,body[data-screen="A01"] .nav-back,body[data-screen="O01"] .nav-back{justify-content:flex-end}
+}
+@media(max-width:599px){
+  body[data-screen="U11"] .paper,body[data-screen="A01"] .paper,body[data-screen="O01"] .paper{padding-bottom:22px}
+  body[data-screen="U11"] .panel h3,body[data-screen="A01"] .panel h3,body[data-screen="O01"] .panel h3{margin-top:0;font-size:18px}
+  body[data-screen="U11"] .fact,body[data-screen="A01"] .fact,body[data-screen="O01"] .fact{display:grid;grid-template-columns:minmax(0,1fr);gap:4px;padding:10px 0}
+  body[data-screen="U11"] .fact strong,body[data-screen="A01"] .fact strong,body[data-screen="O01"] .fact strong{text-align:left;line-height:1.45}
+  body[data-screen="U11"] .actions,body[data-screen="A01"] .actions{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+  body[data-screen="U11"] .actions .btn,body[data-screen="A01"] .actions .btn{width:100%;min-width:0}
+  body[data-screen="A01"] .user-table-wrap{overflow:visible;padding:0;background:transparent;border:0;box-shadow:none}
+  body[data-screen="A01"] .user-table,body[data-screen="A01"] .user-table tbody,body[data-screen="A01"] .user-table tr,body[data-screen="A01"] .user-table td{display:block;width:100%}
+  body[data-screen="A01"] .user-table thead{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  body[data-screen="A01"] .user-table tbody{display:grid;gap:10px}
+  body[data-screen="A01"] .user-table tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 10px;padding:12px;border:1px solid #d9e2e4;border-radius:8px;background:#fff;box-shadow:1px 1px 4px #0001}
+  body[data-screen="A01"] .user-table td{padding:0;border:0;min-width:0}
+  body[data-screen="A01"] .user-table td:first-child,body[data-screen="A01"] .user-table td:last-child{grid-column:1/-1}
+  body[data-screen="A01"] .user-table td:nth-child(2){display:flex;align-items:center;gap:8px}
+  body[data-screen="A01"] .user-table td:nth-child(2):before{content:"権限";font-size:11px;color:#687577;font-weight:700}
+  body[data-screen="A01"] .user-email{overflow-wrap:anywhere;word-break:break-word;line-height:1.45}
+  body[data-screen="A01"] .user-actions .btn{width:100%;min-height:44px;white-space:normal}
+  body[data-screen="O01"] .ops-grid{gap:10px}
+  body[data-screen="O01"] .ops-list{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+  body[data-screen="O01"] .ops-list button{min-height:54px;margin:0;padding:10px 11px}
+  body[data-screen="O01"] .ops-grid>.panel:last-child .actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  body[data-screen="O01"] .ops-grid>.panel:last-child .actions .btn{width:100%;min-width:0;white-space:normal}
+  body[data-screen="O01"] .nav-back{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+  body[data-screen="O01"] .nav-back .btn{width:100%;min-width:0}
+}
+@media(max-width:359px){
+  body[data-screen="O01"] .ops-grid>.panel:last-child .actions{grid-template-columns:minmax(0,1fr)}
+}
 @media(max-width:359px){
   body[data-screen="U01"] .book-container,body[data-screen="U09"] .book-container{grid-template-columns:1fr 1fr;gap:8px}
   body[data-screen="U01"] .book-card,body[data-screen="U09"] .book-card{height:166px}
@@ -273,7 +313,7 @@ function render(){
  }else if(state.screen==='U11'){
   const isAdmin=hasAdminRole(),email=state.auth.user?.email||'',role=state.auth.user?.role||'player';
   const adminPanel=isAdmin?'<div class="panel"><h3>管理メニュー</h3><p class="muted">管理者にだけ表示されるメニューです。</p><div class="actions">'+btn('ユーザー権限管理',"openUserAdmin()")+btn('公開管理',"openOps()", 'secondary')+'</div></div>':'<div class="panel muted">プレーヤー権限では管理メニューは表示されません。</div>';
-  app.innerHTML=page('<h2>Config</h2><div class="panel"><h3>アカウント</h3><div class="fact"><span>Googleアカウント</span><strong>'+email+'</strong></div><div class="fact"><span>権限</span><strong>'+role+'</strong></div><div class="fact"><span>未登録ユーザー</span><strong>player</strong></div><div class="actions">'+btn('ログアウト',"logoutMock()", 'secondary')+'</div></div>'+adminPanel+'<div class="panel"><h3>表示・操作</h3><p class="muted">表示やゲーム操作に関する設定項目は、画面確認を進めながら順次追加します。</p></div>');
+  app.innerHTML=page('<h2>Config</h2><div class="panel"><h3>アカウント</h3><div class="fact"><span>Googleアカウント</span><strong>'+email+'</strong></div><div class="fact"><span>権限</span><strong>'+role+'</strong></div><div class="fact"><span>未登録ユーザー</span><strong>player</strong></div><div class="actions">'+btn('ログアウト',"logoutMock()", 'secondary')+'</div></div>'+adminPanel+'<div class="panel"><h3>表示・操作</h3><p class="muted">表示やゲーム操作に関する設定項目は、画面確認を進めながら順次追加します。</p></div><div class="actions nav-back">'+btn('Book一覧へ戻る',"go('U01')",'secondary')+'</div>');
  }else if(state.screen==='A01'){
   if(!hasAdminRole()){app.innerHTML=page('<h2>ユーザー権限管理</h2><div class="notice danger" role="alert"><strong>管理者権限が必要です。</strong><br>プレーヤーはこの画面を操作できません。</div><div class="actions">'+btn('Bookへ戻る',"go('U01')")+'</div>');}
   else{
@@ -287,7 +327,7 @@ function render(){
   }
  }else if(state.screen==='O01'){
   if(!hasOpsRole()){app.innerHTML=page('<h2>公開管理</h2><div class="notice danger" role="alert"><strong>運用権限が必要です。</strong><br>一般利用者はこの画面を操作できません。</div><div class="actions">'+btn('Bookへ戻る',"go('U01')")+'</div>');}
-  else{const busy=state.ops.status==='saving';app.innerHTML=page('<h2>公開管理</h2><p>一般利用UIから分離した運用PoCです。公開状態の確定はServer権威相当APIの応答後に反映します。</p>'+(state.ops.result?'<div class="notice" role="status"><strong>操作結果</strong><br>'+state.ops.result+'</div>':'')+(state.ops.error?'<div class="notice danger" role="alert">'+state.ops.error+'</div>':'')+'<div class="ops-grid"><div class="panel ops-list">'+state.books.map(x=>'<button onclick="state.book=\''+x.key+'\';state.ops.result=\'\';state.ops.error=\'\';render()"><strong>'+x.title+'</strong><br><small>'+x.pub+'</small></button>').join('')+'</div><div class="panel"><h3>'+book.title+'</h3><div class="fact"><span>対象版</span><strong>'+state.ops.version+'</strong></div><div class="fact"><span>公開状態</span><strong>'+book.pub+'</strong></div><div class="fact"><span>管理権限</span><strong>admin</strong></div><div class="actions"><button class="btn secondary" '+(busy?'disabled':'')+' onclick="opsConfirm(\'TEST\')">Test公開</button><button class="btn" '+(busy?'disabled':'')+' onclick="opsConfirm(\'LIVE\')">本公開</button><button class="btn danger" '+(busy?'disabled':'')+' onclick="opsConfirm(\'STOP\')">公開停止</button><button class="btn secondary" '+(busy?'disabled':'')+' onclick="opsConfirm(\'REPLACE\')">版を差し替え</button></div></div></div>');}
+  else{const busy=state.ops.status==='saving';app.innerHTML=page('<h2>公開管理</h2><p>一般利用UIから分離した運用PoCです。公開状態の確定はServer権威相当APIの応答後に反映します。</p>'+(state.ops.result?'<div class="notice" role="status"><strong>操作結果</strong><br>'+state.ops.result+'</div>':'')+(state.ops.error?'<div class="notice danger" role="alert">'+state.ops.error+'</div>':'')+'<div class="ops-grid"><div class="panel ops-list">'+state.books.map(x=>'<button onclick="state.book=\''+x.key+'\';state.ops.result=\'\';state.ops.error=\'\';render()"><strong>'+x.title+'</strong><br><small>'+x.pub+'</small></button>').join('')+'</div><div class="panel"><h3>'+book.title+'</h3><div class="fact"><span>対象版</span><strong>'+state.ops.version+'</strong></div><div class="fact"><span>公開状態</span><strong>'+book.pub+'</strong></div><div class="fact"><span>管理権限</span><strong>admin</strong></div><div class="actions"><button class="btn secondary" '+(busy?'disabled':'')+' onclick="opsConfirm(\'TEST\')">Test公開</button><button class="btn" '+(busy?'disabled':'')+' onclick="opsConfirm(\'LIVE\')">本公開</button><button class="btn danger" '+(busy?'disabled':'')+' onclick="opsConfirm(\'STOP\')">公開停止</button><button class="btn secondary" '+(busy?'disabled':'')+' onclick="opsConfirm(\'REPLACE\')">版を差し替え</button></div></div></div><div class="actions nav-back">'+btn('Configへ戻る',"go('U11')",'secondary')+btn('Book一覧へ',"go('U01')",'secondary')+'</div>');}
  }
 }
 let leafletMapInstance=null;
