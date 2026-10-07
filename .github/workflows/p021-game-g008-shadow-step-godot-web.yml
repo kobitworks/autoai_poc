@@ -55,8 +55,8 @@ jobs:
           grep -q '零時の中枢保管室' scripts/StageDefinition.gd
           grep -q 'one_way' scripts/CoverGraph.gd
           grep -q 'phase_switch_sec' scripts/StageDefinition.gd
-          grep -q 'stage_2' scripts/SaveManager.gd
-          grep -q 'stage_3' scripts/SaveManager.gd
+          grep -q 'for stage_id in range(1, 4)' scripts/SaveManager.gd
+          grep -q 'record_stage(stage_id' scripts/SaveManager.gd
           grep -q 'ConfigFile' scripts/SaveManager.gd
           grep -q 'AudioStreamWAV' scripts/AudioManager.gd
           grep -q 'Original procedural synthesis' ASSETS.md
