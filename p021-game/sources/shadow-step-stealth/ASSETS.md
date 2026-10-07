@@ -14,6 +14,6 @@
 
 ## Procedural visuals and SFX
 
-All facility geometry, shadows, search-light cones, player silhouette, cover markers, UI panels and short SFX tones in GAME-G008 Stage 1 are Original procedural synthesis implemented in Godot/GDScript.
+All facility geometry, shadows, search-light cones, player silhouette, cover markers, one-way route indicators, Stage 3 phase-change warning UI, HUD panels and short SFX tones in GAME-G008 Stages 1-3 are Original procedural synthesis implemented in Godot/GDScript.
 
-No third-party image or audio pack is bundled in GAME-037.
+No third-party image or audio pack is bundled in GAME-040. The game remains free of paid, NC, or unknown-license assets.
