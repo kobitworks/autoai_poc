@@ -413,7 +413,7 @@ function render(){
   }else{
    const completedBookKey=state.completion.record?.bookKey||book.key,next=state.books.filter(x=>x.key!==completedBookKey&&x.available);
    const nextFeedback=state.nextBookNotice?'<div class="notice danger" role="alert"><i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i> '+state.nextBookNotice+'</div>':'';
-   const nextChoices=next.length?next.map(nextBookChoice).join(''):'<div class="next-choice-empty"><i class="fa-solid fa-books" aria-hidden="true"></i><div><strong>現在選べる次のBookはありません。</strong><span>Book一覧へ戻るか、公開中のBookが追加されるまでお待ちください。</span></div></div>';
+   const nextChoices=next.length?next.map(nextBookChoice).join(''):'<div class="next-choice-empty"><i class="fa-solid fa-book-open" aria-hidden="true"></i><div><strong>現在選べる次のBookはありません。</strong><span>Book一覧へ戻るか、公開中のBookが追加されるまでお待ちください。</span></div></div>';
    app.innerHTML=page(completionFlow(2)+nextFeedback+'<div class="screen-lead"><div class="screen-lead-icon" aria-hidden="true"><i class="fa-solid fa-book-open-reader"></i></div><div><h2>次のBookを選ぶ</h2><p>完走したBook以外から候補を表示しています。候補の詳細を確認してから確定してください。</p></div></div><div class="next-choice-list">'+nextChoices+'</div>'+(next.length?'<div class="selection-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>「詳細を確認」を押しただけでは次Bookは確定しません。次の画面で内容を確認してから選択を確定します。</span></div>':'')+'<div class="completion-actions">'+btn('Book一覧へ戻る',"go('U01')",'secondary')+'</div>');
   }
  }else if(state.screen==='U10'){
