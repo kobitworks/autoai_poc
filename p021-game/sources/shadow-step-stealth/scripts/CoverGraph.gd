@@ -13,15 +13,21 @@ func configure(node_items: Array, edge_items: Array) -> void:
 		_nodes[str(data.get("id", ""))] = data
 	for edge_item in edge_items:
 		var edge: Dictionary = edge_item as Dictionary
+		if not bool(edge.get("enabled", true)):
+			continue
 		var a := str(edge.get("from", ""))
 		var b := str(edge.get("to", ""))
 		var travel := maxf(0.1, float(edge.get("time", 0.6)))
 		if not _nodes.has(a) or not _nodes.has(b):
 			continue
+		_add_directed_edge(a, b, travel)
+		if not bool(edge.get("one_way", false)):
+			_add_directed_edge(b, a, travel)
+
+func _add_directed_edge(a: String, b: String, travel: float) -> void:
+	if not (_nodes[a]["neighbors"] as Array).has(b):
 		(_nodes[a]["neighbors"] as Array).append(b)
-		(_nodes[b]["neighbors"] as Array).append(a)
-		_edge_times[_key(a, b)] = travel
-		_edge_times[_key(b, a)] = travel
+	_edge_times[_key(a, b)] = travel
 
 func _key(a: String, b: String) -> String:
 	return a + "|" + b
