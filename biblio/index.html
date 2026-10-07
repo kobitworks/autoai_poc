@@ -16,7 +16,7 @@
 }
 *{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;font-family:"Yu Gothic Medium","游ゴシック Medium",YuGothic,"ヒラギノ角ゴ Pro W3",sans-serif;color:var(--ink);background:#e7f4f5}
 body.login-mode .app-header,body.login-mode .page-title,body.login-mode .bottomnav,body.login-mode .reviewbar,body.login-mode .banner{display:none}
-body.login-mode .main{top:0;bottom:0;padding:0;background:linear-gradient(180deg,#e7f4f5 0%,#dceff1 100%)}body.safety-mode .banner{display:none}body.safety-mode .main{bottom:calc(64px + var(--safe-bottom))}.legacy-shell{display:contents}.main.map-mode{padding:0;overflow:hidden}.main.map-mode .map-screen{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0}.main.map-mode #leafletMap{position:absolute;inset:0;width:100%;height:100%;min-height:0;margin:0;border:0}.main.map-mode .map-overlay{left:50%;bottom:10px}
+body.login-mode .main{top:0;bottom:0;padding:0;background:linear-gradient(180deg,#e7f4f5 0%,#dceff1 100%)}body.safety-mode .main{bottom:calc(64px + var(--safe-bottom))}.legacy-shell{display:contents}.main.map-mode{padding:0;overflow:hidden}.main.map-mode .map-screen{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0}.main.map-mode #leafletMap{position:absolute;inset:0;width:100%;height:100%;min-height:0;margin:0;border:0}.main.map-mode .map-overlay{left:50%;bottom:10px}
 button{font:inherit}button:focus-visible,[role="button"]:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}.app-header{position:fixed;inset:0 0 auto 0;height:calc(100px + var(--safe-top));padding-top:var(--safe-top);z-index:30;background:var(--base);box-shadow:0 1px 4px #0002}
 .head-top{height:70px;padding:4px 8px;display:flex;align-items:center;justify-content:space-between;background:#d8eeee}
 .logo{display:flex;align-items:center;color:#000}.logo-img{width:60px;height:60px;object-fit:contain;display:block;border-radius:6px}.mode{display:flex;align-items:center;gap:8px}.book-mini{display:none}.mock{display:none}.mobian-world{min-width:170px;padding:7px 16px 6px;background:linear-gradient(#e7c47a,#f4dda5 45%,#d0a457);border:1px solid #a67c36;border-radius:3px;box-shadow:inset 0 0 9px #7f5f2a88,0 1px 2px #0002;color:#392713;font:700 25px/0.9 Georgia,serif;text-align:center;transform:skew(-1deg)}
@@ -37,10 +37,10 @@ button{font:inherit}button:focus-visible,[role="button"]:focus-visible,summary:f
 #leafletMap.leaflet-container{width:100%!important;height:100%!important}
 #leafletMap .leaflet-map-pane,#leafletMap .leaflet-tile-pane{width:auto!important;height:auto!important}
 #leafletMap .leaflet-tile{max-width:none!important;max-height:none!important}
-.map-overlay{position:absolute;z-index:500;left:50%;bottom:12px;transform:translateX(-50%);width:min(94%,540px);pointer-events:none}
-.map-status{background:#ffffffec;border:1px solid #b9c9cc;border-radius:7px;box-shadow:0 2px 8px #0003;padding:8px 10px;font-size:12px;line-height:1.45;pointer-events:auto}
-.map-status strong{display:block;color:#123f6b}.map-status .actions{margin-top:6px}.map-status .btn{min-height:32px;padding:6px 10px}.map-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px;color:#46565a}.map-legend-item{display:inline-flex;align-items:center;gap:4px}.map-legend-dot{width:9px;height:9px;border-radius:50%;background:#176fa6;display:inline-block}.map-legend-dot.friend{background:#7469b6}.map-text-alt{margin-top:5px;color:#41535a}.map-current{font-weight:700;color:#5c6870}
-.map-pin{width:28px;height:28px;display:grid;place-items:center;color:#176fa6;font-size:28px;filter:drop-shadow(0 1px 3px #0006)}.map-pin.friend{color:#7469b6}.map-pin i{line-height:1}.leaflet-control-attribution{font-size:9px}
+.map-overlay{position:absolute;z-index:500;left:50%;bottom:12px;transform:translateX(-50%);width:min(94%,540px);pointer-events:none}.map-overlay[hidden]{display:none!important}
+.map-status{position:relative;background:#ffffffec;border:1px solid #b9c9cc;border-radius:7px;box-shadow:0 2px 8px #0003;padding:8px 10px;font-size:12px;line-height:1.45;pointer-events:auto}
+.map-status-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-bottom:2px}.map-status-head strong{display:block;color:#123f6b;min-width:0}.map-info-close{flex:0 0 auto;width:32px;height:32px;border:0;border-radius:50%;background:#eef3f4;color:#365486;display:grid;place-items:center;cursor:pointer;font-size:16px}.map-info-close:hover,.map-info-close:focus-visible{background:#dcecef}.map-info-reopen{position:absolute;z-index:501;right:10px;top:10px;min-height:40px;padding:7px 11px;border:1px solid #9db6bd;border-radius:999px;background:#fffffff2;box-shadow:0 2px 8px #0003;color:#244d67;font-weight:800;display:flex;align-items:center;gap:6px;cursor:pointer}.map-info-reopen[hidden]{display:none!important}.map-info-reopen i{font-size:16px}.map-status .actions{margin-top:6px}.map-status .btn{min-height:32px;padding:6px 10px}.map-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:5px;color:#46565a}.map-legend-item{display:inline-flex;align-items:center;gap:4px}.map-legend-dot{width:9px;height:9px;border-radius:50%;background:#176fa6;display:inline-block}.map-legend-dot.friend{background:#7469b6}.map-text-alt{margin-top:5px;color:#41535a}.map-current{font-weight:700;color:#5c6870}
+.map-pin{width:28px;height:28px;display:grid;place-items:center;color:#176fa6;font-size:28px;filter:drop-shadow(0 1px 3px #0006)}.map-pin.friend{color:#7469b6}.map-pin.current{color:#16845b}.map-pin i{line-height:1}.leaflet-control-attribution{font-size:9px}
 .ops-grid{display:grid;grid-template-columns:300px minmax(0,1fr);gap:12px;align-items:start}.ops-list{padding:10px}.ops-list-title{display:flex;align-items:center;gap:7px;margin:2px 2px 8px;color:#526269;font-size:12px;font-weight:800}.ops-list button{display:grid;width:100%;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:9px;text-align:left;padding:9px;margin:6px 0;background:white;border:1px solid #cbd8db;border-radius:7px;color:#263b42;cursor:pointer}.ops-list button:hover{background:#f7fbfc}.ops-list button.active{border-color:#7da9bb;background:#eef7fa;box-shadow:0 0 0 1px #b9d5df inset}.ops-book-icon{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#eef3ff;color:#3c5285}.ops-book-copy{min-width:0}.ops-book-copy strong{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ops-book-copy small{display:block;margin-top:3px;color:#718084}.pub-badge{display:inline-flex;align-items:center;gap:5px;min-width:74px;justify-content:center;padding:3px 7px;border-radius:999px;border:1px solid #c8d2d5;background:#f3f5f6;color:#57666b;font-size:10px;font-weight:800}.pub-badge.live{background:#eaf8ee;border-color:#abd2b6;color:#26713b}.pub-badge.test{background:#fff7df;border-color:#e6cf89;color:#785d08}.pub-badge.stop{background:#f4f4f4;border-color:#cecece;color:#666}.ops-detail{padding:13px}.ops-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding-bottom:10px;border-bottom:1px solid #d9e2e4}.ops-detail-title{display:flex;align-items:flex-start;gap:10px;min-width:0}.ops-detail-title>i{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#eef3ff;color:#3c5285;flex:0 0 auto}.ops-detail-title h3{margin:1px 0 3px;font-size:19px}.ops-detail-title p{margin:0;color:#6a777b;font-size:11px}.ops-facts{margin-top:8px}.ops-actions-title{display:flex;align-items:center;gap:7px;margin:14px 0 8px;font-size:13px;font-weight:800;color:#526269}.ops-actions-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.ops-actions-grid .btn{width:100%;min-height:44px;white-space:normal}.ops-actions-grid .btn i{margin-right:6px}.ops-status-strip{display:flex;align-items:flex-start;gap:8px;margin:10px 0;padding:9px 10px;border:1px dashed #b8c9cd;border-radius:7px;background:#fff;color:#5d696d;font-size:12px;line-height:1.5}.ops-status-strip i{margin-top:2px;color:#4b6872}.ops-status-strip.busy{border-style:solid;background:#eef7fa;color:#365486}.ops-result{display:flex;align-items:flex-start;gap:8px}.ops-result i{margin-top:2px}
 .user-table-wrap{overflow-x:auto}.user-table{width:100%;border-collapse:collapse;background:#fff}.user-table th,.user-table td{padding:10px 8px;border-bottom:1px solid #d9e2e4;text-align:left;vertical-align:middle}.user-table th{font-size:12px;color:#526269;background:#f4f8f9}.user-table tr.user-row-locked td{background:#fafcfc}.role-badge{display:inline-block;min-width:72px;padding:3px 8px;border:1px solid #9bb7c0;border-radius:999px;text-align:center;font-size:12px;font-weight:800;background:#eef7fa;color:#254a5b}.role-badge.admin{background:#e9efff;border-color:#94a7d8;color:#27416f}.role-note{font-size:11px;color:#687577;margin-top:4px;line-height:1.45}.user-email{font-weight:700;word-break:break-all}.user-email-line{display:flex;align-items:flex-start;gap:7px}.user-email-line>i{margin-top:2px;color:#60767e}.user-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}.user-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 6px;border-radius:999px;background:#f1f5f6;border:1px solid #d1dcdf;color:#5f6e72;font-size:10px;font-weight:800}.user-tag.fixed{background:#fff7dd;border-color:#e5cf88;color:#745b08}.user-actions{white-space:nowrap}.user-actions .btn i{margin-right:5px}.user-action-hint{display:flex;align-items:flex-start;gap:5px;margin-top:5px;color:#778488;font-size:10px;line-height:1.35}.user-action-hint i{margin-top:1px}.admin-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0 12px}.admin-stat{display:grid;grid-template-columns:34px minmax(0,1fr);align-items:center;gap:8px;padding:10px;border:1px solid #d4e0e3;border-radius:8px;background:#fff}.admin-stat-icon{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#eef7fa;color:#365486}.admin-stat strong{display:block;font-size:18px;line-height:1.1}.admin-stat span{display:block;margin-top:3px;color:#667579;font-size:11px}.admin-session{display:flex;align-items:flex-start;gap:10px}.admin-session>i{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:#e9efff;color:#27416f;flex:0 0 auto}.admin-session-copy{min-width:0}.admin-session-copy strong{display:block;overflow-wrap:anywhere}.admin-rules{display:grid;gap:6px;margin-top:8px}.admin-rule{display:flex;align-items:flex-start;gap:7px;line-height:1.45}.admin-rule i{width:16px;margin-top:2px;text-align:center;color:#8a6600}
 .book-list{display:grid;gap:10px;margin:12px 0}.book-list-item{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:12px;padding:12px;background:#fff;border:1px solid #d9e2e4;border-radius:7px;box-shadow:1px 2px 5px #0001}.book-list-icon{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:#eef7fa;color:#365486;font-size:18px}.book-list-icon.progress{background:#eaf4ff;color:#176fa6}.book-list-icon.done{background:#eaf8ee;color:#26713b}.book-list-icon.unavailable{background:#f2f2f2;color:#777}.book-list-main{min-width:0}.book-list-main>strong{display:block;font-size:16px;line-height:1.4}.book-list-meta{margin-top:3px;color:#667579;font-size:12px;line-height:1.45}.book-list-status{display:inline-block;margin-top:6px;padding:2px 7px;border-radius:999px;background:#eef7fa;border:1px solid #adcbd3;color:#365486;font-size:11px;font-weight:800}.book-list-status.progress{background:#eaf4ff;border-color:#99bdd5;color:#176fa6}.book-list-status.done{background:#eaf8ee;border-color:#a9cfb4;color:#26713b}.book-list-status.unavailable{background:#f2f2f2;border-color:#ccc;color:#666}.book-list-actions{white-space:nowrap}.info-list{display:grid;gap:10px;margin:12px 0}.info-item{display:grid;grid-template-columns:42px minmax(0,1fr);gap:10px;padding:12px;background:#fff;border:1px solid #d9e2e4;border-radius:7px}.info-item p{margin:5px 0 0;line-height:1.55}.info-icon{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#eef7fa;color:#365486;font-size:17px}
@@ -238,7 +238,7 @@ const STORY_SCENES=Object.freeze({
  'scene-1':{chapter:1,scene:1,title:'街角のはじまり',body:['店先の古い時計は、街の時間から少しだけ遅れていた。','通りの先に、誰かが残した小さな印が見える。'],nextSceneKey:'scene-2',nextLabel:'手がかりを確かめる'},
  'scene-2':{chapter:1,scene:2,title:'交差点の小さな違和感',body:['印のそばには、青い壁を示す短いメモが残されていた。','次の手がかりは、ここから数分歩いた「青い壁の広場」にあるらしい。'],nextScreen:'U04',nextLabel:'目的地を確認する'}
 });
-const state={screen:'U01',book:'walk-shibuya',locationResult:null,locationReached:false,location:{status:'idle',result:null,reason:'',permission:'unknown',message:'',attempts:0,lastAttemptAt:0},complete:false,completion:{status:'idle',error:'',record:null,lastRequestKey:''},server:{progressId:null,bookVersion:null,mode:API_BASE?'php-api':'mock'},selectedNext:null,nextBookNotice:'',resumeNotice:'',story:null,storyAdvance:{status:'idle',error:'',notice:'',mode:'success',lastRequestKey:''},start:{status:'idle',error:'',mode:'success'},ops:{status:'idle',error:'',result:'',version:'v2026.10-poc'},auth:{status:'logged_out',user:null,error:'',restored:false},books:[
+const state={screen:'U01',book:'walk-shibuya',locationResult:null,locationReached:false,location:{status:'idle',result:null,reason:'',permission:'unknown',message:'',attempts:0,lastAttemptAt:0},mapLocation:{status:'idle',lat:null,lon:null,accuracy:null,message:'',errorCode:''},mapInfoOpen:true,complete:false,completion:{status:'idle',error:'',record:null,lastRequestKey:''},server:{progressId:null,bookVersion:null,mode:API_BASE?'php-api':'mock'},selectedNext:null,nextBookNotice:'',resumeNotice:'',story:null,storyAdvance:{status:'idle',error:'',notice:'',mode:'success',lastRequestKey:''},start:{status:'idle',error:'',mode:'success'},ops:{status:'idle',error:'',result:'',version:'v2026.10-poc'},auth:{status:'logged_out',user:null,error:'',restored:false},books:[
  {key:'walk-shibuya',title:'街角ミステリー',region:'渋谷',time:'45分',desc:'街を歩きながら手がかりを集める短編Book。',safety:'移動時は画面を見続けず、安全な場所で操作してください。',available:true,unavailableReason:'',pub:'LIVE',cls:''},
  {key:'river-story',title:'川辺の記憶',region:'清澄白河',time:'35分',desc:'水辺の風景をめぐる物語。',safety:'川沿いでは足元と周囲を確認し、安全な場所でのみ画面を操作してください。',available:true,unavailableReason:'',pub:'TEST',cls:'c2'},
  {key:'old-town',title:'古い商店街の手紙',region:'谷中',time:'50分',desc:'商店街に残された手紙を追うBook。',safety:'通行の妨げにならない場所で立ち止まって操作してください。',available:false,unavailableReason:'現在公開を停止しています。',pub:'STOP',cls:'c3'}
@@ -305,7 +305,7 @@ function renderNav(){
  const isLogin=state.screen==='LOGIN';
  document.body.dataset.screen=state.screen;
  document.body.classList.toggle('login-mode',isLogin);
- document.body.classList.toggle('safety-mode',['U04','U05','U06'].includes(state.screen));
+ document.body.classList.toggle('safety-mode',['U05','U06'].includes(state.screen));
  app.classList.toggle('map-mode',state.screen==='U04');
  const tabs=state.screen==='O01'?['Publication','Version']:state.screen==='A01'?['Users','Roles']:state.screen==='U11'?['Config']:state.screen==='U12'?['Book List']:state.screen==='U13'?['Information']:(isLogin?[]:LEGACY_UI_BASELINE.tabs);
  subnav.innerHTML=tabs.map((x,i)=>'<button class="'+(i===0?'active':'')+'" type="button">'+x+'</button>').join('');
@@ -382,9 +382,9 @@ function render(){
   const nextAction=scene.nextSceneKey?'<button class="btn" onclick="advanceStory()" '+(saving?'disabled':'')+'>'+(saving?'進捗を保存中…':nextLabel)+'</button>':btn(nextLabel,"go('"+(scene.nextScreen||'U04')+"')");
   app.innerHTML=page('<div class="story-head"><div class="story-book"><i class="fa-solid fa-book-open" aria-hidden="true"></i><span>'+book.title+'</span></div><h2 class="story-title">'+scene.title+'</h2><div class="story-meta"><span class="story-chip"><i class="fa-solid fa-layer-group" aria-hidden="true"></i>Chapter '+scene.chapter+'</span><span class="story-chip"><i class="fa-solid fa-location-dot" aria-hidden="true"></i>Scene '+scene.scene+'</span><span class="story-chip '+saveTone+'" role="status"><i class="fa-solid '+saveIcon+'" aria-hidden="true"></i>'+saveLabel+'</span></div><p class="story-progress-note">再開地点：Chapter '+scene.chapter+' / Scene '+scene.scene+'</p></div><div class="story story-body">'+scene.body.map(x=>'<p>'+x+'</p>').join('')+'</div>'+(state.storyAdvance.notice?'<div class="notice" role="status">'+state.storyAdvance.notice+'</div>':'')+(state.storyAdvance.error?'<div class="notice danger" role="alert">'+state.storyAdvance.error+'</div>':'')+'<div class="story-next"><div class="story-next-icon" aria-hidden="true"><i class="fa-solid '+nextIcon+'"></i></div><div><strong>次の行動：'+nextLabel+'</strong><span>'+nextHint+'</span></div></div><div class="story-safety"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i><span>移動が必要な場合は、歩きながら画面を見続けず、安全な場所で操作してください。</span></div><div class="story-actions">'+nextAction+btn('中断してBookへ',"go('U01')",'secondary')+'</div>'+(reviewMode?'<div class="panel"><strong>Story Progress API mock確認</strong><p class="muted">Scene確定はAPI相当の応答後だけ反映します。保存中はボタンを無効化し、同じrequestの二重反映を防ぎます。</p><div class="actions">'+btn('API成功',"setStoryMockMode('success')",'secondary')+btn('APIエラー',"setStoryMockMode('error')",'secondary')+btn('競合を試す',"setStoryMockMode('conflict')",'secondary')+'</div><p class="muted">現在のmock: '+state.storyAdvance.mode+' / localStorage: '+PROGRESS_KEY+'</p></div>':'') );
  }else if(state.screen==='U04'){
-  const mapLocationStatus=state.location.result==='ARRIVED'?'到着確認済み':state.location.result==='NOT_ARRIVED'?'到着圏外':state.location.result==='ALTERNATIVE'?'代替進行を選択済み':state.location.result==='INDETERMINATE'||state.location.result==='LOCATION_UNAVAILABLE'?'現在地を確認できませんでした':'未確認（到着確認時のみ取得）';
-  const mapLocationIcon=state.location.result==='ARRIVED'?'fa-circle-check':state.location.result==='NOT_ARRIVED'?'fa-location-arrow':state.location.result==='ALTERNATIVE'?'fa-route':state.location.result?'fa-triangle-exclamation':'fa-location-dot';
-  app.innerHTML='<div class="map-screen"><div id="leafletMap" class="map" role="application" aria-label="Biblio Map。目的地の青い壁の広場と周辺マーカーを表示します。ズーム操作ができます。"></div><div class="map-overlay"><div class="map-status" aria-label="地図情報のテキスト代替"><strong>目的地：青い壁の広場</strong><div class="map-text-alt">渋谷エリアのサンプル地点。周辺マーカーは Mobian A / Mobian B。地図を見ながら歩かず、安全な場所で確認してください。</div><div class="map-current"><i class="fa-solid '+mapLocationIcon+'" aria-hidden="true"></i> 現在地確認：'+mapLocationStatus+'</div><div class="map-legend" aria-label="マーカー凡例"><span class="map-legend-item"><i class="map-legend-dot"></i>目的地</span><span class="map-legend-item"><i class="map-legend-dot friend"></i>周辺マーカー</span></div><div class="actions">'+btn('目的地を中央に',"focusMapTarget()",'secondary')+btn('現在地を確認',"go('U05')",'secondary')+'</div></div></div></div>';setTimeout(initLeafletMap,0);
+  const arrivalStatus=state.location.result==='ARRIVED'?'到着確認済み':state.location.result==='NOT_ARRIVED'?'到着圏外':state.location.result==='ALTERNATIVE'?'代替進行を選択済み':state.location.result==='INDETERMINATE'||state.location.result==='LOCATION_UNAVAILABLE'?'確認できませんでした':'未確認';
+  const arrivalIcon=state.location.result==='ARRIVED'?'fa-circle-check':state.location.result==='NOT_ARRIVED'?'fa-location-arrow':state.location.result==='ALTERNATIVE'?'fa-route':state.location.result?'fa-triangle-exclamation':'fa-location-crosshairs';
+  app.innerHTML='<div class="map-screen"><div id="leafletMap" class="map" role="application" aria-label="Biblio Map。起動時に現在地を取得し、現在地を中心に表示します。目的地と周辺マーカーも表示します。"></div><button type="button" class="map-info-reopen" id="mapInfoReopen" onclick="setMapInfoOpen(true)" aria-label="地図情報を再表示"'+(state.mapInfoOpen?' hidden':'')+'><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>案内を表示</span></button><div class="map-overlay" id="mapInfoOverlay"'+(state.mapInfoOpen?'':' hidden')+'><div class="map-status" aria-label="地図情報"><div class="map-status-head"><strong>目的地：青い壁の広場</strong><button type="button" class="map-info-close" onclick="setMapInfoOpen(false)" aria-label="地図情報を閉じる"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button></div><div class="map-text-alt">GPS取得時は現在地を中心に表示します。取得できない場合は目的地中心で表示します。</div><div class="map-current"><i id="mapGpsStatusIcon" class="fa-solid '+mapGpsStatusIcon()+'" aria-hidden="true"></i> 現在地：<span id="mapGpsStatusText">'+mapGpsStatusText()+'</span></div><div class="map-current"><i class="fa-solid '+arrivalIcon+'" aria-hidden="true"></i> 到着判定：'+arrivalStatus+'</div><div class="map-legend" aria-label="マーカー凡例"><span class="map-legend-item"><i class="map-legend-dot"></i>目的地</span><span class="map-legend-item"><i class="map-legend-dot friend"></i>周辺マーカー</span></div><div class="actions">'+btn('現在地',"focusMapCurrentLocation()",'secondary')+btn('目的地',"focusMapTarget()",'secondary')+btn('到着確認',"go('U05')",'secondary')+'</div></div></div></div>';setTimeout(initLeafletMap,0);
  }else if(state.screen==='U05'){
   const loc=state.location,checking=loc.status==='checking',hasResult=loc.status==='result';
   const permissionLabel=loc.permission==='granted'?'許可済み':loc.permission==='denied'?'拒否されています':loc.permission==='prompt'?'確認時にOS/ブラウザが尋ねます':loc.permission==='unsupported'?'事前確認非対応（実行時に確認）':'確認前';
@@ -449,32 +449,95 @@ function render(){
  }
 }
 let leafletMapInstance=null;
+let leafletCurrentMarker=null;
 const MAP_TARGET=[35.65952,139.70055];
+function startupMapPosition(){
+ const loc=state.mapLocation;
+ return loc&&loc.status==='ready'&&Number.isFinite(loc.lat)&&Number.isFinite(loc.lon)?[loc.lat,loc.lon]:null;
+}
+function mapGpsStatusText(){
+ const loc=state.mapLocation;
+ if(loc.status==='ready')return '取得済み'+(Number.isFinite(loc.accuracy)?'（精度 約'+Math.round(loc.accuracy)+'m）':'');
+ if(loc.status==='checking')return 'GPSを取得中…';
+ if(loc.status==='denied')return '位置情報が拒否されています';
+ if(loc.status==='timeout')return 'GPS取得がタイムアウトしました';
+ if(loc.status==='unsupported')return 'このブラウザでは位置情報を利用できません';
+ if(loc.status==='unavailable')return '現在地を取得できませんでした';
+ return '起動時に取得します';
+}
+function mapGpsStatusIcon(){
+ const status=state.mapLocation.status;
+ return status==='ready'?'fa-location-crosshairs':status==='checking'?'fa-spinner fa-spin':status==='denied'?'fa-ban':status==='timeout'?'fa-clock':status==='unsupported'||status==='unavailable'?'fa-triangle-exclamation':'fa-location-dot';
+}
+function updateMapGpsStatusUi(){
+ const text=document.getElementById('mapGpsStatusText'),icon=document.getElementById('mapGpsStatusIcon');
+ if(text)text.textContent=mapGpsStatusText();
+ if(icon)icon.className='fa-solid '+mapGpsStatusIcon();
+}
+function setMapInfoOpen(open){
+ state.mapInfoOpen=!!open;
+ const overlay=document.getElementById('mapInfoOverlay'),reopen=document.getElementById('mapInfoReopen');
+ if(overlay)overlay.hidden=!state.mapInfoOpen;
+ if(reopen)reopen.hidden=state.mapInfoOpen;
+ if(leafletMapInstance)setTimeout(()=>leafletMapInstance.invalidateSize({pan:false}),0);
+}
 function focusMapTarget(){if(leafletMapInstance)leafletMapInstance.setView(MAP_TARGET,16,{animate:true})}
+function showMapCurrentLocation(current,focus=true){
+ if(!leafletMapInstance||!Array.isArray(current))return;
+ if(leafletCurrentMarker)leafletCurrentMarker.setLatLng(current);
+ else leafletCurrentMarker=L.marker(current,{icon:mapMarkerIcon('current'),title:'現在地'}).addTo(leafletMapInstance).bindPopup('現在地');
+ if(focus)leafletMapInstance.setView(current,16,{animate:true});
+}
+function focusMapCurrentLocation(){
+ const current=startupMapPosition();
+ if(current&&leafletMapInstance){showMapCurrentLocation(current,true);return}
+ requestStartupMapLocation(true);
+}
+function requestStartupMapLocation(force=false){
+ const loc=state.mapLocation;
+ const cached=startupMapPosition();
+ if(!force){
+  if(loc.status==='checking')return;
+  if(cached){if(state.screen==='U04'&&leafletMapInstance)showMapCurrentLocation(cached,true);updateMapGpsStatusUi();return}
+  if(['denied','timeout','unsupported','unavailable'].includes(loc.status)){updateMapGpsStatusUi();return}
+ }
+ if(!navigator.geolocation){loc.status='unsupported';loc.errorCode='GEOLOCATION_UNSUPPORTED';loc.message='このブラウザでは位置情報を利用できません。';updateMapGpsStatusUi();return}
+ loc.status='checking';loc.errorCode='';loc.message='GPSを取得中…';updateMapGpsStatusUi();
+ navigator.geolocation.getCurrentPosition(position=>{
+  const lat=Number(position.coords.latitude),lon=Number(position.coords.longitude),accuracy=Number(position.coords.accuracy);
+  if(!Number.isFinite(lat)||!Number.isFinite(lon)){loc.status='unavailable';loc.errorCode='INVALID_POSITION';loc.message='取得した位置情報を利用できませんでした。';updateMapGpsStatusUi();return}
+  loc.status='ready';loc.lat=lat;loc.lon=lon;loc.accuracy=Number.isFinite(accuracy)?accuracy:null;loc.errorCode='';loc.message='現在地を取得しました。';
+  if(state.screen==='U04'&&leafletMapInstance)showMapCurrentLocation([lat,lon],true);
+  updateMapGpsStatusUi();
+ },error=>{
+  loc.lat=null;loc.lon=null;loc.accuracy=null;
+  if(error&&error.code===1){loc.status='denied';loc.errorCode='PERMISSION_DENIED';loc.message='位置情報の利用が拒否されています。'}
+  else if(error&&error.code===3){loc.status='timeout';loc.errorCode='TIMEOUT';loc.message='GPS取得がタイムアウトしました。'}
+  else{loc.status='unavailable';loc.errorCode='POSITION_UNAVAILABLE';loc.message='現在地を取得できませんでした。'}
+  updateMapGpsStatusUi();
+ },{enableHighAccuracy:true,maximumAge:60000,timeout:10000});
+}
 function mapMarkerIcon(kind='target'){
- const cls=kind==='friend'?'map-pin friend':'map-pin';
- return L.divIcon({className:'',html:'<div class="'+cls+'"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></div>',iconSize:[24,24],iconAnchor:[12,24],popupAnchor:[0,-24]});
+ const cls=kind==='friend'?'map-pin friend':kind==='current'?'map-pin current':'map-pin';
+ const icon=kind==='current'?'fa-location-crosshairs':'fa-location-dot';
+ return L.divIcon({className:'',html:'<div class="'+cls+'"><i class="fa-solid '+icon+'" aria-hidden="true"></i></div>',iconSize:[24,24],iconAnchor:[12,24],popupAnchor:[0,-24]});
 }
 function initLeafletMap(){
  const el=document.getElementById('leafletMap');
  if(!el||typeof L==='undefined')return;
- if(leafletMapInstance){leafletMapInstance.remove();leafletMapInstance=null}
- const target=MAP_TARGET;
- leafletMapInstance=L.map(el,{zoomControl:true,attributionControl:true,minZoom:3,maxZoom:19}).setView(target,16);
+ if(leafletMapInstance){leafletMapInstance.remove();leafletMapInstance=null;leafletCurrentMarker=null}
+ const target=MAP_TARGET,current=startupMapPosition();
+ leafletMapInstance=L.map(el,{zoomControl:true,attributionControl:true,minZoom:3,maxZoom:19}).setView(current||target,16);
  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap contributors'}).addTo(leafletMapInstance);
- L.marker(target,{icon:mapMarkerIcon('target'),title:'目的地：青い壁の広場'}).addTo(leafletMapInstance).bindPopup('<strong>青い壁の広場</strong><br>物語上の目的地（PoC）').openPopup();
+ L.marker(target,{icon:mapMarkerIcon('target'),title:'目的地：青い壁の広場'}).addTo(leafletMapInstance).bindPopup('<strong>青い壁の広場</strong><br>物語上の目的地（PoC）');
  L.marker([35.66018,139.69898],{icon:mapMarkerIcon('friend'),title:'周辺マーカー：Mobian A'}).addTo(leafletMapInstance).bindPopup('Mobian A');
  L.marker([35.65858,139.70173],{icon:mapMarkerIcon('friend'),title:'周辺マーカー：Mobian B'}).addTo(leafletMapInstance).bindPopup('Mobian B');
+ if(current)showMapCurrentLocation(current,false);
  L.control.scale({imperial:false,position:'bottomleft'}).addTo(leafletMapInstance);
  const refreshMapSize=()=>{if(leafletMapInstance){leafletMapInstance.invalidateSize({pan:false});}};
- requestAnimationFrame(refreshMapSize);
- setTimeout(refreshMapSize,100);
- setTimeout(refreshMapSize,400);
- if('ResizeObserver' in window){
-   const ro=new ResizeObserver(refreshMapSize);
-   ro.observe(el);
-   setTimeout(()=>ro.disconnect(),2000);
- }
+ requestAnimationFrame(refreshMapSize);setTimeout(refreshMapSize,100);setTimeout(refreshMapSize,400);
+ if('ResizeObserver' in window){const ro=new ResizeObserver(refreshMapSize);ro.observe(el);setTimeout(()=>ro.disconnect(),2000)}
+ requestStartupMapLocation(false);
 }
 window.addEventListener('resize',()=>{if(leafletMapInstance)leafletMapInstance.invalidateSize()});
 function loginMock(mode){state.auth.status='authenticating';state.auth.error='';render();setTimeout(()=>{if(mode==='error'){state.auth.status='logged_out';state.auth.user=null;state.auth.error='Google認証に失敗しました。時間をおいてもう一度お試しください。';render();return}const isAdmin=mode==='admin'&&reviewMode;const email=isAdmin?DEFAULT_ADMIN_EMAIL:'poc-user@example.com';const session={provider:'google',email,displayName:isAdmin?'PoC Admin':'PoC Player',role:resolvedRole(email),issuedAt:new Date().toISOString()};localStorage.setItem(SESSION_KEY,JSON.stringify(session));state.auth.status='logged_in';state.auth.user=session;state.auth.restored=false;state.auth.error='';state.screen=isAdmin?'A01':'U04';history.replaceState({s:state.screen},'','#'+state.screen);render()},250)}
