@@ -44,7 +44,7 @@ func _run() -> void:
 	root.add_child(main)
 	await process_frame
 	main.set_process(false)
-	main.save_manager.reset_progress()
+	main.save_manager.reset_records()
 	main._configure_stage(1)
 
 	_run_stage(main, 1, ["N2", "N4", "N6", "N8", "N9"])
