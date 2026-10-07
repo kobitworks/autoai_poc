@@ -426,7 +426,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		if not key_event.pressed or key_event.echo:
 			return
 		var key = key_event.keycode
-		if qa_mode and key == KEY_F5:
+		if qa_mode and key == KEY_F4:
 			screen = "stage_select"
 			queue_redraw()
 			get_viewport().set_input_as_handled()
