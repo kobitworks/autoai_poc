@@ -1,4 +1,4 @@
-name: P021 Build GAME-G008 Shadow Step Stealth\n# GAME-040 CI revision 5
+name: P021 Build GAME-G008 Shadow Step Stealth\n# GAME-040 CI revision 6
 
 on:
   push:
@@ -67,7 +67,14 @@ jobs:
 
       - name: Normal-rule three-stage playthrough
         working-directory: p021-game/sources/shadow-step-stealth
-        run: godot --headless --path . --script res://tests/test_playthrough.gd
+        run: |
+          set +e
+          timeout 20s godot --headless --path . --script res://tests/test_playthrough.gd > /tmp/g008-playthrough.log 2>&1
+          status=$?
+          set -e
+          cat /tmp/g008-playthrough.log
+          test "$status" -eq 0
+          grep -q 'normal-rule three-stage playthrough complete: 0 failure(s)' /tmp/g008-playthrough.log
 
       - name: Validate project
         working-directory: p021-game/sources/shadow-step-stealth
