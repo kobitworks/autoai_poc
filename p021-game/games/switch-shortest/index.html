@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Switch Shortest | GAME-G014</title><link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- TOP -->
+    <section id="topScreen" class="screen screen-top" aria-label="top">
+      <div class="topCard">
+        <div class="topBrand">
+          <div class="topTitle">スイッチゲーム</div>
+          <div class="topSub">スイッチを押すと自分と左右が反転します。目標の状態に一致させるまでの最短手数に挑戦してください。</div>
+        </div>
+
+        <div class="topForm">
+          <label class="field" for="difficultySel">
+            <span class="label">難易度</span>
+            <select id="difficultySel" class="select" aria-label="difficulty">
+              <option value="8">Easy（8）</option>
+              <option value="10" selected>Normal（10）</option>
+              <option value="12">Hard（12）</option>
+            </select>
+          </label>
+
+          <div class="metaLine">
+            <span class="pill">スイッチ数: <b id="topN">10</b></span>
+            <span class="pill">最短: <b id="topBest">-</b> 手</span>
+          </div>
+
+          <div class="subttl">目標</div>
+          <div id="topGoalRow" class="switchRow" aria-label="goal row"></div>
+
+          <div class="subttl">開始</div>
+          <div id="topStartRow" class="switchRow" aria-label="start row"></div>
+
+          <div class="topActions">
+            <button id="startBtn" class="btn primary" type="button">ゲーム開始</button><a class="btn portalLink" href="../../">ゲーム一覧へ</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PLAY -->
+    <section id="playScreen" class="screen screen-game hidden" aria-label="play">
+      <div class="gameCard">
+        <div class="metaLine">
+          <span class="pill">手数: <b id="hudMoves">0</b></span>
+          <span class="pill">最短: <b id="hudBest">-</b></span>
+          <span class="pill">スイッチ数: <b id="hudN">-</b></span>
+        </div>
+
+        <div class="subttl">目標</div>
+        <div id="goalRow" class="switchRow" aria-label="goal row"></div>
+
+        <div class="subttl">操作</div>
+        <div id="playRow" class="switchRow" aria-label="play row"></div>
+
+        <div id="hintText" class="hint"></div>
+
+        <div class="actions two">
+          <button id="retryBtn" class="btn" type="button">やり直す</button>
+          <button id="toTopBtn" class="btn" type="button">TOPへ</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>
