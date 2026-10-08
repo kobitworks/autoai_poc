@@ -1,0 +1,1 @@
+(function(){'use strict';window.platform_sdk={finish:function(score,meta){window.dispatchEvent(new CustomEvent('p021:game-finish',{detail:{gameId:'GAME-G010',score,meta:meta||{}}}));},back_to_top:function(){location.href='../../';}};})();
