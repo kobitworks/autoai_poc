@@ -637,7 +637,7 @@ function initLeafletMap(){
  L.marker(target,{icon:mapMarkerIcon('target'),title:'目的地：青い壁の広場'}).addTo(leafletMapInstance).bindPopup('<strong>青い壁の広場</strong><br>物語上の目的地（PoC）');
  L.marker([35.66018,139.69898],{icon:mapMarkerIcon('friend'),title:'周辺マーカー：Mobian A'}).addTo(leafletMapInstance).bindPopup('Mobian A');
  L.marker([35.65858,139.70173],{icon:mapMarkerIcon('friend'),title:'周辺マーカー：Mobian B'}).addTo(leafletMapInstance).bindPopup('Mobian B');
- visibleGisItems().forEach(x=>L.marker([x.lat,x.lon],{icon:mapMarkerIcon(String(x.gis_id)===String(state.gis.selectedId)?'gis-selected':'gis'),title:x.name}).addTo(leafletMapInstance).bindPopup('<strong>'+x.name+'</strong><br>'+x.group+' / 約'+x.distance_m+'m'));
+ visibleGisItems().forEach(x=>{const lat=Number(x.latitude??x.lat),lon=Number(x.longitude??x.lon);if(!Number.isFinite(lat)||!Number.isFinite(lon))return;const name=x.name||x.a_name||'GIS地点',group=x.group||x.gis_group||'',addr=x.address||x.adress1||[x.pref_name,x.city_name].filter(Boolean).join(' ');L.marker([lat,lon],{icon:mapMarkerIcon(String(x.gis_id)===String(state.gis.selectedId)?'gis-selected':'gis'),title:name}).addTo(leafletMapInstance).bindPopup('<strong>'+safeText(name)+'</strong>'+(group?'<br>'+safeText(group):'')+(addr?'<br>'+safeText(addr):'')+(Number.isFinite(Number(x.distance_m))?'<br>約'+Math.round(Number(x.distance_m))+'m':''));});
  if(current)showMapCurrentLocation(current,false);
  el.style.visibility='visible';
  L.control.scale({imperial:false,position:'bottomleft'}).addTo(leafletMapInstance);
