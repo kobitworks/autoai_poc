@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Water Jug</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="app" id="app">
+
+    <!-- TOP screen -->
+    <section id="screenTop" class="screen screen-top" aria-label="top">
+      <div class="topCard">
+        <div class="topBrand">
+          <div class="topTitle">水差しクイズ</div>
+          <div class="topSub">2つの水差しの「満たす」「空にする」「移す」を繰り返して、いずれかの水差しで目標量を作ればクリアです。</div>
+        </div>
+
+        <div class="topForm">
+          <label class="field">
+            <span class="label">難易度</span>
+            <select id="selDifficulty" class="select select" aria-label="difficulty">
+              <option value="easy">Easy</option>
+              <option value="normal" selected>Normal</option>
+              <option value="hard">Hard</option>
+            </select>
+          </label>
+
+          
+<div class="puzzlePreview" aria-label="preview">
+  <div class="pvRow">
+    <div class="pvItem">A 容量: <span id="topCapA">-</span>L</div>
+    <div class="pvItem">B 容量: <span id="topCapB">-</span>L</div>
+  </div>
+  <div class="pvRow" style="margin-top:6px;">
+    <div class="pvItem">目標: <span id="topTarget">-</span>L</div>
+    <div class="pvItem small">（ゲーム画面: 目標 <span id="topTarget2">-</span>L）</div>
+  </div>
+</div>
+
+<div id="bestLine" class="best" aria-label="best">Best: -</div>
+
+<div class="topActions">
+            <button id="btnStart" class="btn primary btn primary" type="button">ゲーム開始</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GAME screen -->
+    <section id="screenGame" class="screen screen-game hidden" aria-label="game">
+      <div class="gameHeader">
+        <div class="ghTitle">Water Jug</div>
+        <div class="ghStats">
+          <div>目標 <b><span id="target">0</span>L</b></div>
+          <div>最短 <b><span id="txtOptimal">-</span></b> 手</div>
+          <div>手数 <b><span id="txtMoves">0</span></b></div>
+          <div>時間 <b><span id="txtTime">0.0</span></b> s</div>
+        </div>
+      </div>
+
+      <div class="board" aria-label="jugs">
+        <!-- Jug A -->
+        <div class="jugCard" id="jugCardA" aria-label="jug A">
+          <div class="jugTitle">A（容量 <span id="capA">0</span>L）</div>
+          <div class="jugBottom">
+            <div class="jugMeter" id="meterA" role="img" aria-label="A meter">
+              <div class="jugCup">
+              <div class="jugCup">
+              <div class="jugCup">
+                <div id="fillA" class="jugFill"></div>
+              </div>
+              </div>
+              </div>
+              <div id="valA" class="jugValue">0</div>
+            </div>
+            <div class="jugBtns">
+              <button id="btnFillA" class="btn icon" type="button" aria-label="満たす" title="満たす">
+                <span class="btnGlyph" aria-hidden="true">＋</span>
+              </button>
+              <button id="btnEmptyA" class="btn icon" type="button" aria-label="捨てる" title="捨てる">
+                <span class="btnGlyph" aria-hidden="true">−</span>
+              </button>
+              <button id="btnPourAtoB" class="btn icon" type="button" aria-label="A → B に移す" title="A → B に移す">
+                <span class="btnGlyph" aria-hidden="true">A→B</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Jug B -->
+        <div class="jugCard" id="jugCardB" aria-label="jug B">
+          <div class="jugTitle">B（容量 <span id="capB">0</span>L）</div>
+          <div class="jugBottom">
+            <div class="jugMeter" id="meterB" role="img" aria-label="B meter">
+              <div class="jugCup">
+              <div class="jugCup">
+              <div class="jugCup">
+                <div id="fillB" class="jugFill"></div>
+              </div>
+              </div>
+              </div>
+              <div id="valB" class="jugValue">0</div>
+            </div>
+            <div class="jugBtns">
+              <button id="btnFillB" class="btn icon" type="button" aria-label="満たす" title="満たす">
+                <span class="btnGlyph" aria-hidden="true">＋</span>
+              </button>
+              <button id="btnEmptyB" class="btn icon" type="button" aria-label="捨てる" title="捨てる">
+                <span class="btnGlyph" aria-hidden="true">−</span>
+              </button>
+              <button id="btnPourBtoA" class="btn icon" type="button" aria-label="B → A に移す" title="B → A に移す">
+                <span class="btnGlyph" aria-hidden="true">B→A</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="goalCard" aria-label="status">
+        <div class="goalText">ヒント</div>
+        <div id="goalHint" class="goalHint">いずれかで目標量を作ればクリアです。</div>
+      </div>
+
+      <div class="bottomActions" aria-label="actions">
+        <button id="btnReset" class="btn" type="button">リセット</button>
+        <button id="btnNewPuzzle" class="btn ghost" type="button">別の問題</button>
+      </div>
+    </section>
+
+  </div>
+
+
+<!-- Clear overlay -->
+<div id="clearOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="clear">
+  <div class="overlayCard">
+    <div class="overlayTitle">クリア！</div>
+    <div id="clearMsg" class="overlayMsg">-</div>
+    <div class="overlayActions">
+      <button id="btnCloseOverlay" class="btn primary" type="button">OK</button>
+    </div>
+  </div>
+</div>
+
+<script src="main.js"></script>
+
+</body>
+</html>
