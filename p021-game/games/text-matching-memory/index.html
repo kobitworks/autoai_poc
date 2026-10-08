@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Text Matching Memory</title>
+<link rel="stylesheet" href="style.css">
+
+<style>.p021-nav{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 14px;background:#10222a;color:#fff;font-size:12px;font-weight:800}.p021-nav a{color:#fff;text-decoration:none}.app{height:100dvh}.screen{min-height:0}@media(max-width:900px) and (orientation:landscape){.screen-top .topCard{max-width:560px}.screen-top .topForm{display:grid;grid-template-columns:1fr 1fr}.screen-top .topActions{grid-column:1/-1}.screen{padding:6px;gap:6px}.hud{padding:5px 8px}.playButtons .btn{padding:8px}}</style>\n</head>
+<body>
+  <div id="app" class="app">\n    <nav class="p021-nav"><a href="../../">← Game Development Lab</a><span>GAME-G011</span></nav>
+
+    <!-- TOP screen -->
+    <section id="topScreen" class="screen screen-top" aria-label="top">
+      <div class="topCard">
+        <div class="topBrand">
+          <div class="topTitle">神経衰弱</div>
+          <div class="topSub">文字種 × 盤面 × 文字長で難易度が変化します。</div>
+        </div>
+
+        <div class="topForm">
+          <label class="field">
+            <span class="label">レベル（盤面）</span>
+            <select id="levelSelect" class="select" aria-label="level">
+            <option value="1">1. Lv1: 4×3（12枚）</option>
+            <option value="2" selected>2. Lv2: 5×4（20枚）</option>
+            <option value="3">3. Lv3: 6×4（24枚）</option>
+            <option value="4">4. Lv4: 6×5（30枚）</option>
+          </select>
+        </label>
+
+          <label class="field">
+            <span class="label">ステージ（文字集合）</span>
+            <select id="stageSelect" class="select" aria-label="stage"></select>
+          </label>
+
+          <label class="field">
+            <span class="label">難易度（文字長構成）</span>
+            <select id="tierSelect" class="select" aria-label="tier">
+            <option value="1">1. Tier1（1文字のみ）</option>
+            <option value="2" selected>2. Tier2（1文字＋2文字）</option>
+            <option value="3">3. Tier3（2文字のみ）</option>
+            <option value="4">4. Tier4（2文字＋3文字）</option>
+            <option value="5">5. Tier5（3文字のみ）</option>
+          </select>
+        </label>
+
+          <label class="field">
+            <span class="label">見た目</span>
+            <select id="themeSelect" class="select" aria-label="theme">
+            <option value="standard" selected>標準</option>
+            <option value="compact">コンパクト</option>
+          </select>
+        </label>
+
+          <div class="topActions two">
+            <button id="startBtn" class="btn primary" type="button">ゲーム開始</button>
+            <button id="howtoBtn" class="btn ghost" type="button">遊び方</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PLAY -->
+    <main id="playScreen" class="screen screenPlay hidden">
+      <section class="hud card">
+        <div class="hudRow">
+          <div class="hudItem"><span class="hudLabel">時間</span><span id="hudTime" class="hudVal">00:00</span></div>
+          <div class="hudItem"><span class="hudLabel">ミス</span><span id="hudMiss" class="hudVal">0</span></div>
+          <div class="hudItem"><span class="hudLabel">手数</span><span id="hudTurn" class="hudVal">0</span></div>
+          <div class="hudItem"><span class="hudLabel">進捗</span><span id="hudProg" class="hudVal">0/0</span></div>
+        </div>
+      </section>
+
+      <section id="board" class="board" aria-label="board"></section>
+
+      <section class="playButtons">
+        <button id="retryBtn" class="btn">やり直し</button>
+        <button id="toTopBtn" class="btn">TOPへ</button>
+      </section>
+    </main>
+
+    <!-- RESULT -->
+    <main id="resultScreen" class="screen screenResult hidden">
+      <section class="card panel">
+        <h2 class="resultTitle">クリア！</h2>
+        <div class="resultStats">
+          <div>時間：<span id="resTime"></span></div>
+          <div>ミス：<span id="resMiss"></span></div>
+          <div>手数：<span id="resTurn"></span></div>
+        </div>
+      </section>
+      <section class="topButtons">
+        <button id="againBtn" class="btn btnPrimary">もう一度</button>
+        <button id="resultToTopBtn" class="btn">TOPへ</button>
+      </section>
+    </main>
+
+    <!-- HowTo Modal -->
+    <dialog id="howtoDialog" class="howto">
+      <div class="howtoBody">
+        <h3>遊び方</h3>
+        <ol>
+          <li>カードを2枚めくり、同じペアを探します。</li>
+          <li>一致すると固定、不一致なら少し待って戻ります。</li>
+          <li>すべて揃えるとクリアです。</li>
+        </ol>
+        <div class="howtoNote">※ 盤面が大きいほど、上部表示は自動的にコンパクトになります。</div>
+        <button id="howtoCloseBtn" class="btn btnPrimary">閉じる</button>
+      </div>
+    </dialog>
+
+  </div>
+
+<script src="platform-adapter.js"></script>\n  <script src="charset_data.js"></script>\n  <script src="game.js"></script>
+
+
+</body>
+</html>
