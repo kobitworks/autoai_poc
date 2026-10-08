@@ -1,0 +1,99 @@
+
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <title>Flash Mental Math | GAME-G012</title>
+
+  <link rel="stylesheet" href="style.css">
+
+</head>
+<body>
+  <div id="app">
+
+    <!-- TOP screen -->
+    <section id="screenTop" class="screen screen-top" aria-label="top">
+      <div class="topCard">
+        <div class="topBrand">
+          <div class="topTitle">フラッシュ暗算</div>
+          <div class="topSub">途中に表示される文字はトラップです。数字だけ計算してください。</div>
+        </div>
+
+        <div class="topForm">
+          <label class="field">
+            <span class="label">ステージ</span>
+            <select class="select" id="stageSelect" aria-label="stage"></select>
+          </label>
+          <label class="field">
+            <span class="label">難易度</span>
+            <select class="select" id="levelSelect" aria-label="level"></select>
+          </label>
+          <label class="field">
+            <span class="label">設定</span>
+            <select class="select" id="roundSelect" aria-label="round"></select>
+          </label>
+
+          <div class="topActions two">
+            <button id="btnStart" class="btn primary" type="button">ゲーム開始</button>
+            <button id="btnBackTop" class="btn ghost" type="button">戻る</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Game -->
+    <section id="screenGame" class="screen screen-game is-hidden">
+      <div class="hud">
+        <div class="pill" id="hudRound">Round 1 / 10</div>
+        <div class="pill" id="hudStage">Stage 1 / Lv1</div>
+      </div>
+
+      <div id="arena" class="arena arena-relative">
+        <!-- overlay token (countdown + flash tokens) -->
+        <div id="flashToken" class="flash-token-overlay" aria-live="polite"></div>
+
+        <!-- keypad takes full arena -->
+        <div id="keypadCard" class="keypadCard is-hidden" aria-label="answer keypad">
+          <div class="display">
+            <div id="answerDisplay" class="answerDisplay">0</div>
+          </div>
+
+          <div class="keypadGrid" role="group" aria-label="keypad">
+            <button class="key" data-key="7">7</button>
+            <button class="key" data-key="8">8</button>
+            <button class="key" data-key="9">9</button>
+
+            <button class="key" data-key="4">4</button>
+            <button class="key" data-key="5">5</button>
+            <button class="key" data-key="6">6</button>
+
+            <button class="key" data-key="1">1</button>
+            <button class="key" data-key="2">2</button>
+            <button class="key" data-key="3">3</button>
+
+            <button class="key" data-key="0">0</button>
+            <button class="key" data-key="bksp" aria-label="1文字消す">⌫</button>
+            <button class="key" data-key="clear" aria-label="すべて消す">C</button>
+          </div>
+
+          <button class="btnAnswer" data-key="ok">回答</button>
+
+          <div class="keypadHint">キーボード入力: 数字 / Backspace / Enter</div>
+        </div>
+      </div>
+
+      <footer class="gameFooter">
+        <button id="btnBackGame" class="btnGhost">戻る</button>
+      </footer>
+    </section>
+  </div>
+
+
+
+  <script src="platform-adapter.js"></script>
+  <script src="main.js"></script>
+
+
+</body>
+</html>
