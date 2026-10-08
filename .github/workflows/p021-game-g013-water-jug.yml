@@ -1,0 +1,31 @@
+name: P021 GAME-G013 Water Jug QA
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'p021-game/games/water-jug/**'
+      - 'p021-game/index.html'
+      - 'p021-game/qa/water-jug-responsive.js'
+      - '.github/workflows/p021-game-g013-water-jug.yml'
+  workflow_dispatch:
+
+jobs:
+  responsive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8000 > /tmp/p021-g013-http.log 2>&1 &
+          sleep 2
+      - name: Run four viewport QA
+        run: node p021-game/qa/water-jug-responsive.js
