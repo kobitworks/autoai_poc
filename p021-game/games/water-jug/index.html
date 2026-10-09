@@ -1,153 +1,220 @@
-<!doctype html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8" />
-  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>Water Jug</title>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+		<title>Water Jug Lab</title>
+		<style>
+html, body, #canvas {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
 
-  <div class="app" id="app">
+body {
+	color: white;
+	background-color: black;
+	overflow: hidden;
+	touch-action: none;
+}
 
-    <!-- TOP screen -->
-    <section id="screenTop" class="screen screen-top" aria-label="top">
-      <div class="topCard">
-        <div class="topBrand">
-          <div class="topTitle">水差しクイズ</div>
-          <div class="topSub">2つの水差しの「満たす」「空にする」「移す」を繰り返して、いずれかの水差しで目標量を作ればクリアです。</div>
-        </div>
+#canvas {
+	display: block;
+}
 
-        <div class="topForm">
-          <label class="field">
-            <span class="label">難易度</span>
-            <select id="selDifficulty" class="select select" aria-label="difficulty">
-              <option value="easy">Easy</option>
-              <option value="normal" selected>Normal</option>
-              <option value="hard">Hard</option>
-            </select>
-          </label>
+#canvas:focus {
+	outline: none;
+}
 
-          
-<div class="puzzlePreview" aria-label="preview">
-  <div class="pvRow">
-    <div class="pvItem">A 容量: <span id="topCapA">-</span>L</div>
-    <div class="pvItem">B 容量: <span id="topCapB">-</span>L</div>
-  </div>
-  <div class="pvRow" style="margin-top:6px;">
-    <div class="pvItem">目標: <span id="topTarget">-</span>L</div>
-    <div class="pvItem small">（ゲーム画面: 目標 <span id="topTarget2">-</span>L）</div>
-  </div>
-</div>
+#status, #status-splash, #status-progress {
+	position: absolute;
+	left: 0;
+	right: 0;
+}
 
-<div id="bestLine" class="best" aria-label="best">Best: -</div>
+#status, #status-splash {
+	top: 0;
+	bottom: 0;
+}
 
-<div class="topActions">
-            <button id="btnStart" class="btn primary btn primary" type="button">ゲーム開始</button>
-          </div>
-        </div>
-      </div>
-    </section>
+#status {
+	background-color: #242424;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	visibility: hidden;
+}
 
-    <!-- GAME screen -->
-    <section id="screenGame" class="screen screen-game hidden" aria-label="game">
-      <div class="gameHeader">
-        <div class="ghTitle">Water Jug</div>
-        <div class="ghStats">
-          <div>目標 <b><span id="target">0</span>L</b></div>
-          <div>最短 <b><span id="txtOptimal">-</span></b> 手</div>
-          <div>手数 <b><span id="txtMoves">0</span></b></div>
-          <div>時間 <b><span id="txtTime">0.0</span></b> s</div>
-        </div>
-      </div>
+#status-splash {
+	max-height: 100%;
+	max-width: 100%;
+	margin: auto;
+}
 
-      <div class="board" aria-label="jugs">
-        <!-- Jug A -->
-        <div class="jugCard" id="jugCardA" aria-label="jug A">
-          <div class="jugTitle">A（容量 <span id="capA">0</span>L）</div>
-          <div class="jugBottom">
-            <div class="jugMeter" id="meterA" role="img" aria-label="A meter">
-              <div class="jugCup">
-              <div class="jugCup">
-              <div class="jugCup">
-                <div id="fillA" class="jugFill"></div>
-              </div>
-              </div>
-              </div>
-              <div id="valA" class="jugValue">0</div>
-            </div>
-            <div class="jugBtns">
-              <button id="btnFillA" class="btn icon" type="button" aria-label="満たす" title="満たす">
-                <span class="btnGlyph" aria-hidden="true">＋</span>
-              </button>
-              <button id="btnEmptyA" class="btn icon" type="button" aria-label="捨てる" title="捨てる">
-                <span class="btnGlyph" aria-hidden="true">−</span>
-              </button>
-              <button id="btnPourAtoB" class="btn icon" type="button" aria-label="A → B に移す" title="A → B に移す">
-                <span class="btnGlyph" aria-hidden="true">A→B</span>
-              </button>
-            </div>
-          </div>
-        </div>
+#status-splash.show-image--false {
+	display: none;
+}
 
-        <!-- Jug B -->
-        <div class="jugCard" id="jugCardB" aria-label="jug B">
-          <div class="jugTitle">B（容量 <span id="capB">0</span>L）</div>
-          <div class="jugBottom">
-            <div class="jugMeter" id="meterB" role="img" aria-label="B meter">
-              <div class="jugCup">
-              <div class="jugCup">
-              <div class="jugCup">
-                <div id="fillB" class="jugFill"></div>
-              </div>
-              </div>
-              </div>
-              <div id="valB" class="jugValue">0</div>
-            </div>
-            <div class="jugBtns">
-              <button id="btnFillB" class="btn icon" type="button" aria-label="満たす" title="満たす">
-                <span class="btnGlyph" aria-hidden="true">＋</span>
-              </button>
-              <button id="btnEmptyB" class="btn icon" type="button" aria-label="捨てる" title="捨てる">
-                <span class="btnGlyph" aria-hidden="true">−</span>
-              </button>
-              <button id="btnPourBtoA" class="btn icon" type="button" aria-label="B → A に移す" title="B → A に移す">
-                <span class="btnGlyph" aria-hidden="true">B→A</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+#status-splash.fullsize--true {
+	height: 100%;
+	width: 100%;
+	object-fit: contain;
+}
 
-      <div class="goalCard" aria-label="status">
-        <div class="goalText">ヒント</div>
-        <div id="goalHint" class="goalHint">いずれかで目標量を作ればクリアです。</div>
-      </div>
+#status-splash.use-filter--false {
+	image-rendering: pixelated;
+}
 
-      <div class="bottomActions" aria-label="actions">
-        <button id="btnReset" class="btn" type="button">リセット</button>
-        <button id="btnNewPuzzle" class="btn ghost" type="button">別の問題</button>
-      </div>
-    </section>
+#status-progress, #status-notice {
+	display: none;
+}
 
-  </div>
+#status-progress {
+	bottom: 10%;
+	width: 50%;
+	margin: 0 auto;
+}
 
+#status-notice {
+	background-color: #5b3943;
+	border-radius: 0.5rem;
+	border: 1px solid #9b3943;
+	color: #e0e0e0;
+	font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+	line-height: 1.3;
+	margin: 0 2rem;
+	overflow: hidden;
+	padding: 1rem;
+	text-align: center;
+	z-index: 1;
+}
+		</style>
+		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
+<link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
+<meta name="theme-color" content="#061323"><meta name="description" content="Water Jug Lab - a polished Godot logic puzzle with tactile fill, empty and pour controls.">
+	</head>
+	<body>
+		<canvas id="canvas">
+			Your browser does not support the canvas tag.
+		</canvas>
 
-<!-- Clear overlay -->
-<div id="clearOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-label="clear">
-  <div class="overlayCard">
-    <div class="overlayTitle">クリア！</div>
-    <div id="clearMsg" class="overlayMsg">-</div>
-    <div class="overlayActions">
-      <button id="btnCloseOverlay" class="btn primary" type="button">OK</button>
-    </div>
-  </div>
-</div>
+		<noscript>
+			Your browser does not support JavaScript.
+		</noscript>
 
-<script src="main.js"></script>
+		<div id="status">
+			<img id="status-splash" class="show-image--true fullsize--true use-filter--true" src="index.png" alt="">
+			<progress id="status-progress"></progress>
+			<div id="status-notice"></div>
+		</div>
 
-</body>
+		<script src="index.js"></script>
+		<script>
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":6941244,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_THREADS_ENABLED = false;
+const engine = new Engine(GODOT_CONFIG);
+
+(function () {
+	const statusOverlay = document.getElementById('status');
+	const statusProgress = document.getElementById('status-progress');
+	const statusNotice = document.getElementById('status-notice');
+
+	let initializing = true;
+	let statusMode = '';
+
+	function setStatusMode(mode) {
+		if (statusMode === mode || !initializing) {
+			return;
+		}
+		if (mode === 'hidden') {
+			statusOverlay.remove();
+			initializing = false;
+			return;
+		}
+		statusOverlay.style.visibility = 'visible';
+		statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
+		statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
+		statusMode = mode;
+	}
+
+	function setStatusNotice(text) {
+		while (statusNotice.lastChild) {
+			statusNotice.removeChild(statusNotice.lastChild);
+		}
+		const lines = text.split('\n');
+		lines.forEach((line) => {
+			statusNotice.appendChild(document.createTextNode(line));
+			statusNotice.appendChild(document.createElement('br'));
+		});
+	}
+
+	function displayFailureNotice(err) {
+		console.error(err);
+		if (err instanceof Error) {
+			setStatusNotice(err.message);
+		} else if (typeof err === 'string') {
+			setStatusNotice(err);
+		} else {
+			setStatusNotice('An unknown error occurred.');
+		}
+		setStatusMode('notice');
+		initializing = false;
+	}
+
+	const missing = Engine.getMissingFeatures({
+		threads: GODOT_THREADS_ENABLED,
+	});
+
+	if (missing.length !== 0) {
+		if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
+			let serviceWorkerRegistrationPromise;
+			try {
+				serviceWorkerRegistrationPromise = navigator.serviceWorker.getRegistration();
+			} catch (err) {
+				serviceWorkerRegistrationPromise = Promise.reject(new Error('Service worker registration failed.'));
+			}
+			// There's a chance that installing the service worker would fix the issue
+			Promise.race([
+				serviceWorkerRegistrationPromise.then((registration) => {
+					if (registration != null) {
+						return Promise.reject(new Error('Service worker already exists.'));
+					}
+					return registration;
+				}).then(() => engine.installServiceWorker()),
+				// For some reason, `getRegistration()` can stall
+				new Promise((resolve) => {
+					setTimeout(() => resolve(), 2000);
+				}),
+			]).then(() => {
+				// Reload if there was no error.
+				window.location.reload();
+			}).catch((err) => {
+				console.error('Error while registering service worker:', err);
+			});
+		} else {
+			// Display the message as usual
+			const missingMsg = 'Error\nThe following features required to run Godot projects on the Web are missing:\n';
+			displayFailureNotice(missingMsg + missing.join('\n'));
+		}
+	} else {
+		setStatusMode('progress');
+		engine.startGame({
+			'onProgress': function (current, total) {
+				if (current > 0 && total > 0) {
+					statusProgress.value = current;
+					statusProgress.max = total;
+				} else {
+					statusProgress.removeAttribute('value');
+					statusProgress.removeAttribute('max');
+				}
+			},
+		}).then(() => {
+			setStatusMode('hidden');
+		}, displayFailureNotice);
+	}
+}());
+		</script>
+	</body>
 </html>
+
