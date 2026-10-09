@@ -1,0 +1,21 @@
+; GAME-G011 / Text Matching Memory Godot redesign (GAME-058)
+config_version=5
+
+[application]
+config/name="Text Matching Memory"
+run/main_scene="res://Main.tscn"
+
+[display]
+window/size/viewport_width=390
+window/size/viewport_height=844
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=0
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.027,0.063,0.122,1)
+
+[audio]
+driver/enable_input=false
