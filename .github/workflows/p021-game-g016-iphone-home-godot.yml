@@ -32,6 +32,11 @@ jobs:
           godot --headless --version
           ls -la /root/.local/share/godot/export_templates/4.7.2.stable | head
 
+      - name: Install build prerequisites
+        run: |
+          apt-get update -qq
+          apt-get install -y --no-install-recommends python3 curl libfontconfig1
+
       - name: Prepare Icons8 icons and original wallpaper
         working-directory: p021-game/sources/iphone-home-godot
         run: |
