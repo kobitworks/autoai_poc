@@ -1,0 +1,342 @@
+/* Biblio main-content design (2026-10-09)
+   Reference: Yahoo! JAPAN mobile's information density and flat news-feed layout.
+   Apply ONLY inside the non-map, authenticated main content area.
+   Keep the existing app header, footer/banner, login and Leaflet map untouched.
+*/
+body:not(.login-mode) .main:not(.map-mode){
+  padding:0;
+  background:#fff;
+  color:#242424;
+  font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",Meiryo,sans-serif;
+}
+body:not(.login-mode) .main:not(.map-mode) .paper{
+  position:relative;
+  box-sizing:border-box;
+  width:100%;
+  max-width:960px;
+  min-height:100%;
+  margin:0 auto;
+  padding:16px 20px 30px;
+  background:#fff;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+}
+body:not(.login-mode) .main:not(.map-mode) .paper::after{content:none;display:none}
+body:not(.login-mode) .main:not(.map-mode) .muted{color:#737980}
+body:not(.login-mode) .main:not(.map-mode) h2,
+body:not(.login-mode) .main:not(.map-mode) h3{color:#242424}
+body:not(.login-mode) .main:not(.map-mode) .panel{
+  margin:10px 0;
+  padding:12px 0;
+  border:0;
+  border-top:1px solid #ebedef;
+  border-bottom:1px solid #ebedef;
+  border-radius:0;
+  box-shadow:none;
+  background:#fff;
+}
+body:not(.login-mode) .main:not(.map-mode) .fact{padding:11px 0;border-bottom:1px solid #eceef0}
+body:not(.login-mode) .main:not(.map-mode) .fact:last-child{border-bottom:0}
+body:not(.login-mode) .main:not(.map-mode) .fact span{color:#666e76}
+body:not(.login-mode) .main:not(.map-mode) .notice:not(.warn):not(.danger){
+  border:1px solid #e1e9ed;
+  border-left:3px solid #5389b3;
+  border-radius:3px;
+  background:#f8fafc;
+}
+body:not(.login-mode) .main:not(.map-mode) .btn{
+  min-height:40px;
+  border-radius:4px;
+  box-shadow:none;
+}
+body:not(.login-mode) .main:not(.map-mode) .btn.secondary{background:#fff}
+body:not(.login-mode) .main:not(.map-mode) .screen-lead{
+  grid-template-columns:36px minmax(0,1fr);
+  align-items:start;
+  gap:9px;
+  margin:5px 0 14px;
+  padding-bottom:10px;
+  border-bottom:1px solid #ebeef0;
+}
+body:not(.login-mode) .main:not(.map-mode) .screen-lead-icon{
+  width:34px;
+  height:34px;
+  border-radius:6px;
+  background:#f1f5f8;
+  color:#416a8f;
+  font-size:17px;
+}
+body:not(.login-mode) .main:not(.map-mode) .screen-lead h2{
+  margin:0 0 3px;
+  font-size:19px;
+  line-height:1.4;
+}
+body:not(.login-mode) .main:not(.map-mode) .screen-lead p{
+  color:#777;
+  font-size:12px;
+  line-height:1.5;
+}
+/* Narrow, separated rows like individual mobile news feed entries. */
+body:not(.login-mode) .main:not(.map-mode) .book-list,
+body:not(.login-mode) .main:not(.map-mode) .gis-list,
+body:not(.login-mode) .main:not(.map-mode) .info-list,
+body:not(.login-mode) .main:not(.map-mode) .next-choice-list{
+  display:block;
+  margin:10px 0;
+}
+body:not(.login-mode) .main:not(.map-mode) .book-list-item.book-view-row{
+  display:grid;
+  grid-template-columns:60px minmax(0,1fr) 16px;
+  gap:12px;
+  align-items:center;
+  min-height:78px;
+  padding:10px 8px;
+  margin:0;
+  border:0;
+  border-bottom:1px solid #e9ecef;
+  border-radius:0;
+  background:#fff;
+  box-shadow:none;
+  text-align:left;
+  cursor:pointer;
+}
+body:not(.login-mode) .main:not(.map-mode) .book-list-item.book-view-row:first-child{border-top:1px solid #e9ecef}
+body:not(.login-mode) .main:not(.map-mode) .book-list-item.book-view-row:hover,
+body:not(.login-mode) .main:not(.map-mode) .book-list-item.book-view-row:focus-visible{
+  background:#f5f9fc;
+  outline:2px solid #9cbdd8;
+  outline-offset:-2px;
+}
+body:not(.login-mode) .main:not(.map-mode) .book-list-cover{
+  width:60px;
+  height:60px;
+  padding:6px 5px;
+  border-left-width:4px;
+  border-radius:3px;
+  font-size:9px;
+  line-height:1.25;
+  box-shadow:none;
+  align-items:center;
+  overflow:hidden;
+  overflow-wrap:anywhere;
+}
+body:not(.login-mode) .main:not(.map-mode) .book-list-main{min-width:0}
+body:not(.login-mode) .main:not(.map-mode) .book-list-main>strong{
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+  font-size:15px;
+  font-weight:700;
+  line-height:1.45;
+  color:#222;
+}
+body:not(.login-mode) .main:not(.map-mode) .book-list-subline{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  column-gap:7px;
+  row-gap:2px;
+  margin-top:5px;
+}
+body:not(.login-mode) .main:not(.map-mode) .book-list-meta{
+  min-width:0;
+  margin:0;
+  color:#81878e;
+  font-size:11px;
+  line-height:1.35;
+  overflow-wrap:anywhere;
+}
+body:not(.login-mode) .main:not(.map-mode) .book-list-status{
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:none;
+  color:#537080;
+  font-size:10px;
+  font-weight:700;
+  white-space:nowrap;
+}
+body:not(.login-mode) .main:not(.map-mode) .book-list-status.progress{background:none;border:0;color:#176fa6}
+body:not(.login-mode) .main:not(.map-mode) .book-list-status.done{background:none;border:0;color:#2f7140}
+body:not(.login-mode) .main:not(.map-mode) .book-list-status.unavailable{background:none;border:0;color:#81878e}
+body:not(.login-mode) .main:not(.map-mode) .book-list-actions{
+  grid-column:auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#a7adb4;
+  font-size:14px;
+}
+body:not(.login-mode) .main:not(.map-mode) .book-list-actions .btn{display:none}
+/* Section headings and compact status strips. */
+body:not(.login-mode) .main:not(.map-mode) .shelf-head{gap:10px;margin:4px 0 8px}
+body:not(.login-mode) .main:not(.map-mode) .shelf-head h2{margin:0 0 3px;font-size:21px}
+body:not(.login-mode) .main:not(.map-mode) .shelf-head p{color:#777;font-size:12px}
+body:not(.login-mode) .main:not(.map-mode) .shelf-summary{gap:7px;margin:8px 0 12px}
+body:not(.login-mode) .main:not(.map-mode) .shelf-stat{
+  padding:3px 5px;
+  border:0;
+  border-radius:0;
+  background:#fff;
+  font-size:11px;
+  color:#656d73;
+}
+body:not(.login-mode) .main:not(.map-mode) .shelf-stat.progress,
+body:not(.login-mode) .main:not(.map-mode) .shelf-stat.done,
+body:not(.login-mode) .main:not(.map-mode) .shelf-stat.unavailable{background:#fff;border:0}
+body:not(.login-mode) .main:not(.map-mode) .shelf-section-title{
+  align-items:center;
+  flex-direction:row;
+  flex-wrap:wrap;
+  margin:8px 0 3px;
+  padding-bottom:6px;
+  border-bottom:1px solid #e9ecef;
+}
+body:not(.login-mode) .main:not(.map-mode) .shelf-section-title h3{font-size:16px}
+body:not(.login-mode) .main:not(.map-mode) .shelf-section-title .muted{font-size:11px}
+body:not(.login-mode) .main:not(.map-mode) .book-view-switch{
+  display:inline-flex;
+  padding:0;
+  gap:0;
+  background:#fff;
+  border:0;
+  border-bottom:1px solid #dce2e7;
+  border-radius:0;
+}
+body:not(.login-mode) .main:not(.map-mode) .book-view-switch button{
+  min-width:78px;
+  min-height:40px;
+  border:0;
+  border-bottom:2px solid transparent;
+  border-radius:0;
+  background:#fff;
+  box-shadow:none;
+  color:#65717b;
+  font-size:12px;
+  font-weight:700;
+}
+body:not(.login-mode) .main:not(.map-mode) .book-view-switch button.active{
+  border-bottom-color:#2468a6;
+  color:#175c9b;
+  background:#fff;
+  box-shadow:none;
+}
+body:not(.login-mode) .main:not(.map-mode) .resume-hero{
+  margin:6px 0 13px;
+  border:1px solid #d9e4ed;
+  border-left:3px solid #4d8dbb;
+  border-radius:3px;
+  background:#f8fbfe;
+  box-shadow:none;
+}
+body:not(.login-mode) .main:not(.map-mode) .shelf-empty{
+  margin:8px 0 12px;
+  border:1px solid #e9ecef;
+  border-radius:3px;
+  background:#fafbfc;
+}
+/* Other list and menu screens use the same white, flat row design. */
+body:not(.login-mode) .main:not(.map-mode) .gis-list-item,
+body:not(.login-mode) .main:not(.map-mode) .info-item,
+body:not(.login-mode) .main:not(.map-mode) .config-menu-item,
+body:not(.login-mode) .main:not(.map-mode) .next-choice,
+body:not(.login-mode) .main:not(.map-mode) .ops-list button{
+  margin:0;
+  padding:11px 8px;
+  border:0;
+  border-bottom:1px solid #e9ecef;
+  border-radius:0;
+  background:#fff;
+  box-shadow:none;
+}
+body:not(.login-mode) .main:not(.map-mode) .gis-list-item:first-child,
+body:not(.login-mode) .main:not(.map-mode) .info-item:first-child,
+body:not(.login-mode) .main:not(.map-mode) .next-choice:first-child{border-top:1px solid #e9ecef}
+body:not(.login-mode) .main:not(.map-mode) .gis-list-item:hover,
+body:not(.login-mode) .main:not(.map-mode) .info-item:hover,
+body:not(.login-mode) .main:not(.map-mode) .config-menu-item:hover{
+  background:#f6f9fb;
+}
+body:not(.login-mode) .main:not(.map-mode) .gis-list-icon,
+body:not(.login-mode) .main:not(.map-mode) .info-icon,
+body:not(.login-mode) .main:not(.map-mode) .config-menu-icon{border-radius:5px;background:#f0f5f8;color:#4b789c}
+body:not(.login-mode) .main:not(.map-mode) .info-item p{margin-top:3px;color:#747b82;font-size:12px}
+body:not(.login-mode) .main:not(.map-mode) .config-menu{
+  display:block;
+  margin-top:8px;
+}
+body:not(.login-mode) .main:not(.map-mode) .config-menu-item{
+  grid-template-columns:40px minmax(0,1fr) auto;
+  min-height:62px;
+  width:100%;
+}
+body:not(.login-mode) .main:not(.map-mode) .book-detail-section{
+  padding:13px 0;
+  margin:0;
+  border:0;
+  border-bottom:1px solid #e9ecef;
+  border-radius:0;
+  background:#fff;
+  box-shadow:none;
+}
+body:not(.login-mode) .main:not(.map-mode) .story-state-detail,
+body:not(.login-mode) .main:not(.map-mode) .complete-hero{
+  border-color:#e5e9ec;
+  border-radius:3px;
+  background:#fff;
+  box-shadow:none;
+}
+body:not(.login-mode) .main:not(.map-mode) .story-actions,
+body:not(.login-mode) .main:not(.map-mode) .book-detail-actions{
+  background:#fffffff5;
+  border-color:#e5e9ec;
+  border-radius:4px;
+  box-shadow:0 -2px 10px #0000000a;
+}
+body:not(.login-mode) .main:not(.map-mode) .gis-list-search input,
+body:not(.login-mode) .main:not(.map-mode) .gis-list-controls select{
+  border-color:#d0d7de;
+  border-radius:4px;
+  background:#fff;
+}
+body:not(.login-mode) .main:not(.map-mode) .dev{
+  margin-top:22px;
+  border-top:1px solid #e7e9ed;
+  color:#8a8e93;
+  font-size:10px;
+}
+@media(max-width:599px){
+  body:not(.login-mode) .main:not(.map-mode) .paper{padding:12px 14px 26px}
+  body:not(.login-mode) .main:not(.map-mode) .book-list,
+  body:not(.login-mode) .main:not(.map-mode) .gis-list,
+  body:not(.login-mode) .main:not(.map-mode) .info-list{margin-left:-14px;margin-right:-14px}
+  body:not(.login-mode) .main:not(.map-mode) .book-list-item.book-view-row{
+    grid-template-columns:56px minmax(0,1fr) 14px;
+    gap:10px;
+    min-height:76px;
+    padding:9px 14px;
+  }
+  body:not(.login-mode) .main:not(.map-mode) .book-list-cover{width:56px;height:56px}
+  body:not(.login-mode) .main:not(.map-mode) .gis-list-item,
+  body:not(.login-mode) .main:not(.map-mode) .info-item{padding:10px 14px}
+  body:not(.login-mode) .main:not(.map-mode) .book-list-main>strong{font-size:15px}
+  body:not(.login-mode) .main:not(.map-mode) .shelf-head{grid-template-columns:1fr;gap:8px}
+  body:not(.login-mode) .main:not(.map-mode) .book-view-switch{width:100%}
+  body:not(.login-mode) .main:not(.map-mode) .book-view-switch button{flex:1}
+  body:not(.login-mode) .main:not(.map-mode) .screen-lead{grid-template-columns:32px minmax(0,1fr)}
+  body:not(.login-mode) .main:not(.map-mode) .screen-lead-icon{width:30px;height:30px;font-size:15px}
+  body:not(.login-mode) .main:not(.map-mode) .screen-lead h2{font-size:18px}
+  body:not(.login-mode) .main:not(.map-mode) .book-detail-actions,
+  body:not(.login-mode) .main:not(.map-mode) .story-actions{background:#fffffff5}
+  body:not(.login-mode) .main:not(.map-mode) .btn{min-height:44px}
+}
+@media(min-width:600px) and (max-width:1023px){
+  body:not(.login-mode) .main:not(.map-mode){padding:0}
+  body:not(.login-mode) .main:not(.map-mode) .paper{padding:16px 24px 30px}
+}
