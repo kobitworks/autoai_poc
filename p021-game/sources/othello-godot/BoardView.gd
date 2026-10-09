@@ -79,7 +79,7 @@ func _draw() -> void:
 		return
 	var margin := clampf(minf(size.x, size.y) * 0.035, 8.0, 18.0)
 	var usable := maxf(80.0, minf(size.x, size.y) - margin * 2.0)
-	var board_size := floor(usable)
+	var board_size: float = floor(usable)
 	cell_size = board_size / float(SIZE)
 	board_origin = Vector2((size.x - board_size) * 0.5, (size.y - board_size) * 0.5)
 
