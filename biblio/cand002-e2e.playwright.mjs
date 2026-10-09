@@ -20,7 +20,7 @@ async function waitScene(page, title) {
 }
 
 async function nextScene(page) {
-  const button = page.locator('.story-next .btn').first();
+  const button = page.locator('.story-actions .btn').first();
   await button.waitFor({ state: 'visible' });
   assert(!(await button.isDisabled()), 'Next button must be enabled before advancing');
   await button.click();
@@ -60,7 +60,7 @@ try {
   await waitScene(page, '四時は時刻ではない');
 
   // E2E-10: Q01 wrong -> Hint -> retry -> correct.
-  const blocked = page.locator('.story-next .btn').first();
+  const blocked = page.locator('.story-actions .btn').first();
   assert(await blocked.isDisabled(), 'Q01 must block next chapter before answer');
   await clickButton(page, '現実の16時まで待つ');
   await page.getByText('Hint 1: 時間以外の読み方を考える').waitFor({ state: 'visible' });
