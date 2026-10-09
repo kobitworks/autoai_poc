@@ -28,10 +28,10 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Install Playwright Chromium
-        run: |
-          npm install --no-save --no-package-lock playwright@1.55.0
-          npx playwright install --with-deps chromium
+      - name: Install Playwright
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
+        run: npm install --no-save --no-package-lock playwright@1.55.0
 
       - name: Start local PoC server
         run: |
