@@ -252,7 +252,7 @@ func _build_ui() -> void:
 	diff_row.add_theme_constant_override("separation", 5)
 	side.add_child(diff_row)
 	for diff in ["easy", "normal", "hard"]:
-		var label := {"easy":"EASY 5x5", "normal":"NORMAL 6x6", "hard":"HARD 7x7"}[diff]
+		var label: String = str({"easy":"EASY 5x5", "normal":"NORMAL 6x6", "hard":"HARD 7x7"}[diff])
 		var btn := _make_button(label, "segment")
 		btn.toggle_mode = true
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
