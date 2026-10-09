@@ -74,7 +74,7 @@ async function startFreshBook(page) {
     history.replaceState({ s:'U01' }, '', '#U01');
     render();
   });
-  const cand = page.locator('.book-card').filter({ hasText: '午後四時の消印' });
+  const cand = page.locator('.book-card, .book-list-item.book-view-row').filter({ hasText: '午後四時の消印' });
   await cand.waitFor({ state: 'visible' });
   await cand.click();
   await clickButton(page, 'このBookを始める');
