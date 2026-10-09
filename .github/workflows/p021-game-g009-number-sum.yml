@@ -1,12 +1,10 @@
-name: P021 GAME-G009 Number Sum QA
+name: P021 GAME-G009 Number Sum Published Build QA
 on:
   push:
     branches: [develop]
     paths:
       - 'p021-game/games/number-sum/**'
       - 'p021-game/index.html'
-      - 'p021-game/qa/number-sum-responsive.js'
-      - '.github/workflows/p021-game-g009-number-sum.yml'
   workflow_dispatch:
 
 jobs:
@@ -15,6 +13,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: develop
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -28,5 +28,5 @@ jobs:
           python3 -m http.server 8000 > /tmp/p021-g009-http.log 2>&1 &
           echo $! > /tmp/p021-g009-http.pid
           sleep 2
-      - name: Run four viewport QA
+      - name: Run four viewport and URL-only QA
         run: node p021-game/qa/number-sum-responsive.js
