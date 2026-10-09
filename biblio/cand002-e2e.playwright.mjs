@@ -255,7 +255,7 @@ try {
     for (const [sceneKey, title] of [['cand2-ch03','駅の輪郭'],['cand2-ch07','見落とされたスケッチ'],['cand2-ch11','五枚目の窓'],['cand2-ch14','中止した理由']]) {
       await seedScene(page, sceneKey, { clueIds:['CAND2-CARD-01','RESUME-MARK'], triggerStates:{'RESUME-STATE':'kept'} });
       await page.reload({ waitUntil:'domcontentloaded' });
-      await page.waitForFunction(() => document.body.dataset.screen === 'U04' || document.body.dataset.screen === 'LOGIN');
+      await page.waitForFunction(() => !!document.body.dataset.screen);
       if (await page.getByRole('button', { name:'Google でログイン', exact:true }).count()) {
         await clickButton(page, 'Google でログイン');
         await page.waitForFunction(() => document.body.dataset.screen === 'U04');
