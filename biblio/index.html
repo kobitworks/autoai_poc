@@ -178,6 +178,7 @@ dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(10
 @media(max-width:1023px){.bottomnav button>span:last-child{font-size:11px}.page-title{font-size:14px}}
 @media(max-width:599px){.page-title{padding-right:min(48vw,175px)}.session-chip{max-width:min(46vw,165px)}.session-chip-email{display:none}.bottomnav button{min-height:56px}.navicon{width:34px;height:32px;font-size:22px}.badge70{right:-4px;top:-2px}}
 </style>
+<link rel="stylesheet" href="./yahoo-mobile-main.css?v=20261009-1">
 </head>
 <body data-ui-baseline="biblio-v2-mobile-20261005">
 <header class="app-header">
@@ -204,7 +205,7 @@ const SESSION_KEY='biblio_poc_session_v1';
 const PROGRESS_KEY='biblio_poc_progress_v1';
 const USER_ROLE_KEY='biblio_poc_user_roles_v1';
 const UI_PREFS_KEY='biblio_poc_ui_prefs_v1';
-function loadUiPrefs(){try{const x=JSON.parse(localStorage.getItem(UI_PREFS_KEY)||'{}');return {radiusM:[500,1500,3000].includes(Number(x.radiusM))?Number(x.radiusM):1500,sort:['distance','name','group'].includes(x.sort)?x.sort:'distance',gisVisible:x.gisVisible!==false,bookView:['shelf','list'].includes(x.bookView)?x.bookView:'shelf'}}catch(e){return {radiusM:1500,sort:'distance',gisVisible:true,bookView:'shelf'}}}
+function loadUiPrefs(){try{const x=JSON.parse(localStorage.getItem(UI_PREFS_KEY)||'{}');return {radiusM:[500,1500,3000].includes(Number(x.radiusM))?Number(x.radiusM):1500,sort:['distance','name','group'].includes(x.sort)?x.sort:'distance',gisVisible:x.gisVisible!==false,bookView:['shelf','list'].includes(x.bookView)?x.bookView:'list'}}catch(e){return {radiusM:1500,sort:'distance',gisVisible:true,bookView:'list'}}}
 const UI_PREFS=loadUiPrefs();
 const DEFAULT_ADMIN_EMAIL='shinozaki@410831.com';
 const DEFAULT_USER_DIRECTORY=[
@@ -448,14 +449,12 @@ function nextBookChoice(x){
  return '<div class="next-choice"><div class="next-choice-cover '+x.cls+'" aria-hidden="true">'+x.title+'</div><div class="next-choice-main"><strong>'+x.title+'</strong><p>'+x.region+' / '+x.time+'</p><p>'+x.desc+'</p></div><div class="next-choice-actions">'+btn('詳細を確認',"previewNextBook('"+x.key+"')")+'</div></div>';
 }
 function bookListState(x){return shelfState(x)}
-function bookListAction(x,s){
- if(s.key==='progress')return btn('つづきから',"resumeBook('"+x.key+"')");
- if(s.key==='unavailable')return '<button class="btn secondary" disabled>利用不可</button>';
- return btn('詳細を見る',"state.book='"+x.key+"';go('U02')",'secondary');
-}
 function bookListRow(x){
  const s=bookListState(x),p=latestProgress(x.key),detail=p?'Chapter '+p.chapter+' / Scene '+p.scene+' · '+p.sceneTitle:x.region+' / '+x.time;
- return '<div class="book-list-item book-view-row"><div class="book-list-cover '+x.cls+'" aria-hidden="true">'+x.title+'</div><div class="book-list-main"><strong>'+x.title+'</strong><div class="book-list-meta">'+detail+'</div><span class="book-list-status '+s.key+'"><i class="fa-solid '+s.icon+'" aria-hidden="true"></i> '+s.label+'</span></div><div class="book-list-actions">'+bookListAction(x,s)+'</div></div>';
+ const action=s.key==='progress'?"resumeBook('"+x.key+"')":"state.book='"+x.key+"';go('U02')";
+ const label=s.key==='progress'?'つづきから読む':'詳細を見る';
+ const keyHandler="if(event.key==='Enter'||event.key===' '){event.preventDefault();this.click()}";
+ return '<div class="book-list-item book-view-row" tabindex="0" role="button" aria-label="'+x.title+'：'+label+'" onclick="'+action+'" onkeydown="'+keyHandler+'"><div class="book-list-cover '+x.cls+'" aria-hidden="true">'+x.title+'</div><div class="book-list-main"><strong>'+x.title+'</strong><div class="book-list-subline"><span class="book-list-meta">'+detail+'</span><span class="book-list-status '+s.key+'"><i class="fa-solid '+s.icon+'" aria-hidden="true"></i>'+s.label+'</span></div></div><div class="book-list-actions" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></div></div>';
 }
 function listGisItems(){const q=(state.gis.query||'').trim().toLocaleLowerCase('ja');let items=(state.gis.group==='ALL'?visibleGisItems():visibleGisItems().filter(x=>x.group===state.gis.group)).slice();if(q)items=items.filter(x=>[x.name,x.group].filter(Boolean).some(v=>String(v).toLocaleLowerCase('ja').includes(q)));if(state.gis.sort==='name')items.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'ja'));else if(state.gis.sort==='group')items.sort((a,b)=>String(a.group||'').localeCompare(String(b.group||''),'ja')||String(a.name||'').localeCompare(String(b.name||''),'ja'));else items.sort((a,b)=>(Number(a.distance_m)||999999999)-(Number(b.distance_m)||999999999));return items}
 function setGisQuery(v){state.gis.query=String(v||'');state.gis.listLimit=10;if(state.screen==='U12')render()}
@@ -464,7 +463,7 @@ function clearGisFilters(){state.gis.query='';state.gis.group='ALL';state.gis.li
 function setGisSort(v){state.gis.sort=['distance','name','group'].includes(v)?v:'distance';state.gis.listLimit=10;persistUiPrefs();if(state.screen==='U12')render()}
 function persistUiPrefs(){localStorage.setItem(UI_PREFS_KEY,JSON.stringify({radiusM:state.gis.radiusM,sort:state.gis.sort,gisVisible:state.gis.visible,bookView:state.bookView}))}
 function setBookView(v){if(!['shelf','list'].includes(v)||state.bookView===v)return;state.bookView=v;persistUiPrefs();if(state.screen==='U01')render()}
-function resetUiPrefs(){state.gis.radiusM=1500;state.gis.sort='distance';state.gis.visible=true;state.gis.group='ALL';state.gis.listLimit=10;state.bookView='shelf';persistUiPrefs();if(state.screen==='U11')render()}
+function resetUiPrefs(){state.gis.radiusM=1500;state.gis.sort='distance';state.gis.visible=true;state.gis.group='ALL';state.gis.listLimit=10;state.bookView='list';persistUiPrefs();if(state.screen==='U11')render()}
 function showMoreGis(){state.gis.listLimit=Math.min(100,(state.gis.listLimit||20)+20);if(state.screen==='U12')render()}
 function gisListRow(x){const selected=String(state.gis.selectedId??'')===String(x.gis_id??'');return '<div class="gis-list-item '+(selected?'selected':'')+'" tabindex="0" role="button" aria-label="'+x.name+'をMapで見る" onclick="selectGisAndOpenMap(\''+x.gis_id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){this.click()}"><div class="gis-list-icon" aria-hidden="true"><i class="fa-solid fa-location-dot"></i></div><div><strong>'+x.name+'</strong><div class="gis-list-meta">'+x.group+'<br>PoC GIS mock</div></div><div class="gis-list-distance">'+x.distance_m+'m <i class="fa-solid fa-chevron-right" aria-hidden="true"></i></div></div>'}
 function selectedGisItem(){const id=String(state.gis.selectedId??'');return id?state.gis.items.find(x=>String(x.gis_id??'')===id)||null:null}
