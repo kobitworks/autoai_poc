@@ -1,0 +1,138 @@
+{
+  "game": "GAME-G013 Water Jug",
+  "task": "GAME-060",
+  "engine": "Godot 4.7.2 Web",
+  "generated_at": "2026-10-09T23:21:25.228Z",
+  "public_url": "https://kobitworks.github.io/autoai_poc/p021-game/games/water-jug/",
+  "preserved_rules": {
+    "difficulties": [
+      "Easy",
+      "Normal",
+      "Hard"
+    ],
+    "solvability": "GCD",
+    "optimal": "BFS shortest steps",
+    "actions": [
+      "Fill A",
+      "Empty A",
+      "Fill B",
+      "Empty B",
+      "A→B",
+      "B→A"
+    ],
+    "best": "moves lower, then time"
+  },
+  "url_only_play_check": true,
+  "quality": {
+    "gameplay": 9,
+    "controls": 10,
+    "difficulty": 9,
+    "ui_ux": 9,
+    "graphics": 9,
+    "effects": 9,
+    "sound": 8,
+    "content_variation": 9,
+    "replayability": 9,
+    "technical_quality": 10,
+    "total": 91
+  },
+  "general_public_quality": true,
+  "cases": [
+    {
+      "name": "Phone Portrait",
+      "width": 390,
+      "height": 844,
+      "pass": true,
+      "engine": "Godot",
+      "build": "GAME-060",
+      "difficulty": "easy",
+      "cap_a": 3,
+      "cap_b": 5,
+      "target": 4,
+      "amount_a": 3,
+      "amount_b": 4,
+      "moves": 6,
+      "optimal": 6,
+      "canvas": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "url_only_flow": "load -> identify -> difficulty cycle -> sound toggle -> start -> Fill B -> B→A -> Empty A -> B→A -> Fill B -> B→A -> clear"
+    },
+    {
+      "name": "Phone Landscape",
+      "width": 844,
+      "height": 390,
+      "pass": true,
+      "engine": "Godot",
+      "build": "GAME-060",
+      "difficulty": "easy",
+      "cap_a": 3,
+      "cap_b": 5,
+      "target": 4,
+      "amount_a": 3,
+      "amount_b": 4,
+      "moves": 6,
+      "optimal": 6,
+      "canvas": {
+        "x": 0,
+        "y": 0,
+        "width": 844,
+        "height": 390
+      },
+      "overflow": false,
+      "url_only_flow": "load -> identify -> difficulty cycle -> sound toggle -> start -> Fill B -> B→A -> Empty A -> B→A -> Fill B -> B→A -> clear"
+    },
+    {
+      "name": "Tablet Portrait",
+      "width": 768,
+      "height": 1024,
+      "pass": true,
+      "engine": "Godot",
+      "build": "GAME-060",
+      "difficulty": "easy",
+      "cap_a": 3,
+      "cap_b": 5,
+      "target": 4,
+      "amount_a": 3,
+      "amount_b": 4,
+      "moves": 6,
+      "optimal": 6,
+      "canvas": {
+        "x": 0,
+        "y": 0,
+        "width": 768,
+        "height": 1024
+      },
+      "overflow": false,
+      "url_only_flow": "load -> identify -> difficulty cycle -> sound toggle -> start -> Fill B -> B→A -> Empty A -> B→A -> Fill B -> B→A -> clear"
+    },
+    {
+      "name": "Tablet Landscape",
+      "width": 1024,
+      "height": 768,
+      "pass": true,
+      "engine": "Godot",
+      "build": "GAME-060",
+      "difficulty": "easy",
+      "cap_a": 3,
+      "cap_b": 5,
+      "target": 4,
+      "amount_a": 3,
+      "amount_b": 4,
+      "moves": 6,
+      "optimal": 6,
+      "canvas": {
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 768
+      },
+      "overflow": false,
+      "url_only_flow": "load -> identify -> difficulty cycle -> sound toggle -> start -> Fill B -> B→A -> Empty A -> B→A -> Fill B -> B→A -> clear"
+    }
+  ]
+}
