@@ -149,7 +149,7 @@ try {
   await page.getByRole('heading', { name: 'Book Complete' }).waitFor({ state: 'visible' });
 
   const finalState = await page.evaluate(() => {
-    const p = latestProgress('cand-002');
+    const p = state.progressRecords.find(x => x.bookKey === 'cand-002');
     return {
       main: p.questStates['CAND2-QMAIN-001'],
       clear: p.triggerStates['CAND2-BOOK-CLEAR'],
