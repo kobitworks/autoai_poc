@@ -97,7 +97,7 @@ async function resolveLocation(page, mode) {
   await page.getByText(mode === 'normal' ? /通常到着で進行条件を満たしました/ : /安全代替で進行条件を満たしました/).waitFor({ state: 'visible' });
 }
 
-const browser = await chromium.launch({ headless: true });
+const browser = await chromium.launch({ headless: true, channel: 'chrome' });
 const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
 const results = [];
 
