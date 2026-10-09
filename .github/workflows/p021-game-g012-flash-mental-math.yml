@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     container:
-      image: barichello/godot-ci:4.7.2
+      image: ghcr.io/abarichello/godot-ci:4.7.2
     steps:
       - uses: actions/checkout@v4
         with:
