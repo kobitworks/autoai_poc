@@ -177,6 +177,12 @@ dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(10
 @media(min-width:1024px){.desktop-nav{display:flex;height:40px;background:color-mix(in srgb,var(--main) 45%,white);align-items:stretch;gap:2px;padding:0 10px;border-top:1px solid #c2dddd}.desktop-nav button{position:relative;display:flex;align-items:center;gap:7px;background:transparent;border:0;border-right:1px solid #a8c8ce;padding:0 14px;font-size:15px;font-weight:800;color:#244b65;cursor:pointer}.desktop-nav button i{width:18px;text-align:center;color:#365486}.desktop-nav button:hover{background:#ffffff80}.desktop-nav button.current{background:#fff;color:#173c68}.desktop-nav button.current:after{content:"";position:absolute;left:8px;right:8px;bottom:0;height:3px;background:#365486;border-radius:3px 3px 0 0}.page-title{font-size:14px}}
 @media(max-width:1023px){.bottomnav button>span:last-child{font-size:11px}.page-title{font-size:14px}}
 @media(max-width:599px){.page-title{padding-right:min(48vw,175px)}.session-chip{max-width:min(46vw,165px)}.session-chip-email{display:none}.bottomnav button{min-height:56px}.navicon{width:34px;height:32px;font-size:22px}.badge70{right:-4px;top:-2px}}
+
+/* Shared white canvas for every non-map content screen. */
+body:not(.login-mode) .main:not(.map-mode){background:#fff;padding:0}
+body:not(.login-mode) .main:not(.map-mode) .paper{width:min(100%,920px);min-height:100%;margin:0 auto;padding:15px 14px 22px;background:#fff;border:0;border-radius:0;box-shadow:none}
+body:not(.login-mode) .main:not(.map-mode) .paper::after{display:none}
+@media(max-width:599px){body:not(.login-mode) .main:not(.map-mode) .paper{padding:14px 12px 22px}}
 </style>
 <link rel="stylesheet" href="./yahoo-mobile-main.css?v=20261009-1">
 </head>
