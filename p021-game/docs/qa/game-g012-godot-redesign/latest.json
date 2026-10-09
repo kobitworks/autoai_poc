@@ -1,0 +1,119 @@
+{
+  "game": "GAME-G012 Flash Mental Math",
+  "task": "GAME-059",
+  "engine": "Godot 4.7.2 Web",
+  "generated_at": "2026-10-09T21:39:01.339Z",
+  "public_url": "https://kobitworks.github.io/autoai_poc/p021-game/games/flash-mental-math/",
+  "preserved_rules": {
+    "stages": 5,
+    "levels": 5,
+    "rounds": "1-10",
+    "traps": "Stage 2 / 4 / 5",
+    "score": "correct rounds, higher is better"
+  },
+  "url_only_play_check": true,
+  "quality": {
+    "gameplay": 9,
+    "controls": 10,
+    "difficulty": 9,
+    "ui_ux": 9,
+    "graphics": 9,
+    "effects": 9,
+    "sound": 8,
+    "content_variation": 9,
+    "replayability": 9,
+    "technical_quality": 10,
+    "total": 91
+  },
+  "general_public_quality": true,
+  "cases": [
+    {
+      "name": "Phone Portrait",
+      "width": 390,
+      "height": 844,
+      "pass": true,
+      "engine": "Godot",
+      "build": "GAME-059",
+      "stage": 5,
+      "level": 5,
+      "rounds": 3,
+      "correct": 2,
+      "miss": 1,
+      "best_streak": 2,
+      "canvas": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844
+      },
+      "overflow": false,
+      "url_only_flow": "load -> identify -> Stage5/Lv5 -> sound toggle -> start -> miss feedback -> correct -> correct -> result"
+    },
+    {
+      "name": "Phone Landscape",
+      "width": 844,
+      "height": 390,
+      "pass": true,
+      "engine": "Godot",
+      "build": "GAME-059",
+      "stage": 5,
+      "level": 5,
+      "rounds": 3,
+      "correct": 2,
+      "miss": 1,
+      "best_streak": 2,
+      "canvas": {
+        "x": 0,
+        "y": 0,
+        "width": 844,
+        "height": 390
+      },
+      "overflow": false,
+      "url_only_flow": "load -> identify -> Stage5/Lv5 -> sound toggle -> start -> miss feedback -> correct -> correct -> result"
+    },
+    {
+      "name": "Tablet Portrait",
+      "width": 768,
+      "height": 1024,
+      "pass": true,
+      "engine": "Godot",
+      "build": "GAME-059",
+      "stage": 5,
+      "level": 5,
+      "rounds": 3,
+      "correct": 2,
+      "miss": 1,
+      "best_streak": 2,
+      "canvas": {
+        "x": 0,
+        "y": 0,
+        "width": 768,
+        "height": 1024
+      },
+      "overflow": false,
+      "url_only_flow": "load -> identify -> Stage5/Lv5 -> sound toggle -> start -> miss feedback -> correct -> correct -> result"
+    },
+    {
+      "name": "Tablet Landscape",
+      "width": 1024,
+      "height": 768,
+      "pass": true,
+      "engine": "Godot",
+      "build": "GAME-059",
+      "stage": 5,
+      "level": 5,
+      "rounds": 3,
+      "correct": 2,
+      "miss": 1,
+      "best_streak": 2,
+      "canvas": {
+        "x": 0,
+        "y": 0,
+        "width": 1024,
+        "height": 768
+      },
+      "overflow": false,
+      "url_only_flow": "load -> identify -> Stage5/Lv5 -> sound toggle -> start -> miss feedback -> correct -> correct -> result"
+    }
+  ]
+}
