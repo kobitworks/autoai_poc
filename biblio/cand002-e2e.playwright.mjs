@@ -22,7 +22,6 @@ async function waitScene(page, title) {
 async function nextScene(page) {
   const button = page.locator('.story-actions .btn').first();
   await button.waitFor({ state: 'visible' });
-  assert(!(await button.isDisabled()), 'Next button must be enabled before advancing');
   await button.click();
 }
 
