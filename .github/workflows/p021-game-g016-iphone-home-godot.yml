@@ -1,0 +1,130 @@
+name: P021 GAME-G016 iPhone Home Godot PWA
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'p021-game/sources/iphone-home-godot/**'
+      - 'p021-game/qa/iphone-home-godot-responsive.js'
+      - '.github/workflows/p021-game-g016-iphone-home-godot.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: p021-game-g016-iphone-home-develop
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    container:
+      image: barichello/godot-ci:4.7.2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+
+      - name: Check Godot and export templates
+        run: |
+          godot --headless --version
+          ls -la /root/.local/share/godot/export_templates/4.7.2.stable | head
+
+      - name: Prepare Icons8 icons and original wallpaper
+        working-directory: p021-game/sources/iphone-home-godot
+        run: |
+          python3 tools/prepare_assets.py
+          test -s assets/wallpaper.png
+          test -s assets/pwa180.png
+          test -s assets/icons8-provenance.json
+
+      - name: Bundle Japanese font (SIL OFL)
+        working-directory: p021-game/sources/iphone-home-godot
+        run: |
+          mkdir -p fonts
+          curl -fL --retry 3 -o fonts/NotoSansJP.ttf 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/NotoSansJP%5Bwght%5D.ttf'
+          curl -fL --retry 3 -o fonts/OFL.txt 'https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/OFL.txt'
+          test -s fonts/NotoSansJP.ttf
+          test -s fonts/OFL.txt
+
+      - name: Import and validate Godot project
+        working-directory: p021-game/sources/iphone-home-godot
+        run: |
+          if ! godot --headless --editor --quit-after 5 > /tmp/godot-import.log 2>&1; then
+            cat /tmp/godot-import.log
+            exit 1
+          fi
+          cat /tmp/godot-import.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Failed to load script' /tmp/godot-import.log; then
+            echo 'Godot import failed.'
+            exit 1
+          fi
+
+      - name: Export Godot Web PWA
+        working-directory: p021-game/sources/iphone-home-godot
+        run: |
+          mkdir -p ../../games/iphone-home
+          if ! godot --headless --export-release Web ../../games/iphone-home/index.html > /tmp/godot-export.log 2>&1; then
+            cat /tmp/godot-export.log
+            exit 1
+          fi
+          cat /tmp/godot-export.log
+          test -s ../../games/iphone-home/index.html
+          test -s ../../games/iphone-home/index.js
+          test -s ../../games/iphone-home/index.wasm
+          test -s ../../games/iphone-home/index.pck
+          cp fonts/OFL.txt ../../games/iphone-home/NotoSansJP-OFL.txt
+          cp assets/icons8-provenance.json ../../games/iphone-home/icons8-credits.json
+          cp README.md ../../games/iphone-home/README.md
+          cat > ../../games/iphone-home/build.json <<'JSON'
+          {"game":"GAME-G016","engine":"Godot 4.7.2","kind":"iPhone-style home-screen PWA","auth":false,"icon_source":"Icons8","branch":"develop"}
+          JSON
+
+      - name: Commit exported game to Pages branch
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A p021-game/games/iphone-home/
+          if git diff --cached --quiet; then
+            echo 'No Web build changes.'
+          else
+            git commit -m 'P021 GAME-G016: publish iPhone Home Godot PWA'
+            git pull --rebase origin develop
+            git push origin HEAD:develop
+          fi
+
+  browser-qa:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser QA tools
+        run: |
+          npm install --no-save playwright@1.55.0 pngjs@7.0.0
+          npx playwright install --with-deps chromium
+      - name: Serve GitHub Pages contents
+        run: |
+          python3 -m http.server 8765 > /tmp/g016-web.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/p021-game/games/iphone-home/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/g016-web.log
+          exit 1
+      - name: Validate 4 viewports and capture screenshots
+        run: node p021-game/qa/iphone-home-godot-responsive.js
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: game-g016-iphone-home-responsive
+          path: p021-game/docs/qa/iphone-home-godot/
+          if-no-files-found: ignore
