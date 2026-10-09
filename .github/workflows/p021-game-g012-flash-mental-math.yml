@@ -16,26 +16,41 @@ concurrency:
 
 permissions:
   contents: write
-  packages: read
 
 env:
   GODOT_VERSION: "4.7.2"
 
 jobs:
   export-web:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    container:
-      image: ghcr.io/abarichello/godot-ci:4.7.2
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
           ref: develop
 
-      - name: Setup Godot export templates
+      - name: Install official Godot editor and export templates
         run: |
-          mkdir -p ~/.local/share/godot/export_templates/
-          cp -a /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          set -euxo pipefail
+          curl -fL --retry 3 -o /tmp/godot.zip "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          rm -rf /tmp/godot-editor
+          mkdir -p /tmp/godot-editor
+          unzip -q /tmp/godot.zip -d /tmp/godot-editor
+          GODOT_BIN="$(find /tmp/godot-editor -maxdepth 2 -type f -name 'Godot_v*-stable_linux.x86_64' | head -n 1)"
+          test -n "$GODOT_BIN"
+          chmod +x "$GODOT_BIN"
+          sudo cp "$GODOT_BIN" /usr/local/bin/godot
+
+          curl -fL --retry 3 -o /tmp/godot-templates.tpz "https://github.com/godotengine/godot-builds/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          rm -rf /tmp/godot-templates
+          mkdir -p /tmp/godot-templates
+          unzip -q /tmp/godot-templates.tpz -d /tmp/godot-templates
+          TEMPLATE_SRC="$(find /tmp/godot-templates -type f -name 'web_release.zip' -printf '%h\n' | head -n 1)"
+          test -n "$TEMPLATE_SRC"
+          mkdir -p "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          cp -a "$TEMPLATE_SRC/." "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/"
+          godot --version
+          test -s "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable/web_release.zip"
 
       - name: Bundle Noto Sans JP and license
         working-directory: p021-game/sources/flash-mental-math-godot
