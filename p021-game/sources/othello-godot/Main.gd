@@ -523,13 +523,14 @@ func _flips(b: Array, row: int, col: int, player: int) -> Array:
 	var out: Array = []
 	var opponent := -player
 	for dir in DIRS:
-		var r := row + dir.y
-		var c := col + dir.x
+		var direction: Vector2i = dir
+		var r: int = row + direction.y
+		var c: int = col + direction.x
 		var temp: Array = []
 		while _inside(r, c) and int(b[r][c]) == opponent:
 			temp.append(Vector2i(c, r))
-			r += dir.y
-			c += dir.x
+			r += direction.y
+			c += direction.x
 		if not temp.is_empty() and _inside(r, c) and int(b[r][c]) == player:
 			out.append_array(temp)
 	return out
