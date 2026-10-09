@@ -1,0 +1,21 @@
+; GAME-G009 / Number Sum Godot redesign (GAME-056)
+config_version=5
+
+[application]
+config/name="Number Sum"
+run/main_scene="res://Main.tscn"
+
+[display]
+window/size/viewport_width=390
+window/size/viewport_height=844
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=0
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+environment/defaults/default_clear_color=Color(0.035,0.055,0.09,1)
+
+[audio]
+driver/enable_input=false
