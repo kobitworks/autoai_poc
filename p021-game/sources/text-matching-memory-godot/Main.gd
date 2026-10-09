@@ -470,7 +470,7 @@ func _make_tone(freq: float, duration: float, amplitude: float) -> AudioStreamWA
 	var data := PackedByteArray()
 	data.resize(frames * 2)
 	for i in range(frames):
-		var env := 1.0 - (float(i) / max(1.0, float(frames)))
+		var env: float = 1.0 - (float(i) / maxf(1.0, float(frames)))
 		var wave := sin(TAU * freq * float(i) / float(rate))
 		var sample := int(clamp(wave * env * amplitude, -1.0, 1.0) * 32767.0)
 		data.encode_s16(i * 2, sample)
@@ -537,7 +537,7 @@ func _generate_unique_texts(pair_count: int) -> Array:
 	var guard := 0
 	while out.size() < pair_count and guard < 30000:
 		guard += 1
-		var length := max(min_len, _pick_length())
+		var length: int = maxi(min_len, _pick_length())
 		var value := ""
 		for _j in range(length):
 			value += str(pool[rng.randi_range(0, pool.size() - 1)])
@@ -735,7 +735,7 @@ func _record_key() -> String:
 	return "l%d-s%d-t%d" % [level, stage, tier]
 
 func _format_time(ms: int) -> String:
-	var total := max(0, ms / 1000)
+	var total: int = maxi(0, int(float(ms) / 1000.0))
 	return "%02d:%02d" % [int(total / 60), int(total % 60)]
 
 func _cycle_level() -> void:
