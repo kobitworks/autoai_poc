@@ -549,7 +549,8 @@ func _inside(row: int, col: int) -> bool:
 func _clone_board(b: Array) -> Array:
 	var out: Array = []
 	for row in b:
-		out.append((row as Array).duplicate())
+		var row_array: Array = row
+		out.append(row_array.duplicate())
 	return out
 
 func _apply_to_clone(b: Array, move: Dictionary, player: int) -> Array:
@@ -593,7 +594,8 @@ func _minimax(b: Array, player: int, depth: int, alpha_in: float, beta_in: float
 	if player == max_color:
 		var best := -1000000000.0
 		for item in moves:
-			var score := _minimax(_apply_to_clone(b, item, player), -player, depth - 1, alpha, beta, max_color)
+			var move: Dictionary = item
+			var score := _minimax(_apply_to_clone(b, move, player), -player, depth - 1, alpha, beta, max_color)
 			best = maxf(best, score)
 			alpha = maxf(alpha, best)
 			if beta <= alpha:
@@ -601,7 +603,8 @@ func _minimax(b: Array, player: int, depth: int, alpha_in: float, beta_in: float
 		return best
 	var best := 1000000000.0
 	for item in moves:
-		var score := _minimax(_apply_to_clone(b, item, player), -player, depth - 1, alpha, beta, max_color)
+		var move: Dictionary = item
+		var score := _minimax(_apply_to_clone(b, move, player), -player, depth - 1, alpha, beta, max_color)
 		best = minf(best, score)
 		beta = minf(beta, best)
 		if beta <= alpha:
