@@ -1,0 +1,58 @@
+name: Biblio CAND-002 Headless E2E
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'biblio/index.html'
+      - 'biblio/cand002-e2e.playwright.mjs'
+      - '.github/workflows/biblio-cand002-e2e.yml'
+  pull_request:
+    paths:
+      - 'biblio/index.html'
+      - 'biblio/cand002-e2e.playwright.mjs'
+      - '.github/workflows/biblio-cand002-e2e.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cand002-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Playwright Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Start local PoC server
+        run: |
+          python3 -m http.server 4173 --bind 127.0.0.1 > /tmp/biblio-http.log 2>&1 &
+          echo $! > /tmp/biblio-http.pid
+          for i in $(seq 1 20); do
+            if curl -fsS http://127.0.0.1:4173/biblio/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/biblio-http.log
+          exit 1
+
+      - name: Run CAND-002 browser E2E
+        run: node biblio/cand002-e2e.playwright.mjs
+
+      - name: Upload E2E screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: biblio-cand002-e2e-screenshots
+          path: biblio/test-results/
+          if-no-files-found: ignore
