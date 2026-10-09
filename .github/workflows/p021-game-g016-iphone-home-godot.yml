@@ -32,6 +32,12 @@ jobs:
           godot --headless --version
           ls -la /root/.local/share/godot/export_templates/4.7.2.stable | head
 
+      - name: Link Godot templates into GitHub Actions HOME
+        run: |
+          mkdir -p "$HOME/.local/share/godot/export_templates"
+          ln -s /root/.local/share/godot/export_templates/4.7.2.stable "$HOME/.local/share/godot/export_templates/4.7.2.stable"
+          test -s "$HOME/.local/share/godot/export_templates/4.7.2.stable/web_nothreads_release.zip"
+
       - name: Install build prerequisites
         run: |
           apt-get update -qq
