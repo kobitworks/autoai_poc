@@ -1,0 +1,168 @@
+name: P021 GAME-G013 Water Jug Godot Redesign
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'p021-game/sources/water-jug-godot/**'
+      - 'p021-game/qa/water-jug-godot-responsive.js'
+      - 'p021-game/index.html'
+      - '.github/workflows/p021-game-g013-water-jug-godot.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: p021-game-g013-water-jug-godot-develop
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: "4.7.2"
+
+jobs:
+  export-web:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+
+      - name: Install official Godot editor and export templates
+        run: |
+          set -euxo pipefail
+          curl -fL --retry 3 -o /tmp/godot.zip "https://github.com/godotengine/godot-builds/releases/download/$GODOT_VERSION-stable/Godot_v$GODOT_VERSION-stable_linux.x86_64.zip"
+          rm -rf /tmp/godot-editor
+          mkdir -p /tmp/godot-editor
+          unzip -q /tmp/godot.zip -d /tmp/godot-editor
+          GODOT_BIN="$(find /tmp/godot-editor -maxdepth 2 -type f -name 'Godot_v*-stable_linux.x86_64' | head -n 1)"
+          test -n "$GODOT_BIN"
+          chmod +x "$GODOT_BIN"
+          sudo cp "$GODOT_BIN" /usr/local/bin/godot
+          curl -fL --retry 3 -o /tmp/godot-templates.tpz "https://github.com/godotengine/godot-builds/releases/download/$GODOT_VERSION-stable/Godot_v$GODOT_VERSION-stable_export_templates.tpz"
+          rm -rf /tmp/godot-templates
+          mkdir -p /tmp/godot-templates
+          unzip -q /tmp/godot-templates.tpz -d /tmp/godot-templates
+          TEMPLATE_SRC="$(find /tmp/godot-templates -type f -name 'web_release.zip' -printf '%h\n' | head -n 1)"
+          test -n "$TEMPLATE_SRC"
+          mkdir -p "$HOME/.local/share/godot/export_templates/$GODOT_VERSION.stable"
+          cp -a "$TEMPLATE_SRC/." "$HOME/.local/share/godot/export_templates/$GODOT_VERSION.stable/"
+          godot --version
+
+      - name: Bundle Noto Sans JP and license
+        working-directory: p021-game/sources/water-jug-godot
+        run: |
+          mkdir -p fonts
+          wget -q -O fonts/NotoSansJP.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/NotoSansJP%5Bwght%5D.ttf"
+          wget -q -O fonts/OFL.txt "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/OFL.txt"
+          test -s fonts/NotoSansJP.ttf
+          test -s fonts/OFL.txt
+
+      - name: Validate GAME-060 source contract
+        run: |
+          test -s p021-game/sources/water-jug-godot/project.godot
+          test -s p021-game/sources/water-jug-godot/Main.gd
+          grep -q 'GAME-060' p021-game/sources/water-jug-godot/Main.gd
+          grep -q '_shortest_steps' p021-game/sources/water-jug-godot/Main.gd
+          grep -q '__P021_WATER_JUG' p021-game/sources/water-jug-godot/Main.gd
+
+      - name: Import and parse Godot project
+        working-directory: p021-game/sources/water-jug-godot
+        run: |
+          if ! godot --headless --editor --quit-after 4 > /tmp/godot-import.log 2>&1; then
+            cat /tmp/godot-import.log
+            exit 1
+          fi
+          cat /tmp/godot-import.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Failed to load script' /tmp/godot-import.log; then
+            echo "Godot script parse/import errors detected."
+            exit 1
+          fi
+
+      - name: Export GAME-G013 for Web
+        working-directory: p021-game/sources/water-jug-godot
+        run: |
+          rm -rf ../../games/water-jug
+          mkdir -p ../../games/water-jug
+          if ! godot --headless --export-release "Web" ../../games/water-jug/index.html > /tmp/godot-export.log 2>&1; then
+            cat /tmp/godot-export.log
+            exit 1
+          fi
+          cat /tmp/godot-export.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Failed to load script' /tmp/godot-export.log; then
+            echo "Godot script errors detected during export."
+            exit 1
+          fi
+          cp README.md ../../games/water-jug/README.md
+          cp CREDITS.md ../../games/water-jug/CREDITS.md
+          cp fonts/OFL.txt ../../games/water-jug/NotoSansJP-OFL.txt
+          cat > ../../games/water-jug/build.json <<'JSON'
+          {
+            "game": "GAME-G013",
+            "task": "GAME-060",
+            "engine": "Godot 4.7.2",
+            "renderer": "Compatibility",
+            "thread_support": false,
+            "quality_target": 91
+          }
+          JSON
+          test -f ../../games/water-jug/index.html
+          test -f ../../games/water-jug/index.wasm
+          test -f ../../games/water-jug/index.pck
+          test -f ../../games/water-jug/index.js
+
+      - name: Commit exported Godot Web build
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A p021-game/games/water-jug/
+          if git diff --cached --quiet; then
+            echo "No exported changes."
+          else
+            git commit -m "P021 GAME-060: publish Water Jug Godot Web"
+            git pull --rebase origin develop
+            git push origin HEAD:develop
+          fi
+
+  browser-quality:
+    needs: export-web
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Serve P021 locally
+        run: |
+          python3 -m http.server 8000 > /tmp/p021-g013-godot-http.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8000/p021-game/games/water-jug/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/p021-g013-godot-http.log
+          exit 1
+      - name: Run URL-only and four-viewport quality gate
+        run: node p021-game/qa/water-jug-godot-responsive.js
+      - name: Commit QA evidence
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add p021-game/docs/qa/game-g013-godot-redesign/
+          if git diff --cached --quiet; then
+            echo "No QA evidence changes."
+          else
+            git commit -m "P021 GAME-060: record Water Jug Godot QA"
+            git pull --rebase origin develop
+            git push origin HEAD:develop
+          fi
