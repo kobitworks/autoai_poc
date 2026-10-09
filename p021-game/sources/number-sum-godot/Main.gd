@@ -420,7 +420,7 @@ func _start_puzzle(difficulty: String, advance: bool) -> void:
 	if advance:
 		puzzle_cursor[difficulty] = (int(puzzle_cursor[difficulty]) + 1) % list.size()
 	var cursor := int(puzzle_cursor[difficulty]) % list.size()
-	current_puzzle = (list[cursor] as Dictionary).duplicate(true)
+	current_puzzle = list[cursor].duplicate(true)
 	var n := int(current_puzzle.get("N", 0))
 	state = []
 	state.resize(n * n)
