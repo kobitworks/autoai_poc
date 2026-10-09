@@ -1,99 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+		<title>Flash Mental Math</title>
+		<style>
+html, body, #canvas {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
 
-<!doctype html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>Flash Mental Math | GAME-G012</title>
+body {
+	color: white;
+	background-color: black;
+	overflow: hidden;
+	touch-action: none;
+}
 
-  <link rel="stylesheet" href="style.css">
+#canvas {
+	display: block;
+}
 
-</head>
-<body>
-  <div id="app">
+#canvas:focus {
+	outline: none;
+}
 
-    <!-- TOP screen -->
-    <section id="screenTop" class="screen screen-top" aria-label="top">
-      <div class="topCard">
-        <div class="topBrand">
-          <div class="topTitle">フラッシュ暗算</div>
-          <div class="topSub">途中に表示される文字はトラップです。数字だけ計算してください。</div>
-        </div>
+#status, #status-splash, #status-progress {
+	position: absolute;
+	left: 0;
+	right: 0;
+}
 
-        <div class="topForm">
-          <label class="field">
-            <span class="label">ステージ</span>
-            <select class="select" id="stageSelect" aria-label="stage"></select>
-          </label>
-          <label class="field">
-            <span class="label">難易度</span>
-            <select class="select" id="levelSelect" aria-label="level"></select>
-          </label>
-          <label class="field">
-            <span class="label">設定</span>
-            <select class="select" id="roundSelect" aria-label="round"></select>
-          </label>
+#status, #status-splash {
+	top: 0;
+	bottom: 0;
+}
 
-          <div class="topActions two">
-            <button id="btnStart" class="btn primary" type="button">ゲーム開始</button>
-            <button id="btnBackTop" class="btn ghost" type="button">戻る</button>
-          </div>
-        </div>
-      </div>
-    </section>
+#status {
+	background-color: #242424;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	visibility: hidden;
+}
 
-    <!-- Game -->
-    <section id="screenGame" class="screen screen-game is-hidden">
-      <div class="hud">
-        <div class="pill" id="hudRound">Round 1 / 10</div>
-        <div class="pill" id="hudStage">Stage 1 / Lv1</div>
-      </div>
+#status-splash {
+	max-height: 100%;
+	max-width: 100%;
+	margin: auto;
+}
 
-      <div id="arena" class="arena arena-relative">
-        <!-- overlay token (countdown + flash tokens) -->
-        <div id="flashToken" class="flash-token-overlay" aria-live="polite"></div>
+#status-splash.show-image--false {
+	display: none;
+}
 
-        <!-- keypad takes full arena -->
-        <div id="keypadCard" class="keypadCard is-hidden" aria-label="answer keypad">
-          <div class="display">
-            <div id="answerDisplay" class="answerDisplay">0</div>
-          </div>
+#status-splash.fullsize--true {
+	height: 100%;
+	width: 100%;
+	object-fit: contain;
+}
 
-          <div class="keypadGrid" role="group" aria-label="keypad">
-            <button class="key" data-key="7">7</button>
-            <button class="key" data-key="8">8</button>
-            <button class="key" data-key="9">9</button>
+#status-splash.use-filter--false {
+	image-rendering: pixelated;
+}
 
-            <button class="key" data-key="4">4</button>
-            <button class="key" data-key="5">5</button>
-            <button class="key" data-key="6">6</button>
+#status-progress, #status-notice {
+	display: none;
+}
 
-            <button class="key" data-key="1">1</button>
-            <button class="key" data-key="2">2</button>
-            <button class="key" data-key="3">3</button>
+#status-progress {
+	bottom: 10%;
+	width: 50%;
+	margin: 0 auto;
+}
 
-            <button class="key" data-key="0">0</button>
-            <button class="key" data-key="bksp" aria-label="1文字消す">⌫</button>
-            <button class="key" data-key="clear" aria-label="すべて消す">C</button>
-          </div>
+#status-notice {
+	background-color: #5b3943;
+	border-radius: 0.5rem;
+	border: 1px solid #9b3943;
+	color: #e0e0e0;
+	font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+	line-height: 1.3;
+	margin: 0 2rem;
+	overflow: hidden;
+	padding: 1rem;
+	text-align: center;
+	z-index: 1;
+}
+		</style>
+		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
+<link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
+<meta name="theme-color" content="#050916"><meta name="description" content="Flash Mental Math - a polished Godot speed arithmetic game with five stages, five levels and distraction traps.">
+	</head>
+	<body>
+		<canvas id="canvas">
+			Your browser does not support the canvas tag.
+		</canvas>
 
-          <button class="btnAnswer" data-key="ok">回答</button>
+		<noscript>
+			Your browser does not support JavaScript.
+		</noscript>
 
-          <div class="keypadHint">キーボード入力: 数字 / Backspace / Enter</div>
-        </div>
-      </div>
+		<div id="status">
+			<img id="status-splash" class="show-image--true fullsize--true use-filter--true" src="index.png" alt="">
+			<progress id="status-progress"></progress>
+			<div id="status-notice"></div>
+		</div>
 
-      <footer class="gameFooter">
-        <button id="btnBackGame" class="btnGhost">戻る</button>
-      </footer>
-    </section>
-  </div>
+		<script src="index.js"></script>
+		<script>
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":6948876,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_THREADS_ENABLED = false;
+const engine = new Engine(GODOT_CONFIG);
 
+(function () {
+	const statusOverlay = document.getElementById('status');
+	const statusProgress = document.getElementById('status-progress');
+	const statusNotice = document.getElementById('status-notice');
 
+	let initializing = true;
+	let statusMode = '';
 
-  <script src="platform-adapter.js"></script>
-  <script src="main.js"></script>
+	function setStatusMode(mode) {
+		if (statusMode === mode || !initializing) {
+			return;
+		}
+		if (mode === 'hidden') {
+			statusOverlay.remove();
+			initializing = false;
+			return;
+		}
+		statusOverlay.style.visibility = 'visible';
+		statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
+		statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
+		statusMode = mode;
+	}
 
+	function setStatusNotice(text) {
+		while (statusNotice.lastChild) {
+			statusNotice.removeChild(statusNotice.lastChild);
+		}
+		const lines = text.split('\n');
+		lines.forEach((line) => {
+			statusNotice.appendChild(document.createTextNode(line));
+			statusNotice.appendChild(document.createElement('br'));
+		});
+	}
 
-</body>
+	function displayFailureNotice(err) {
+		console.error(err);
+		if (err instanceof Error) {
+			setStatusNotice(err.message);
+		} else if (typeof err === 'string') {
+			setStatusNotice(err);
+		} else {
+			setStatusNotice('An unknown error occurred.');
+		}
+		setStatusMode('notice');
+		initializing = false;
+	}
+
+	const missing = Engine.getMissingFeatures({
+		threads: GODOT_THREADS_ENABLED,
+	});
+
+	if (missing.length !== 0) {
+		if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
+			let serviceWorkerRegistrationPromise;
+			try {
+				serviceWorkerRegistrationPromise = navigator.serviceWorker.getRegistration();
+			} catch (err) {
+				serviceWorkerRegistrationPromise = Promise.reject(new Error('Service worker registration failed.'));
+			}
+			// There's a chance that installing the service worker would fix the issue
+			Promise.race([
+				serviceWorkerRegistrationPromise.then((registration) => {
+					if (registration != null) {
+						return Promise.reject(new Error('Service worker already exists.'));
+					}
+					return registration;
+				}).then(() => engine.installServiceWorker()),
+				// For some reason, `getRegistration()` can stall
+				new Promise((resolve) => {
+					setTimeout(() => resolve(), 2000);
+				}),
+			]).then(() => {
+				// Reload if there was no error.
+				window.location.reload();
+			}).catch((err) => {
+				console.error('Error while registering service worker:', err);
+			});
+		} else {
+			// Display the message as usual
+			const missingMsg = 'Error\nThe following features required to run Godot projects on the Web are missing:\n';
+			displayFailureNotice(missingMsg + missing.join('\n'));
+		}
+	} else {
+		setStatusMode('progress');
+		engine.startGame({
+			'onProgress': function (current, total) {
+				if (current > 0 && total > 0) {
+					statusProgress.value = current;
+					statusProgress.max = total;
+				} else {
+					statusProgress.removeAttribute('value');
+					statusProgress.removeAttribute('max');
+				}
+			},
+		}).then(() => {
+			setStatusMode('hidden');
+		}, displayFailureNotice);
+	}
+}());
+		</script>
+	</body>
 </html>
+
