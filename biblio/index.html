@@ -189,6 +189,12 @@ dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(10
 .book-list-panel .book-list-status{display:inline-flex;align-items:center;gap:4px;margin-top:4px;border:0;background:transparent;padding:0;font-size:10px;line-height:1.2}
 .book-list-panel .news-book-chevron{font-size:10px;color:#8899aa}
 @media(max-width:480px){.book-list-panel{margin-left:-12px;margin-right:-12px}.book-list-panel .news-book-row{padding-left:10px;padding-right:10px}}
+
+/* Unified content canvas: white for every non-map screen. */
+body:not(.login-mode) .main:not(.map-mode){background:#fff;padding:0}
+body:not(.login-mode) .main:not(.map-mode) .paper{background:#fff;width:min(100%,920px);margin:0 auto;padding:15px 14px 22px;border:0;border-radius:0;box-shadow:none;min-height:100%}
+body:not(.login-mode) .main:not(.map-mode) .paper::after{display:none}
+@media(max-width:599px){body:not(.login-mode) .main:not(.map-mode) .paper{padding:14px 12px 22px}}
 </style>
 </head>
 <body data-ui-baseline="biblio-v2-mobile-20261005">
