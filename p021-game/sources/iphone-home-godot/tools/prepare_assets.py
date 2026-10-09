@@ -23,7 +23,7 @@ NAMES = {
  "notes": ["note", "notes", "edit"],
  "stocks": ["stocks", "combo-chart", "statistics"],
  "books": ["books", "open-book", "book"],
- "appstore": ["app-store", "app-store-ios", "apps"],
+ "appstore": ["app-store", "app-store-ios", "apps", "apple-app-store", "application-store"],
  "podcasts": ["podcast", "microphone"],
  "tv": ["retro-tv", "tv", "video"],
  "health": ["heart-with-pulse", "heart-health", "heart"],
@@ -31,7 +31,7 @@ NAMES = {
  "wallet": ["wallet", "bank-cards"],
  "facetime": ["video-call", "video-message"],
  "calendar": ["calendar", "tear-off-calendar"],
- "files": ["folder", "file-folder"],
+ "files": ["folder", "file-folder", "opened-folder", "documents-folder"],
  "contacts": ["contacts", "contact-card"],
  "shortcuts": ["lightning-bolt", "automation"],
  "find": ["location", "radar"],
@@ -113,7 +113,7 @@ for n in (144,180,512):
 def get_icon(item):
     key, aliases = item
     for alias in aliases:
-        for style in ("fluency","color","windows-11-color"):
+        for style in ("fluency","color","3d-fluency","ios-filled","windows-11-color"):
             url="https://img.icons8.com/%s/96/%s.png"%(style,alias)
             try:
                 req=urllib.request.Request(url,headers={"User-Agent":"Mozilla/5.0 (compatible; AutoAI-game-demo/1.0)","Accept":"image/png"})
@@ -124,6 +124,13 @@ def get_icon(item):
                     return key,url
             except Exception:
                 pass
+    # Icons8 fallback icon for 404 CDN names: reuse another Icons8 asset.
+    fallback = "shortcuts" if key=="appstore" else "notes" if key=="files" else None
+    if fallback:
+        src = ICONS/(fallback+".png")
+        if src.is_file():
+            (ICONS/(key+".png")).write_bytes(src.read_bytes())
+            return key,"icons8-fallback:"+fallback
     return key,None
 
 success={}
