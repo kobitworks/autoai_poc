@@ -58,8 +58,11 @@ jobs:
       - name: Import and parse Godot project
         working-directory: p021-game/sources/number-sum-godot
         run: |
-          set -o pipefail
-          godot --headless --editor --quit-after 4 2>&1 | tee /tmp/godot-import.log
+          if ! godot --headless --editor --quit-after 4 > /tmp/godot-import.log 2>&1; then
+            cat /tmp/godot-import.log
+            exit 1
+          fi
+          cat /tmp/godot-import.log
           if grep -E 'SCRIPT ERROR|Parse Error|Failed to load script' /tmp/godot-import.log; then
             echo "Godot script parse/import errors detected."
             exit 1
@@ -68,10 +71,13 @@ jobs:
       - name: Export GAME-G009 for Web
         working-directory: p021-game/sources/number-sum-godot
         run: |
-          set -o pipefail
           rm -rf ../../games/number-sum
           mkdir -p ../../games/number-sum
-          godot --headless --export-release "Web" ../../games/number-sum/index.html 2>&1 | tee /tmp/godot-export.log
+          if ! godot --headless --export-release "Web" ../../games/number-sum/index.html > /tmp/godot-export.log 2>&1; then
+            cat /tmp/godot-export.log
+            exit 1
+          fi
+          cat /tmp/godot-export.log
           if grep -E 'SCRIPT ERROR|Parse Error|Failed to load script' /tmp/godot-export.log; then
             echo "Godot script errors detected during export."
             exit 1
