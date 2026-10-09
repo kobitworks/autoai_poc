@@ -91,7 +91,7 @@ func _draw() -> void:
 	header_size = clampf(minf(size.x, size.y) * 0.095, 29.0, 42.0)
 	var usable_w := maxf(20.0, size.x - header_size - 10.0)
 	var usable_h := maxf(20.0, size.y - header_size - 10.0)
-	var board_size := floor(minf(usable_w, usable_h))
+	var board_size: float = floor(minf(usable_w, usable_h))
 	cell_size = board_size / float(n)
 	grid_origin = Vector2(
 		header_size + (usable_w - board_size) * 0.5,
@@ -244,4 +244,4 @@ func get_test_cell_global(index: int = 0) -> Vector2:
 	var row := int(index / n)
 	var col := index % n
 	var local := grid_origin + Vector2((col + 0.5) * cell_size, (row + 0.5) * cell_size)
-	return to_global(local)
+	return global_position + local
