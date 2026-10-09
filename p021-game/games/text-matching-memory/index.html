@@ -1,123 +1,220 @@
-<!doctype html>
-<html lang="ja">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <title>Text Matching Memory</title>
-<link rel="stylesheet" href="style.css">
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+		<title>Text Matching Memory</title>
+		<style>
+html, body, #canvas {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
 
-<style>.p021-nav{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 14px;background:#10222a;color:#fff;font-size:12px;font-weight:800}.p021-nav a{color:#fff;text-decoration:none}.app{height:100dvh}.screen{min-height:0}@media(max-width:900px) and (orientation:landscape){.screen-top .topCard{max-width:560px}.screen-top .topForm{display:grid;grid-template-columns:1fr 1fr}.screen-top .topActions{grid-column:1/-1}.screen{padding:6px;gap:6px}.hud{padding:5px 8px}.playButtons .btn{padding:8px}}</style>
-</head>
-<body>
-  <div id="app" class="app">
-    <nav class="p021-nav"><a href="../../">← Game Development Lab</a><span>GAME-G011</span></nav>
+body {
+	color: white;
+	background-color: black;
+	overflow: hidden;
+	touch-action: none;
+}
 
-    <!-- TOP screen -->
-    <section id="topScreen" class="screen screen-top" aria-label="top">
-      <div class="topCard">
-        <div class="topBrand">
-          <div class="topTitle">神経衰弱</div>
-          <div class="topSub">文字種 × 盤面 × 文字長で難易度が変化します。</div>
-        </div>
+#canvas {
+	display: block;
+}
 
-        <div class="topForm">
-          <label class="field">
-            <span class="label">レベル（盤面）</span>
-            <select id="levelSelect" class="select" aria-label="level">
-            <option value="1">1. Lv1: 4×3（12枚）</option>
-            <option value="2" selected>2. Lv2: 5×4（20枚）</option>
-            <option value="3">3. Lv3: 6×4（24枚）</option>
-            <option value="4">4. Lv4: 6×5（30枚）</option>
-          </select>
-        </label>
+#canvas:focus {
+	outline: none;
+}
 
-          <label class="field">
-            <span class="label">ステージ（文字集合）</span>
-            <select id="stageSelect" class="select" aria-label="stage"></select>
-          </label>
+#status, #status-splash, #status-progress {
+	position: absolute;
+	left: 0;
+	right: 0;
+}
 
-          <label class="field">
-            <span class="label">難易度（文字長構成）</span>
-            <select id="tierSelect" class="select" aria-label="tier">
-            <option value="1">1. Tier1（1文字のみ）</option>
-            <option value="2" selected>2. Tier2（1文字＋2文字）</option>
-            <option value="3">3. Tier3（2文字のみ）</option>
-            <option value="4">4. Tier4（2文字＋3文字）</option>
-            <option value="5">5. Tier5（3文字のみ）</option>
-          </select>
-        </label>
+#status, #status-splash {
+	top: 0;
+	bottom: 0;
+}
 
-          <label class="field">
-            <span class="label">見た目</span>
-            <select id="themeSelect" class="select" aria-label="theme">
-            <option value="standard" selected>標準</option>
-            <option value="compact">コンパクト</option>
-          </select>
-        </label>
+#status {
+	background-color: #242424;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	visibility: hidden;
+}
 
-          <div class="topActions two">
-            <button id="startBtn" class="btn primary" type="button">ゲーム開始</button>
-            <button id="howtoBtn" class="btn ghost" type="button">遊び方</button>
-          </div>
-        </div>
-      </div>
-    </section>
+#status-splash {
+	max-height: 100%;
+	max-width: 100%;
+	margin: auto;
+}
 
-    <!-- PLAY -->
-    <main id="playScreen" class="screen screenPlay hidden">
-      <section class="hud card">
-        <div class="hudRow">
-          <div class="hudItem"><span class="hudLabel">時間</span><span id="hudTime" class="hudVal">00:00</span></div>
-          <div class="hudItem"><span class="hudLabel">ミス</span><span id="hudMiss" class="hudVal">0</span></div>
-          <div class="hudItem"><span class="hudLabel">手数</span><span id="hudTurn" class="hudVal">0</span></div>
-          <div class="hudItem"><span class="hudLabel">進捗</span><span id="hudProg" class="hudVal">0/0</span></div>
-        </div>
-      </section>
+#status-splash.show-image--false {
+	display: none;
+}
 
-      <section id="board" class="board" aria-label="board"></section>
+#status-splash.fullsize--true {
+	height: 100%;
+	width: 100%;
+	object-fit: contain;
+}
 
-      <section class="playButtons">
-        <button id="retryBtn" class="btn">やり直し</button>
-        <button id="toTopBtn" class="btn">TOPへ</button>
-      </section>
-    </main>
+#status-splash.use-filter--false {
+	image-rendering: pixelated;
+}
 
-    <!-- RESULT -->
-    <main id="resultScreen" class="screen screenResult hidden">
-      <section class="card panel">
-        <h2 class="resultTitle">クリア！</h2>
-        <div class="resultStats">
-          <div>時間：<span id="resTime"></span></div>
-          <div>ミス：<span id="resMiss"></span></div>
-          <div>手数：<span id="resTurn"></span></div>
-        </div>
-      </section>
-      <section class="topButtons">
-        <button id="againBtn" class="btn btnPrimary">もう一度</button>
-        <button id="resultToTopBtn" class="btn">TOPへ</button>
-      </section>
-    </main>
+#status-progress, #status-notice {
+	display: none;
+}
 
-    <!-- HowTo Modal -->
-    <dialog id="howtoDialog" class="howto">
-      <div class="howtoBody">
-        <h3>遊び方</h3>
-        <ol>
-          <li>カードを2枚めくり、同じペアを探します。</li>
-          <li>一致すると固定、不一致なら少し待って戻ります。</li>
-          <li>すべて揃えるとクリアです。</li>
-        </ol>
-        <div class="howtoNote">※ 盤面が大きいほど、上部表示は自動的にコンパクトになります。</div>
-        <button id="howtoCloseBtn" class="btn btnPrimary">閉じる</button>
-      </div>
-    </dialog>
+#status-progress {
+	bottom: 10%;
+	width: 50%;
+	margin: 0 auto;
+}
 
-  </div>
+#status-notice {
+	background-color: #5b3943;
+	border-radius: 0.5rem;
+	border: 1px solid #9b3943;
+	color: #e0e0e0;
+	font-family: 'Noto Sans', 'Droid Sans', Arial, sans-serif;
+	line-height: 1.3;
+	margin: 0 2rem;
+	overflow: hidden;
+	padding: 1rem;
+	text-align: center;
+	z-index: 1;
+}
+		</style>
+		<link id="-gd-engine-icon" rel="icon" type="image/png" href="index.icon.png" />
+<link rel="apple-touch-icon" href="index.apple-touch-icon.png"/>
+<meta name="theme-color" content="#07101f"><meta name="description" content="Text Matching Memory - a polished Godot memory grid with multiple character sets and difficulty tiers.">
+	</head>
+	<body>
+		<canvas id="canvas">
+			Your browser does not support the canvas tag.
+		</canvas>
 
-<script src="platform-adapter.js"></script>
-  <script src="charset_data.js"></script>
-  <script src="game.js"></script>
+		<noscript>
+			Your browser does not support JavaScript.
+		</noscript>
 
+		<div id="status">
+			<img id="status-splash" class="show-image--true fullsize--true use-filter--true" src="index.png" alt="">
+			<progress id="status-progress"></progress>
+			<div id="status-notice"></div>
+		</div>
 
-</body>
+		<script src="index.js"></script>
+		<script>
+const GODOT_CONFIG = {"args":[],"canvasResizePolicy":2,"emscriptenPoolSize":8,"ensureCrossOriginIsolationHeaders":true,"executable":"index","experimentalVK":false,"fileSizes":{"index.pck":6945900,"index.wasm":39514754},"focusCanvas":true,"gdextensionLibs":[],"godotPoolSize":4};
+const GODOT_THREADS_ENABLED = false;
+const engine = new Engine(GODOT_CONFIG);
+
+(function () {
+	const statusOverlay = document.getElementById('status');
+	const statusProgress = document.getElementById('status-progress');
+	const statusNotice = document.getElementById('status-notice');
+
+	let initializing = true;
+	let statusMode = '';
+
+	function setStatusMode(mode) {
+		if (statusMode === mode || !initializing) {
+			return;
+		}
+		if (mode === 'hidden') {
+			statusOverlay.remove();
+			initializing = false;
+			return;
+		}
+		statusOverlay.style.visibility = 'visible';
+		statusProgress.style.display = mode === 'progress' ? 'block' : 'none';
+		statusNotice.style.display = mode === 'notice' ? 'block' : 'none';
+		statusMode = mode;
+	}
+
+	function setStatusNotice(text) {
+		while (statusNotice.lastChild) {
+			statusNotice.removeChild(statusNotice.lastChild);
+		}
+		const lines = text.split('\n');
+		lines.forEach((line) => {
+			statusNotice.appendChild(document.createTextNode(line));
+			statusNotice.appendChild(document.createElement('br'));
+		});
+	}
+
+	function displayFailureNotice(err) {
+		console.error(err);
+		if (err instanceof Error) {
+			setStatusNotice(err.message);
+		} else if (typeof err === 'string') {
+			setStatusNotice(err);
+		} else {
+			setStatusNotice('An unknown error occurred.');
+		}
+		setStatusMode('notice');
+		initializing = false;
+	}
+
+	const missing = Engine.getMissingFeatures({
+		threads: GODOT_THREADS_ENABLED,
+	});
+
+	if (missing.length !== 0) {
+		if (GODOT_CONFIG['serviceWorker'] && GODOT_CONFIG['ensureCrossOriginIsolationHeaders'] && 'serviceWorker' in navigator) {
+			let serviceWorkerRegistrationPromise;
+			try {
+				serviceWorkerRegistrationPromise = navigator.serviceWorker.getRegistration();
+			} catch (err) {
+				serviceWorkerRegistrationPromise = Promise.reject(new Error('Service worker registration failed.'));
+			}
+			// There's a chance that installing the service worker would fix the issue
+			Promise.race([
+				serviceWorkerRegistrationPromise.then((registration) => {
+					if (registration != null) {
+						return Promise.reject(new Error('Service worker already exists.'));
+					}
+					return registration;
+				}).then(() => engine.installServiceWorker()),
+				// For some reason, `getRegistration()` can stall
+				new Promise((resolve) => {
+					setTimeout(() => resolve(), 2000);
+				}),
+			]).then(() => {
+				// Reload if there was no error.
+				window.location.reload();
+			}).catch((err) => {
+				console.error('Error while registering service worker:', err);
+			});
+		} else {
+			// Display the message as usual
+			const missingMsg = 'Error\nThe following features required to run Godot projects on the Web are missing:\n';
+			displayFailureNotice(missingMsg + missing.join('\n'));
+		}
+	} else {
+		setStatusMode('progress');
+		engine.startGame({
+			'onProgress': function (current, total) {
+				if (current > 0 && total > 0) {
+					statusProgress.value = current;
+					statusProgress.max = total;
+				} else {
+					statusProgress.removeAttribute('value');
+					statusProgress.removeAttribute('max');
+				}
+			},
+		}).then(() => {
+			setStatusMode('hidden');
+		}, displayFailureNotice);
+	}
+}());
+		</script>
+	</body>
 </html>
+

@@ -1,0 +1,8 @@
+{
+  "game": "GAME-G011",
+  "task": "GAME-058",
+  "engine": "Godot 4.7.2",
+  "renderer": "Compatibility",
+  "thread_support": false,
+  "quality_target": 89
+}

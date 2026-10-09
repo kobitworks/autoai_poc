@@ -1,13 +1,29 @@
-# GAME-G011 Memory Game
+# GAME-G011 Text Matching Memory — Godot redesign
 
-kobitworks/kobit_jsgames の `text_matching_memory` を、元リポジトリを変更せず P021 向け静的Web版として移植したものです。
+Task: GAME-058
 
-- Source: `public/game/text_matching_memory/app/controllers/main.php` + `css/style.css` + `js/game.js` + `js/charset_data.js`
-- PHP / asset_stamp / 広告ゲート依存を除去
-- Platform SDK は `platform-adapter.js` へ置換
-- Lv1〜4、Stage 1〜10、Tier 1〜5、standard / compact を維持
-- recent seed の localStorage 保存を維持
-- DB / 外部API / 有償サービスなし
-- HOME は P021 Game Development Lab へ戻る
+## Preserved rules
+- Four board levels: 4x3 (6 pairs), 5x4 (10 pairs), 6x4 (12 pairs), 6x5 (15 pairs).
+- Ten character-set stages: digits, alphabet, mixed symbols, kanji and Hangul combinations.
+- Five text-length tiers matching the former 1 / 1-2 / 2 / 2-3 / 3-character progression.
+- Two-card memory flow: matching cards remain open; a mismatch flips back after a short delay.
+- Time, misses, turns and matched-pair progress remain first-class results.
+- Recent shuffle seeds are retained locally to reduce immediate repetition.
 
-PoC: https://kobitworks.github.io/autoai_poc/p021-game/games/text-matching-memory/
+## Redesign
+- Godot 4.7.2 Web / Compatibility renderer.
+- Touch-first cards with distinct hidden, revealed and matched visual states.
+- Responsive portrait/landscape layout for phone and tablet.
+- Runtime-generated flip/match/miss/clear sounds with SOUND ON/OFF.
+- Per level/stage/tier best record persisted locally.
+- Game Hub navigation remains available.
+- Keyboard helpers: 1-4 level, S stage, T tier, R reshuffle, M sound.
+- ?qa=1 enables an automated pair-by-pair completion helper used only by CI.
+
+## Public URL
+https://kobitworks.github.io/autoai_poc/p021-game/games/text-matching-memory/
+
+## Source
+p021-game/sources/text-matching-memory-godot/
+
+No paid game art or audio assets are used.
