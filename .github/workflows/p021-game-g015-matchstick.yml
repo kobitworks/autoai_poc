@@ -1,0 +1,31 @@
+name: P021 GAME-G015 Matchstick QA
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'p021-game/games/matchstick/**'
+      - 'p021-game/index.html'
+      - 'p021-game/qa/matchstick-responsive.js'
+      - '.github/workflows/p021-game-g015-matchstick.yml'
+  workflow_dispatch:
+
+jobs:
+  responsive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm init -y >/dev/null 2>&1
+          npm install playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8000 > /tmp/p021-g015-http.log 2>&1 &
+          sleep 2
+      - name: Run four viewport QA
+        run: node p021-game/qa/matchstick-responsive.js
