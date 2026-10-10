@@ -507,7 +507,7 @@ func _draw_result() -> void:
 	_button("restart", Rect2(card.position.x + 16.0, by, bw, 48.0), "もう一度", true)
 	_button("top", Rect2(card.position.x + 16.0 + bw + gap, by, bw, 48.0), "設定へ戻る")
 
-func _gui_input(event: InputEvent) -> void:
+func _input(event: InputEvent) -> void:
 	var point := Vector2.ZERO
 	var pressed := false
 	if event is InputEventMouseButton:
@@ -523,10 +523,10 @@ func _gui_input(event: InputEvent) -> void:
 	if not pressed:
 		return
 	if _handle_button(point):
-		accept_event()
+		get_viewport().set_input_as_handled()
 		return
 	if screen == "game" and _handle_segment(point):
-		accept_event()
+		get_viewport().set_input_as_handled()
 
 func _handle_button(point: Vector2) -> bool:
 	for key in buttons.keys():
