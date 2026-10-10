@@ -3,6 +3,7 @@ extends Control
 # All app icons are non-functional mock-ups. No biometric or device APIs.
 const W := 390.0
 const H := 844.0
+const SITE_URL := "https://kobitworks.github.io/autoai_poc/p021-game/games/iphone-home/"
 const APPS := {
  "photos":["写真","#FFFFFF"],"camera":["カメラ","#EFF0F4"],"mail":["メール","#178AF5"],"clock":["時計","#F9FAFC"],
  "maps":["マップ","#FFFFFF"],"weather":["天気","#38A9FB"],"reminders":["リマインダー","#FFFFFF"],"notes":["メモ","#FFFFFF"],
@@ -10,17 +11,18 @@ const APPS := {
  "tv":["TV","#19191E"],"health":["ヘルスケア","#FFFFFF"],"home":["ホーム","#FEA42B"],"wallet":["ウォレット","#171B29"],
  "facetime":["FaceTime","#37CD66"],"calendar":["カレンダー","#FFFFFF"],"files":["ファイル","#FFFFFF"],"contacts":["連絡先","#E6E7EC"],
  "shortcuts":["ショートカット","#3B59D9"],"find":["探す","#FFFFFF"],"calculator":["計算機","#1C1C20"],"translate":["翻訳","#FFFFFF"],
- "voice":["ボイスメモ","#FFFFFF"],"tips":["ヒント","#F9C53E"],"news":["ニュース","#FFFFFF"],"settings":["設定","#BBC0C9"],
+ "voice":["ボイスメモ","#FFFFFF"],"tips":["ヒント","#F9C53E"],"news":["ニュース","#FFFFFF"],"settings":["設定","#BBC0C9"],"qr":["サイトQR","#FFFFFF"],
  "phone":["電話","#39CE67"],"safari":["Safari","#FFFFFF"],"messages":["メッセージ","#38CE62"],"music":["ミュージック","#FF5269"],
  "freeform":["フリーボード","#FFFFFF"],"fitness":["フィットネス","#101116"],"measure":["計測","#171717"],"magnifier":["拡大鏡","#16191F"]
 }
 const PAGE_ONE := ["photos","camera","mail","clock","maps","weather","reminders","notes","stocks","books","appstore","podcasts","tv","health","home","wallet"]
-const PAGE_TWO := ["facetime","calendar","files","contacts","shortcuts","find","calculator","translate","voice","tips","news","settings","freeform","fitness","measure","magnifier","photos","clock","weather","notes"]
+const PAGE_TWO := ["facetime","calendar","files","contacts","shortcuts","find","calculator","translate","voice","tips","news","settings","qr","freeform","fitness","measure","magnifier","photos","clock","weather"]
 const DOCK := ["phone","safari","messages","music"]
 
 var app_textures: Dictionary = {}
 var ui_font: Font
 var wall: Texture2D
+var qr_texture: Texture2D
 var page: int = 0
 var visual_page: float = 0.0
 var selected: String = ""
@@ -40,6 +42,8 @@ func _ready() -> void:
   ui_font = ThemeDB.fallback_font
  if ResourceLoader.exists("res://assets/wallpaper.png"):
   wall = load("res://assets/wallpaper.png")
+ if ResourceLoader.exists("res://assets/site-qr.png"):
+  qr_texture = load("res://assets/site-qr.png")
  for key in APPS.keys():
   var p: String = "res://assets/icons/%s.png" % str(key)
   if ResourceLoader.exists(p):
@@ -95,7 +99,9 @@ func _draw() -> void:
   _draw_landscape()
  else:
   _draw_portrait()
- if selected != "":
+ if selected == "qr":
+  _draw_qr_dialog(landscape)
+ elif selected != "":
   _draw_sheet(landscape)
  draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
@@ -206,6 +212,44 @@ func _draw_pages(cx: float, y: float) -> void:
   var a := 0.95 if i == page else 0.34
   draw_circle(Vector2(cx-9.0+float(i)*17.0,y),3.7 if i == page else 3.2,Color(1,1,1,a))
 
+
+func _qr_dialog_rect(landscape: bool) -> Rect2:
+ return Rect2(160.0,24.0,524.0,338.0) if landscape else Rect2(24.0,162.0,342.0,512.0)
+
+func _qr_close_rect(landscape: bool) -> Rect2:
+ return Rect2(445.0,270.0,206.0,52.0) if landscape else Rect2(54.0,607.0,282.0,52.0)
+
+func _draw_qr_dialog(landscape: bool) -> void:
+ # A real, locally bundled QR PNG. The QR payload points to the public Godot PWA.
+ var v := Vector2(844.0,390.0) if landscape else Vector2(W,H)
+ draw_rect(Rect2(Vector2.ZERO,v),Color(0.02,0.04,0.11,0.72))
+ var panel := _qr_dialog_rect(landscape)
+ _rounded(Rect2(panel.position+Vector2(0.0,7.0),panel.size),32.0,Color(0,0,0,0.16))
+ _rounded(panel,32.0,Color("#F9FAFC"))
+ if landscape:
+  _rounded(Rect2(179.0,54.0,266.0,266.0),19.0,Color.WHITE)
+  if qr_texture != null:
+   draw_texture_rect(qr_texture,Rect2(191.0,66.0,242.0,242.0),false)
+  _label("このサイトのQRコード",452.0,92.0,210.0,17,Color("#212633"))
+  _label("スマートフォンで読み取ると",452.0,131.0,206.0,12,Color("#5B6474"))
+  _label("ゲームを直接開けます",452.0,152.0,206.0,12,Color("#5B6474"))
+  _label("kobitworks.github.io",452.0,193.0,206.0,13,Color("#2778CD"))
+  _label("/autoai_poc/p021-game/",452.0,215.0,206.0,10,Color("#657081"))
+  _label("games/iphone-home/",452.0,233.0,206.0,10,Color("#657081"))
+ else:
+  _label("このサイトのQRコード",46.0,213.0,298.0,20,Color("#212633"))
+  _label("スマートフォンで読み取って開く",46.0,238.0,298.0,12,Color("#687181"))
+  _rounded(Rect2(54.0,255.0,282.0,282.0),21.0,Color.WHITE)
+  if qr_texture != null:
+   draw_texture_rect(qr_texture,Rect2(67.0,268.0,256.0,256.0),false)
+  _label("kobitworks.github.io",46.0,566.0,298.0,15,Color("#247ACF"))
+  _label("/autoai_poc/p021-game/games/iphone-home/",36.0,586.0,318.0,10,Color("#657081"))
+ var close_rect := _qr_close_rect(landscape)
+ _rounded(close_rect,16.0,Color("#147AFF"))
+ _label("閉じる",close_rect.position.x,close_rect.position.y+33.0,close_rect.size.x,16,Color.WHITE)
+ if not landscape:
+  _rounded(Rect2(132.0,833.0,126.0,4.5),2.3,Color.WHITE)
+
 func _draw_sheet(landscape: bool) -> void:
  var v := Vector2(844.0,390.0) if landscape else Vector2(W,H)
  draw_rect(Rect2(Vector2.ZERO,v),Color(0.08,0.12,0.27,0.68))
@@ -264,6 +308,11 @@ func _handle_release(pos: Vector2) -> void:
  var dist := b-a
  var d := _canvas_area()
  if selected != "":
+  if selected == "qr":
+   var qr_panel := _qr_dialog_rect(bool(d["landscape"]))
+   if _qr_close_rect(bool(d["landscape"])).has_point(b) or not qr_panel.has_point(b) or dist.y < -95.0:
+    selected = ""
+   return
   var r := Rect2(250.0,38.0,344.0,314.0) if d["landscape"] else Rect2(26.0,263.0,338.0,298.0)
   if selected == "settings":
    if Rect2(r.position.x+20.0,r.position.y+190.0,r.size.x-40.0,49.0).has_point(b):

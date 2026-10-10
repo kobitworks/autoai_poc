@@ -41,7 +41,7 @@ jobs:
       - name: Install build prerequisites
         run: |
           apt-get update -qq
-          apt-get install -y --no-install-recommends python3 curl libfontconfig1
+          apt-get install -y --no-install-recommends python3 curl libfontconfig1 qrencode zbar-tools
 
       - name: Prepare Icons8 icons and original wallpaper
         working-directory: p021-game/sources/iphone-home-godot
@@ -50,6 +50,10 @@ jobs:
           test -s assets/wallpaper.png
           test -s assets/pwa180.png
           test -s assets/icons8-provenance.json
+          qrencode -s 10 -m 4 -l M -o assets/site-qr.png 'https://kobitworks.github.io/autoai_poc/p021-game/games/iphone-home/'
+          test -s assets/site-qr.png
+          test "$(zbarimg --raw --quiet assets/site-qr.png)" = 'https://kobitworks.github.io/autoai_poc/p021-game/games/iphone-home/'
+          test -s assets/icons/qr.png
 
       - name: Bundle Japanese font (SIL OFL)
         working-directory: p021-game/sources/iphone-home-godot
@@ -88,6 +92,10 @@ jobs:
           test -s ../../games/iphone-home/index.pck
           cp fonts/OFL.txt ../../games/iphone-home/NotoSansJP-OFL.txt
           cp assets/icons8-provenance.json ../../games/iphone-home/icons8-credits.json
+          cp assets/site-qr.png ../../games/iphone-home/site-qr.png
+          cp assets/icons/qr.png ../../games/iphone-home/qr-icon.png
+          test -s ../../games/iphone-home/site-qr.png
+          test -s ../../games/iphone-home/qr-icon.png
           cp README.md ../../games/iphone-home/README.md
           cat > ../../games/iphone-home/build.json <<'JSON'
           {"game":"GAME-G016","engine":"Godot 4.7.2","kind":"iPhone-style home-screen PWA","auth":false,"icon_source":"Icons8","branch":"develop"}

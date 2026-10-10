@@ -48,7 +48,8 @@ NAMES = {
  "freeform": ["mind-map", "draw"],
  "fitness": ["activity", "running"],
  "measure": ["ruler", "measure"],
- "magnifier": ["search", "magnifying-glass"]
+ "magnifier": ["search", "magnifying-glass"],
+ "qr": ["qr-code", "qr-code-scan", "qr-code-reader"]
 }
 
 def png(path, width, height, colorfunc):
