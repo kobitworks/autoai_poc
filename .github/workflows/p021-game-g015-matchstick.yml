@@ -21,7 +21,27 @@ env:
   GODOT_VERSION: "4.7.2"
 
 jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+      - name: RED/GREEN contract for GAME-062
+        run: |
+          test -s p021-game/sources/matchstick-godot/project.godot
+          test -s p021-game/sources/matchstick-godot/Main.tscn
+          test -s p021-game/sources/matchstick-godot/Main.gd
+          test -s p021-game/sources/matchstick-godot/MatchstickLogic.gd
+          test -s p021-game/sources/matchstick-godot/tests/LogicSmoke.gd
+          test -s p021-game/sources/matchstick-godot/export_presets.cfg
+          grep -q 'GAME-062' p021-game/sources/matchstick-godot/Main.gd
+          grep -q 'one_match_only' p021-game/sources/matchstick-godot/MatchstickLogic.gd
+          grep -q 'audio_enabled' p021-game/sources/matchstick-godot/Main.gd
+
   export-web:
+    needs: contract
     runs-on: ubuntu-latest
     timeout-minutes: 20
     container:
@@ -30,23 +50,18 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: develop
-
       - name: Setup Godot export templates
         run: |
           mkdir -p ~/.local/share/godot/export_templates/
           cp -a /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
-
-      - name: RED/GREEN contract for GAME-062
+      - name: Bundle Noto Sans JP and license
+        working-directory: p021-game/sources/matchstick-godot
         run: |
-          test -s p021-game/sources/matchstick-godot/project.godot
-          test -s p021-game/sources/matchstick-godot/Main.tscn
-          test -s p021-game/sources/matchstick-godot/Main.gd
-          test -s p021-game/sources/matchstick-godot/MatchstickLogic.gd
-          test -s p021-game/sources/matchstick-godot/export_presets.cfg
-          grep -q 'GAME-062' p021-game/sources/matchstick-godot/Main.gd
-          grep -q 'one_match_only' p021-game/sources/matchstick-godot/MatchstickLogic.gd
-          grep -q 'audio_enabled' p021-game/sources/matchstick-godot/Main.gd
-
+          mkdir -p fonts
+          wget -q -O fonts/NotoSansJP.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/NotoSansJP%5Bwght%5D.ttf"
+          wget -q -O fonts/OFL.txt "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/OFL.txt"
+          test -s fonts/NotoSansJP.ttf
+          test -s fonts/OFL.txt
       - name: Import and parse Godot project
         working-directory: p021-game/sources/matchstick-godot
         run: |
@@ -55,14 +70,10 @@ jobs:
             exit 1
           fi
           cat /tmp/godot-import.log
-          if grep -E 'SCRIPT ERROR|Parse Error|Failed to load script' /tmp/godot-import.log; then
-            exit 1
-          fi
-
+          if grep -E 'SCRIPT ERROR|Parse Error|Failed to load script' /tmp/godot-import.log; then exit 1; fi
       - name: Run logic smoke tests
         working-directory: p021-game/sources/matchstick-godot
         run: godot --headless --script tests/LogicSmoke.gd
-
       - name: Export GAME-G015 for Web
         working-directory: p021-game/sources/matchstick-godot
         run: |
@@ -71,6 +82,7 @@ jobs:
           godot --headless --export-release "Web" ../../games/matchstick/index.html
           cp README.md ../../games/matchstick/README.md
           cp CREDITS.md ../../games/matchstick/CREDITS.md
+          cp fonts/OFL.txt ../../games/matchstick/NotoSansJP-OFL.txt
           cat > ../../games/matchstick/build.json <<'JSON'
           {
             "game": "GAME-G015",
@@ -85,7 +97,6 @@ jobs:
           test -s ../../games/matchstick/index.wasm
           test -s ../../games/matchstick/index.pck
           test -s ../../games/matchstick/index.js
-
       - name: Commit exported Godot Web build
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
