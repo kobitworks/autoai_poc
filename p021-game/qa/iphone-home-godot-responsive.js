@@ -57,10 +57,13 @@ async function main(){
    const landscape=view.width>view.height*1.42&&view.height<620;
    let z,ox,oy;
    if(landscape){z=Math.min(view.width/844,view.height/390);ox=(view.width-844*z)/2;oy=(view.height-390*z)/2;}
-   else if(view.width>=640&&view.height>=690){
-    const h=Math.min(860,view.height-36),w=h*390/844;
-    z=h/844;ox=(view.width-w)/2;oy=(view.height-h)/2;
-   } else {z=Math.min(view.width/390,view.height/844);ox=(view.width-390*z)/2;oy=(view.height-844*z)/2;}
+   else {
+    // Godot canvas_items scales the 390x844 project viewport within the
+    // browser canvas; on iPad it letterboxes rather than using Control.size.
+    z=Math.min(view.width/390,view.height/844);
+    ox=(view.width-390*z)/2;
+    oy=(view.height-844*z)/2;
+   }
    const xy=(x,y)=>({x:Math.round(ox+x*z),y:Math.round(oy+y*z)});
    const start=landscape?xy(735,230):xy(317,380);
    const end=landscape?xy(230,230):xy(65,380);

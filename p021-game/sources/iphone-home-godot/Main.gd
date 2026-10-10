@@ -36,6 +36,8 @@ var current_time: String = "9:41"
 
 func _ready() -> void:
  mouse_filter = Control.MOUSE_FILTER_STOP
+ # Clip outgoing home pages to the virtual phone canvas (iPad/Desktop letterboxing).
+ clip_contents = true
  if ResourceLoader.exists("res://fonts/NotoSansJP.ttf"):
   ui_font = load("res://fonts/NotoSansJP.ttf")
  else:
