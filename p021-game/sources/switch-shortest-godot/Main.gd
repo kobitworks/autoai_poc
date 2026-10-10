@@ -194,7 +194,7 @@ func _new_puzzle() -> void:
 	switches_n = int(DIFFICULTY_COUNTS[difficulty_index])
 	goal_mask = rng.randi_range(0, (1 << switches_n) - 1)
 	start_mask = goal_mask
-	var scramble := [4, 6, 8][difficulty_index]
+	var scramble: int = int([4, 6, 8][difficulty_index])
 	if qa_mode and difficulty_index == 0:
 		goal_mask = 173
 		start_mask = goal_mask
