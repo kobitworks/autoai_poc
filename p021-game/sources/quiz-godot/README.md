@@ -51,3 +51,40 @@ OK: 45 questions / 3 enabled categories / 5 levels each
 ## Next integration rule
 
 The Godot integration task should read this JSON locally and preserve the canonical question IDs. If a build-time transformation is introduced, this directory remains the human/audit source of truth.
+
+
+## Godot Web integration
+
+GAME-067 integrates this unchanged audit dataset into **GAME-G017 Quiz Arena**.
+
+- Engine: Godot 4.7.2 / GDScript / Compatibility renderer
+- Web export: single-thread
+- Public slug: `p021-game/games/quiz/`
+- One run: 10 unique questions
+- Category: choose one of the 3 enabled categories
+- Focus Lv: 1 through 5; the run takes all available questions from the selected level first, then fills from adjacent levels without duplicates
+- Feedback: correct/miss, answer highlight, explanation, and compact source label
+- Score: numeric correct-count; higher is better; elapsed time is tie-break/meta
+- Input: touch-first choice buttons plus keyboard 1-4
+- Sound: generated UI tones with SOUND ON/OFF
+- Storage: local best result per category / Focus Lv
+- Runtime dependencies: no PHP, DB, CDN, or external API
+- QA: URL-only start-to-result flow plus phone/tablet portrait/landscape browser checks
+
+### Public-quality review target
+
+| Category | Score |
+| --- | ---: |
+| Game design | 8 |
+| Controls | 9 |
+| Difficulty | 8 |
+| UI/UX | 9 |
+| Graphics | 8 |
+| Effects | 8 |
+| Sound | 8 |
+| Content / variation | 10 |
+| Replayability | 8 |
+| Technical quality | 10 |
+| **Total** | **86 / 100** |
+
+The build is accepted as general-public quality only when Godot import/export, the data validator, and all four browser viewport checks pass. QA evidence is written to `p021-game/docs/qa/game-g017-quiz/latest.json`.
