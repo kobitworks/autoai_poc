@@ -175,15 +175,19 @@ func _draw_icon(key: String, x: float, y: float, s: float, label: bool = true, l
 
 func _draw_portrait() -> void:
  _draw_status(false)
- _draw_widget(-visual_page * W)
+ var widget_shift := -visual_page * W
+ if 201.0 + widget_shift + 171.0 > 0.0 and 18.0 + widget_shift < W:
+  _draw_widget(widget_shift)
  for idx in range(PAGE_ONE.size()):
   var x: float = 22.0 + float(idx % 4) * 93.0 - visual_page * W
   var y: float = 284.0 + float(idx / 4) * 95.5
-  _draw_icon(PAGE_ONE[idx],x,y,63.0)
+  if x + 63.0 > 0.0 and x < W:
+   _draw_icon(PAGE_ONE[idx],x,y,63.0)
  for idx in range(PAGE_TWO.size()):
   var x: float = 22.0 + float(idx % 4) * 93.0 + (1.0-visual_page)*W
   var y: float = 106.0 + float(idx / 4) * 109.0
-  _draw_icon(PAGE_TWO[idx],x,y,63.0)
+  if x + 63.0 > 0.0 and x < W:
+   _draw_icon(PAGE_TWO[idx],x,y,63.0)
  _draw_pages(690.0, 704.0)
  _rounded(Rect2(13.0,730.0,364.0,96.0),32.0,Color(0.93,0.94,1.0,0.35))
  for idx in range(4):
