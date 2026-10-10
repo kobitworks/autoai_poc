@@ -4,7 +4,7 @@
 // Incrementing CACHE_VERSION will kick off the install event and force
 // previously cached resources to be updated from the network.
 /** @type {string} */
-const CACHE_VERSION = '1791591037|2065133';
+const CACHE_VERSION = '1791591348|2126900';
 /** @type {string} */
 const CACHE_PREFIX = 'iPhone Home Simu-sw-cache-';
 const CACHE_NAME = CACHE_PREFIX + CACHE_VERSION;
