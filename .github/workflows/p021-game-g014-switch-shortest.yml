@@ -1,31 +1,10 @@
-name: P021 GAME-G014 Switch Shortest QA
+name: P021 GAME-G014 Switch Shortest Legacy Static QA
+
 on:
-  push:
-    branches: [develop]
-    paths:
-      - 'p021-game/games/switch-shortest/**'
-      - 'p021-game/index.html'
-      - 'p021-game/qa/switch-shortest-responsive.js'
-      - '.github/workflows/p021-game-g014-switch-shortest.yml'
   workflow_dispatch:
 
 jobs:
-  responsive:
+  archived:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Install Playwright
-        run: |
-          npm init -y >/dev/null 2>&1
-          npm install playwright@1.55.0
-          npx playwright install --with-deps chromium
-      - name: Start static server
-        run: |
-          python3 -m http.server 8000 > /tmp/p021-g014-http.log 2>&1 &
-          sleep 2
-      - name: Run four viewport QA
-        run: node p021-game/qa/switch-shortest-responsive.js
+      - run: echo "Legacy HTML/JS QA archived after GAME-061 Godot redesign. Use p021-game-g014-switch-shortest-godot.yml."
