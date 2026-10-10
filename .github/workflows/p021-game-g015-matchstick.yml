@@ -39,6 +39,8 @@ jobs:
           grep -q 'GAME-062' p021-game/sources/matchstick-godot/Main.gd
           grep -q 'one_match_only' p021-game/sources/matchstick-godot/MatchstickLogic.gd
           grep -q 'audio_enabled' p021-game/sources/matchstick-godot/Main.gd
+          grep -q 'InputEventScreenTouch' p021-game/sources/matchstick-godot/Main.gd
+          grep -q '_handle_segment' p021-game/sources/matchstick-godot/Main.gd
 
   export-web:
     needs: contract

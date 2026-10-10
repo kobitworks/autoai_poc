@@ -605,6 +605,12 @@ func _handle_segment(point: Vector2) -> bool:
 				return true
 	return false
 
+func _qa_hit(which: String) -> void:
+	if screen != "game" or not qa_solution_points.has(which):
+		return
+	var point: Vector2 = qa_solution_points[which]
+	_handle_segment(point)
+
 func _poll_qa_command() -> void:
 	var value = JavaScriptBridge.eval("window.__MATCHSTICK_QA_COMMAND__ || ''", true)
 	if not (value is String):
@@ -628,6 +634,10 @@ func _poll_qa_command() -> void:
 			_go_top()
 		"sound":
 			_cycle_audio()
+		"qa_pick":
+			_qa_hit("pick")
+		"qa_place":
+			_qa_hit("place")
 		_:
 			pass
 

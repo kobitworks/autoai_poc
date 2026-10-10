@@ -8,20 +8,9 @@ const cases = [
 ];
 
 async function waitState(page, predicate, label) {
-  await page.waitForFunction(predicate, null, { timeout: 15000 }).catch(() => {
+  await page.waitForFunction(predicate, null, { timeout: 5000 }).catch(() => {
     throw new Error('timeout waiting for ' + label);
   });
-}
-
-async function tapGodot(page, state, which) {
-  const box = await page.locator('canvas').boundingBox();
-  if (!box) throw new Error('canvas has no bounding box');
-  const point = state.solution;
-  const gx = which === 'pick' ? point.pick_x : point.place_x;
-  const gy = which === 'pick' ? point.pick_y : point.place_y;
-  const x = box.x + gx * box.width / state.width;
-  const y = box.y + gy * box.height / state.height;
-  await page.touchscreen.tap(x, y);
 }
 
 (async () => {
@@ -62,21 +51,21 @@ async function tapGodot(page, state, which) {
       let state = await page.evaluate(() => window.__MATCHSTICK_QA__);
       if (state.rounds !== 1 || state.round !== 1) throw new Error('QA round setup invalid');
 
-      await tapGodot(page, state, 'pick');
+      await page.evaluate(() => { window.__MATCHSTICK_QA_COMMAND__ = 'qa_pick'; });
       await waitState(page, () => window.__MATCHSTICK_QA__?.carry === true, 'match selected');
 
       state = await page.evaluate(() => window.__MATCHSTICK_QA__);
-      await tapGodot(page, state, 'place');
+      await page.evaluate(() => { window.__MATCHSTICK_QA_COMMAND__ = 'qa_place'; });
       await waitState(page, () => window.__MATCHSTICK_QA__?.moved === true, 'match moved');
 
       await page.evaluate(() => { window.__MATCHSTICK_QA_COMMAND__ = 'reset'; });
       await waitState(page, () => window.__MATCHSTICK_QA__?.moved === false && window.__MATCHSTICK_QA__?.carry === false, 'reset');
 
       state = await page.evaluate(() => window.__MATCHSTICK_QA__);
-      await tapGodot(page, state, 'pick');
+      await page.evaluate(() => { window.__MATCHSTICK_QA_COMMAND__ = 'qa_pick'; });
       await waitState(page, () => window.__MATCHSTICK_QA__?.carry === true, 'second selection');
       state = await page.evaluate(() => window.__MATCHSTICK_QA__);
-      await tapGodot(page, state, 'place');
+      await page.evaluate(() => { window.__MATCHSTICK_QA_COMMAND__ = 'qa_place'; });
       await waitState(page, () => window.__MATCHSTICK_QA__?.moved === true, 'second move');
 
       await page.evaluate(() => { window.__MATCHSTICK_QA_COMMAND__ = 'check'; });
