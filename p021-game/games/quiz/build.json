@@ -1,0 +1,9 @@
+{
+  "game": "GAME-G017",
+  "task": "GAME-067",
+  "engine": "Godot 4.7.2",
+  "renderer": "Compatibility",
+  "thread_support": false,
+  "dataset": "quiz-core-ja-v1",
+  "quality_target": 86
+}
