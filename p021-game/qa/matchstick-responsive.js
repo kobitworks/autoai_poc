@@ -13,6 +13,17 @@ async function waitState(page, predicate, label) {
   });
 }
 
+async function tapGodot(page, state, which) {
+  const box = await page.locator('canvas').boundingBox();
+  if (!box) throw new Error('canvas has no bounding box');
+  const point = state.solution;
+  const gx = which === 'pick' ? point.pick_x : point.place_x;
+  const gy = which === 'pick' ? point.pick_y : point.place_y;
+  const x = box.x + gx * box.width / state.width;
+  const y = box.y + gy * box.height / state.height;
+  await page.touchscreen.tap(x, y);
+}
+
 (async () => {
   const browser = await chromium.launch({ headless: true });
   const results = [];
@@ -50,23 +61,22 @@ async function waitState(page, predicate, label) {
 
       let state = await page.evaluate(() => window.__MATCHSTICK_QA__);
       if (state.rounds !== 1 || state.round !== 1) throw new Error('QA round setup invalid');
-      const canvas = page.locator('canvas');
 
-      await canvas.tap({ position: { x: state.solution.pick_x, y: state.solution.pick_y } });
+      await tapGodot(page, state, 'pick');
       await waitState(page, () => window.__MATCHSTICK_QA__?.carry === true, 'match selected');
 
       state = await page.evaluate(() => window.__MATCHSTICK_QA__);
-      await canvas.tap({ position: { x: state.solution.place_x, y: state.solution.place_y } });
+      await tapGodot(page, state, 'place');
       await waitState(page, () => window.__MATCHSTICK_QA__?.moved === true, 'match moved');
 
       await page.evaluate(() => { window.__MATCHSTICK_QA_COMMAND__ = 'reset'; });
       await waitState(page, () => window.__MATCHSTICK_QA__?.moved === false && window.__MATCHSTICK_QA__?.carry === false, 'reset');
 
       state = await page.evaluate(() => window.__MATCHSTICK_QA__);
-      await canvas.tap({ position: { x: state.solution.pick_x, y: state.solution.pick_y } });
+      await tapGodot(page, state, 'pick');
       await waitState(page, () => window.__MATCHSTICK_QA__?.carry === true, 'second selection');
       state = await page.evaluate(() => window.__MATCHSTICK_QA__);
-      await canvas.tap({ position: { x: state.solution.place_x, y: state.solution.place_y } });
+      await tapGodot(page, state, 'place');
       await waitState(page, () => window.__MATCHSTICK_QA__?.moved === true, 'second move');
 
       await page.evaluate(() => { window.__MATCHSTICK_QA_COMMAND__ = 'check'; });
@@ -80,7 +90,7 @@ async function waitState(page, predicate, label) {
       await page.evaluate(() => { window.__MATCHSTICK_QA_COMMAND__ = 'top'; });
       await waitState(page, () => window.__MATCHSTICK_QA__?.screen === 'top', 'return top');
       await page.evaluate(() => { window.__MATCHSTICK_QA_COMMAND__ = 'sound'; });
-      await page.waitForTimeout(120);
+      await page.waitForTimeout(150);
       const sound = (await page.evaluate(() => window.__MATCHSTICK_QA__)).audio;
       if (sound !== 'SOUND 60%') throw new Error('volume cycle failed: ' + sound);
 
