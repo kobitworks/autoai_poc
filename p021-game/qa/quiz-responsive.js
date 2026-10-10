@@ -96,7 +96,11 @@ async function wait(page, fn, timeout = 30000) {
         await wait(page, () => window.__P021_QUIZ && window.__P021_QUIZ.phase === 'feedback');
         if (i < 9) {
           await page.keyboard.press('n');
-          await wait(page, () => window.__P021_QUIZ && window.__P021_QUIZ.phase === 'question' && window.__P021_QUIZ.question_number === i + 2);
+          await page.waitForFunction(
+            expected => window.__P021_QUIZ && window.__P021_QUIZ.phase === 'question' && window.__P021_QUIZ.question_number === expected,
+            i + 2,
+            { timeout: 30000 }
+          );
         } else {
           await page.keyboard.press('n');
           await wait(page, () => window.__P021_QUIZ && window.__P021_QUIZ.finished === true);
