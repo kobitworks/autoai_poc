@@ -528,6 +528,10 @@ func _record_key() -> String:
 func _start_run() -> void:
 	if categories.is_empty() or questions.is_empty():
 		return
+	if next_button.pressed.is_connected(_start_run):
+		next_button.pressed.disconnect(_start_run)
+	if not next_button.pressed.is_connected(_next_question):
+		next_button.pressed.connect(_next_question)
 	run_questions = _pick_questions(str(categories[category_index].get("id", "")), focus_level)
 	if run_questions.size() < QUESTIONS_PER_RUN:
 		push_error("GAME-067 needs 10 questions for selected category")
