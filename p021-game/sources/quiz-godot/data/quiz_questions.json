@@ -1,0 +1,852 @@
+{
+  "schemaVersion": 1,
+  "gameId": "GAME-G017",
+  "datasetId": "quiz-core-ja-v1",
+  "language": "ja-JP",
+  "verifiedAt": "2026-10-11",
+  "sourceCatalog": {
+    "original_math": {
+      "type": "original",
+      "title": "P021 original arithmetic and logic question set",
+      "url": null,
+      "verifiedAt": "2026-10-11",
+      "note": "Problem wording, numbers, distractors, and explanations were newly authored for GAME-G017. No legacy SQLite question text was copied."
+    },
+    "nist_si": {
+      "type": "primary",
+      "title": "NIST - Definitions of the SI base units",
+      "url": "https://www.nist.gov/si-redefinition/definitions-si-base-units",
+      "verifiedAt": "2026-10-11"
+    },
+    "nasa_planets": {
+      "type": "primary",
+      "title": "NASA Science - Planet Sizes and Locations in Our Solar System",
+      "url": "https://science.nasa.gov/solar-system/planet-sizes-and-locations-in-our-solar-system/",
+      "verifiedAt": "2026-10-11"
+    },
+    "rfc9110": {
+      "type": "primary",
+      "title": "RFC 9110 - HTTP Semantics",
+      "url": "https://www.rfc-editor.org/rfc/rfc9110.html",
+      "verifiedAt": "2026-10-11"
+    },
+    "mdn_strict_equality": {
+      "type": "reference",
+      "title": "MDN - Strict equality (===)",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Strict_equality",
+      "verifiedAt": "2026-10-11"
+    }
+  },
+  "questions": [
+    {
+      "id": "MATH-L1-001",
+      "categoryId": "math_logic",
+      "level": 1,
+      "prompt": "7 + 5 はいくつ？",
+      "choices": [
+        "10",
+        "11",
+        "12",
+        "13"
+      ],
+      "answerIndex": 2,
+      "explanation": "7に5を足すと12。",
+      "sourceRefs": [
+        "original_math"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "MATH-L1-002",
+      "categoryId": "math_logic",
+      "level": 1,
+      "prompt": "18 - 9 はいくつ？",
+      "choices": [
+        "7",
+        "8",
+        "9",
+        "10"
+      ],
+      "answerIndex": 2,
+      "explanation": "18から9を引くと9。",
+      "sourceRefs": [
+        "original_math"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "MATH-L1-003",
+      "categoryId": "math_logic",
+      "level": 1,
+      "prompt": "4 × 6 はいくつ？",
+      "choices": [
+        "18",
+        "20",
+        "24",
+        "28"
+      ],
+      "answerIndex": 2,
+      "explanation": "4を6回足すと24。",
+      "sourceRefs": [
+        "original_math"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "MATH-L2-001",
+      "categoryId": "math_logic",
+      "level": 2,
+      "prompt": "36 ÷ 6 はいくつ？",
+      "choices": [
+        "4",
+        "5",
+        "6",
+        "7"
+      ],
+      "answerIndex": 2,
+      "explanation": "36を6等分すると1つは6。",
+      "sourceRefs": [
+        "original_math"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "MATH-L2-002",
+      "categoryId": "math_logic",
+      "level": 2,
+      "prompt": "15 + 8 - 6 はいくつ？",
+      "choices": [
+        "15",
+        "16",
+        "17",
+        "18"
+      ],
+      "answerIndex": 2,
+      "explanation": "15+8=23、23-6=17。",
+      "sourceRefs": [
+        "original_math"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "MATH-L2-003",
+      "categoryId": "math_logic",
+      "level": 2,
+      "prompt": "80の25%はいくつ？",
+      "choices": [
+        "10",
+        "20",
+        "25",
+        "40"
+      ],
+      "answerIndex": 1,
+      "explanation": "25%は4分の1なので、80÷4=20。",
+      "sourceRefs": [
+        "original_math"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "MATH-L3-001",
+      "categoryId": "math_logic",
+      "level": 3,
+      "prompt": "数列 2, 4, 8, 16, ? の次の数は？",
+      "choices": [
+        "18",
+        "24",
+        "30",
+        "32"
+      ],
+      "answerIndex": 3,
+      "explanation": "各項が直前の2倍なので16×2=32。",
+      "sourceRefs": [
+        "original_math"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "MATH-L3-002",
+      "categoryId": "math_logic",
+      "level": 3,
+      "prompt": "x + 7 = 19 のとき、xはいくつ？",
+      "choices": [
+        "10",
+        "11",
+        "12",
+        "13"
+      ],
+      "answerIndex": 2,
+      "explanation": "両辺から7を引くとx=12。",
+      "sourceRefs": [
+        "original_math"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "MATH-L3-003",
+      "categoryId": "math_logic",
+      "level": 3,
+      "prompt": "たて5 cm、よこ8 cmの長方形の面積は？",
+      "choices": [
+        "13 cm²",
+        "26 cm²",
+        "40 cm²",
+        "80 cm²"
+      ],
+      "answerIndex": 2,
+      "explanation": "長方形の面積は5×8=40 cm²。",
+      "sourceRefs": [
+        "original_math"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "MATH-L4-001",
+      "categoryId": "math_logic",
+      "level": 4,
+      "prompt": "3/4 + 1/8 はいくつ？",
+      "choices": [
+        "4/12",
+        "5/8",
+        "7/8",
+        "1"
+      ],
+      "answerIndex": 2,
+      "explanation": "3/4を6/8に直すと、6/8+1/8=7/8。",
+      "sourceRefs": [
+        "original_math"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "MATH-L4-002",
+      "categoryId": "math_logic",
+      "level": 4,
+      "prompt": "6、8、10の平均はいくつ？",
+      "choices": [
+        "7",
+        "8",
+        "9",
+        "10"
+      ],
+      "answerIndex": 1,
+      "explanation": "(6+8+10)÷3=24÷3=8。",
+      "sourceRefs": [
+        "original_math"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "MATH-L4-003",
+      "categoryId": "math_logic",
+      "level": 4,
+      "prompt": "120を15%増やすといくつ？",
+      "choices": [
+        "132",
+        "135",
+        "138",
+        "140"
+      ],
+      "answerIndex": 2,
+      "explanation": "120の15%は18なので、120+18=138。",
+      "sourceRefs": [
+        "original_math"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "MATH-L5-001",
+      "categoryId": "math_logic",
+      "level": 5,
+      "prompt": "3x - 5 = 16 のとき、xはいくつ？",
+      "choices": [
+        "5",
+        "6",
+        "7",
+        "8"
+      ],
+      "answerIndex": 2,
+      "explanation": "両辺に5を足すと3x=21、3で割ってx=7。",
+      "sourceRefs": [
+        "original_math"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "MATH-L5-002",
+      "categoryId": "math_logic",
+      "level": 5,
+      "prompt": "時速60 kmで1.5時間進むと距離は？",
+      "choices": [
+        "60 km",
+        "75 km",
+        "90 km",
+        "120 km"
+      ],
+      "answerIndex": 2,
+      "explanation": "距離=速さ×時間なので60×1.5=90 km。",
+      "sourceRefs": [
+        "original_math"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "MATH-L5-003",
+      "categoryId": "math_logic",
+      "level": 5,
+      "prompt": "公平な6面サイコロを1回振る。偶数が出る確率は？",
+      "choices": [
+        "1/6",
+        "1/3",
+        "1/2",
+        "2/3"
+      ],
+      "answerIndex": 2,
+      "explanation": "偶数は2・4・6の3通り。全6通りなので3/6=1/2。",
+      "sourceRefs": [
+        "original_math"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "SCI-L1-001",
+      "categoryId": "science_si",
+      "level": 1,
+      "prompt": "SIで長さの基本単位は？",
+      "choices": [
+        "メートル",
+        "リットル",
+        "グラム",
+        "ワット"
+      ],
+      "answerIndex": 0,
+      "explanation": "SIの長さの基本単位はメートル（m）。",
+      "sourceRefs": [
+        "nist_si"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "SCI-L1-002",
+      "categoryId": "science_si",
+      "level": 1,
+      "prompt": "SIで質量の基本単位は？",
+      "choices": [
+        "グラム",
+        "キログラム",
+        "トン",
+        "ニュートン"
+      ],
+      "answerIndex": 1,
+      "explanation": "SIの質量の基本単位はキログラム（kg）。",
+      "sourceRefs": [
+        "nist_si"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "SCI-L1-003",
+      "categoryId": "science_si",
+      "level": 1,
+      "prompt": "現在の太陽系の惑星はいくつ？",
+      "choices": [
+        "7",
+        "8",
+        "9",
+        "10"
+      ],
+      "answerIndex": 1,
+      "explanation": "NASAは太陽系の惑星を8個としている。",
+      "sourceRefs": [
+        "nasa_planets"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "SCI-L2-001",
+      "categoryId": "science_si",
+      "level": 2,
+      "prompt": "SIで時間の基本単位は？",
+      "choices": [
+        "分",
+        "時",
+        "秒",
+        "日"
+      ],
+      "answerIndex": 2,
+      "explanation": "SIの時間の基本単位は秒（s）。",
+      "sourceRefs": [
+        "nist_si"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "SCI-L2-002",
+      "categoryId": "science_si",
+      "level": 2,
+      "prompt": "SIで電流の基本単位は？",
+      "choices": [
+        "ボルト",
+        "ワット",
+        "アンペア",
+        "オーム"
+      ],
+      "answerIndex": 2,
+      "explanation": "SIの電流の基本単位はアンペア（A）。",
+      "sourceRefs": [
+        "nist_si"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "SCI-L2-003",
+      "categoryId": "science_si",
+      "level": 2,
+      "prompt": "太陽系で最も大きい惑星は？",
+      "choices": [
+        "地球",
+        "土星",
+        "木星",
+        "海王星"
+      ],
+      "answerIndex": 2,
+      "explanation": "NASAの惑星サイズ比較では木星が最大。",
+      "sourceRefs": [
+        "nasa_planets"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "SCI-L3-001",
+      "categoryId": "science_si",
+      "level": 3,
+      "prompt": "SIで熱力学温度の基本単位は？",
+      "choices": [
+        "摂氏度",
+        "ケルビン",
+        "ジュール",
+        "カロリー"
+      ],
+      "answerIndex": 1,
+      "explanation": "SIの熱力学温度の基本単位はケルビン（K）。",
+      "sourceRefs": [
+        "nist_si"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "SCI-L3-002",
+      "categoryId": "science_si",
+      "level": 3,
+      "prompt": "SIで物質量の基本単位は？",
+      "choices": [
+        "モル",
+        "グラム",
+        "リットル",
+        "パスカル"
+      ],
+      "answerIndex": 0,
+      "explanation": "SIの物質量の基本単位はモル（mol）。",
+      "sourceRefs": [
+        "nist_si"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "SCI-L3-003",
+      "categoryId": "science_si",
+      "level": 3,
+      "prompt": "SIで光度の基本単位は？",
+      "choices": [
+        "ルーメン",
+        "ルクス",
+        "カンデラ",
+        "ワット"
+      ],
+      "answerIndex": 2,
+      "explanation": "SIの光度の基本単位はカンデラ（cd）。",
+      "sourceRefs": [
+        "nist_si"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "SCI-L4-001",
+      "categoryId": "science_si",
+      "level": 4,
+      "prompt": "メートルのSI単位記号は？",
+      "choices": [
+        "M",
+        "m",
+        "mt",
+        "met"
+      ],
+      "answerIndex": 1,
+      "explanation": "メートルの単位記号は小文字のm。",
+      "sourceRefs": [
+        "nist_si"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "SCI-L4-002",
+      "categoryId": "science_si",
+      "level": 4,
+      "prompt": "キログラムのSI単位記号は？",
+      "choices": [
+        "g",
+        "KG",
+        "kg",
+        "kG"
+      ],
+      "answerIndex": 2,
+      "explanation": "キログラムの単位記号はkg。",
+      "sourceRefs": [
+        "nist_si"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "SCI-L4-003",
+      "categoryId": "science_si",
+      "level": 4,
+      "prompt": "1モルに含まれる要素粒子数としてSIで固定されている値は？",
+      "choices": [
+        "6.02214076×10²³",
+        "9.192631770×10⁹",
+        "2.99792458×10⁸",
+        "1.380649×10⁻²³"
+      ],
+      "answerIndex": 0,
+      "explanation": "アボガドロ定数は正確に6.02214076×10²³ mol⁻¹と定義されている。",
+      "sourceRefs": [
+        "nist_si"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "SCI-L5-001",
+      "categoryId": "science_si",
+      "level": 5,
+      "prompt": "1秒の定義に使われるセシウム133の遷移周波数 ΔνCs の固定値は？",
+      "choices": [
+        "9,192,631,770 Hz",
+        "299,792,458 Hz",
+        "6,626,070,150 Hz",
+        "1,380,649,000 Hz"
+      ],
+      "answerIndex": 0,
+      "explanation": "ΔνCs は正確に9,192,631,770 Hzと固定され、秒の定義に使われる。",
+      "sourceRefs": [
+        "nist_si"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "SCI-L5-002",
+      "categoryId": "science_si",
+      "level": 5,
+      "prompt": "メートルの定義で真空中の光速 c に固定されている値は？",
+      "choices": [
+        "299,792,458 m/s",
+        "300,000,000 km/s",
+        "9,192,631,770 m/s",
+        "6.02214076×10²³ m/s"
+      ],
+      "answerIndex": 0,
+      "explanation": "真空中の光速cは正確に299,792,458 m/sと固定されている。",
+      "sourceRefs": [
+        "nist_si"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "SCI-L5-003",
+      "categoryId": "science_si",
+      "level": 5,
+      "prompt": "キログラムの定義で固定されているプランク定数 h の値は？",
+      "choices": [
+        "6.62607015×10⁻³⁴ J·s",
+        "1.602176634×10⁻¹⁹ J·s",
+        "1.380649×10⁻²³ J·s",
+        "299792458 J·s"
+      ],
+      "answerIndex": 0,
+      "explanation": "プランク定数hは正確に6.62607015×10⁻³⁴ J·sと固定されている。",
+      "sourceRefs": [
+        "nist_si"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "WEB-L1-001",
+      "categoryId": "web_basics",
+      "level": 1,
+      "prompt": "HTTPステータスコード200の理由句は？",
+      "choices": [
+        "Created",
+        "OK",
+        "No Content",
+        "Not Found"
+      ],
+      "answerIndex": 1,
+      "explanation": "RFC 9110では200はOK。",
+      "sourceRefs": [
+        "rfc9110"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "WEB-L1-002",
+      "categoryId": "web_basics",
+      "level": 1,
+      "prompt": "HTTPステータスコード404の理由句は？",
+      "choices": [
+        "Forbidden",
+        "Not Found",
+        "Bad Request",
+        "Gone"
+      ],
+      "answerIndex": 1,
+      "explanation": "RFC 9110では404はNot Found。",
+      "sourceRefs": [
+        "rfc9110"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "WEB-L1-003",
+      "categoryId": "web_basics",
+      "level": 1,
+      "prompt": "JavaScriptの厳密等価演算子は？",
+      "choices": [
+        "==",
+        "===",
+        "!=",
+        "=>"
+      ],
+      "answerIndex": 1,
+      "explanation": "JavaScriptの厳密等価演算子は===。",
+      "sourceRefs": [
+        "mdn_strict_equality"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "WEB-L2-001",
+      "categoryId": "web_basics",
+      "level": 2,
+      "prompt": "HTTPステータスコード201の理由句は？",
+      "choices": [
+        "Created",
+        "Accepted",
+        "OK",
+        "Partial Content"
+      ],
+      "answerIndex": 0,
+      "explanation": "RFC 9110では201はCreated。",
+      "sourceRefs": [
+        "rfc9110"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "WEB-L2-002",
+      "categoryId": "web_basics",
+      "level": 2,
+      "prompt": "HTTPステータスコード204の理由句は？",
+      "choices": [
+        "Reset Content",
+        "No Content",
+        "Not Modified",
+        "Continue"
+      ],
+      "answerIndex": 1,
+      "explanation": "RFC 9110では204はNo Content。",
+      "sourceRefs": [
+        "rfc9110"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "WEB-L2-003",
+      "categoryId": "web_basics",
+      "level": 2,
+      "prompt": "JavaScriptで \"1\" === 1 の結果は？",
+      "choices": [
+        "true",
+        "false",
+        "1",
+        "例外"
+      ],
+      "answerIndex": 1,
+      "explanation": "===は型変換をしないため、文字列と数値は厳密等価ではない。",
+      "sourceRefs": [
+        "mdn_strict_equality"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "WEB-L3-001",
+      "categoryId": "web_basics",
+      "level": 3,
+      "prompt": "HTTPステータスコード301の理由句は？",
+      "choices": [
+        "Found",
+        "Permanent Redirect",
+        "Moved Permanently",
+        "Temporary Redirect"
+      ],
+      "answerIndex": 2,
+      "explanation": "RFC 9110では301はMoved Permanently。",
+      "sourceRefs": [
+        "rfc9110"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "WEB-L3-002",
+      "categoryId": "web_basics",
+      "level": 3,
+      "prompt": "RFC 9110で「safe」と定義される代表的なHTTPメソッドは？",
+      "choices": [
+        "GET",
+        "POST",
+        "PUT",
+        "DELETE"
+      ],
+      "answerIndex": 0,
+      "explanation": "GETはsafe method。POST、PUT、DELETEはsafeには分類されない。",
+      "sourceRefs": [
+        "rfc9110"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "WEB-L3-003",
+      "categoryId": "web_basics",
+      "level": 3,
+      "prompt": "JavaScriptで NaN === NaN の結果は？",
+      "choices": [
+        "true",
+        "false",
+        "NaN",
+        "例外"
+      ],
+      "answerIndex": 1,
+      "explanation": "厳密等価でもNaNはNaN自身と等しくない。",
+      "sourceRefs": [
+        "mdn_strict_equality"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "WEB-L4-001",
+      "categoryId": "web_basics",
+      "level": 4,
+      "prompt": "HTTPステータスコード400の理由句は？",
+      "choices": [
+        "Unauthorized",
+        "Bad Request",
+        "Conflict",
+        "Not Acceptable"
+      ],
+      "answerIndex": 1,
+      "explanation": "RFC 9110では400はBad Request。",
+      "sourceRefs": [
+        "rfc9110"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "WEB-L4-002",
+      "categoryId": "web_basics",
+      "level": 4,
+      "prompt": "HTTPステータスコード403の理由句は？",
+      "choices": [
+        "Forbidden",
+        "Unauthorized",
+        "Not Found",
+        "Proxy Authentication Required"
+      ],
+      "answerIndex": 0,
+      "explanation": "RFC 9110では403はForbidden。",
+      "sourceRefs": [
+        "rfc9110"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "WEB-L4-003",
+      "categoryId": "web_basics",
+      "level": 4,
+      "prompt": "JavaScriptで ({a:1}) === ({a:1}) の結果は？",
+      "choices": [
+        "true",
+        "false",
+        "1",
+        "構文エラー"
+      ],
+      "answerIndex": 1,
+      "explanation": "別々に生成したオブジェクトは内容が同じでも同一参照ではないためfalse。",
+      "sourceRefs": [
+        "mdn_strict_equality"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "WEB-L5-001",
+      "categoryId": "web_basics",
+      "level": 5,
+      "prompt": "HTTPステータスコード500の理由句は？",
+      "choices": [
+        "Bad Gateway",
+        "Service Unavailable",
+        "Internal Server Error",
+        "Gateway Timeout"
+      ],
+      "answerIndex": 2,
+      "explanation": "RFC 9110では500はInternal Server Error。",
+      "sourceRefs": [
+        "rfc9110"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "WEB-L5-002",
+      "categoryId": "web_basics",
+      "level": 5,
+      "prompt": "RFC 9110でsafe methodとして列挙される組み合わせは？",
+      "choices": [
+        "GET, HEAD, OPTIONS, TRACE",
+        "GET, POST, PUT, DELETE",
+        "POST, PATCH, CONNECT",
+        "PUT, DELETE, TRACE"
+      ],
+      "answerIndex": 0,
+      "explanation": "RFC 9110ではGET、HEAD、OPTIONS、TRACEがsafeと定義される。",
+      "sourceRefs": [
+        "rfc9110"
+      ],
+      "verifiedAt": "2026-10-11"
+    },
+    {
+      "id": "WEB-L5-003",
+      "categoryId": "web_basics",
+      "level": 5,
+      "prompt": "JavaScriptで const x = {}; const y = x; としたとき x === y は？",
+      "choices": [
+        "true",
+        "false",
+        "undefined",
+        "例外"
+      ],
+      "answerIndex": 0,
+      "explanation": "xとyは同じオブジェクトを参照しているため厳密等価はtrue。",
+      "sourceRefs": [
+        "mdn_strict_equality"
+      ],
+      "verifiedAt": "2026-10-11"
+    }
+  ]
+}

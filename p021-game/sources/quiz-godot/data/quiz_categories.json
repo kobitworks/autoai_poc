@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "gameId": "GAME-G017",
+  "datasetId": "quiz-core-ja-v1",
+  "language": "ja-JP",
+  "verifiedAt": "2026-10-11",
+  "questionsPerRun": 10,
+  "categories": [
+    {
+      "id": "math_logic",
+      "name": "算数・ロジック",
+      "description": "四則演算、割合、方程式、確率など。",
+      "enabled": true,
+      "levels": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "questionCount": 15,
+      "sourcePolicy": "original"
+    },
+    {
+      "id": "science_si",
+      "name": "科学・SI単位",
+      "description": "SI基本単位と太陽系の基礎。",
+      "enabled": true,
+      "levels": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "questionCount": 15,
+      "sourcePolicy": "primary"
+    },
+    {
+      "id": "web_basics",
+      "name": "Web・HTTP・JavaScript",
+      "description": "HTTPの基礎とJavaScript厳密等価。",
+      "enabled": true,
+      "levels": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ],
+      "questionCount": 15,
+      "sourcePolicy": "primary/reference"
+    }
+  ]
+}
