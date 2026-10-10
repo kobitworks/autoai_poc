@@ -127,8 +127,17 @@ jobs:
             echo "No exported changes."
           else
             git commit -m "P021 GAME-067: publish Quiz Arena Godot Web"
-            git pull --rebase origin develop
-            git push origin HEAD:develop
+            for attempt in 1 2 3 4 5; do
+              git fetch origin develop
+              git rebase origin/develop
+              if git push origin HEAD:develop; then
+                exit 0
+              fi
+              echo "Push race detected; retrying ($attempt/5)."
+              sleep 2
+            done
+            echo "Failed to publish after 5 retries."
+            exit 1
           fi
 
   browser-quality:
@@ -175,6 +184,15 @@ jobs:
             echo "No QA evidence changes."
           else
             git commit -m "P021 GAME-067: record Quiz Arena QA"
-            git pull --rebase origin develop
-            git push origin HEAD:develop
+            for attempt in 1 2 3 4 5; do
+              git fetch origin develop
+              git rebase origin/develop
+              if git push origin HEAD:develop; then
+                exit 0
+              fi
+              echo "Push race detected; retrying ($attempt/5)."
+              sleep 2
+            done
+            echo "Failed to publish QA evidence after 5 retries."
+            exit 1
           fi
