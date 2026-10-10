@@ -1,0 +1,9 @@
+{
+  "game": "GAME-G029",
+  "task": "GAME-064",
+  "engine": "Godot 4.7.2",
+  "renderer": "Compatibility",
+  "thread_support": false,
+  "quality_target": 84,
+  "art": "4 original local SVG illustrations"
+}
