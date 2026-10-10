@@ -72,8 +72,9 @@ async function command(page, action, value) {
       assert(data.piece_count === data.grid * data.grid, target.name + ': piece count mismatch');
       assert(data.board.w >= 200 && data.board.h >= 200, target.name + ': board too small');
       assert(data.board.x >= 0 && data.board.y >= 0, target.name + ': board outside viewport');
-      assert(data.board.x + data.board.w <= target.width + 2, target.name + ': board width overflow');
-      assert(data.board.y + data.board.h <= target.height + 2, target.name + ': board height overflow');
+      assert(data.viewport_w >= 200 && data.viewport_h >= 200, target.name + ': invalid Godot viewport');
+      assert(data.board.x + data.board.w <= data.viewport_w + 2, target.name + ': board width overflow');
+      assert(data.board.y + data.board.h <= data.viewport_h + 2, target.name + ': board height overflow');
 
       await command(page, 'hint');
       await page.waitForFunction(() => window.__P021_JIGSAW && window.__P021_JIGSAW.hints >= 1, null, { timeout: 5000 });
