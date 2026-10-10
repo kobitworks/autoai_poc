@@ -1,0 +1,149 @@
+name: P021 GAME-G029 Jigsaw Godot Web
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'p021-game/sources/jigsaw-godot/**'
+      - 'p021-game/games/jigsaw/**'
+      - 'p021-game/qa/jigsaw-responsive.js'
+      - 'p021-game/index.html'
+      - '.github/workflows/p021-game-g029-jigsaw.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: p021-game-g029-jigsaw-develop
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: "4.7.2"
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+      - name: Contract checks for GAME-064
+        run: |
+          test -s p021-game/sources/jigsaw-godot/project.godot
+          test -s p021-game/sources/jigsaw-godot/Main.tscn
+          test -s p021-game/sources/jigsaw-godot/Main.gd
+          test -s p021-game/sources/jigsaw-godot/JigsawLogic.gd
+          test -s p021-game/sources/jigsaw-godot/tests/LogicSmoke.gd
+          test -s p021-game/sources/jigsaw-godot/export_presets.cfg
+          test -s p021-game/sources/jigsaw-godot/assets/aurora.svg
+          test -s p021-game/sources/jigsaw-godot/assets/harbor.svg
+          test -s p021-game/sources/jigsaw-godot/assets/garden.svg
+          test -s p021-game/sources/jigsaw-godot/assets/city.svg
+          grep -q 'GAME-064' p021-game/sources/jigsaw-godot/Main.gd
+          grep -q 'GAME-G029' p021-game/sources/jigsaw-godot/Main.gd
+          grep -q 'InputEventScreenTouch' p021-game/sources/jigsaw-godot/Main.gd
+          grep -q 'draw_texture_rect_region' p021-game/sources/jigsaw-godot/Main.gd
+          grep -q 'hint_timer' p021-game/sources/jigsaw-godot/Main.gd
+          grep -q 'best_records' p021-game/sources/jigsaw-godot/Main.gd
+          grep -q 'GAME-G029' p021-game/index.html
+          grep -q 'games/jigsaw/' p021-game/index.html
+
+  export-web:
+    needs: contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container:
+      image: barichello/godot-ci:4.7.2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+      - name: Setup Godot export templates
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates/
+          cp -a /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+      - name: Bundle Noto Sans JP and license
+        working-directory: p021-game/sources/jigsaw-godot
+        run: |
+          mkdir -p fonts
+          wget -q -O fonts/NotoSansJP.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/NotoSansJP%5Bwght%5D.ttf"
+          wget -q -O fonts/OFL.txt "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/OFL.txt"
+          test -s fonts/NotoSansJP.ttf
+          test -s fonts/OFL.txt
+      - name: Import and parse Godot project
+        working-directory: p021-game/sources/jigsaw-godot
+        run: |
+          if ! godot --headless --editor --quit-after 4 > /tmp/godot-import.log 2>&1; then
+            cat /tmp/godot-import.log
+            exit 1
+          fi
+          cat /tmp/godot-import.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Failed to load script' /tmp/godot-import.log; then exit 1; fi
+      - name: Run Jigsaw logic smoke tests
+        working-directory: p021-game/sources/jigsaw-godot
+        run: godot --headless --script tests/LogicSmoke.gd
+      - name: Export GAME-G029 for Web
+        working-directory: p021-game/sources/jigsaw-godot
+        run: |
+          rm -rf ../../games/jigsaw
+          mkdir -p ../../games/jigsaw
+          godot --headless --export-release "Web" ../../games/jigsaw/index.html
+          cp README.md ../../games/jigsaw/README.md
+          cp CREDITS.md ../../games/jigsaw/CREDITS.md
+          cp fonts/OFL.txt ../../games/jigsaw/NotoSansJP-OFL.txt
+          cat > ../../games/jigsaw/build.json <<'JSON'
+          {
+            "game": "GAME-G029",
+            "task": "GAME-064",
+            "engine": "Godot 4.7.2",
+            "renderer": "Compatibility",
+            "thread_support": false,
+            "quality_target": 84,
+            "art": "4 original local SVG illustrations"
+          }
+          JSON
+          test -s ../../games/jigsaw/index.html
+          test -s ../../games/jigsaw/index.wasm
+          test -s ../../games/jigsaw/index.pck
+          test -s ../../games/jigsaw/index.js
+      - name: Commit exported Godot Web build
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A p021-game/games/jigsaw/
+          if git diff --cached --quiet; then
+            echo "No exported changes."
+          else
+            git commit -m "P021 GAME-064: publish Jigsaw Godot Web"
+            git pull --rebase origin develop
+            git push origin HEAD:develop
+          fi
+
+  browser-quality:
+    needs: export-web
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8000 > /tmp/p021-g029-http.log 2>&1 &
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8000/p021-game/games/jigsaw/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Run four viewport QA
+        run: node p021-game/qa/jigsaw-responsive.js
