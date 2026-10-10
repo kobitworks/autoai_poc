@@ -7,61 +7,90 @@ const cases = [
   ['Tablet Landscape', 1024, 768],
 ];
 
+async function waitState(page, predicate, label) {
+  await page.waitForFunction(predicate, null, { timeout: 15000 }).catch(() => {
+    throw new Error('timeout waiting for ' + label);
+  });
+}
+
 (async () => {
   const browser = await chromium.launch({ headless: true });
   const results = [];
   let failed = false;
 
   for (const [name, width, height] of cases) {
-    const page = await browser.newPage({ viewport: { width, height } });
+    const context = await browser.newContext({
+      viewport: { width, height },
+      hasTouch: true,
+      isMobile: width < 600,
+      deviceScaleFactor: 1,
+    });
+    const page = await context.newPage();
     const errors = [];
-    page.on('console', m => { if (m.type() === 'error') errors.push('console:' + m.text()); });
-    page.on('pageerror', e => errors.push('page:' + e.message));
+    page.on('console', msg => {
+      if (msg.type() === 'error') errors.push('console:' + msg.text());
+    });
+    page.on('pageerror', err => errors.push('page:' + err.message));
 
     try {
-      await page.goto('http://127.0.0.1:8000/p021-game/games/matchstick/', { waitUntil: 'domcontentloaded' });
-      if (await page.locator('#topLevel option').count() !== 3) throw new Error('difficulty options != 3');
-      if (await page.locator('#topRounds option').count() !== 5) throw new Error('round options != 5');
-      if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 2)) throw new Error('top horizontal overflow');
+      await page.goto('http://127.0.0.1:8000/p021-game/games/matchstick/?qa=1', { waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('canvas', { timeout: 15000 });
+      await waitState(page, () => window.__MATCHSTICK_QA__?.ready === true, 'Godot ready');
 
-      await page.selectOption('#topLevel', 'hard');
-      await page.selectOption('#topRounds', '1');
-      await page.click('#btnStart');
-      await page.waitForSelector('#screenGame:not(.hidden)', { timeout: 3000 });
-
-      if (await page.locator('svg.digitSvg').count() < 2) throw new Error('digit count < 2');
-      const game = await page.locator('.gameCard').boundingBox();
-      if (!game || game.x < -1 || game.x + game.width > width + 2) throw new Error('game card outside viewport');
-
-      let picked = false;
-      const onCount = await page.locator('.seg.on').count();
-      for (let i = 0; i < onCount; i++) {
-        await page.locator('.seg.on').nth(i).click({ force: true });
-        if (await page.locator('.seg.placeable').count()) { picked = true; break; }
+      const top = await page.evaluate(() => window.__MATCHSTICK_QA__);
+      if (top.build !== 'GAME-062-20261010') throw new Error('wrong build id');
+      if (top.quality_target < 80) throw new Error('quality target below 80');
+      if (top.screen !== 'top') throw new Error('initial screen is not top');
+      if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 2)) {
+        throw new Error('horizontal overflow at top');
       }
-      if (!picked) throw new Error('no pickable match found');
-      await page.locator('.seg.placeable').first().click({ force: true });
-      if (await page.locator('#btnCheck').isDisabled()) throw new Error('move did not enable check');
 
-      await page.click('#btnReset');
-      if (!(await page.locator('#btnCheck').isDisabled())) throw new Error('reset did not disable check');
-      if ((await page.locator('#carryPill').textContent()).trim() !== '棒：未選択') throw new Error('reset did not clear carry');
+      await page.evaluate(() => { window.__MATCHSTICK_QA_COMMAND__ = 'start'; });
+      await waitState(page, () => window.__MATCHSTICK_QA__?.screen === 'game' && !!window.__MATCHSTICK_QA__?.solution, 'game + solution');
 
-      await page.click('#btnSkip');
-      await page.waitForSelector('#screenResult:not(.hidden)', { timeout: 3000 });
-      if ((await page.locator('#finalScore').textContent()).trim() !== '0') throw new Error('unexpected one-round skip score');
-      if (!/高いほど上位/.test(await page.locator('.scoreNote').textContent())) throw new Error('higher score semantics missing');
-      if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 2)) throw new Error('result horizontal overflow');
+      let state = await page.evaluate(() => window.__MATCHSTICK_QA__);
+      if (state.rounds !== 1 || state.round !== 1) throw new Error('QA round setup invalid');
+      const canvas = page.locator('canvas');
 
-      await page.click('#btnBackToTop');
-      await page.waitForSelector('#screenTop:not(.hidden)', { timeout: 3000 });
+      await canvas.tap({ position: { x: state.solution.pick_x, y: state.solution.pick_y } });
+      await waitState(page, () => window.__MATCHSTICK_QA__?.carry === true, 'match selected');
+
+      state = await page.evaluate(() => window.__MATCHSTICK_QA__);
+      await canvas.tap({ position: { x: state.solution.place_x, y: state.solution.place_y } });
+      await waitState(page, () => window.__MATCHSTICK_QA__?.moved === true, 'match moved');
+
+      await page.evaluate(() => { window.__MATCHSTICK_QA_COMMAND__ = 'reset'; });
+      await waitState(page, () => window.__MATCHSTICK_QA__?.moved === false && window.__MATCHSTICK_QA__?.carry === false, 'reset');
+
+      state = await page.evaluate(() => window.__MATCHSTICK_QA__);
+      await canvas.tap({ position: { x: state.solution.pick_x, y: state.solution.pick_y } });
+      await waitState(page, () => window.__MATCHSTICK_QA__?.carry === true, 'second selection');
+      state = await page.evaluate(() => window.__MATCHSTICK_QA__);
+      await canvas.tap({ position: { x: state.solution.place_x, y: state.solution.place_y } });
+      await waitState(page, () => window.__MATCHSTICK_QA__?.moved === true, 'second move');
+
+      await page.evaluate(() => { window.__MATCHSTICK_QA_COMMAND__ = 'check'; });
+      await waitState(page, () => window.__MATCHSTICK_QA__?.screen === 'result', 'result');
+      state = await page.evaluate(() => window.__MATCHSTICK_QA__);
+      if (state.score !== 2) throw new Error('expected score 2, got ' + state.score);
+      if (await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 2)) {
+        throw new Error('horizontal overflow at result');
+      }
+
+      await page.evaluate(() => { window.__MATCHSTICK_QA_COMMAND__ = 'top'; });
+      await waitState(page, () => window.__MATCHSTICK_QA__?.screen === 'top', 'return top');
+      await page.evaluate(() => { window.__MATCHSTICK_QA_COMMAND__ = 'sound'; });
+      await page.waitForTimeout(120);
+      const sound = (await page.evaluate(() => window.__MATCHSTICK_QA__)).audio;
+      if (sound !== 'SOUND 60%') throw new Error('volume cycle failed: ' + sound);
+
       if (errors.length) throw new Error(errors.join(' | '));
-      results.push({ name, width, height, pass: true });
-    } catch (e) {
+      results.push({ name, width, height, pass: true, score: 2, sound });
+    } catch (error) {
       failed = true;
-      results.push({ name, width, height, pass: false, error: String(e), errors });
+      results.push({ name, width, height, pass: false, error: String(error), errors });
     } finally {
-      await page.close();
+      await context.close();
     }
   }
 
