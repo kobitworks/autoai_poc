@@ -669,7 +669,7 @@ func _style_answer_button(button: Button, state: String) -> void:
 	button.add_theme_color_override("font_disabled_color", font)
 
 func _source_summary(q: Dictionary) -> String:
-	var names: Array[String] = []
+	var names := PackedStringArray()
 	for ref_value in q.get("sourceRefs", []):
 		var ref := str(ref_value)
 		if not source_catalog.has(ref):
@@ -729,7 +729,8 @@ func _finish_run() -> void:
 	source_label.text = "Score = correct-count (higher) · time = tie-break"
 	next_button.text = "PLAY AGAIN"
 	next_button.visible = true
-	next_button.pressed.disconnect(_next_question) if next_button.pressed.is_connected(_next_question) else null
+	if next_button.pressed.is_connected(_next_question):
+		next_button.pressed.disconnect(_next_question)
 	if not next_button.pressed.is_connected(_start_run):
 		next_button.pressed.connect(_start_run)
 	settings_button.visible = true
