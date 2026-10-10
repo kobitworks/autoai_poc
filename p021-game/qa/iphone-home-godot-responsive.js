@@ -55,25 +55,21 @@ async function main(){
    }));
    // Swipe to home page 2, select the Icons8 QR tile, and check the QR sheet.
    const landscape=view.width>view.height*1.42&&view.height<620;
-   let z,ox,oy;
-   if(landscape){z=Math.min(view.width/844,view.height/390);ox=(view.width-844*z)/2;oy=(view.height-390*z)/2;}
-   else {
-    // Godot canvas_items scales the 390x844 project viewport within the
-    // browser canvas; on iPad it letterboxes rather than using Control.size.
-    z=Math.min(view.width/390,view.height/844);
-    ox=(view.width-390*z)/2;
-    oy=(view.height-844*z)/2;
-   }
+   // The iPhone home screen remains portrait on a landscape browser viewport.
+   // Godot letterboxes its 390x844 content horizontally, as on an iPhone preview.
+   const z=Math.min(view.width/390,view.height/844);
+   const ox=(view.width-390*z)/2;
+   const oy=(view.height-844*z)/2;
    const xy=(x,y)=>({x:Math.round(ox+x*z),y:Math.round(oy+y*z)});
-   const start=landscape?xy(735,230):xy(317,380);
-   const end=landscape?xy(230,230):xy(65,380);
+   const start=xy(317,380);
+   const end=xy(65,380);
    await page.mouse.move(start.x,start.y);
    await page.mouse.down();
    await page.mouse.move(end.x,end.y,{steps:10});
    await page.mouse.up();
    await page.waitForTimeout(550);
    const beforeQR=PNG.sync.read(await page.screenshot({path:path.join(OUTPUT,view.name+'-page2.png')}));
-   const icon=landscape?xy(466,195):xy(53,465);
+   const icon=xy(53,465);
    await page.mouse.click(icon.x,icon.y);
    await page.waitForTimeout(400);
    const withQR=PNG.sync.read(await page.screenshot({path:path.join(OUTPUT,view.name+'-qr-open.png')}));
@@ -86,8 +82,8 @@ async function main(){
     if(dr+dg+db>95)changed++;
    }
    const ratio=changed/seen;
-   if(ratio<0.15)throw Error(view.name+': QR dialog did not render, changed-pixel ratio '+ratio.toFixed(3));
-   const close=landscape?xy(548,294):xy(195,635);
+   if(ratio<(landscape?0.025:0.15))throw Error(view.name+': QR dialog did not render, changed-pixel ratio '+ratio.toFixed(3));
+   const close=xy(195,635);
    await page.mouse.click(close.x,close.y);
    await page.waitForTimeout(240);
    const closed=PNG.sync.read(await page.screenshot());
