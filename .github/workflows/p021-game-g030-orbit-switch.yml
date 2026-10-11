@@ -7,6 +7,7 @@ on:
       - 'p021-game/sources/orbit-switch-courier-godot/**'
       - 'p021-game/games/orbit-switch-courier/**'
       - 'p021-game/qa/orbit-switch-courier-responsive.js'
+      - 'p021-game/qa/orbit-switch-courier-real-input.js'
       - 'p021-game/index.html'
       - '.github/workflows/p021-game-g030-orbit-switch.yml'
   workflow_dispatch:
@@ -37,6 +38,7 @@ jobs:
           test -s p021-game/sources/orbit-switch-courier-godot/export_presets.cfg
           test -s p021-game/sources/orbit-switch-courier-godot/README.md
           test -s p021-game/qa/orbit-switch-courier-responsive.js
+          test -s p021-game/qa/orbit-switch-courier-real-input.js
           grep -q 'GAME-069-20261011' p021-game/sources/orbit-switch-courier-godot/Main.gd
           grep -q 'GAME-G030' p021-game/sources/orbit-switch-courier-godot/Main.gd
           grep -q 'InputEventScreenTouch' p021-game/sources/orbit-switch-courier-godot/Main.gd
@@ -146,5 +148,14 @@ jobs:
             sleep 1
           done
           exit 1
-      - name: Run four viewport and gameplay QA
+      - name: Run four viewport simulated smoke QA
         run: node p021-game/qa/orbit-switch-courier-responsive.js
+      - name: Run four viewport actual touch/click E2E (GAME-071)
+        run: node p021-game/qa/orbit-switch-courier-real-input.js
+      - name: Upload GAME-071 screenshots and result evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p021-game-g030-real-input-evidence
+          path: /tmp/p021-g030-real-input/
+          if-no-files-found: warn
