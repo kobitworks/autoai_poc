@@ -56,20 +56,24 @@ async function run(){
         await input(page,t);
         await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.state==='playing','start');
         d=await snapshot(page);
-        check(d.orbit===1 && d.cargo_target===0,'Unexpected deterministic round');
+        check(d.orbit===1 && d.cargo_target===0 && d.energy===3,'Unexpected deterministic round or double start input');
         // Orbit 1 angular velocity is negative. Wait for crossing at 4.50 radians.
         await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
-          x.orbit===1&&x.angle>=4.54&&x.angle<=4.61;},'approach natural switch');
+          x.orbit===1&&x.angle>=4.62&&x.angle<=4.68;},'approach natural switch');
+        evidence.switchBefore=await snapshot(page);
         await input(page,t);
-        await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.orbit===0,'real orbit transfer');
+        evidence.switchAfter=await snapshot(page);
+        await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.orbit===0,'real orbit transfer',4000);
         d=await snapshot(page);
         check(d.energy===3,'Energy lost at switch');
         evidence.transfer={orbit:d.orbit,energy:d.energy};
         // Orbit 0 angular velocity is positive; Hub 0 is at 1.48 radians.
         await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
-          x.orbit===0&&x.angle>=1.395&&x.angle<=1.45;},'approach natural delivery');
+          x.orbit===0&&x.angle>=1.345&&x.angle<=1.395;},'approach natural delivery');
+        evidence.hubBefore=await snapshot(page);
         await input(page,t);
-        await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.deliveries>=1,'real delivery');
+        evidence.hubAfter=await snapshot(page);
+        await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.deliveries>=1,'real delivery',4000);
         d=await snapshot(page);
         check(d.deliveries===1&&d.score>0&&d.energy===3,'Natural score/delivery missing');
         evidence.delivery={deliveries:d.deliveries,score:d.score,energy:d.energy};
@@ -77,6 +81,7 @@ async function run(){
         await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
           x.orbit===0&&x.angle>=2.00&&x.angle<=2.13;},'safe miss zone');
         for(let energy=2;energy>=0;energy--){
+          await page.waitForTimeout(170);
           await input(page,t);
           await page.waitForFunction(n=>window.__P021_ORBIT && window.__P021_ORBIT.energy===n,
             energy,{timeout:7000,polling:'raf'});
