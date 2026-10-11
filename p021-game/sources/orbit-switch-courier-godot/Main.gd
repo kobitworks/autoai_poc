@@ -16,6 +16,7 @@ const HUB_ANGLES := [1.48, 3.56, 5.20]
 const HUB_NAMES := ["SCARLET / SQUARE", "CYAN / TRIANGLE", "GOLD / CIRCLE"]
 const HUB_SHORT := ["SQUARE", "TRIANGLE", "CIRCLE"]
 const HUB_COLORS := [Color("#ff6b81"), Color("#42d9ee"), Color("#ffd166")]
+const ROUTE_NAMES := ["STARTER", "RUSH", "NIGHT", "ACE"]
 
 var ui_font: Font
 var rng := RandomNumberGenerator.new()
@@ -39,6 +40,9 @@ var action_text := "TAP / SPACE でスタート"
 var feedback_text := "交差点で軌道を切替え、荷物と同じ記号のHUBへ届けよう。"
 var flash_good := 0.0
 var flash_bad := 0.0
+var cue_clock := 0.0
+var cue_text := ""
+var cue_good := true
 var result_clock := 0.0
 var bridge_clock := 0.0
 var elapsed := 0.0
@@ -147,6 +151,8 @@ func _reset_round(to_intro: bool = true) -> void:
 	result_clock = 0.0
 	flash_good = 0.0
 	flash_bad = 0.0
+	cue_clock = 0.0
+	cue_text = ""
 	trail.clear()
 	sparks.clear()
 	action_text = "TAP / SPACE でスタート"
@@ -169,6 +175,7 @@ func _process(delta: float) -> void:
 	bridge_clock += delta
 	flash_good = maxf(0.0, flash_good - delta * 2.2)
 	flash_bad = maxf(0.0, flash_bad - delta * 2.6)
+	cue_clock = maxf(0.0, cue_clock - delta)
 	if state == "result":
 		result_clock += delta
 		_process_sparks(delta)
@@ -214,6 +221,39 @@ func _combo_multiplier() -> int:
 		return 2
 	return 1
 
+# GAME-075: progression is driven by actual deliveries, not QA commands.
+func _mission_tier() -> int:
+	if deliveries >= 6:
+		return 3
+	if deliveries >= 3:
+		return 2
+	if deliveries >= 1:
+		return 1
+	return 0
+
+func _mission_name() -> String:
+	return str(ROUTE_NAMES[_mission_tier()])
+
+func _cargo_limit() -> float:
+	match _mission_tier():
+		3: return 10.0
+		2: return 12.0
+		1: return 14.0
+		_: return CARGO_TIME
+
+func _route_color() -> Color:
+	match _mission_tier():
+		3: return Color("#ffd166")
+		2: return Color("#bc91ff")
+		1: return Color("#55e3c7")
+		_: return Color("#1e5772")
+
+func _show_cue(message: String, positive: bool = true) -> void:
+	cue_text = message
+	cue_good = positive
+	cue_clock = 1.65
+	queue_redraw()
+
 func _attempt_action() -> void:
 	if state == "intro":
 		_start_game()
@@ -252,6 +292,7 @@ func _switch_orbit(index: int) -> void:
 	action_text = "TRANSFER!"
 	feedback_text = "軌道 %d へ切替成功。配送先 %s を狙え。" % [orbit_index + 1, HUB_SHORT[cargo_target]]
 	flash_good = 0.45
+	_show_cue("TRANSFER OK · ORBIT %d" % (orbit_index + 1))
 	_play(tone_switch)
 	_emit_sparks(_player_position(), Color("#7df9ff"), 10)
 	_update_debug_bridge()
@@ -260,6 +301,7 @@ func _deliver() -> void:
 	var multiplier := _combo_multiplier()
 	var urgency_bonus := int(round(cargo_left * 2.0))
 	var gained := 100 * multiplier + urgency_bonus
+	var previous_tier := _mission_tier()
 	score += gained
 	deliveries += 1
 	streak += 1
@@ -267,6 +309,10 @@ func _deliver() -> void:
 	action_text = "+%d  DELIVERY" % gained
 	feedback_text = "%sへ配達成功 · STREAK %d · COMBO x%d" % [HUB_SHORT[cargo_target], streak, next_multiplier]
 	flash_good = 1.0
+	if _mission_tier() > previous_tier:
+		_show_cue("NEW ROUTE %d · %s" % [_mission_tier() + 1, _mission_name()])
+	else:
+		_show_cue("DELIVERY +%d · COMBO x%d" % [gained, next_multiplier])
 	_play(tone_delivery)
 	_emit_sparks(_player_position(), HUB_COLORS[cargo_target], 22)
 	_assign_next_cargo()
@@ -280,7 +326,7 @@ func _assign_next_cargo() -> void:
 		var choices := [0, 1, 2]
 		choices.erase(previous)
 		cargo_target = int(choices[rng.randi_range(0, choices.size() - 1)])
-	cargo_left = CARGO_TIME
+	cargo_left = _cargo_limit()
 
 func _lose_energy(reason: String) -> void:
 	if state != "playing":
@@ -291,6 +337,7 @@ func _lose_energy(reason: String) -> void:
 	action_text = "ENERGY -1"
 	feedback_text = reason
 	flash_bad = 1.0
+	_show_cue("MISS · ENERGY -1", false)
 	_play(tone_error)
 	_emit_sparks(_player_position(), Color("#ff5577"), 14)
 	if energy <= 0:
@@ -464,7 +511,7 @@ func _draw() -> void:
 
 
 func _draw_playfield() -> void:
-	_rounded_box(field_rect, Color(0.025, 0.065, 0.105, 0.96), Color("#1e5772"), 20, 1)
+	_rounded_box(field_rect, Color(0.025, 0.065, 0.105, 0.96), _route_color(), 20, 2)
 	var center := _field_center()
 	var base := minf(field_rect.size.x, field_rect.size.y) * 0.5
 	draw_circle(center, base * 0.16, Color(0.09, 0.32, 0.46, 0.5))
@@ -515,6 +562,12 @@ func _draw_playfield() -> void:
 	if flash_bad > 0:
 		draw_circle(p, 20.0 + flash_bad * 10.0, Color(1.0, 0.28, 0.42, flash_bad * 0.22))
 
+	if cue_clock > 0.0 and state == "playing":
+		var cue_w := minf(field_rect.size.x - _ui_px(20.0), _ui_px(360.0))
+		var cue_r := Rect2(field_rect.position.x + (field_rect.size.x - cue_w) * 0.5, field_rect.position.y + _ui_px(12.0), cue_w, _ui_px(39.0))
+		_rounded_box(cue_r, Color("#11463f") if cue_good else Color("#542039"), Color("#72f4d3") if cue_good else Color("#ff91a9"), 10, 1)
+		_draw_center_text(cue_text, cue_r, _font_size(14.0), Color("#ffffff"))
+
 	var prompt := _near_action_prompt()
 	_draw_center_text(prompt, Rect2(field_rect.position.x, field_rect.end.y - _ui_px(38.0), field_rect.size.x, _ui_px(28.0)), _font_size(14.0), Color("#e0fbff"))
 
@@ -544,7 +597,7 @@ func _draw_info_panel() -> void:
 	var pad := _ui_px(16.0)
 	var x := info_rect.position.x + pad
 	var y := info_rect.position.y + _ui_px(22.0)
-	_draw_label("CARGO  /  DELIVERY TARGET", Vector2(x, y), _font_size(12.0), Color("#c2dfea"))
+	_draw_fit_label("ROUTE %d · %s  /  CARGO" % [_mission_tier() + 1, _mission_name()], Vector2(x, y), _font_size(12.0), _route_color().lightened(0.42), info_rect.size.x - pad * 2.0)
 	y += _ui_px(24.0)
 	_draw_label(HUB_NAMES[cargo_target], Vector2(x, y), _font_size(17.0), HUB_COLORS[cargo_target])
 	y += _ui_px(20.0)
@@ -575,8 +628,8 @@ func _draw_intro_overlay() -> void:
 	_rounded_box(r, Color("#0b1a2b"), Color("#46dce9"), 22, 2)
 	_draw_center_text("ORBIT SWITCH COURIER", Rect2(r.position.x, r.position.y + _ui_px(18.0), width, _ui_px(32.0)), _font_size(19.0), Color("#f5fbff"))
 	_draw_center_text("1. 荷物と同じ記号のHUBを探す", Rect2(r.position.x, r.position.y + _ui_px(62.0), width, _ui_px(27.0)), _font_size(15.0), Color("#f4fdff"))
-	_draw_center_text("2. 光る交差点でTAP → 軌道切替", Rect2(r.position.x, r.position.y + _ui_px(96.0), width, _ui_px(27.0)), _font_size(15.0), Color("#ddfbff"))
-	_draw_center_text("3. 同じHUBでTAP → 配達", Rect2(r.position.x, r.position.y + _ui_px(130.0), width, _ui_px(27.0)), _font_size(15.0), Color("#ffefc7"))
+	_draw_center_text("2. 光る交差点でTAPして乗換", Rect2(r.position.x, r.position.y + _ui_px(96.0), width, _ui_px(27.0)), _font_size(15.0), Color("#ddfbff"))
+	_draw_center_text("3. 同じHUBでTAPすると配達", Rect2(r.position.x, r.position.y + _ui_px(130.0), width, _ui_px(27.0)), _font_size(15.0), Color("#ffefc7"))
 	var start_rect := Rect2(r.position.x + _ui_px(22.0), r.end.y - _ui_px(59.0), width - _ui_px(44.0), _ui_px(48.0))
 	_rounded_box(start_rect, Color("#14647a"), Color("#8dfbff"), 12, 2)
 	_draw_center_text("TAP TO START", start_rect, _font_size(16.0), Color.WHITE)
@@ -727,6 +780,10 @@ func _update_debug_bridge() -> void:
 		"time_left": time_left,
 		"cargo_left": cargo_left,
 		"cargo_target": cargo_target,
+		"mission_tier": _mission_tier(),
+		"mission_name": _mission_name(),
+		"cargo_limit": _cargo_limit(),
+		"cue_text": cue_text if cue_clock > 0.0 else "",
 		"orbit": orbit_index,
 		"angle": orbit_angle,
 		"sound": sound_on,
