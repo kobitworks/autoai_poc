@@ -33,6 +33,29 @@ function physicalRect(r,c,d) {
   return {x:c.x+r[0]*c.width/d.viewport_w,y:c.y+r[1]*c.height/d.viewport_h,
     width:r[2]*c.width/d.viewport_w,height:r[3]*c.height/d.viewport_h};
 }
+// GAME-076: deterministic cargo sequence, but EVERY score and orbital change is
+// achieved using real mouse/touch at ordinary runtime windows (no QA commands).
+async function physicalSwitch(page,t,from,to,lo,hi,label) {
+  await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
+    x.orbit===from&&x.angle>=lo&&x.angle<=hi;},label+' crossing',18000);
+  await input(page,t);
+  await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.orbit===to;},label+' transfer',3500);
+  const d=await snapshot(page);
+  check(d.energy===3&&d.state==='playing',label+' lost energy');
+  return {action:'transfer',label,orbit:d.orbit,angle:d.angle,energy:d.energy};
+}
+async function physicalDeliver(page,t,target,lo,hi,total,label) {
+  await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
+    x.orbit===target&&x.cargo_target===target&&x.angle>=lo&&x.angle<=hi;},
+    label+' target HUB',18000);
+  await input(page,t);
+  await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.deliveries===total;},
+    label+' actual delivery',3500);
+  const d=await snapshot(page);
+  check(d.energy===3&&d.state==='playing'&&d.score>0,label+' scoring/energy failed');
+  return {action:'delivery',label,deliveries:d.deliveries,score:d.score,
+    orbit:d.orbit,mission:d.mission_name,limit:d.cargo_limit,energy:d.energy};
+}
 async function run(){
   fs.mkdirSync(dir,{recursive:true});
   const browser=await chromium.launch({headless:true});
@@ -135,9 +158,38 @@ async function run(){
         evidence.delivery={deliveries:d.deliveries,score:d.score,energy:d.energy,
           progression:{route:d.mission_tier,name:d.mission_name,cargoLimit:d.cargo_limit,cue:d.cue_text}};
         await page.screenshot({path:dir+'/'+t.name+'-route-rush.png'});
-        // Three real misses at 2.0 rad: no nearby active transfer/HUB window.
+        // Stage RUSH -> NIGHT -> ACE by actual taps at crossings and HUBs.
+        // Physical input paths: 0 -> 1 -> HUB1; 1 -> 2 -> HUB2 (NIGHT at 3);
+        // 2 -> 1 -> 0 -> HUB0; 0 -> 1 -> HUB1; 1 -> 2 -> HUB2 (ACE at 6).
+        evidence.routeMoves=[];
+        evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.37,4.45,'RUSH 0->1'));
+        evidence.routeMoves.push(await physicalDeliver(page,t,1,3.59,3.66,2,'RUSH HUB1'));
+        evidence.routeMoves.push(await physicalSwitch(page,t,1,2,2.55,2.63,'RUSH 1->2'));
+        evidence.routeMoves.push(await physicalDeliver(page,t,2,5.10,5.17,3,'NIGHT HUB2'));
+        d=await snapshot(page);
+        check(d.mission_tier===2&&d.mission_name==='NIGHT'&&d.cargo_limit===12,
+          'Natural 3 deliveries did not unlock NIGHT/12 seconds');
+        evidence.night={deliveries:d.deliveries,score:d.score,limit:d.cargo_limit,
+          cue:d.cue_text,energy:d.energy};
+        await page.screenshot({path:dir+'/'+t.name+'-route-night.png'});
+        evidence.routeMoves.push(await physicalSwitch(page,t,2,1,5.60,5.69,'NIGHT 2->1'));
+        evidence.routeMoves.push(await physicalSwitch(page,t,1,0,4.55,4.62,'NIGHT 1->0'));
+        evidence.routeMoves.push(await physicalDeliver(page,t,0,1.37,1.44,4,'NIGHT HUB0'));
+        evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.37,4.45,'NIGHT 0->1'));
+        evidence.routeMoves.push(await physicalDeliver(page,t,1,3.59,3.66,5,'NIGHT HUB1'));
+        evidence.routeMoves.push(await physicalSwitch(page,t,1,2,2.55,2.63,'NIGHT 1->2'));
+        evidence.routeMoves.push(await physicalDeliver(page,t,2,5.10,5.17,6,'ACE HUB2'));
+        d=await snapshot(page);
+        check(d.mission_tier===3&&d.mission_name==='ACE'&&d.cargo_limit===10,
+          'Natural 6 deliveries did not unlock ACE/10 seconds');
+        evidence.ace={deliveries:d.deliveries,score:d.score,limit:d.cargo_limit,
+          cue:d.cue_text,energy:d.energy};
+        await page.screenshot({path:dir+'/'+t.name+'-route-ace.png'});
+        // Three real misses away from HUB and crossings; no success shortcuts.
+        // Orbit 2 after HUB2 rotates forward; 0.56..0.70 is safe even
+        // as we send three taps, unlike 5.72 where a bridge is nearby.
         await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
-          x.orbit===0&&x.angle>=2.00&&x.angle<=2.13;},'safe miss zone');
+          x.orbit===2&&x.angle>=0.56&&x.angle<=0.70;},'safe miss zone after ACE');
         for(let energy=2;energy>=0;energy--){
           await page.waitForTimeout(170);
           await input(page,t);
@@ -190,9 +242,9 @@ async function run(){
       }
     }
   }finally{await browser.close();}
-  const output={task:'GAME-075',game:'GAME-G030',
-    method:'real touch/mouse UI sound toggle + natural orbital play and BEST persistence; read-only QA telemetry',
-    screenshotStates:['intro','playing','route-rush','miss-feedback','result','retry','sound-off','sound-on','replay'],
+  const output={task:'GAME-076',game:'GAME-G030',
+    method:'real touch/mouse STARTER/RUSH/NIGHT/ACE natural delivery and BEST persistence; read-only QA telemetry; no QA command/state override',
+    screenshotStates:['intro','playing','route-rush','route-night','route-ace','miss-feedback','result','retry','sound-off','sound-on','replay'],
     physicalOutput:'NOT VERIFIED – must check actual device audio and first-time user experience',
     independentQualityScore:'NOT ASSESSED (manual visual/audio/human checks separate)',viewports:results};
   fs.writeFileSync(dir+'/results.json',JSON.stringify(output,null,2));
