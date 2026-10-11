@@ -7,7 +7,8 @@ const PLAY_TIME := 90.0
 const CARGO_TIME := 16.0
 const SAVE_PATH := "user://orbit-switch-best.txt"
 const SWITCH_WINDOW := 0.19
-const HUB_WINDOW := 0.15
+# GAME-076: Larger touch window improves delivery at lower frame rates on tablet displays.
+const HUB_WINDOW := 0.23
 
 const ORBIT_SPEEDS := [1.12, -0.94, 0.79]
 const SWITCH_ANGLES := [0.35, 2.50, 4.50, 5.72]
