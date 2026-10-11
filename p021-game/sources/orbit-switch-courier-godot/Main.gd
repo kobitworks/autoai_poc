@@ -52,6 +52,7 @@ var field_rect := Rect2()
 var info_rect := Rect2()
 var sound_rect := Rect2()
 var hub_rect := Rect2()
+var hud_rect := Rect2()
 var retry_rect := Rect2()
 
 var audio_player: AudioStreamPlayer
@@ -376,6 +377,14 @@ func _font_size(base: float) -> int:
 func _draw_label(text_value: String, pos: Vector2, font_size: int, color: Color) -> void:
 	draw_string(ui_font, pos, text_value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
 
+func _draw_fit_label(text_value: String, pos: Vector2, font_size: int, color: Color, available_width: float) -> void:
+	var clipped := text_value
+	if ui_font.get_string_size(clipped, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > available_width:
+		while clipped.length() > 1 and ui_font.get_string_size(clipped + "…", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > available_width:
+			clipped = clipped.substr(0, clipped.length() - 1)
+		clipped += "…"
+	_draw_label(clipped, pos, font_size, color)
+
 func _draw_center_text(text_value: String, rect: Rect2, font_size: int, color: Color) -> void:
 	var measured := ui_font.get_string_size(text_value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
 	var x := rect.position.x + (rect.size.x - measured.x) * 0.5
@@ -401,10 +410,11 @@ func _draw() -> void:
 	draw_circle(Vector2(w * 0.88, h * 0.78), minf(w, h) * 0.31, Color(0.63, 0.32, 0.88, 0.05))
 
 	var margin := _ui_px(12.0 if compact else 18.0)
-	var title_h := _ui_px(56.0 if compact else 68.0)
+	# Reserve the second header row for GAME HUB on portrait/tablet layouts.
+	var title_h := _ui_px(56.0 if compact else 112.0)
 	_draw_label("GAME-G030  /  GODOT 4.7.2", Vector2(margin, margin + _ui_px(15.0)), _font_size(12.0), Color("#8af4ff"))
 	var heading := "ORBIT COURIER" if phys_w < 520.0 else "ORBIT SWITCH COURIER"
-	_draw_label(heading, Vector2(margin, margin + title_h - _ui_px(8.0)), _font_size(23.0), Color("#f4fbff"))
+	_draw_label(heading, Vector2(margin, margin + _ui_px(50.0 if compact else 58.0)), _font_size(23.0), Color("#f4fbff"))
 
 	# Physical 116x48 CSS-pixel SOUND button, including narrow phone landscape.
 	sound_rect = Rect2(w - margin - _ui_px(116.0), margin + _ui_px(3.0), _ui_px(116.0), _ui_px(48.0))
@@ -415,6 +425,7 @@ func _draw() -> void:
 
 	var hud_y := margin + title_h + _ui_px(9.0)
 	var hud_h := _ui_px(54.0)
+	hud_rect = Rect2(margin, hud_y, w - margin * 2.0, hud_h)
 	var gap := _ui_px(6.0)
 	var stat_w := (w - margin * 2.0 - gap * 3.0) / 4.0
 	var stats := [
@@ -438,9 +449,9 @@ func _draw() -> void:
 		field_rect = Rect2(margin, content_y, field_w, available_h)
 		info_rect = Rect2(field_rect.end.x + _ui_px(12.0), content_y, w - margin - field_rect.end.x - _ui_px(12.0), available_h)
 	else:
-		var info_h := clampf(available_h * 0.24, _ui_px(148.0), _ui_px(182.0))
+		var info_h := clampf(available_h * 0.24, _ui_px(170.0), _ui_px(194.0))
 		field_rect = Rect2(margin, content_y, w - margin * 2.0, maxf(_ui_px(190.0), available_h - info_h - _ui_px(8.0)))
-		info_rect = Rect2(margin, field_rect.end.y + _ui_px(8.0), w - margin * 2.0, maxf(_ui_px(148.0), h - margin - field_rect.end.y - _ui_px(8.0)))
+		info_rect = Rect2(margin, field_rect.end.y + _ui_px(8.0), w - margin * 2.0, maxf(_ui_px(170.0), h - margin - field_rect.end.y - _ui_px(8.0)))
 
 	_draw_playfield()
 	_draw_info_panel()
@@ -532,27 +543,24 @@ func _draw_info_panel() -> void:
 	_rounded_box(info_rect, Color("#0a1625"), Color("#2f5b72"), 16, 1)
 	var pad := _ui_px(16.0)
 	var x := info_rect.position.x + pad
-	var y := info_rect.position.y + _ui_px(25.0)
+	var y := info_rect.position.y + _ui_px(22.0)
 	_draw_label("CARGO  /  DELIVERY TARGET", Vector2(x, y), _font_size(12.0), Color("#c2dfea"))
-	y += _ui_px(26.0)
+	y += _ui_px(24.0)
 	_draw_label(HUB_NAMES[cargo_target], Vector2(x, y), _font_size(17.0), HUB_COLORS[cargo_target])
-	y += _ui_px(21.0)
+	y += _ui_px(20.0)
 	var cargo_bar := Rect2(x, y, info_rect.size.x - pad * 2.0, _ui_px(9.0))
 	draw_rect(cargo_bar, Color("#244a64"), true)
 	draw_rect(Rect2(cargo_bar.position, Vector2(cargo_bar.size.x * clampf(cargo_left / CARGO_TIME, 0.0, 1.0), cargo_bar.size.y)), HUB_COLORS[cargo_target], true)
-	y += _ui_px(32.0)
+	y += _ui_px(29.0)
 	var hearts := ""
 	for i in range(3):
 		hearts += "◆ " if i < energy else "◇ "
 	_draw_label("ENERGY  " + hearts, Vector2(x, y), _font_size(15.0), Color("#ffc4d0"))
-	y += _ui_px(27.0)
+	y += _ui_px(25.0)
 	_draw_label("STREAK %d  ·  COMBO x%d" % [streak, _combo_multiplier()], Vector2(x, y), _font_size(14.0), Color("#fff0bd"))
-	y += _ui_px(27.0)
-	if info_rect.size.y >= _ui_px(145.0):
-		var text_value := feedback_text
-		if text_value.length() > 34:
-			text_value = text_value.substr(0, 32) + "…"
-		_draw_label(text_value, Vector2(x, y), _font_size(13.0), Color("#d5edf7"))
+	y += _ui_px(24.0)
+	if info_rect.size.y >= _ui_px(158.0):
+		_draw_fit_label(feedback_text, Vector2(x, y), _font_size(14.0), Color("#e2f4fc"), info_rect.size.x - pad * 2.0)
 	# Wide landscape panels have actual space for persistent novice instructions.
 	if info_rect.size.y > _ui_px(215.0):
 		_draw_label("光る交差点で TAP → 軌道を切替", Vector2(x, info_rect.end.y - _ui_px(52.0)), _font_size(13.0), Color("#b7f5ff"))
@@ -566,9 +574,9 @@ func _draw_intro_overlay() -> void:
 	var r := Rect2(field_rect.get_center() - Vector2(width, height) * 0.5, Vector2(width, height))
 	_rounded_box(r, Color("#0b1a2b"), Color("#46dce9"), 22, 2)
 	_draw_center_text("ORBIT SWITCH COURIER", Rect2(r.position.x, r.position.y + _ui_px(18.0), width, _ui_px(32.0)), _font_size(19.0), Color("#f5fbff"))
-	_draw_center_text("1. 荷物と同じ記号のHUBを探す", Rect2(r.position.x, r.position.y + _ui_px(62.0), width, _ui_px(27.0)), _font_size(14.0), Color("#e8f7ff"))
-	_draw_center_text("2. 光る交差点でTAP → 軌道切替", Rect2(r.position.x, r.position.y + _ui_px(96.0), width, _ui_px(27.0)), _font_size(14.0), Color("#aff4ff"))
-	_draw_center_text("3. 同じHUBでTAP → 配達", Rect2(r.position.x, r.position.y + _ui_px(130.0), width, _ui_px(27.0)), _font_size(14.0), Color("#ffe3a2"))
+	_draw_center_text("1. 荷物と同じ記号のHUBを探す", Rect2(r.position.x, r.position.y + _ui_px(62.0), width, _ui_px(27.0)), _font_size(15.0), Color("#f4fdff"))
+	_draw_center_text("2. 光る交差点でTAP → 軌道切替", Rect2(r.position.x, r.position.y + _ui_px(96.0), width, _ui_px(27.0)), _font_size(15.0), Color("#ddfbff"))
+	_draw_center_text("3. 同じHUBでTAP → 配達", Rect2(r.position.x, r.position.y + _ui_px(130.0), width, _ui_px(27.0)), _font_size(15.0), Color("#ffefc7"))
 	var start_rect := Rect2(r.position.x + _ui_px(22.0), r.end.y - _ui_px(59.0), width - _ui_px(44.0), _ui_px(48.0))
 	_rounded_box(start_rect, Color("#14647a"), Color("#8dfbff"), 12, 2)
 	_draw_center_text("TAP TO START", start_rect, _font_size(16.0), Color.WHITE)
@@ -725,6 +733,8 @@ func _update_debug_bridge() -> void:
 		"audio_playing": audio_player.playing,
 		"ui_scale": ui_scale,
 		"sound_rect": _rect_payload(sound_rect),
+		"hub_rect": _rect_payload(hub_rect),
+		"hud_rect": _rect_payload(hud_rect),
 		"retry_rect": _rect_payload(retry_rect),
 		"field": _rect_payload(field_rect),
 		"info": _rect_payload(info_rect),
