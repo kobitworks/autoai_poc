@@ -13,6 +13,28 @@
 .game-qr-dialog .qr-url{font-size:11px;overflow-wrap:anywhere;color:#3d658b;margin:0 0 16px}
 .game-qr-dialog .qr-close{display:block;width:100%;min-height:46px;border:0;border-radius:13px;background:#1683dd;color:white;font:inherit;font-weight:700;cursor:pointer}
 .game-qr-dialog .qr-link{display:block;font-size:13px;color:#2473b6;margin-bottom:14px}
+
+/* mobile-compact-game-cards v1 */
+@media (max-width: 620px) {
+  .shell{padding:20px 0 38px}
+  .head{gap:5px;margin-bottom:12px}
+  .head h2{font-size:25px}
+  .back{font-size:13px}
+  .grid{grid-template-columns:minmax(0,1fr);gap:12px}
+  .card{border-radius:16px;box-shadow:0 5px 16px #14374813}
+  .card:hover{transform:none}
+  .visual{min-height:90px;height:90px;font-size:48px}
+  .body{padding:14px}
+  .badges{gap:5px}
+  .badge{padding:4px 7px;font-size:10px}
+  .card h3{font-size:21px;margin:9px 0 5px;line-height:1.25}
+  .card p{font-size:13px;line-height:1.5;margin:7px 0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+  .card p.meta{font-size:11px;line-height:1.45;-webkit-line-clamp:2}
+  .actions{gap:6px;margin-top:12px;flex-wrap:wrap}
+  .btn{min-height:44px;padding:10px 7px;font-size:12px;display:inline-flex;align-items:center;justify-content:center;white-space:normal;line-height:1.3}
+  .qr-launch{min-height:44px}
+  .qr-launch img{width:19px;height:19px}
+}
 </style></head>
 <body><header><div class="hero"><p class="eyebrow">AUTOAI / P021</p><h1>Game Development Lab</h1><p class="lead">小さく作って、すぐ遊ぶ。孫プロジェクト単位のゲームPoCを、この1つの一覧から起動します。</p><div class="stats"><div><strong>19</strong><span>Playable games</span></div><div><strong>Web</strong><span>PoC first</span></div><div><strong>Godot</strong><span>Primary engine</span></div></div></div></header>
 <main class="shell"><div class="head"><div><p class="eyebrow">PLAYABLE PROTOTYPES</p><h2>ゲーム一覧</h2></div><a class="back" href="../">AutoAI PoCトップへ</a></div>
