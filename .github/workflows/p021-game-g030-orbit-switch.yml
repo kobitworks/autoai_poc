@@ -1,0 +1,141 @@
+name: P021 GAME-G030 Orbit Switch Courier Godot Web
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'p021-game/sources/orbit-switch-courier-godot/**'
+      - 'p021-game/games/orbit-switch-courier/**'
+      - 'p021-game/qa/orbit-switch-courier-responsive.js'
+      - 'p021-game/index.html'
+      - '.github/workflows/p021-game-g030-orbit-switch.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: p021-game-g030-orbit-switch-develop
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: "4.7.2"
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+      - name: Contract checks for GAME-069
+        run: |
+          test -s p021-game/sources/orbit-switch-courier-godot/project.godot
+          test -s p021-game/sources/orbit-switch-courier-godot/Main.tscn
+          test -s p021-game/sources/orbit-switch-courier-godot/Main.gd
+          test -s p021-game/sources/orbit-switch-courier-godot/export_presets.cfg
+          test -s p021-game/sources/orbit-switch-courier-godot/README.md
+          test -s p021-game/qa/orbit-switch-courier-responsive.js
+          grep -q 'GAME-069-20261011' p021-game/sources/orbit-switch-courier-godot/Main.gd
+          grep -q 'GAME-G030' p021-game/sources/orbit-switch-courier-godot/Main.gd
+          grep -q 'InputEventScreenTouch' p021-game/sources/orbit-switch-courier-godot/Main.gd
+          grep -q "localStorage" p021-game/sources/orbit-switch-courier-godot/Main.gd
+          grep -q 'ORBIT SWITCH COURIER' p021-game/sources/orbit-switch-courier-godot/Main.gd
+          grep -q 'GAME-G030' p021-game/index.html
+          grep -q 'games/orbit-switch-courier/' p021-game/index.html
+
+  export-web:
+    needs: contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    container:
+      image: barichello/godot-ci:4.7.2
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+      - name: Setup Godot export templates
+        run: |
+          mkdir -p ~/.local/share/godot/export_templates/
+          cp -a /root/.local/share/godot/export_templates/${GODOT_VERSION}.stable ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+      - name: Bundle Noto Sans JP and license
+        working-directory: p021-game/sources/orbit-switch-courier-godot
+        run: |
+          mkdir -p fonts
+          wget -q -O fonts/NotoSansJP.ttf "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/NotoSansJP%5Bwght%5D.ttf"
+          wget -q -O fonts/OFL.txt "https://raw.githubusercontent.com/google/fonts/main/ofl/notosansjp/OFL.txt"
+          test -s fonts/NotoSansJP.ttf
+          test -s fonts/OFL.txt
+      - name: Import and parse Godot project
+        working-directory: p021-game/sources/orbit-switch-courier-godot
+        run: |
+          if ! godot --headless --editor --quit-after 4 > /tmp/godot-import.log 2>&1; then
+            cat /tmp/godot-import.log
+            exit 1
+          fi
+          cat /tmp/godot-import.log
+          if grep -E 'SCRIPT ERROR|Parse Error|Failed to load script' /tmp/godot-import.log; then exit 1; fi
+      - name: Export GAME-G030 for Web
+        working-directory: p021-game/sources/orbit-switch-courier-godot
+        run: |
+          rm -rf ../../games/orbit-switch-courier
+          mkdir -p ../../games/orbit-switch-courier
+          godot --headless --export-release "Web" ../../games/orbit-switch-courier/index.html
+          cp README.md ../../games/orbit-switch-courier/README.md
+          cp fonts/OFL.txt ../../games/orbit-switch-courier/NotoSansJP-OFL.txt
+          cat > ../../games/orbit-switch-courier/build.json <<'JSON'
+          {
+            "game": "GAME-G030",
+            "task": "GAME-069",
+            "engine": "Godot 4.7.2",
+            "renderer": "Compatibility",
+            "thread_support": false,
+            "quality_target": 84,
+            "storage": "browser localStorage",
+            "viewports": ["390x844", "844x390", "768x1024", "1024x768"]
+          }
+          JSON
+          test -s ../../games/orbit-switch-courier/index.html
+          test -s ../../games/orbit-switch-courier/index.wasm
+          test -s ../../games/orbit-switch-courier/index.pck
+          test -s ../../games/orbit-switch-courier/index.js
+      - name: Commit exported Godot Web build
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A p021-game/games/orbit-switch-courier/
+          if git diff --cached --quiet; then
+            echo "No exported changes."
+          else
+            git commit -m "P021 GAME-069: publish Orbit Switch Courier Godot Web"
+            git pull --rebase origin develop
+            git push origin HEAD:develop
+          fi
+
+  browser-quality:
+    needs: export-web
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Start static server
+        run: |
+          python3 -m http.server 8000 > /tmp/p021-g030-http.log 2>&1 &
+          for i in $(seq 1 40); do
+            if curl -fsS http://127.0.0.1:8000/p021-game/games/orbit-switch-courier/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          exit 1
+      - name: Run four viewport and gameplay QA
+        run: node p021-game/qa/orbit-switch-courier-responsive.js
