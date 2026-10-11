@@ -61,6 +61,14 @@ async function run(){
         // Record the novice intro on all four viewport sizes.
         await page.screenshot({path:dir+'/'+t.name+'-intro.png'});
         const soundBox=physicalRect(d.sound_rect,c,d);
+        const hudBox=physicalRect(d.hud_rect,c,d);
+        const hubBox=physicalRect(d.hub_rect,c,d);
+        // Compact landscape intentionally hides GAME HUB; other layouts must
+        // show a distinct, non-overlapping second header row.
+        if(c.height>520) {
+          check(hubBox.y+hubBox.height <= hudBox.y-3,
+            'GAME HUB overlaps the HUD: '+JSON.stringify({hubBox,hudBox}));
+        }
         check(soundBox.width>=44&&soundBox.height>=44,
           'SOUND tap target <44px: '+JSON.stringify(soundBox));
         check(soundBox.x>=0 && soundBox.y>=0 &&
