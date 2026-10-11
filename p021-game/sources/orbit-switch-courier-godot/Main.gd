@@ -177,7 +177,7 @@ func _process(delta: float) -> void:
 	_process_sparks(delta)
 	if qa_mode and OS.get_name() == "Web":
 		_process_qa_command()
-	if bridge_clock >= 0.18:
+	if bridge_clock >= (0.025 if qa_mode else 0.18):
 		bridge_clock = 0.0
 		_update_debug_bridge()
 	queue_redraw()
