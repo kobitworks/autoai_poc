@@ -72,9 +72,13 @@ async function run(){
         check(d.energy===3,'Energy lost at switch');
         evidence.transfer={orbit:d.orbit,energy:d.energy};
         // Orbit 0 angular velocity is positive; Hub 0 is at 1.48 radians.
+        // The actual scoring window is 1.365..1.595 (HUB_WINDOW=0.115).
+        // Observe the middle 1.37..1.49 band, not a 0.05-rad sliver that
+        // can be skipped when the browser or a tablet frame is delayed.
+        // Delivery and full energy are still required: never force physics/state.
         await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
-          x.orbit===0&&x.angle>=1.345&&x.angle<=1.395;},'approach natural delivery');
-        evidence.hubTrigger='1.345..1.395 rad, real-time observation';
+          x.orbit===0&&x.cargo_target===0&&x.angle>=1.37&&x.angle<=1.49;},'approach natural delivery');
+        evidence.hubTrigger='1.37..1.49 rad, real-time observation within natural HUB window';
         await input(page,t);
         evidence.hubAfter=await snapshot(page);
         await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.deliveries>=1,'real delivery',4000);
