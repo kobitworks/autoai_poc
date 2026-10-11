@@ -174,7 +174,9 @@ async function run(){
         await page.screenshot({path:dir+'/'+t.name+'-route-night.png'});
         evidence.routeMoves.push(await physicalSwitch(page,t,2,1,5.60,5.69,'NIGHT 2->1'));
         evidence.routeMoves.push(await physicalSwitch(page,t,1,0,4.55,4.62,'NIGHT 1->0'));
-        evidence.routeMoves.push(await physicalDeliver(page,t,0,1.36,1.52,4,'NIGHT HUB0'));
+        // GAME-076: Watch the full usable touch zone, not an easily skipped 0.16-rad sliver.
+        // 1.28..1.68 stays inside the genuine ±0.23 HUB physics window.
+        evidence.routeMoves.push(await physicalDeliver(page,t,0,1.28,1.68,4,'NIGHT HUB0'));
         evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.37,4.45,'NIGHT 0->1'));
         evidence.routeMoves.push(await physicalDeliver(page,t,1,3.53,3.68,5,'NIGHT HUB1'));
         evidence.routeMoves.push(await physicalSwitch(page,t,1,2,2.55,2.63,'NIGHT 1->2'));
