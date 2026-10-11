@@ -141,7 +141,7 @@ async function run(){
         check(d.energy===3,'Energy lost at switch');
         evidence.transfer={orbit:d.orbit,energy:d.energy};
         // Orbit 0 angular velocity is positive; Hub 0 is at 1.48 radians.
-        // The actual scoring window is 1.365..1.595 (HUB_WINDOW=0.115).
+        // The actual scoring window is 1.33..1.63 (HUB_WINDOW=0.15).
         // Observe the middle 1.37..1.49 band, not a 0.05-rad sliver that
         // can be skipped when the browser or a tablet frame is delayed.
         // Delivery and full energy are still required: never force physics/state.
@@ -163,9 +163,9 @@ async function run(){
         // 2 -> 1 -> 0 -> HUB0; 0 -> 1 -> HUB1; 1 -> 2 -> HUB2 (ACE at 6).
         evidence.routeMoves=[];
         evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.37,4.45,'RUSH 0->1'));
-        evidence.routeMoves.push(await physicalDeliver(page,t,1,3.59,3.66,2,'RUSH HUB1'));
+        evidence.routeMoves.push(await physicalDeliver(page,t,1,3.53,3.68,2,'RUSH HUB1'));
         evidence.routeMoves.push(await physicalSwitch(page,t,1,2,2.55,2.63,'RUSH 1->2'));
-        evidence.routeMoves.push(await physicalDeliver(page,t,2,5.10,5.17,3,'NIGHT HUB2'));
+        evidence.routeMoves.push(await physicalDeliver(page,t,2,5.06,5.22,3,'NIGHT HUB2'));
         d=await snapshot(page);
         check(d.mission_tier===2&&d.mission_name==='NIGHT'&&d.cargo_limit===12,
           'Natural 3 deliveries did not unlock NIGHT/12 seconds');
@@ -174,11 +174,11 @@ async function run(){
         await page.screenshot({path:dir+'/'+t.name+'-route-night.png'});
         evidence.routeMoves.push(await physicalSwitch(page,t,2,1,5.60,5.69,'NIGHT 2->1'));
         evidence.routeMoves.push(await physicalSwitch(page,t,1,0,4.55,4.62,'NIGHT 1->0'));
-        evidence.routeMoves.push(await physicalDeliver(page,t,0,1.37,1.44,4,'NIGHT HUB0'));
+        evidence.routeMoves.push(await physicalDeliver(page,t,0,1.36,1.52,4,'NIGHT HUB0'));
         evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.37,4.45,'NIGHT 0->1'));
-        evidence.routeMoves.push(await physicalDeliver(page,t,1,3.59,3.66,5,'NIGHT HUB1'));
+        evidence.routeMoves.push(await physicalDeliver(page,t,1,3.53,3.68,5,'NIGHT HUB1'));
         evidence.routeMoves.push(await physicalSwitch(page,t,1,2,2.55,2.63,'NIGHT 1->2'));
-        evidence.routeMoves.push(await physicalDeliver(page,t,2,5.10,5.17,6,'ACE HUB2'));
+        evidence.routeMoves.push(await physicalDeliver(page,t,2,5.06,5.22,6,'ACE HUB2'));
         d=await snapshot(page);
         check(d.mission_tier===3&&d.mission_name==='ACE'&&d.cargo_limit===10,
           'Natural 6 deliveries did not unlock ACE/10 seconds');
