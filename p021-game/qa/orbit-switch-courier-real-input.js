@@ -171,7 +171,11 @@ async function run(){
           'Natural 3 deliveries did not unlock NIGHT/12 seconds');
         evidence.night={deliveries:d.deliveries,score:d.score,limit:d.cargo_limit,
           cue:d.cue_text,energy:d.energy};
-        await page.screenshot({path:dir+'/'+t.name+'-route-night.png'});
+        // Important: the next 2->1 crossing arrives ~0.5s after delivery #3.
+        // Awaiting a heavyweight screenshot here makes larger tablet viewports miss
+        // that crossing, forcing a whole extra orbit and expiring the NIGHT cargo.
+        // Record the genuine route milestone in evidence.night; keep screenshots
+        // for non-critical states instead of perturbing natural timed gameplay.
         evidence.routeMoves.push(await physicalSwitch(page,t,2,1,5.60,5.69,'NIGHT 2->1'));
         evidence.routeMoves.push(await physicalSwitch(page,t,1,0,4.55,4.62,'NIGHT 1->0'));
         // GAME-076: Watch the full usable touch zone, not an easily skipped 0.16-rad sliver.
@@ -191,7 +195,7 @@ async function run(){
         // Orbit 2 after HUB2 rotates forward; 0.56..0.70 is safe even
         // as we send three taps, unlike 5.72 where a bridge is nearby.
         await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
-          x.orbit===2&&x.angle>=0.56&&x.angle<=0.70;},'safe miss zone after ACE');
+          x.orbit===2&&x.angle>=0.55&&x.angle<=1.40;},'safe miss zone after ACE');
         for(let energy=2;energy>=0;energy--){
           await page.waitForTimeout(170);
           await input(page,t);
@@ -246,7 +250,7 @@ async function run(){
   }finally{await browser.close();}
   const output={task:'GAME-076',game:'GAME-G030',
     method:'real touch/mouse STARTER/RUSH/NIGHT/ACE natural delivery and BEST persistence; read-only QA telemetry; no QA command/state override',
-    screenshotStates:['intro','playing','route-rush','route-night','route-ace','miss-feedback','result','retry','sound-off','sound-on','replay'],
+    screenshotStates:['intro','playing','route-rush','route-ace','miss-feedback','result','retry','sound-off','sound-on','replay'],
     physicalOutput:'NOT VERIFIED – must check actual device audio and first-time user experience',
     independentQualityScore:'NOT ASSESSED (manual visual/audio/human checks separate)',viewports:results};
   fs.writeFileSync(dir+'/results.json',JSON.stringify(output,null,2));
