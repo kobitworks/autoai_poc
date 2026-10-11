@@ -105,7 +105,7 @@ async function run(){
         await input(page,t);
         await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.state==='playing','start');
         d=await snapshot(page);
-        check(d.orbit===1 && d.cargo_target===0 && d.energy===3,'Unexpected deterministic round or double start input');
+        check(d.orbit===1 && d.cargo_target===0 && d.energy===3 && d.mission_tier===0 && d.cargo_limit===16,'Unexpected initial route, cargo or double start input');
         await page.screenshot({path:dir+'/'+t.name+'-playing.png'});
         // Orbit 1 angular velocity is negative. Wait for crossing at 4.50 radians.
         await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
@@ -130,7 +130,10 @@ async function run(){
         await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.deliveries>=1,'real delivery',4000);
         d=await snapshot(page);
         check(d.deliveries===1&&d.score>0&&d.energy===3,'Natural score/delivery missing');
-        evidence.delivery={deliveries:d.deliveries,score:d.score,energy:d.energy};
+        check(d.mission_tier===1 && d.mission_name==='RUSH' && d.cargo_limit===14,
+          'Delivery did not unlock the harder RUSH route');
+        evidence.delivery={deliveries:d.deliveries,score:d.score,energy:d.energy,
+          progression:{route:d.mission_tier,name:d.mission_name,cargoLimit:d.cargo_limit,cue:d.cue_text}};
         // Three real misses at 2.0 rad: no nearby active transfer/HUB window.
         await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
           x.orbit===0&&x.angle>=2.00&&x.angle<=2.13;},'safe miss zone');
@@ -185,7 +188,7 @@ async function run(){
       }
     }
   }finally{await browser.close();}
-  const output={task:'GAME-074',game:'GAME-G030',
+  const output={task:'GAME-075',game:'GAME-G030',
     method:'real touch/mouse UI sound toggle + natural orbital play and BEST persistence; read-only QA telemetry',
     screenshotStates:['intro','playing','result','retry','sound-off','sound-on','replay'],
     physicalOutput:'NOT VERIFIED – must check actual device audio and first-time user experience',
