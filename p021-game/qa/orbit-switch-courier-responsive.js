@@ -61,8 +61,8 @@ function inside(rect, width, height) {
       assert(data.build === 'GAME-069-20261011', target.name + ': wrong build');
       assert(data.child_id === 'GAME-G030', target.name + ': wrong child id');
       assert(data.state === 'intro', target.name + ': intro not ready');
-      assert(inside(data.field, target.width, target.height), target.name + ': field outside viewport');
-      assert(inside(data.info, target.width, target.height), target.name + ': info outside viewport');
+      assert(inside(data.field, data.viewport_w, data.viewport_h), target.name + ': field outside Godot viewport ' + JSON.stringify(data.field) + ' / ' + data.viewport_w + 'x' + data.viewport_h);
+      assert(inside(data.info, data.viewport_w, data.viewport_h), target.name + ': info outside Godot viewport ' + JSON.stringify(data.info) + ' / ' + data.viewport_w + 'x' + data.viewport_h);
 
       const canvas = await page.locator('#canvas').boundingBox();
       assert(canvas && canvas.width > 200 && canvas.height > 200, target.name + ': canvas missing');
