@@ -41,6 +41,8 @@ var result_clock := 0.0
 var bridge_clock := 0.0
 var elapsed := 0.0
 var last_action_angle := -99.0
+# Ignore a browser-emulated second event for the same physical tap/click.
+var last_pointer_down_msec: int = -100000
 var trail: Array[Vector2] = []
 var sparks: Array[Dictionary] = []
 
@@ -556,10 +558,20 @@ func _draw_sparks() -> void:
 		var life := clampf(float(p["life"]), 0.0, 1.0)
 		draw_circle(Vector2(p["pos"]), 2.0 + life * 2.5, Color(Color(p["color"]), life * 0.72))
 
+func _pointer_press_allowed() -> bool:
+	var now: int = Time.get_ticks_msec()
+	if now - last_pointer_down_msec < 120:
+		return false
+	last_pointer_down_msec = now
+	return true
+
 func _gui_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
 		var mouse := event as InputEventMouseButton
 		if mouse.button_index == MOUSE_BUTTON_LEFT and mouse.pressed:
+			if not _pointer_press_allowed():
+				accept_event()
+				return
 			if sound_rect.has_point(mouse.position):
 				_toggle_sound()
 			elif hub_rect.has_point(mouse.position) and size.y > 460.0:
@@ -570,6 +582,9 @@ func _gui_input(event: InputEvent) -> void:
 	elif event is InputEventScreenTouch:
 		var touch := event as InputEventScreenTouch
 		if touch.pressed:
+			if not _pointer_press_allowed():
+				accept_event()
+				return
 			if sound_rect.has_point(touch.position):
 				_toggle_sound()
 			elif hub_rect.has_point(touch.position) and size.y > 460.0:
