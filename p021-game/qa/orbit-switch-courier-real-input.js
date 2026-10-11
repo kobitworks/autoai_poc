@@ -92,6 +92,8 @@ async function run(){
         check(score>0&&d.best>=score,'RESULT score/BEST invalid');
         evidence.result={score,best:d.best,energy:d.energy};
         await page.screenshot({path:dir+'/'+t.name+'-result.png'});
+        // Retry is a separate human action, not the browser's duplicate pointer event.
+        await page.waitForTimeout(170);
         await input(page,t);
         await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.state==='intro','RETRY');
         d=await snapshot(page);
