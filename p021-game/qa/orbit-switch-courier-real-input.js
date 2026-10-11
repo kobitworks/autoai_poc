@@ -19,13 +19,10 @@ async function until(page, predicate, stage, waitMs=16000) {
     .catch(e=>{throw new Error(stage+': '+e.message);});
 }
 async function input(page,t) {
-  const d=await snapshot(page), canvas=await page.locator('#canvas').boundingBox();
-  check(d && d.field && canvas, 'No game field to operate');
-  const x=canvas.x+(d.field[0]+d.field[2]/2)*canvas.width/d.viewport_w;
-  const y=canvas.y+(d.field[1]+d.field[3]/2)*canvas.height/d.viewport_h;
-  check(x>0 && x<t.width && y>0 && y<t.height,'Tap/click outside viewport');
-  if(t.input==='touch') await page.touchscreen.tap(x,y);
-  else await page.mouse.click(x,y);
+  // Use the once-calculated physical pointer position: no DOM queries on the timing-critical path.
+  check(t.hitPoint,'Hit point was not prepared');
+  if(t.input==='touch') await page.touchscreen.tap(t.hitPoint.x,t.hitPoint.y);
+  else await page.mouse.click(t.hitPoint.x,t.hitPoint.y);
 }
 async function run(){
   fs.mkdirSync(dir,{recursive:true});
@@ -52,6 +49,13 @@ async function run(){
           'Field or info overflows game viewport');
         const c=await page.locator('#canvas').boundingBox();
         check(c && c.x>=-2 && c.y>=-2 && c.x+c.width<=t.width+2 && c.y+c.height<=t.height+2,'Canvas overflows');
+        // Cache coordinates only once before starting gameplay; telemetry may update continuously.
+        t.hitPoint={
+          x:c.x+(d.field[0]+d.field[2]/2)*c.width/d.viewport_w,
+          y:c.y+(d.field[1]+d.field[3]/2)*c.height/d.viewport_h
+        };
+        check(t.hitPoint.x>0 && t.hitPoint.x<t.width &&
+          t.hitPoint.y>0 && t.hitPoint.y<t.height,'Physical input point outside viewport');
         // A physical touch/click starts the round.
         await input(page,t);
         await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.state==='playing','start');
@@ -60,7 +64,7 @@ async function run(){
         // Orbit 1 angular velocity is negative. Wait for crossing at 4.50 radians.
         await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
           x.orbit===1&&x.angle>=4.62&&x.angle<=4.68;},'approach natural switch');
-        evidence.switchBefore=await snapshot(page);
+        evidence.switchTrigger='4.62..4.68 rad, real-time observation';
         await input(page,t);
         evidence.switchAfter=await snapshot(page);
         await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.orbit===0,'real orbit transfer',4000);
@@ -70,7 +74,7 @@ async function run(){
         // Orbit 0 angular velocity is positive; Hub 0 is at 1.48 radians.
         await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
           x.orbit===0&&x.angle>=1.345&&x.angle<=1.395;},'approach natural delivery');
-        evidence.hubBefore=await snapshot(page);
+        evidence.hubTrigger='1.345..1.395 rad, real-time observation';
         await input(page,t);
         evidence.hubAfter=await snapshot(page);
         await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.deliveries>=1,'real delivery',4000);
