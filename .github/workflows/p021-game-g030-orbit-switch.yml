@@ -110,8 +110,17 @@ jobs:
             echo "No exported changes."
           else
             git commit -m "P021 GAME-069: publish Orbit Switch Courier Godot Web"
-            git pull --rebase origin develop
-            git push origin HEAD:develop
+            for attempt in 1 2 3 4 5; do
+              git fetch origin develop
+              git rebase origin/develop
+              if git push origin HEAD:develop; then
+                exit 0
+              fi
+              echo "Push race detected; retrying after refresh (attempt ${attempt}/5)."
+              sleep 2
+            done
+            echo "Unable to publish after retry budget."
+            exit 1
           fi
 
   browser-quality:
