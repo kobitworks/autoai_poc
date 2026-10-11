@@ -14,26 +14,31 @@
 .game-qr-dialog .qr-close{display:block;width:100%;min-height:46px;border:0;border-radius:13px;background:#1683dd;color:white;font:inherit;font-weight:700;cursor:pointer}
 .game-qr-dialog .qr-link{display:block;font-size:13px;color:#2473b6;margin-bottom:14px}
 
-/* mobile-compact-game-cards v1 */
+/* mobile-horizontal-game-list v2 */
 @media (max-width: 620px) {
-  .shell{padding:20px 0 38px}
-  .head{gap:5px;margin-bottom:12px}
-  .head h2{font-size:25px}
+  .hero{padding:12px 0}
+  .hero .eyebrow,.hero .lead,.hero .stats{display:none}
+  .hero h1{font-size:20px;line-height:1.2}
+  .shell{padding:12px 0 30px}
+  .head{gap:2px;margin-bottom:10px}
+  .head .eyebrow{display:none}
+  .head h2{font-size:23px}
   .back{font-size:13px}
-  .grid{grid-template-columns:minmax(0,1fr);gap:12px}
-  .card{border-radius:16px;box-shadow:0 5px 16px #14374813}
+  .grid{grid-template-columns:minmax(0,1fr);gap:8px}
+  .card{display:grid;grid-template-columns:72px minmax(0,1fr);min-height:80px;border-radius:12px;box-shadow:0 3px 10px #14374812}
   .card:hover{transform:none}
-  .visual{min-height:90px;height:90px;font-size:48px}
-  .body{padding:14px}
-  .badges{gap:5px}
-  .badge{padding:4px 7px;font-size:10px}
-  .card h3{font-size:21px;margin:9px 0 5px;line-height:1.25}
-  .card p{font-size:13px;line-height:1.5;margin:7px 0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
-  .card p.meta{font-size:11px;line-height:1.45;-webkit-line-clamp:2}
-  .actions{gap:6px;margin-top:12px;flex-wrap:wrap}
-  .btn{min-height:44px;padding:10px 7px;font-size:12px;display:inline-flex;align-items:center;justify-content:center;white-space:normal;line-height:1.3}
-  .qr-launch{min-height:44px}
-  .qr-launch img{width:19px;height:19px}
+  .visual{height:72px;min-height:72px;align-self:center;font-size:31px}
+  .body{min-width:0;padding:8px 10px;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto auto;align-content:center;align-items:center;gap:2px 8px}
+  .badges{grid-column:1;grid-row:2;gap:3px;min-width:0}
+  .badges .badge{display:none}
+  .badges .badge:nth-child(2){display:inline-block;padding:0;background:transparent;font-size:11px;font-weight:600;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+  .card h3{grid-column:1;grid-row:1;font-size:15px;line-height:1.3;margin:0;overflow-wrap:anywhere}
+  .card p{display:none}
+  .actions{grid-column:2;grid-row:1/span 2;display:flex;flex-direction:column;align-items:stretch;gap:4px;margin:0;width:102px;max-width:102px}
+  .btn{flex:none;min-height:36px;padding:6px 5px;font-size:11px;display:inline-flex;align-items:center;justify-content:center;white-space:normal;line-height:1.25;border-radius:8px}
+  .actions .btn:not(.primary):not(.qr-launch){display:none}
+  .qr-launch{min-height:36px}
+  .qr-launch img{width:16px;height:16px}
 }
 </style></head>
 <body><header><div class="hero"><p class="eyebrow">AUTOAI / P021</p><h1>Game Development Lab</h1><p class="lead">小さく作って、すぐ遊ぶ。孫プロジェクト単位のゲームPoCを、この1つの一覧から起動します。</p><div class="stats"><div><strong>19</strong><span>Playable games</span></div><div><strong>Web</strong><span>PoC first</span></div><div><strong>Godot</strong><span>Primary engine</span></div></div></div></header>
