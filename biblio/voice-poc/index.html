@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Biblio キャラクター音声 PoC</title>
+<style>
+:root{color-scheme:light;--bg:#eef7f8;--card:#fff;--ink:#24343b;--muted:#63747b;--accent:#365486;--line:#cfe0e4;--ok:#1f7a4d;--warn:#8a6700}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Yu Gothic",sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+main{width:min(960px,100%);margin:auto;padding:20px 14px 44px}h1{font-size:clamp(24px,5vw,36px);margin:0 0 8px}h2{font-size:20px;margin:0 0 10px}.lead{margin:0 0 18px;color:var(--muted)}
+.notice{background:#f7fbfc;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:12px 0}.status{font-weight:700}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:0 3px 14px #24414b12}.character{display:flex;align-items:center;gap:10px;margin-bottom:8px}.avatar{width:46px;height:46px;display:grid;place-items:center;border-radius:50%;background:#e6f0fa;font-size:23px}.name{font-weight:800;font-size:18px}.role{font-size:12px;color:var(--muted)}
+.line{min-height:94px;padding:12px;border-radius:10px;background:#f7fafb;border:1px solid #dce8eb;margin:10px 0 12px;font-size:16px}
+label{display:block;font-weight:700;font-size:13px;margin-top:10px}.hint{display:block;color:var(--muted);font-size:12px;font-weight:400}select,input[type=range]{width:100%;margin-top:5px}select{min-height:44px;padding:7px 9px;border:1px solid #b9ccd1;border-radius:8px;background:#fff}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.btn{min-height:48px;border:0;border-radius:9px;padding:9px 12px;font:inherit;font-weight:800;cursor:pointer;background:var(--accent);color:#fff}.btn.secondary{background:#fff;color:var(--accent);border:1px solid var(--accent)}.btn:disabled{opacity:.45;cursor:not-allowed}
+.meta{margin-top:10px;font-size:12px;color:var(--muted)}.badge{display:inline-block;margin-right:5px;padding:2px 7px;border-radius:999px;background:#edf5f7;border:1px solid #cbdde1}
+.footer{margin-top:16px;font-size:13px;color:var(--muted)}code{background:#eef2f3;padding:1px 4px;border-radius:4px}
+@media(max-width:720px){.grid{grid-template-columns:1fr}.controls{grid-template-columns:1fr}.card{padding:14px}}
+</style>
+</head>
+<body>
+<main>
+  <h1>Biblio キャラクター音声 PoC</h1>
+  <p class="lead">ブラウザ標準の Web Speech API だけを使う無料PoCです。外部TTS API・音声ファイル・実在人物の声の模倣は使用しません。</p>
+
+  <div class="notice">
+    <div id="support" class="status" role="status" aria-live="polite">音声機能を確認中…</div>
+    <div id="voiceSummary" class="footer"></div>
+    <button id="stopAll" class="btn secondary" type="button" style="margin-top:10px">読み上げを停止</button>
+  </div>
+
+  <section class="grid" aria-label="キャラクター音声サンプル">
+    <article class="card" data-character="sheroku">
+      <div class="character"><div class="avatar" aria-hidden="true">🔎</div><div><div class="name">家入 紗六</div><div class="role">推理役 / 冷静・間を取る</div></div></div>
+      <div class="line" id="text-sheroku">手掛かりは、もう目の前にあります。順番を変えて見てみましょう。</div>
+      <label for="voice-sheroku">声<select id="voice-sheroku"></select><span class="hint">端末の日本語音声を優先。声名は端末ごとに異なります。</span></label>
+      <label for="rate-sheroku">話速 <output id="rateOut-sheroku">0.92</output><input id="rate-sheroku" type="range" min="0.7" max="1.3" step="0.01" value="0.92"></label>
+      <label for="pitch-sheroku">高さ <output id="pitchOut-sheroku">0.92</output><input id="pitch-sheroku" type="range" min="0.7" max="1.3" step="0.01" value="0.92"></label>
+      <div class="controls"><button class="btn speak" type="button" data-id="sheroku">セリフを再生</button><button class="btn secondary reset" type="button" data-id="sheroku">設定を戻す</button></div>
+      <div class="meta" id="meta-sheroku"></div>
+    </article>
+
+    <article class="card" data-character="junji">
+      <div class="character"><div class="avatar" aria-hidden="true">🧭</div><div><div class="name">渡 淳二</div><div class="role">相棒・案内役 / 安心感・やや軽快</div></div></div>
+      <div class="line" id="text-junji">急がなくて大丈夫です。安全な場所で、次の手掛かりを確認しましょう。</div>
+      <label for="voice-junji">声<select id="voice-junji"></select><span class="hint">2つ以上の日本語音声がある場合は、紗六と別の声を初期選択します。</span></label>
+      <label for="rate-junji">話速 <output id="rateOut-junji">1.03</output><input id="rate-junji" type="range" min="0.7" max="1.3" step="0.01" value="1.03"></label>
+      <label for="pitch-junji">高さ <output id="pitchOut-junji">1.02</output><input id="pitch-junji" type="range" min="0.7" max="1.3" step="0.01" value="1.02"></label>
+      <div class="controls"><button class="btn speak" type="button" data-id="junji">セリフを再生</button><button class="btn secondary reset" type="button" data-id="junji">設定を戻す</button></div>
+      <div class="meta" id="meta-junji"></div>
+    </article>
+  </section>
+
+  <div class="notice footer">
+    <strong>PoC方針:</strong> 自動再生しません。セリフ本文は常に画面に残します。<code>localService=true</code> の音声を優先しますが、端末によってはリモート音声しかないためオフライン動作は保証しません。音声一覧が遅れて届くブラウザ向けに <code>voiceschanged</code> にも対応します。
+  </div>
+</main>
+<script>
+(() => {
+  const synth = window.speechSynthesis;
+  const supported = "speechSynthesis" in window && "SpeechSynthesisUtterance" in window;
+  const supportEl = document.getElementById("support");
+  const summaryEl = document.getElementById("voiceSummary");
+  const defaults = {
+    sheroku:{rate:0.92,pitch:0.92},
+    junji:{rate:1.03,pitch:1.02}
+  };
+  let voices = [];
+
+  const setEnabled = enabled => document.querySelectorAll(".speak,.reset,#stopAll,select,input").forEach(el => el.disabled = !enabled);
+
+  function sortedVoices(){
+    const all = synth ? synth.getVoices() : [];
+    return [...all].sort((a,b) => {
+      const jaA = /^ja(-|_)/i.test(a.lang) ? 0 : 1;
+      const jaB = /^ja(-|_)/i.test(b.lang) ? 0 : 1;
+      const localA = a.localService ? 0 : 1;
+      const localB = b.localService ? 0 : 1;
+      return jaA-jaB || localA-localB || a.name.localeCompare(b.name,"ja");
+    });
+  }
+
+  function optionLabel(v){
+    return `${v.name} / ${v.lang} / ${v.localService ? "端末内" : "リモート"}${v.default ? " / 既定" : ""}`;
+  }
+
+  function loadVoices(){
+    if(!supported){ setEnabled(false); supportEl.textContent="このブラウザは Speech Synthesis API に対応していません。"; return; }
+    voices = sortedVoices();
+    const japanese = voices.filter(v => /^ja(-|_)/i.test(v.lang));
+    const list = japanese.length ? japanese : voices;
+
+    ["sheroku","junji"].forEach((id,idx) => {
+      const sel = document.getElementById("voice-"+id);
+      const prior = sel.value;
+      sel.innerHTML="";
+      list.forEach(v => {
+        const opt=document.createElement("option");
+        opt.value=v.voiceURI || v.name;
+        opt.textContent=optionLabel(v);
+        sel.appendChild(opt);
+      });
+      if(prior && [...sel.options].some(o => o.value===prior)) sel.value=prior;
+      else if(sel.options.length) sel.selectedIndex=Math.min(idx,sel.options.length-1);
+      updateMeta(id);
+    });
+
+    if(list.length){
+      setEnabled(true);
+      supportEl.textContent="音声再生可能です。再生ボタンを押すと、その場で合成します。";
+      summaryEl.textContent=`利用可能音声: ${voices.length}件 / 日本語: ${japanese.length}件 / 端末内: ${voices.filter(v=>v.localService).length}件`;
+    }else{
+      setEnabled(false);
+      supportEl.textContent="音声APIはありますが、利用可能な音声がまだ読み込まれていません。";
+      summaryEl.textContent="音声一覧の読み込みを待っています。";
+    }
+  }
+
+  function selectedVoice(id){
+    const sel=document.getElementById("voice-"+id);
+    return voices.find(v => (v.voiceURI || v.name) === sel.value) || null;
+  }
+
+  function updateMeta(id){
+    const v=selectedVoice(id);
+    document.getElementById("meta-"+id).innerHTML = v
+      ? `<span class="badge">${v.lang}</span><span class="badge">${v.localService ? "端末内音声" : "リモート音声"}</span>`
+      : "音声未選択";
+  }
+
+  function speak(id){
+    const text=document.getElementById("text-"+id).textContent.trim();
+    const utter=new SpeechSynthesisUtterance(text);
+    utter.lang="ja-JP";
+    utter.rate=Number(document.getElementById("rate-"+id).value);
+    utter.pitch=Number(document.getElementById("pitch-"+id).value);
+    const v=selectedVoice(id);
+    if(v) utter.voice=v;
+    utter.onstart=()=>supportEl.textContent=`${id==="sheroku"?"家入 紗六":"渡 淳二"}のセリフを再生中…`;
+    utter.onend=()=>supportEl.textContent="再生が完了しました。";
+    utter.onerror=e=>supportEl.textContent=`再生できませんでした: ${e.error || "unknown"}`;
+    synth.cancel();
+    synth.speak(utter);
+  }
+
+  function reset(id){
+    document.getElementById("rate-"+id).value=defaults[id].rate;
+    document.getElementById("pitch-"+id).value=defaults[id].pitch;
+    document.getElementById("rateOut-"+id).value=defaults[id].rate.toFixed(2);
+    document.getElementById("pitchOut-"+id).value=defaults[id].pitch.toFixed(2);
+    const japanese=voices.filter(v=>/^ja(-|_)/i.test(v.lang));
+    const list=japanese.length?japanese:voices;
+    const sel=document.getElementById("voice-"+id);
+    const idx=id==="sheroku"?0:Math.min(1,Math.max(0,list.length-1));
+    if(sel.options.length) sel.selectedIndex=idx;
+    updateMeta(id);
+  }
+
+  document.querySelectorAll(".speak").forEach(b=>b.addEventListener("click",()=>speak(b.dataset.id)));
+  document.querySelectorAll(".reset").forEach(b=>b.addEventListener("click",()=>reset(b.dataset.id)));
+  document.getElementById("stopAll").addEventListener("click",()=>{ if(synth) synth.cancel(); supportEl.textContent="再生を停止しました。"; });
+  ["sheroku","junji"].forEach(id=>{
+    const rate=document.getElementById("rate-"+id), pitch=document.getElementById("pitch-"+id);
+    rate.addEventListener("input",()=>document.getElementById("rateOut-"+id).value=Number(rate.value).toFixed(2));
+    pitch.addEventListener("input",()=>document.getElementById("pitchOut-"+id).value=Number(pitch.value).toFixed(2));
+    document.getElementById("voice-"+id).addEventListener("change",()=>updateMeta(id));
+  });
+
+  if(!supported){ setEnabled(false); supportEl.textContent="このブラウザは Speech Synthesis API に対応していません。"; return; }
+  loadVoices();
+  if("onvoiceschanged" in synth) synth.addEventListener("voiceschanged",loadVoices);
+})();
+</script>
+</body>
+</html>
