@@ -18,11 +18,20 @@ async function until(page, predicate, stage, waitMs=16000) {
   await page.waitForFunction(predicate,null,{timeout:waitMs,polling:'raf'})
     .catch(e=>{throw new Error(stage+': '+e.message);});
 }
+async function inputAt(page,t,p) {
+  check(p && Number.isFinite(p.x) && Number.isFinite(p.y),'Physical input point missing');
+  if(t.input==='touch') await page.touchscreen.tap(p.x,p.y);
+  else await page.mouse.click(p.x,p.y);
+}
 async function input(page,t) {
-  // Use the once-calculated physical pointer position: no DOM queries on the timing-critical path.
+  // Cache gameplay position: no DOM queries on the timing-critical path.
   check(t.hitPoint,'Hit point was not prepared');
-  if(t.input==='touch') await page.touchscreen.tap(t.hitPoint.x,t.hitPoint.y);
-  else await page.mouse.click(t.hitPoint.x,t.hitPoint.y);
+  await inputAt(page,t,t.hitPoint);
+}
+function physicalRect(r,c,d) {
+  check(r && r.length===4,'Missing UI rectangle');
+  return {x:c.x+r[0]*c.width/d.viewport_w,y:c.y+r[1]*c.height/d.viewport_h,
+    width:r[2]*c.width/d.viewport_w,height:r[3]*c.height/d.viewport_h};
 }
 async function run(){
   fs.mkdirSync(dir,{recursive:true});
@@ -49,7 +58,35 @@ async function run(){
           'Field or info overflows game viewport');
         const c=await page.locator('#canvas').boundingBox();
         check(c && c.x>=-2 && c.y>=-2 && c.x+c.width<=t.width+2 && c.y+c.height<=t.height+2,'Canvas overflows');
-        // Cache coordinates only once before starting gameplay; telemetry may update continuously.
+        // Record the novice intro on all four viewport sizes.
+        await page.screenshot({path:dir+'/'+t.name+'-intro.png'});
+        const soundBox=physicalRect(d.sound_rect,c,d);
+        check(soundBox.width>=44&&soundBox.height>=44,
+          'SOUND tap target <44px: '+JSON.stringify(soundBox));
+        check(soundBox.x>=0 && soundBox.y>=0 &&
+          soundBox.x+soundBox.width<=t.width+2&&soundBox.y+soundBox.height<=t.height+2,
+          'SOUND rectangle overflows physical browser viewport');
+        const soundPoint={x:soundBox.x+soundBox.width/2,y:soundBox.y+soundBox.height/2};
+        check(d.sound===true,'SOUND should default to ON');
+        // Real physical interaction with the visible canvas button, no QA commands.
+        await inputAt(page,t,soundPoint);
+        await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.sound===false,'SOUND OFF');
+        d=await snapshot(page);
+        check(d.state==='intro' && !d.audio_playing,'SOUND OFF should mute immediately and not start the game');
+        await page.screenshot({path:dir+'/'+t.name+'-sound-off.png'});
+        await page.waitForTimeout(170);
+        await inputAt(page,t,soundPoint);
+        await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.sound===true,'SOUND ON');
+        // Internal player start is observable; actual speaker output/volume needs a human.
+        const heardByEngine=await page.waitForFunction(
+          ()=>window.__P021_ORBIT && window.__P021_ORBIT.sound &&
+            window.__P021_ORBIT.audio_playing===true,
+          null,{timeout:1200,polling:'raf'}).then(()=>true).catch(()=>false);
+        evidence.audio={soundOff:true,soundOn:true,enginePlayerObserved:heardByEngine,
+          physicalOutput:'NOT VERIFIED – requires real-device audible check'};
+        await page.screenshot({path:dir+'/'+t.name+'-sound-on.png'});
+        await page.waitForTimeout(170);
+        // Cache gameplay coordinates before time-critical physics; never override state.
         t.hitPoint={
           x:c.x+(d.field[0]+d.field[2]/2)*c.width/d.viewport_w,
           y:c.y+(d.field[1]+d.field[3]/2)*c.height/d.viewport_h
@@ -61,6 +98,7 @@ async function run(){
         await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.state==='playing','start');
         d=await snapshot(page);
         check(d.orbit===1 && d.cargo_target===0 && d.energy===3,'Unexpected deterministic round or double start input');
+        await page.screenshot({path:dir+'/'+t.name+'-playing.png'});
         // Orbit 1 angular velocity is negative. Wait for crossing at 4.50 radians.
         await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
           x.orbit===1&&x.angle>=4.62&&x.angle<=4.68;},'approach natural switch');
@@ -95,15 +133,23 @@ async function run(){
             energy,{timeout:7000,polling:'raf'});
         }
         await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.state==='result','RESULT');
+        await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.retry_rect&&x.retry_rect[3]>0;},
+          'RETRY drawn');
         d=await snapshot(page);
+        const retryBox=physicalRect(d.retry_rect,c,d);
+        check(retryBox.width>=44&&retryBox.height>=44,
+          'RETRY tap target <44px: '+JSON.stringify(retryBox));
+        evidence.targets={soundCssPixels:{w:Math.round(soundBox.width),h:Math.round(soundBox.height)},
+          retryCssPixels:{w:Math.round(retryBox.width),h:Math.round(retryBox.height)}};
         const score=d.score;
         check(score>0&&d.best>=score,'RESULT score/BEST invalid');
         evidence.result={score,best:d.best,energy:d.energy};
         await page.screenshot({path:dir+'/'+t.name+'-result.png'});
         // Retry is a separate human action, not the browser's duplicate pointer event.
         await page.waitForTimeout(170);
-        await input(page,t);
+        await inputAt(page,t,{x:retryBox.x+retryBox.width/2,y:retryBox.y+retryBox.height/2});
         await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.state==='intro','RETRY');
+        await page.screenshot({path:dir+'/'+t.name+'-retry.png'});
         d=await snapshot(page);
         check(d.best>=score&&d.score===0&&d.energy===3,'RETRY did not reset while retaining best');
         await page.reload({waitUntil:'domcontentloaded',timeout:120000});
@@ -131,9 +177,11 @@ async function run(){
       }
     }
   }finally{await browser.close();}
-  const output={task:'GAME-071',game:'GAME-G030',
-    method:'real touch/mouse events on live orbital physics; read-only QA telemetry',
-    independentQualityScore:'NOT ASSESSED (visual/audio/human checks separate)',viewports:results};
+  const output={task:'GAME-074',game:'GAME-G030',
+    method:'real touch/mouse UI sound toggle + natural orbital play and BEST persistence; read-only QA telemetry',
+    screenshotStates:['intro','playing','result','retry','sound-off','sound-on','replay'],
+    physicalOutput:'NOT VERIFIED – must check actual device audio and first-time user experience',
+    independentQualityScore:'NOT ASSESSED (manual visual/audio/human checks separate)',viewports:results};
   fs.writeFileSync(dir+'/results.json',JSON.stringify(output,null,2));
   console.log(JSON.stringify(output,null,2));
   if(results.some(x=>x.status!=='PASS'))process.exitCode=1;
