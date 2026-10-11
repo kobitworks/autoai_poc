@@ -36,3 +36,13 @@
 4. 実機スピーカー/イヤホンの実音・端末FPS/発熱・初見ユーザー30秒理解/誤タップ率は**Human Gate / 未検証**のまま保持。CIをもって実機合格とはしない。
 
 この記録は1回のRunner時間制限に伴う中間成果であり、GAME-076はTask ToDoに戻し、別タスクは実行しない。
+
+
+## 2026-10-12 06:45 JST 継続実行（今回のRunner）
+
+- 正本GAME-076=ToDo、GAME-075=Done、他Doingなしを読戻し、GAME-076をDoingへ排他取得。今回の選定タスクはこの1件のみ。
+- 前回保留run [38173935846](https://github.com/kobitworks/autoai_poc/actions/runs/38173935846)を確認。contract / export-web はSUCCESS、browser-quality はFAIL。artifact [11714908812](https://github.com/kobitworks/autoai_poc/actions/runs/38173935846/artifacts/11714908812)の37ファイル（36 PNG+results.json）を実体ダウンロードして独立読戻し。Phone Portrait / LandscapeはACE配達6件・SOUND切替・RETRY・BEST保存PASS。一方Tablet Portrait / LandscapeはNIGHT 3件の後、4件目HUB0待機中にタイムアウト。最終snapはenergy=1、cargo_target=2、deliveries=3（2回の貨物期限切れを含む）。4/4の成功ではない。
+- 修正1 [a703cb94](https://github.com/kobitworks/autoai_poc/commit/a703cb941c71f88d9afdf69f69ff0aabdefa9eea): HUB実タップ許容角を0.15→0.23radへ拡げ、低FPS・大画面での操作猶予を確保。ゲームの正規判定のみの変更でQA成功コマンドやステート直書きなし。
+- 修正2 [871686aa](https://github.com/kobitworks/autoai_poc/commit/871686aa9f9025e114ba120df23650647f269a6d): NIGHT HUB0の実入力E2E観測域を1.36..1.52→1.28..1.68radへ変更。拡大後の自然なゲーム側HUB窓内に限定し、実タップと自然配達の成立を必須とする。
+- 再CI [38177790865](https://github.com/kobitworks/autoai_poc/actions/runs/38177790865): contractとexport-web SUCCESS、レスポンシブ4画面スモーク試験SUCCESS、実入力E2Eは実行中（この行の記録時点）。最終4画面・ACE6件・44 PNG+JSON・独立10軸採点は後続結果の確認まで**未検証**。mainマージ/課金/有償利用なし。
+- GAME-075の36画像と前回GAME-076の36画像を実際に展開し、intro、PLAY、RUSH/NIGHT/ACE画面を比較。正しいTAPタイミングの文言と緑の操作リングの改善は確認できるが、スマホ横画面の情報密度と実機表示視認性・実音声/イヤホン/FPS・初見ユーザー実評価には改善/未検証余地が残る。
