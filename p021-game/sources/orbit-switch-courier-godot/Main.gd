@@ -547,6 +547,8 @@ func _draw_playfield() -> void:
 		_draw_hub_symbol(pos, hub, HUB_COLORS[hub])
 
 	var p := _player_position()
+	if _near_action_prompt().begins_with("TAP NOW"):
+		draw_arc(p, _ui_px(17.0), 0.0, TAU, 40, Color("#72f4d3"), _ui_px(3.0), true)
 	trail.push_back(p)
 	if trail.size() > 18:
 		trail.pop_front()
@@ -583,14 +585,30 @@ func _draw_hub_symbol(pos: Vector2, hub: int, color: Color) -> void:
 func _near_action_prompt() -> String:
 	if state != "playing":
 		return ""
-	if _angle_distance(orbit_angle, float(HUB_ANGLES[orbit_index])) <= HUB_WINDOW * 1.65:
-		return "TAP NOW · HUB %s" % HUB_SHORT[orbit_index]
+	# GAME-076: Never suggest TAP NOW outside a real, usable scoring window.
+	# Hub collision has priority over crossing, so wrong hubs must not invite a TAP.
+	var hub_distance := _angle_distance(orbit_angle, float(HUB_ANGLES[orbit_index]))
+	if hub_distance <= HUB_WINDOW:
+		if orbit_index == cargo_target:
+			return "TAP NOW · DELIVER %s" % HUB_SHORT[cargo_target]
+		return "OTHER HUB · WAIT TO SWITCH"
+	var next_switch_distance := 999.0
 	for i in range(SWITCH_ANGLES.size()):
 		var pair: Array = SWITCH_PAIRS[i]
-		if orbit_index == int(pair[0]) or orbit_index == int(pair[1]):
-			if _angle_distance(orbit_angle, float(SWITCH_ANGLES[i])) <= SWITCH_WINDOW * 1.55:
-				return "TAP NOW · TRANSFER"
-	return "NEXT WINDOW…"
+		if orbit_index != int(pair[0]) and orbit_index != int(pair[1]):
+			continue
+		var next_orbit := int(pair[1]) if orbit_index == int(pair[0]) else int(pair[0])
+		if absi(next_orbit - cargo_target) >= absi(orbit_index - cargo_target):
+			continue
+		next_switch_distance = minf(next_switch_distance, _angle_distance(orbit_angle, float(SWITCH_ANGLES[i])))
+	if next_switch_distance <= SWITCH_WINDOW:
+		return "TAP NOW · TRANSFER"
+	if orbit_index == cargo_target and hub_distance <= HUB_WINDOW * 2.4:
+		return "GET READY · TARGET HUB"
+	if next_switch_distance <= SWITCH_WINDOW * 2.2:
+		return "GET READY · CROSSING"
+	return "TARGET %s · WAIT FOR GLOW" % HUB_SHORT[cargo_target]
+
 
 func _draw_info_panel() -> void:
 	_rounded_box(info_rect, Color("#0a1625"), Color("#2f5b72"), 16, 1)
@@ -603,7 +621,7 @@ func _draw_info_panel() -> void:
 	y += _ui_px(20.0)
 	var cargo_bar := Rect2(x, y, info_rect.size.x - pad * 2.0, _ui_px(9.0))
 	draw_rect(cargo_bar, Color("#244a64"), true)
-	draw_rect(Rect2(cargo_bar.position, Vector2(cargo_bar.size.x * clampf(cargo_left / CARGO_TIME, 0.0, 1.0), cargo_bar.size.y)), HUB_COLORS[cargo_target], true)
+	draw_rect(Rect2(cargo_bar.position, Vector2(cargo_bar.size.x * clampf(cargo_left / _cargo_limit(), 0.0, 1.0), cargo_bar.size.y)), HUB_COLORS[cargo_target], true)
 	y += _ui_px(29.0)
 	var hearts := ""
 	for i in range(3):
@@ -612,6 +630,12 @@ func _draw_info_panel() -> void:
 	y += _ui_px(25.0)
 	_draw_label("STREAK %d  ·  COMBO x%d" % [streak, _combo_multiplier()], Vector2(x, y), _font_size(14.0), Color("#fff0bd"))
 	y += _ui_px(24.0)
+	if info_rect.size.y >= _ui_px(255.0):
+		var next_goal := 1 if deliveries < 1 else (3 if deliveries < 3 else (6 if deliveries < 6 else 0))
+		var next_route := "RUSH" if deliveries < 1 else ("NIGHT" if deliveries < 3 else ("ACE" if deliveries < 6 else "ACE MASTER"))
+		var progress := "NEXT %s · %d more" % [next_route, maxi(0, next_goal - deliveries)] if next_goal > 0 else "ALL ROUTES UNLOCKED"
+		_draw_fit_label(progress, Vector2(x, y), _font_size(13.0), Color("#8ceec7"), info_rect.size.x - pad * 2.0)
+		y += _ui_px(23.0)
 	if info_rect.size.y >= _ui_px(158.0):
 		_draw_fit_label(feedback_text, Vector2(x, y), _font_size(14.0), Color("#e2f4fc"), info_rect.size.x - pad * 2.0)
 	# Wide landscape panels have actual space for persistent novice instructions.
@@ -627,9 +651,9 @@ func _draw_intro_overlay() -> void:
 	var r := Rect2(field_rect.get_center() - Vector2(width, height) * 0.5, Vector2(width, height))
 	_rounded_box(r, Color("#0b1a2b"), Color("#46dce9"), 22, 2)
 	_draw_center_text("ORBIT SWITCH COURIER", Rect2(r.position.x, r.position.y + _ui_px(18.0), width, _ui_px(32.0)), _font_size(19.0), Color("#f5fbff"))
-	_draw_center_text("1. 荷物と同じ記号のHUBを探す", Rect2(r.position.x, r.position.y + _ui_px(62.0), width, _ui_px(27.0)), _font_size(15.0), Color("#f4fdff"))
-	_draw_center_text("2. 光る交差点でTAPして乗換", Rect2(r.position.x, r.position.y + _ui_px(96.0), width, _ui_px(27.0)), _font_size(15.0), Color("#ddfbff"))
-	_draw_center_text("3. 同じHUBでTAPすると配達", Rect2(r.position.x, r.position.y + _ui_px(130.0), width, _ui_px(27.0)), _font_size(15.0), Color("#ffefc7"))
+	_draw_center_text("1. STARTで開始 · SQUAREが最初の目標", Rect2(r.position.x, r.position.y + _ui_px(62.0), width, _ui_px(27.0)), _font_size(13.0), Color("#f4fdff"))
+	_draw_center_text("2. 下に TAP NOW が出たら盤面を1回押す", Rect2(r.position.x, r.position.y + _ui_px(96.0), width, _ui_px(27.0)), _font_size(13.0), Color("#ddfbff"))
+	_draw_center_text("3. 同じ記号のHUBまで乗換→配達", Rect2(r.position.x, r.position.y + _ui_px(130.0), width, _ui_px(27.0)), _font_size(13.0), Color("#ffefc7"))
 	var start_rect := Rect2(r.position.x + _ui_px(22.0), r.end.y - _ui_px(59.0), width - _ui_px(44.0), _ui_px(48.0))
 	_rounded_box(start_rect, Color("#14647a"), Color("#8dfbff"), 12, 2)
 	_draw_center_text("TAP TO START", start_rect, _font_size(16.0), Color.WHITE)
