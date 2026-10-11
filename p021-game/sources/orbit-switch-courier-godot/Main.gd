@@ -651,7 +651,7 @@ func _draw_intro_overlay() -> void:
 	var r := Rect2(field_rect.get_center() - Vector2(width, height) * 0.5, Vector2(width, height))
 	_rounded_box(r, Color("#0b1a2b"), Color("#46dce9"), 22, 2)
 	_draw_center_text("ORBIT SWITCH COURIER", Rect2(r.position.x, r.position.y + _ui_px(18.0), width, _ui_px(32.0)), _font_size(19.0), Color("#f5fbff"))
-	_draw_center_text("1. STARTで開始 · SQUAREが最初の目標", Rect2(r.position.x, r.position.y + _ui_px(62.0), width, _ui_px(27.0)), _font_size(13.0), Color("#f4fdff"))
+	_draw_center_text("1. STARTで開始 · %sが最初の目標" % HUB_SHORT[cargo_target], Rect2(r.position.x, r.position.y + _ui_px(62.0), width, _ui_px(27.0)), _font_size(13.0), Color("#f4fdff"))
 	_draw_center_text("2. 下に TAP NOW が出たら盤面を1回押す", Rect2(r.position.x, r.position.y + _ui_px(96.0), width, _ui_px(27.0)), _font_size(13.0), Color("#ddfbff"))
 	_draw_center_text("3. 同じ記号のHUBまで乗換→配達", Rect2(r.position.x, r.position.y + _ui_px(130.0), width, _ui_px(27.0)), _font_size(13.0), Color("#ffefc7"))
 	var start_rect := Rect2(r.position.x + _ui_px(22.0), r.end.y - _ui_px(59.0), width - _ui_px(44.0), _ui_px(48.0))
