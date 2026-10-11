@@ -14,8 +14,8 @@ function check(value, message) { if (!value) throw new Error(message); }
 function fits(r,w,h) { return r && r.length===4 && r[0]>=-2 && r[1]>=-2 &&
   r[2]>100 && r[3]>70 && r[0]+r[2]<=w+2 && r[1]+r[3]<=h+2; }
 async function snapshot(page) { return page.evaluate(() => window.__P021_ORBIT || null); }
-async function until(page, predicate, stage, waitMs=16000) {
-  await page.waitForFunction(predicate,null,{timeout:waitMs,polling:'raf'})
+async function until(page, predicate, stage, waitMs=16000, arg=null) {
+  await page.waitForFunction(predicate,arg,{timeout:waitMs,polling:'raf'})
     .catch(e=>{throw new Error(stage+': '+e.message);});
 }
 async function inputAt(page,t,p) {
@@ -36,21 +36,21 @@ function physicalRect(r,c,d) {
 // GAME-076: deterministic cargo sequence, but EVERY score and orbital change is
 // achieved using real mouse/touch at ordinary runtime windows (no QA commands).
 async function physicalSwitch(page,t,from,to,lo,hi,label) {
-  await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
-    x.orbit===from&&x.angle>=lo&&x.angle<=hi;},label+' crossing',18000);
+  await until(page,(a)=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
+    x.orbit===a.from&&x.angle>=a.lo&&x.angle<=a.hi;},label+' crossing',18000,{from,lo,hi});
   await input(page,t);
-  await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.orbit===to;},label+' transfer',3500);
+  await until(page,(a)=>{const x=window.__P021_ORBIT;return x&&x.orbit===a.to;},label+' transfer',3500,{to});
   const d=await snapshot(page);
   check(d.energy===3&&d.state==='playing',label+' lost energy');
   return {action:'transfer',label,orbit:d.orbit,angle:d.angle,energy:d.energy};
 }
 async function physicalDeliver(page,t,target,lo,hi,total,label) {
-  await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
-    x.orbit===target&&x.cargo_target===target&&x.angle>=lo&&x.angle<=hi;},
-    label+' target HUB',18000);
+  await until(page,(a)=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
+    x.orbit===a.target&&x.cargo_target===a.target&&x.angle>=a.lo&&x.angle<=a.hi;},
+    label+' target HUB',18000,{target,lo,hi});
   await input(page,t);
-  await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.deliveries===total;},
-    label+' actual delivery',3500);
+  await until(page,(a)=>{const x=window.__P021_ORBIT;return x&&x.deliveries===a.total;},
+    label+' actual delivery',3500,{total});
   const d=await snapshot(page);
   check(d.energy===3&&d.state==='playing'&&d.score>0,label+' scoring/energy failed');
   return {action:'delivery',label,deliveries:d.deliveries,score:d.score,
