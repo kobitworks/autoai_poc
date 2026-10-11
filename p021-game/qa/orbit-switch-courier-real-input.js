@@ -134,6 +134,7 @@ async function run(){
           'Delivery did not unlock the harder RUSH route');
         evidence.delivery={deliveries:d.deliveries,score:d.score,energy:d.energy,
           progression:{route:d.mission_tier,name:d.mission_name,cargoLimit:d.cargo_limit,cue:d.cue_text}};
+        await page.screenshot({path:dir+'/'+t.name+'-route-rush.png'});
         // Three real misses at 2.0 rad: no nearby active transfer/HUB window.
         await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
           x.orbit===0&&x.angle>=2.00&&x.angle<=2.13;},'safe miss zone');
@@ -142,6 +143,7 @@ async function run(){
           await input(page,t);
           await page.waitForFunction(n=>window.__P021_ORBIT && window.__P021_ORBIT.energy===n,
             energy,{timeout:7000,polling:'raf'});
+          if(energy===2)await page.screenshot({path:dir+'/'+t.name+'-miss-feedback.png'});
         }
         await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.state==='result','RESULT');
         await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.retry_rect&&x.retry_rect[3]>0;},
@@ -190,7 +192,7 @@ async function run(){
   }finally{await browser.close();}
   const output={task:'GAME-075',game:'GAME-G030',
     method:'real touch/mouse UI sound toggle + natural orbital play and BEST persistence; read-only QA telemetry',
-    screenshotStates:['intro','playing','result','retry','sound-off','sound-on','replay'],
+    screenshotStates:['intro','playing','route-rush','miss-feedback','result','retry','sound-off','sound-on','replay'],
     physicalOutput:'NOT VERIFIED – must check actual device audio and first-time user experience',
     independentQualityScore:'NOT ASSESSED (manual visual/audio/human checks separate)',viewports:results};
   fs.writeFileSync(dir+'/results.json',JSON.stringify(output,null,2));
