@@ -117,8 +117,10 @@ function inside(rect, width, height) {
       game: 'GAME-G030',
       task: 'GAME-069',
       quality_target: 84,
-      general_public_quality: true,
-      url_only_play_flow: 'intro -> one-action transfer/delivery -> result -> retry',
+      technical_smoke: true,
+      simulated_commands: true,
+      independent_quality_score: 'not assessed',
+      url_only_play_flow: 'not verified by simulated commands; see GAME-071 real-input E2E',
       viewports: report,
     }, null, 2));
   } finally {
