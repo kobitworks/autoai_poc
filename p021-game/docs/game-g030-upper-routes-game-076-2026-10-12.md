@@ -464,3 +464,10 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - 改善設計案（**提案のみ、今回ゲームコードは無変更**）: 重要情報を「成功/失敗＋現在ルート」と「次操作のTAP NOW＋目標HUB」の2群に分け、必要に応じ上部cueを2行対応へ変更する。全文を無理に詰めず、任意の補足部分だけを省略する。タブレット右の24px帯は要約のみ。小画面でもHUD・軌道・下部操作帯を塞がないことを最優先する。単なる全面的な小文字化は採用しない。
 - 受入条件案: 4 viewportの長文cue画面で「結果」「ルート」「次操作」の3情報を判読でき、ボタン/HUDと重ならないこと。通常プレイは自然タップ/クリックでNIGHT3件→ACE6件、SOUND ON/OFF・RETRY・BEST復元を4/4再確認し、強制成功コマンド・state直書きを使用しない。独立10軸80点の合否は証拠が揃うまで保留する。実機音声・FPS/発熱・初見30秒・文字/誤タップはHuman Gateを維持する。
 - 既存成功run [38287586256](https://github.com/kobitworks/autoai_poc/actions/runs/38287586256) のbrowser-quality job `114940204094` を03:37:51 JSTに再実行し、attempt2 job `114954738477` を取得。再実行中のためこの時点では合否・artifactの件数を主張せず、後続の検証結果を別途記録する。ゲーム本体・main・課金・本番・他タスクに変更なし。
+
+### 2026-10-13 03:42:27 JST / AUTOAI-GAME076-20261013-0332 — 再実行attempt2の最終判定
+
+- [Actions run 38287586256 attempt2](https://github.com/kobitworks/autoai_poc/actions/runs/38287586256) は **completed/success**。contract・export-web・browser-quality全3ジョブsuccess、browser-quality新job `114954738477`のsmoke、自然タップ/クリックE2E、artifact uploadが全success。対象headは `57bd8caaf593282fa8c40b0ae5c7ff29dd9f85ce`。developの最新コミットは報告文書のみが追加された状態であり、ゲームコードSHAは同一。
+- ブラウザジョブログの出力JSONを直接パースして確認した自然入力結果: **4/4 PASS**。Phone縦: ACE6件/1109点、Phone横: ACE6件/1110点、Tablet縦: ACE6件/1094点、Tablet横: ACE6件/1109点。全画面でNIGHT3配達（12秒）→ACE6配達（10秒）へ通常操作で到達。各画面の `restoredBest` と `localStorageBest` はスコアと一致（1109/1110/1094/1109）。SOUND OFF/ON、RETRYもE2Eチェック通過。全4ケースで `qaCommand=NEVER USED` / `stateOverride=NONE`。
+- `visualContract.result=PASS_STATIC`。長文cue stress fixtureは4/4 `CAPTURED`、各条件とも画面を自然入力で開始した時点で `deliveries=0,score=0`、ゲーム進捗を変更しないQA描画であることをログで確認。新artifact [11767136879](https://github.com/kobitworks/autoai_poc/actions/runs/38287586256/artifacts/11767136879) （3,212,471 bytes）はGitHubメタデータで存在とアップロード成功を確認。**今回のattempt2についてZIP内全PNGの独立展開・画像目視までは実施していない**ため、画像の文字判読性や情報保持はPASS扱いにしない。
+- ゲーム一般公開品質の10軸スコアは既存証跡限定暫定 **76/100据置**。80点・一般公開品質は未認定。初見30秒操作、実機スピーカー/イヤホン音質、FPS/発熱、文字可読性/誤タップはHuman Gate。次回再開点: 上記2行情報保持案の実装方針を承認確認し、cueStressの4画面視覚比較と独立10軸再採点を行う。今回のコード改変・mainマージ・有償/本番・他タスクなし、GAME-076は完了条件未達のためToDoで継続する。
