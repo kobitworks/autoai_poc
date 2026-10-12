@@ -427,3 +427,12 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - 証跡artifact [11762698209](https://github.com/kobitworks/autoai_poc/actions/runs/38284393464/artifacts/11762698209) のアップロード成功をジョブログ・メタデータで確認。ブラウザジョブログ上の結果JSONで4画面いずれも`status=PASS`。ZIP全画像を今回独立目視したことまでは主張しない。
 - 10軸独立品質評価は従前の**暫定76/100**を据置、一般公開目標80点を未達。実機音声・FPS/発熱・初見30秒・実機文字サイズ/誤タップ、長文cueのstress screenshotはHuman Gate/次回作業として残る。
 - 1タスクのみ処理しGAME-076はDoneにしない。SheetのDoingをToDoへ戻して次回継続、他タスク/本番/main/有償利用は変更しない。
+
+
+## 2026-10-13 02:53 JST / AUTOAI-GAME076-20261013-0241 — 長文cue専用・表示のみの4画面テストを実装
+
+- 今回実行対象は **P021 GAME-076 の1件のみ**。GAME-075=Done、GAME-076=ToDo、他Doingなしを確認してからDoingへ変更。共通Runner v1.38.0、developのみ。
+- 未検証だった「非常に長い成功/状態メッセージが画面内に収まるか」を実機確認前に可視化するため、Godot表示専用fixtureを追加。明示的な `?qa=1&cue_stress=1` の時だけ長文を描画する。通常ゲームでは無効。コードは物理・配達数・スコア・セーブ・状態遷移を直接変更しない。source commit [cadca1d73827ae1fd45aee68f2a09b5c0f3a6a80](https://github.com/kobitworks/autoai_poc/commit/cadca1d73827ae1fd45aee68f2a09b5c0f3a6a80)。
+- 既存の自然タップ・クリック4画面E2E後に同じブラウザでQA-only fixtureを開き、実入力でイントロからplayingへ進み、score/deliveries=0を検証して `-cue-stress.png` を各viewport1枚（合計4枚）保存する工程を追加。QA commit [1057812e4d76996d6fd0b183aca944f51d3da57a](https://github.com/kobitworks/autoai_poc/commit/1057812e4d76996d6fd0b183aca944f51d3da57a)。強制成功コマンド・配送進行の直接書き換えなし。
+- 新コードのGitHub Actions [run 38287092113](https://github.com/kobitworks/autoai_poc/actions/runs/38287092113) は本記録時点で実行待ち／未判定。Godot build・4画面自然入力・4 stress画像・結果JSONおよび実画像の独立目視が揃うまでPASSを主張しない。失敗した場合は同GAME-076で失敗理由を調査して修正する。
+- 証拠限定の品質スコアは **76/100（据置）**、80点・一般公開品質は未認定。実機スピーカー/イヤホン、FPS/発熱、初見30秒、実機文字可読性/誤タップは依然Human Gate。今回はmainマージ・有償利用・本番環境変更・他タスクなし。完了条件未達のためGAME-076はToDoへ戻して次回検証。
