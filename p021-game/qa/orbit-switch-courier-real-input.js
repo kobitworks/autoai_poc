@@ -293,9 +293,11 @@ async function run(){
         evidence.routeMoves.push(await physicalSwitch(page,t,1,0,4.38,4.68,'NIGHT 1->0'));
         // GAME-076: Use a broad 1.31..1.60 band inside the real HUB0 +/- 0.23 window.
         evidence.routeMoves.push(await physicalDeliver(page,t,0,1.31,1.60,4,'NIGHT HUB0'));
-        // Prefer the leading edge (4.32..4.44) of the physical switch window.
-        // Keep actual touchscreen/mouse input and require an observed orbit transfer.
-        evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.32,4.44,'NIGHT 0->1'));
+        // GAME-076: Tablet-portrait CI run 38311488593 missed the 4.467/4.370 rad
+        // orbit-0 crossings with a narrow 4.32..4.44 observer. Observe 4.31..4.47
+        // within the real 4.50 +/- 0.19 rad switch window (no success bypass).
+        // Input remains a physical touch/mouse event; score and energy are asserted.
+        evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.31,4.47,'NIGHT 0->1'));
         evidence.routeMoves.push(await physicalDeliver(page,t,1,3.46,3.76,5,'NIGHT HUB1'));
         evidence.routeMoves.push(await physicalSwitch(page,t,1,2,2.41,2.66,'NIGHT 1->2'));
         evidence.routeMoves.push(await physicalDeliver(page,t,2,5.02,5.29,6,'ACE HUB2'));
