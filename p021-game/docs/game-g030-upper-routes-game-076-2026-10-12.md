@@ -489,3 +489,14 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - スマホ縦横・タブレット縦横の自然タップ/クリック4/4 PASS。NIGHT3→ACE6、SOUND ON/OFF、RETRY、BEST復元4/4成功（1110/1112/1108/1109点）。QA成功コマンド不使用・state直接変更なし。
 - 長文cue stress4枚を旧artifact11767136879と独立目視比較。旧1行の末尾省略で失われた結果/ルート/次操作の3要素を新2行で全4画面表示、明白な枠外はみ出し・HUD/ボタン重なりなし。実機の文字可読性は未判定。
 - 10軸暫定76/100（ゲーム8・操作8・難度7・UI8・描画7・演出6・音6・変化8・リプレイ9・技術9）を維持、80点/一般公開品質未認定。実機音声/イヤホン、FPS/発熱、初見30秒、可読性/誤タップはHuman Gate。今回は同GAME-076のみ、Done未達でToDoへ戻す。main/有償/本番変更なし。
+
+
+## 2026-10-13 04:21 JST — AutoAI GAME-076 期限残秒の視認性強化（今回の1件）
+
+- 独立した既存タスクは追加実行せず、GAME-075=Done→GAME-076=ToDoをFresh-readしてDoing排他取得。
+- Godot `Main.gd` の配達先表示を「残秒数を先頭に置く `%02ds LEFT · HUB名`」へ変更。これにより名前が画面幅によって末尾省略されても制限時間が残る。残り3.0秒以下ではラベル・タイマー棒・外枠を暖色の注意表示へ切替。配送時間減算、当たり判定、採点、既存正規入力、QA成功コマンド、ベスト保存は無変更。
+- コード変更: [commit bfd7b69d](https://github.com/kobitworks/autoai_poc/commit/bfd7b69d16667a51edaf8a51d3bb744fe6188819) / blob SHA `8a0999cfcf98b676abd04321b40fba1e243b57ae`。developから再取得し一致確認。
+- [QA契約追加 commit 14e00c3d](https://github.com/kobitworks/autoai_poc/commit/14e00c3d81c7d150c4cc0251243948c62f696811) / blob SHA `7b84b4be2efc838d4a83fdf015e251b4ee839463`。残秒先頭・3秒閾値・警告色・既存実時間進捗棒がソース上で保たれることを静的検査。QAのテスト実行結果や実機での視認性を、ソース一致だけから合格とみなさない。
+- 変更後CI: [GitHub Actions run 38297105130](https://github.com/kobitworks/autoai_poc/actions/runs/38297105130) は 2026-10-13 04:22:12 JSTの初回確認時点でpending。contract / export-web / browser-quality の最終結果、4 viewport実入力、ACE6配達、SOUND・RETRY・BEST、画像の独立確認は今回の新コードではまだ未確定。
+- 品質10軸スコアは直近独立評価76/100据置。80点/一般公開品質は未認定。Human Gate（実機音質/イヤホン、FPS/発熱、初見30秒理解、誤タップ、実機文字可読性）は未検証。main変更・有料課金・本番拡大なし。
+- 再開点: run 38297105130 の3ジョブ成否とartifact実画像/JSONを確認し、4 viewportで合法操作NIGHT3→ACE6、SOUND、RETRY、BESTを再検証。新UIの標準/残3秒内スクリーンショットを比較し10軸独立再採点。Human Gateは引き続き別確認とし、80点未達なら同一GAME-076を継続。
