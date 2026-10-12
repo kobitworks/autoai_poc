@@ -81,6 +81,13 @@ function verifyGuideContrast() {
     cargoPanel.includes('_font_size(18.0) if cargo_urgent') &&
     cargoPanel.includes('cargo_left / _cargo_limit()'),
     'Visible cargo countdown / <=3s warning contract missing');
+  // GAME-076: first mistimed novice tap is a one-time hint, never a QA cheat.
+  check(source.includes('not novice_miss_guard_used and deliveries == 0 and PLAY_TIME - time_left <= 30.0') &&
+    source.includes('novice_miss_guard_used = true') &&
+    source.includes('novice_miss_guard_used = false') &&
+    source.includes('"novice_guard_used": novice_miss_guard_used') &&
+    source.includes('FIRST TAP GUIDE · ENERGY SAVED'),
+    'Novice one-time no-penalty timing hint contract missing');
   return {result:'PASS_STATIC',labels:results,minimumContrast:7,
     cargoDeadline:'SOURCE_CONTRACT_ONLY: seconds first; last 3 seconds show HURRY text and contrasting frame; physical legibility requires device review',
     longCueBoundary:'SOURCE_CONTRACT_ONLY: two-line priority summary; human legibility not yet verified',
@@ -340,6 +347,24 @@ async function run(){
         await input(page,t);
         await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.state==='playing','replay after reload');
         await page.screenshot({path:dir+'/'+t.name+'-replay.png'});
+        // GAME-076: an actual off-window tap in the first 30 seconds should
+        // teach first-time players instead of consuming one energy. This is a
+        // NORMAL user interaction and never changes state from the QA bridge.
+        // Orbit 1 at 4.0..4.2 rad is safely outside all HUB/switch windows.
+        await until(page,()=>{const x=window.__P021_ORBIT;return x&&
+          x.state==='playing'&&x.orbit===1&&x.deliveries===0&&
+          x.angle>=4.0&&x.angle<=4.2;},'novice safe off-window tap',9500);
+        await input(page,t);
+        await until(page,()=>{const x=window.__P021_ORBIT;return x&&
+          x.state==='playing'&&x.novice_guard_used===true&&
+          x.energy===3&&x.deliveries===0;},'novice energy-preserving guide',3500);
+        d=await snapshot(page);
+        check(d.cue_text.includes('FIRST TAP GUIDE') && d.score===0,
+          'Novice hint was not visible or unexpectedly scored');
+        await page.screenshot({path:dir+'/'+t.name+'-novice-first-tap-guide.png'});
+        evidence.noviceFirstTapGuide={status:'PASS',input:'real touch/mouse',
+          energyAfter:3,deliveriesAfter:0,guardConsumed:true,
+          hint:d.cue_text,screenshot:t.name+'-novice-first-tap-guide.png'};
         // GAME-076: independent cue-overflow image fixture, not a scoring cheat.
         // Only an extra QA query flag substitutes the banner DRAWN TEXT.
         // We start by a real tap and verify progress remains at zero.
