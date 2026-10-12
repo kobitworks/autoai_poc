@@ -679,11 +679,18 @@ func _draw_info_panel() -> void:
 	var y := info_rect.position.y + _ui_px(22.0)
 	_draw_fit_label("ROUTE %d · %s  /  CARGO" % [_mission_tier() + 1, _mission_name()], Vector2(x, y), _font_size(14.0), Color("#f5fdff"), info_rect.size.x - pad * 2.0)
 	y += _ui_px(24.0)
-	_draw_label(HUB_NAMES[cargo_target], Vector2(x, y), _font_size(17.0), HUB_COLORS[cargo_target])
+	# GAME-076: Show the physical remaining seconds FIRST so even a clipped
+	# cargo name never hides the deadline. Highlight the final three seconds
+	# without obscuring the normal TAP NOW action or altering game timing.
+	var cargo_urgent := state == "playing" and cargo_left <= 3.0
+	var cargo_countdown := "%02ds LEFT  ·  %s" % [int(ceil(cargo_left)), HUB_NAMES[cargo_target]]
+	_draw_fit_label(cargo_countdown, Vector2(x, y), _font_size(17.0), Color("#ffb9c8") if cargo_urgent else HUB_COLORS[cargo_target], info_rect.size.x - pad * 2.0)
 	y += _ui_px(20.0)
 	var cargo_bar := Rect2(x, y, info_rect.size.x - pad * 2.0, _ui_px(9.0))
-	draw_rect(cargo_bar, Color("#244a64"), true)
-	draw_rect(Rect2(cargo_bar.position, Vector2(cargo_bar.size.x * clampf(cargo_left / _cargo_limit(), 0.0, 1.0), cargo_bar.size.y)), HUB_COLORS[cargo_target], true)
+	draw_rect(cargo_bar, Color("#68283b") if cargo_urgent else Color("#244a64"), true)
+	draw_rect(Rect2(cargo_bar.position, Vector2(cargo_bar.size.x * clampf(cargo_left / _cargo_limit(), 0.0, 1.0), cargo_bar.size.y)), Color("#ff5877") if cargo_urgent else HUB_COLORS[cargo_target], true)
+	if cargo_urgent:
+		draw_rect(cargo_bar.grow(_ui_px(2.0)), Color("#ff9dab"), false, _ui_px(2.0))
 	y += _ui_px(29.0)
 	var hearts := ""
 	for i in range(3):
