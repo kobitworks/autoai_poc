@@ -625,3 +625,14 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - 実装commit: https://github.com/kobitworks/autoai_poc/commit/022dea23f61fe9b81804627d057f7da94a45fb98 （source blob `bda2315445898ba4ad4991ec56132bca838d733f`）。GitHub develop実体を再読戻しし、6箇所を照合。main・課金・本番化なし。
 - 修正後CI: https://github.com/kobitworks/autoai_poc/actions/runs/38318973637 （07:53時点 contract/export-web=success、browser-quality=in_progress。新実入力結果は未確定）。**CI最終結果、画像の見やすさ、4viewport実操作の回帰合否はまだ未確認でありPASSとはしない**。ここで76/100据置・一般公開品質80点未達、実機の音/イヤホン、初見ユーザー30秒、FPS/発熱、タップ・可読性はHuman Gate未確認。
 - 次回再開: 上記runの3ジョブと新artifactのJSON/PNGをFresh-readし、4画面NIGHT3→ACE6・SOUND/RETRY/BEST・初回救済・cue読取/重なりを独立検証。新CI FAILなら原因を特定して同GAME-076を続行。人間のみ判定可能な実機項目はPASSにしない。
+
+
+## 2026-10-13 08:06:40 JST / AUTOAI-GAME076-20261013-0800 — 6箇所フォント改善後のCI・52PNG独立検証（今回の1件）
+
+- **今回唯一の実作業**: P021 GAME-076。共通Runner v1.38.0 activeとP021 v1.2.0、依存GAME-075=Done/他DoingなしをFresh-readし、タスク正本でToDo→Doingの排他取得を確認。明示Slack新規指示なし、09:00前なので全体日次監視なし。P005〜P018/P020は要確認・依存待ち・周期制約等につき実タスク着手なし。
+- 前回未確定だった6箇所文字サイズ改善commit [022dea23f61f](https://github.com/kobitworks/autoai_poc/commit/022dea23f61fe9b81804627d057f7da94a45fb98)に対応する[GitHub Actions run38318973637](https://github.com/kobitworks/autoai_poc/actions/runs/38318973637)をFresh-read。**contract/export-web/browser-quality 3/3 completed/success**。旧CIのPASSと混同しない。
+- [新artifact11778405171](https://github.com/kobitworks/autoai_poc/actions/runs/38318973637/artifacts/11778405171)をZIP実体で取得・展開、**53ファイル=52 PNG（4 viewport×13状態）+ results.json**、ZIP全件CRC異常なし、画像全52枚のデコードと端末サイズ一致（phone縦390×844、横844×390、tablet縦768×1024、横1024×768）を確認。results.json SHA256=e049e24abbc446e9a053c1f897ed5f8b607d76b3dd5dbe9f69543b08d45c2e98。
+- **新コード自然入力E2E 4/4 PASS**: phone portrait touch=1109、phone landscape mouse=1112、tablet portrait touch=1107、tablet landscape mouse=1109。いずれもNIGHT3→ACE6、SOUND OFF/ON、RETRY、BEST保存・再読込で数値一致。初回誤タップ無減点案内も4/4 PASS（energy=3、deliveries=0、guardConsumed=true）。qaCommand=NEVER USED、stateOverride=NONE、成功コマンド・ゲームstate直接書換なし。警告3秒画像も通常START後の自然時間経過（2.40〜2.63秒時点）で4画面生成。
+- **画像独立レビュー**: 4端末のintro/cue-stress/cargo-warning-3s/novice-first-tap-guide/route-ace/resultから計24枚の代表画像を並べて確認。大きなHUD・操作部の領域衝突や画面外欠落は見られない。直前の[artifact11776937081](https://github.com/kobitworks/autoai_poc/actions/runs/38313195871/artifacts/11776937081)のcue-stress画像4画面と並列比較し、改修後の補助文字拡大を目視確認。ただし縦スマホ等では小さい補助文字が残り、ブラウザ画像比較だけでは物理端末可読性PASSを判定できない。全52枚の独立目視完了とは主張しない。
+- **品質10軸は証跡限定暫定76/100を据置**: ゲーム性8、操作感8、難度7、UI/UX8、グラフィック7、演出6、音6、コンテンツ変化8、リプレイ9、技術9。CI成功・可読性の部分改善だけでは+4点を実証できず、**80点一般公開完了Gate未達**。スピーカー/イヤホンの実音、初見ユーザー30秒、物理画面の文字・誤タップ、FPS/発熱はHuman Gate未検証として維持。
+- 今回の成果は新CIと実証証跡の検証・監査記録。ゲーム/QAコード本体とmain・本番・有償設定を変更しない。**GAME-076はDoneとせず終了前にDoing→ToDoへ戻す**。次回は残る小文字/演出・音フィードバックを実画像と実機回答で評価し、80点到達可否を同タスクで継続。別タスクへの着手なし。
