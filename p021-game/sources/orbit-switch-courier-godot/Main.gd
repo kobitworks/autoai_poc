@@ -634,8 +634,8 @@ func _draw_playfield() -> void:
 			var key_lines := _cue_priority_lines()
 			var top_cue_r := Rect2(cue_r.position.x, cue_r.position.y + _ui_px(1.0), cue_r.size.x, _ui_px(19.0))
 			var bottom_cue_r := Rect2(cue_r.position.x, cue_r.position.y + _ui_px(19.0), cue_r.size.x, _ui_px(19.0))
-			_draw_center_fit_text(key_lines[0], top_cue_r, _font_size(13.0), Color("#ffffff"))
-			_draw_center_fit_text(key_lines[1], bottom_cue_r, _font_size(12.0), Color("#fff5d9"))
+			_draw_center_fit_text(key_lines[0], top_cue_r, _font_size(15.0), Color("#ffffff"))
+			_draw_center_fit_text(key_lines[1], bottom_cue_r, _font_size(14.0), Color("#fff5d9"))
 		else:
 			_draw_center_fit_text(_visible_cue(), cue_r, _font_size(14.0), Color("#ffffff"))
 
@@ -726,7 +726,7 @@ func _draw_info_panel() -> void:
 		var next_goal := 1 if deliveries < 1 else (3 if deliveries < 3 else (6 if deliveries < 6 else 0))
 		var next_route := "RUSH" if deliveries < 1 else ("NIGHT" if deliveries < 3 else ("ACE" if deliveries < 6 else "ACE MASTER"))
 		var progress := "NEXT %s · %d more" % [next_route, maxi(0, next_goal - deliveries)] if next_goal > 0 else "ALL ROUTES UNLOCKED"
-		_draw_fit_label(progress, Vector2(x, y), _font_size(13.0), Color("#c1ffe9"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label(progress, Vector2(x, y), _font_size(15.0), Color("#c1ffe9"), info_rect.size.x - pad * 2.0)
 		y += _ui_px(23.0)
 	# GAME-076: Give the actual next legal action a contrast-safe, unclipped home.
 	# Compact portrait layouts retain the single-line fallback rather than drawing outside the card.
@@ -756,7 +756,7 @@ func _draw_info_panel() -> void:
 	# The tablet-landscape information area is taller: put a readable step guide near
 	# the action card instead of leaving the next input unexplained in empty space.
 	if info_rect.size.y > _ui_px(470.0):
-		_draw_label("HOW TO PLAY", Vector2(x, y + _ui_px(94.0)), _font_size(14.0), Color("#8fe8fa"))
+		_draw_label("HOW TO PLAY", Vector2(x, y + _ui_px(94.0)), _font_size(16.0), Color("#8fe8fa"))
 		_draw_fit_label("1  緑に光る交差点でTAP", Vector2(x, y + _ui_px(126.0)), _font_size(16.0), Color("#f3fcff"), info_rect.size.x - pad * 2.0)
 		_draw_fit_label("2  同じ記号のHUBでTAP", Vector2(x, y + _ui_px(161.0)), _font_size(16.0), Color("#fff3be"), info_rect.size.x - pad * 2.0)
 		_draw_fit_label("3  配達を重ねACEへ", Vector2(x, y + _ui_px(196.0)), _font_size(16.0), Color("#b3ffe4"), info_rect.size.x - pad * 2.0)
@@ -773,7 +773,7 @@ func _draw_info_panel() -> void:
 	# naturally-earned route tiers are unlocked. This is a display only.
 	if info_rect.size.y > _ui_px(525.0):
 		var milestones_y := info_rect.end.y - _ui_px(126.0)
-		_draw_label("ROUTE MILESTONES", Vector2(x, milestones_y - _ui_px(13.0)), _font_size(15.0), Color("#ffffff"))
+		_draw_label("ROUTE MILESTONES", Vector2(x, milestones_y - _ui_px(13.0)), _font_size(16.0), Color("#ffffff"))
 		var milestone_gap := _ui_px(6.0)
 		var milestone_width := (info_rect.size.x - pad * 2.0 - milestone_gap * 2.0) / 3.0
 		for step in range(3):
@@ -789,7 +789,7 @@ func _draw_info_panel() -> void:
 		_rounded_box(feedback_rect, Color("#125f4d") if cue_good else Color("#712f4b"), Color("#94f8d9") if cue_good else Color("#ffbbd0"), 8, 1)
 		# The tablet side echo carries the short outcome/route summary only.
 		var side_cue := _cue_priority_lines()[0] if _visible_cue().contains(" / ") else _visible_cue()
-		_draw_center_fit_text(side_cue, feedback_rect, _font_size(13.0), Color("#ffffff"))
+		_draw_center_fit_text(side_cue, feedback_rect, _font_size(15.0), Color("#ffffff"))
 	# GAME-076: Give the two bottom instructions a stronger contrast-safe
 	# background and 16 CSS-pixel labels on tablet-sized information panels.
 	# Keep a 3px gap after the optional feedback cue above and a 6px bottom inset.
