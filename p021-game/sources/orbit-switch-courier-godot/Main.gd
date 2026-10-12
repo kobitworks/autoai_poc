@@ -475,7 +475,7 @@ func _draw() -> void:
 
 	# Physical 116x48 CSS-pixel SOUND button, including narrow phone landscape.
 	sound_rect = Rect2(w - margin - _ui_px(116.0), margin + _ui_px(3.0), _ui_px(116.0), _ui_px(48.0))
-	_draw_button(sound_rect, "SOUND ON" if sound_on else "SOUND OFF")
+	_draw_button(sound_rect, "SOUND ON" if sound_on else "SOUND OFF", sound_on)
 	hub_rect = Rect2(w - margin - _ui_px(116.0), margin + _ui_px(57.0), _ui_px(116.0), _ui_px(44.0))
 	if not compact:
 		_draw_button(hub_rect, "GAME HUB")
@@ -494,7 +494,7 @@ func _draw() -> void:
 	for i in range(4):
 		var r := Rect2(margin + float(i) * (stat_w + gap), hud_y, stat_w, hud_h)
 		_rounded_box(r, Color("#0b1727"), Color("#335a73"), 10, 1)
-		_draw_label(str(stats[i][0]), r.position + Vector2(_ui_px(8.0), _ui_px(18.0)), _font_size(11.0), Color("#c4ddea"))
+		_draw_label(str(stats[i][0]), r.position + Vector2(_ui_px(8.0), _ui_px(18.0)), _font_size(13.0), Color("#eefaff"))
 		_draw_label(str(stats[i][1]), r.position + Vector2(_ui_px(8.0), hud_h - _ui_px(8.0)), _font_size(19.0), Color("#f5fbff"))
 
 	var content_y := hud_y + hud_h + _ui_px(9.0)
@@ -681,8 +681,8 @@ func _draw_info_panel() -> void:
 	# Keep two bright, readable steps below (not inside) the NEXT ACTION card.
 	# The <220px portrait panel uses its existing single-line fallback instead.
 	if info_rect.size.y >= _ui_px(220.0) and info_rect.size.y <= _ui_px(275.0):
-		_draw_fit_label("1  光る交差点でTAP", Vector2(x, info_rect.end.y - _ui_px(32.0)), _font_size(16.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
-		_draw_fit_label("2  同じ印でTAP・配達", Vector2(x, info_rect.end.y - _ui_px(12.0)), _font_size(16.0), Color("#fff8d9"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label("1  光る交差点でTAP", Vector2(x, info_rect.end.y - _ui_px(32.0)), _font_size(17.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label("2  同じ印でTAP・配達", Vector2(x, info_rect.end.y - _ui_px(12.0)), _font_size(17.0), Color("#fff8d9"), info_rect.size.x - pad * 2.0)
 	# Tablet landscape: use otherwise empty lower-panel space to show which
 	# naturally-earned route tiers are unlocked. This is a display only.
 	if info_rect.size.y > _ui_px(525.0):
@@ -707,13 +707,13 @@ func _draw_intro_overlay() -> void:
 	var height := minf(field_rect.size.y - _ui_px(20.0), _ui_px(240.0))
 	var r := Rect2(field_rect.get_center() - Vector2(width, height) * 0.5, Vector2(width, height))
 	_rounded_box(r, Color("#0b1a2b"), Color("#46dce9"), 22, 2)
-	_draw_center_text("ORBIT SWITCH COURIER", Rect2(r.position.x, r.position.y + _ui_px(18.0), width, _ui_px(32.0)), _font_size(19.0), Color("#f5fbff"))
-	_draw_center_fit_text("1  START → 目標 %s" % HUB_SHORT[cargo_target], Rect2(r.position.x, r.position.y + _ui_px(62.0), width, _ui_px(29.0)), _font_size(16.0), Color("#ffffff"))
-	_draw_center_fit_text("2  TAP NOWで画面をタップ", Rect2(r.position.x, r.position.y + _ui_px(96.0), width, _ui_px(29.0)), _font_size(16.0), Color("#b6fff0"))
-	_draw_center_fit_text("3  同じ印のHUBでタップ→配達", Rect2(r.position.x, r.position.y + _ui_px(130.0), width, _ui_px(29.0)), _font_size(16.0), Color("#fff3be"))
+	_draw_center_text("ORBIT SWITCH COURIER", Rect2(r.position.x, r.position.y + _ui_px(18.0), width, _ui_px(32.0)), _font_size(21.0), Color("#f5fbff"))
+	_draw_center_fit_text("1  START → 目標 %s" % HUB_SHORT[cargo_target], Rect2(r.position.x, r.position.y + _ui_px(62.0), width, _ui_px(29.0)), _font_size(18.0), Color("#ffffff"))
+	_draw_center_fit_text("2  TAP NOWで画面をタップ", Rect2(r.position.x, r.position.y + _ui_px(96.0), width, _ui_px(29.0)), _font_size(18.0), Color("#b6fff0"))
+	_draw_center_fit_text("3  同じ印のHUBでタップ→配達", Rect2(r.position.x, r.position.y + _ui_px(130.0), width, _ui_px(29.0)), _font_size(18.0), Color("#fff3be"))
 	var start_rect := Rect2(r.position.x + _ui_px(22.0), r.end.y - _ui_px(59.0), width - _ui_px(44.0), _ui_px(48.0))
 	_rounded_box(start_rect, Color("#14647a"), Color("#8dfbff"), 12, 2)
-	_draw_center_text("TAP TO START", start_rect, _font_size(16.0), Color.WHITE)
+	_draw_center_text("TAP TO START", start_rect, _font_size(18.0), Color.WHITE)
 
 
 func _draw_result_overlay() -> void:
