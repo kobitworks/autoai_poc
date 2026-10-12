@@ -295,3 +295,24 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - Tablet縦の失敗PNGを独立目視。NIGHTのルートとHUDは描画されているが、エネルギー2、DELIVER 4の停滞状態が残る。4画面の安定再現性は**未達**。本回にゲーム本体・QAコード修正は行わず、無根拠な許容角の拡大や連続リトライは避けた。
 - **品質10軸暫定76/100を維持、80点・一般公開品質は未認定**。今回の再現性FAILにより加点しない。実機音質/スピーカー/イヤホン、初見30秒、誤タップ、FPS/発熱、実機可読性は引き続き Human Gate 未確認。mainマージ、契約、課金、公開範囲拡大は一切なし。
 - **次回再開点**: (1) QA実入力のcrossing観測→Playwright touch処理→実際の状態更新を各段階で時刻付きread-onlyログにして、Tablet縦NIGHT 0→1の遅延を計測する。(2) 物理判定域内で早めに入力できる観測帯と入力経路を検討するが、成功コマンド・状態直書き禁止を保持。(3) 修正後に別runを含む4/4自然入力 E2E、40PNG、品質10軸再採点。80点未満ならGAME-076のToDoを継続、Human Gateは人間検証待ちであることを明記する。本Runnerでは他タスク未実施。
+
+
+## 2026-10-12 23:01:15 JST / AUTOAI-GAME076-20261012225247 — 乗換実入力窓の早期化とレイテンシ記録
+
+- **この回の実タスクは GAME-076 だけ**。前提GAME-075=Done、GAME-076=ToDo、他DoingなしをFresh-readし、管理表でDoing排他取得。対象は `kobitworks/autoai_poc` の `develop`、main/課金/本番範囲変更なし。
+- 直前の同一コード再試行 [run 38252571037 attempt2](https://github.com/kobitworks/autoai_poc/actions/runs/38252571037) はタブレット縦でNIGHT 0→1乗換が不成立（4画面3/4 PASS）。旧診断角度4.411→4.568→4.802radと物理乗換窓4.50±0.19radから、入力が有効範囲より遅れた可能性を調査対象にした。原因の厳密な断定はしない。
+- `p021-game/qa/orbit-switch-courier-real-input.js` だけを改修：前進する軌道0→1のRUSH/NIGHT観測帯を4.35..4.57から**物理的に有効な前方4.32..4.44rad**へ変更。実際のPlaywright touch/clickでのみ乗換と配達を実行する。成功コマンド・Godotゲームstate直書きは禁止のまま。受理窓本体、得点、物理法則、難易度には変更なし。
+- `physicalSwitch` に観測完了/実入力完了/乗換観測のwall-clock時刻を記録するread-only `actionTimings`、既存パッシブNIGHTトレースに `wallMs` を追加。失敗した場合も実測を結果JSONに保存可能とした。
+- ソース変更commit [b538128a33fb159f886799ff4f94f198f20a5605](https://github.com/kobitworks/autoai_poc/commit/b538128a33fb159f886799ff4f94f198f20a5605)、新Blob `a2e590b373866403e89e739674d29f39b44ba1c9`、develop全文読戻し一致。Godot Web自動書き出しcommit `515031d2895c39af7499d5e672f28dcb99fef69e` はdevelopのみ。
+- [Actions run 38258928362](https://github.com/kobitworks/autoai_poc/actions/runs/38258928362) の **contract / export-web / browser-quality は全3ジョブcompleted/success**。実入力QAログの結果JSONを独立解析し4画面すべて `PASS`、`qaCommand=NEVER USED`、`stateOverride=NONE`。NIGHT(3配達)→ACE(6配達)に実タップ・マウスのみで到達。SOUND OFF/ON、RETRY、BEST保存/復元も各4画面で一致。
+- [artifact 11752246355](https://github.com/kobitworks/autoai_poc/actions/runs/38258928362/artifacts/11752246355) のZIP実体を取得・解凍し、**40 PNG + results.json 計41ファイル**の存在とJSONを読戻した。JSON SHA256=`7f1c6c8d66b19fb90b7fd0f73d008e6dc109dd871da787ee8d22ef637ee650c1`。各画面intro/ACE/resultの画像を目視し主要UIに明確な重なりなし、ただし小画面の補助文字が細く低コントラストで可読性改善余地あり。
+
+| 画面 | 通常の実入力E2E | ACE配達 | Score | NIGHT 0→1実入力呼び出し |
+| --- | --- | ---: | ---: | ---: |
+| Phone縦390×844 | PASS/touch | 6 | 1109 | 62 ms |
+| Phone横844×390 | PASS/mouse | 6 | 1110 | 21 ms |
+| Tablet縦768×1024 | **PASS/touch** | 6 | 1107 | 124 ms |
+| Tablet横1024×768 | PASS/mouse | 6 | 1110 | 42 ms |
+
+- 改修後の新コードは現時点で**CI 1回のみ**。4/4 PASSは確認したが再試行による安定再現性までは未確定。10軸の証跡限定暫定評価は**76/100（ゲーム性8・操作8・難度7・UI/UX8・描画7・演出6・サウンド6・変化8・リプレイ9・技術9）を据置**。品質80点・一般公開完了は未認定。
+- 実機スピーカー/イヤホンでの音質、FPS/発熱、実際のスマホ/タブレットでの可読性、初見利用者30秒での理解と誤タップは **Human Gate未検証**。次回は同一新コードの別CI試行、4画面の視認性と演出、10軸再評価をGAME-076として続ける。ユーザー操作を自動代行せず、この回は他タスク実行なし。完了条件未達のため管理表はDoing→ToDoへ戻して終了する。
