@@ -735,9 +735,9 @@ const BOOK_SPOT_MARKER_ICONS=Object.freeze({
 function gisBookMarkerUrl(spot){
  const bookRef=String(spot.book_id??spot.bookId??spot.book_key??spot.bookKey??'').trim();
  const book=bookRef?state.books.find(item=>[item.key,item.id,item.book_id].some(id=>id!=null&&String(id)===bookRef)):null;
- const bookTitle=String(spot.book_title??spot.bookTitle??book?.title??'').trim();
- const value=spot.map_icon_url??spot.mapIconUrl??book?.map_icon_url??book?.mapIconUrl??BOOK_SPOT_MARKER_ICONS[bookTitle]??'';
- const url=String(value).trim();
+ const bookTitle=String(spot.book_title||spot.bookTitle||book?.title||'').trim();
+ const candidates=[spot.map_icon_url,spot.mapIconUrl,book?.map_icon_url,book?.mapIconUrl,BOOK_SPOT_MARKER_ICONS[bookTitle]];
+ const url=String(candidates.find(value=>typeof value==='string'&&value.trim())||'').trim();
  return /^https:\/\/img\.icons8\.com\//.test(url)?url:'';
 }
 function mapMarkerIcon(kind='target',bookMarkerUrl=''){
