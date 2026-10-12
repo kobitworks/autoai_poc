@@ -530,3 +530,14 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - **独立10軸の証拠限定暫定品質=76/100据置:** ゲーム性8、操作感8、難度7、UI/UX8、描画7、演出6、音6、変化8、リプレイ9、技術9。今回の画像証跡で警告の描画動作は証明できたが、公開品質80点の差4点を満たす実機UX・演出・音声/品質の改善証拠はない。**一般公開品質80点は未認定**。
 - Human Gateとして **スピーカー/イヤホンの実音、実端末FPS/発熱、初見30秒の自然操作/誤タップ、実画面での文字可読性**を未検証のまま維持。今回ゲーム本体コード・QAコード・main・有料リソース・本番公開範囲は変更しない。
 - 1件のDone条件未達につき、正本タスク`GAME-076`は実行終了時にDoing→ToDoへ戻し、次回は独立警告UX改善案と実画像E2E・10軸再評価から再開する。別タスクは実行しない。
+
+
+## 2026-10-13 05:26 JST / AUTOAI-GAME076-20261013-0518 — 残3秒警告の文字・枠強調（今回の1件）
+
+- AutoAI Runner v1.38.0とP021 project_rule v1.2.0をFresh-read。Slack明示指示なし、09:00以前のため日次全体監視対象外。P005〜P018、P020は要確認/依存未解除・スキャン間隔24時間未満・日次実行済みなどで実行対象なし。GAME-075=Done、GAME-076=ToDo、他DoingなしからGAME-076のみDoingで排他取得。
+- 前回の[独立warning画像監査](https://github.com/kobitworks/autoai_poc/actions/runs/38300290645)で4 viewportの『03s LEFT』表示・警告帯の描画は確認済みだが、通常時との差異が弱いことを課題として今回の改善範囲に採用。
+- Godot `Main.gd`の表示処理に、配達残り3秒以下でのみ「%02ds LEFT! HURRY · HUB」テキスト、背景#8b2030・白文字・黄色枠#fff0aaの角丸警告チップを追加。[コードコミット59de65c8](https://github.com/kobitworks/autoai_poc/commit/59de65c821ca89776a2d6ce9346aec9df1ff3e67)、developのblob=5d0b755e2923bb0b19a6320703d1922e67c569d6を独立再読込一致。時間減算、配達判定、スコア、入力、保存は無変更。警告チップは既存CARGO表示行のみを覆う配置で、通常時のアクション表示帯には変更なし。
+- `qa/orbit-switch-courier-real-input.js`のソース契約に「HURRY」「警告チップ」「白文字／赤背景」「18px優先文字」検査を追加。[QAコミットf926f0cc](https://github.com/kobitworks/autoai_poc/commit/f926f0ccc3d6d4e522045d63815e20aba23f23fb)、blob=5c4f91613bead105a3322b078177e79418710bb8。手続き的な成功命令・ゲームstate直接書換は追加なし。
+- 静的WCAGコントラスト計算で白字/#8b2030が約8.95:1、黄色枠/#8b2030が約7.80:1。これだけを根拠に実画面・実機の可読性PASSとは断定しない。
+- 最新のゲーム専用[GitHub Actions run38304048826](https://github.com/kobitworks/autoai_poc/actions/runs/38304048826)は本記録時点でcontract=SUCCESS、export-web=実行中、browser-quality/新警告PNG/自然入力4 viewportの最終結果は**未判定**。前のrun38303972268は新QA push時にconcurrencyでcancelledされており、そのPASSを流用しない。新runのresult.json＋48PNGの実体読戻し・4端末画面での警告差分目視・NIGHT3→ACE6、SOUND/RETRY/BEST成功確認が次回再開点。
+- 10軸独立の証拠限定暫定品質=**76/100（据置）**。目標80点未達、一般公開品質未認定。実機スピーカー/イヤホン音量・FPS/発熱・初見30秒理解・誤タップ率・実機文字可読性は**Human Gate未確認**。main変更、有料契約、本番公開拡大なし、他タスク着手なし。完了条件を満たすまでGAME-076=ToDoで次回継続。
