@@ -63,8 +63,21 @@ function verifyGuideContrast() {
     source.includes('_draw_center_fit_text(key_lines[0], top_cue_r') &&
     source.includes('_draw_center_fit_text(key_lines[1], bottom_cue_r'),
     'Long-cue result/route/next-action two-line contract missing');
+  // Cargo clock is a player-visible cue, not a QA shortcut: keep the
+  // count first to survive clipping and emphasize genuine <=3s urgency.
+  const cargoPanel=source.slice(source.indexOf('func _draw_info_panel()'),
+    source.indexOf('func _draw_intro_overlay()'));
+  check(cargoPanel.includes('int(ceil(cargo_left))') &&
+    cargoPanel.includes('"%02ds LEFT  ·  %s"') &&
+    cargoPanel.includes('_draw_fit_label(cargo_countdown') &&
+    cargoPanel.includes('cargo_left <= 3.0') &&
+    cargoPanel.includes('Color("#ff5877") if cargo_urgent') &&
+    cargoPanel.includes('Color("#ff9dab")') &&
+    cargoPanel.includes('cargo_left / _cargo_limit()'),
+    'Visible cargo countdown / <=3s warning contract missing');
   return {result:'PASS_STATIC',labels:results,minimumContrast:7,
-    longCueBoundary:'SOURCE_CONTRACT_ONLY: two-line priority summary; new screenshots and human legibility not yet verified',
+    cargoDeadline:'SOURCE_CONTRACT_ONLY: countdown first, last 3 seconds highlighted; actual visual/physical timing requires screenshot and device review',
+    longCueBoundary:'SOURCE_CONTRACT_ONLY: two-line priority summary; human legibility not yet verified',
     realDevice:'NOT_VERIFIED'};
 }
 
