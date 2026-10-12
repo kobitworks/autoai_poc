@@ -720,10 +720,14 @@ func _draw_info_panel() -> void:
 		var feedback_rect := Rect2(x, info_rect.end.y - _ui_px(94.0), info_rect.size.x - pad * 2.0, _ui_px(24.0))
 		_rounded_box(feedback_rect, Color("#125f4d") if cue_good else Color("#712f4b"), Color("#94f8d9") if cue_good else Color("#ffbbd0"), 8, 1)
 		_draw_center_fit_text(cue_text, feedback_rect, _font_size(13.0), Color("#ffffff"))
-	# Keep longer help away from the live action card and the milestone strip.
+	# GAME-076: Give the two bottom instructions a stronger contrast-safe
+	# background and 16 CSS-pixel labels on tablet-sized information panels.
+	# Keep a 3px gap after the optional feedback cue above and a 6px bottom inset.
 	if info_rect.size.y > _ui_px(275.0):
-		_draw_fit_label("交差点の緑でTAP → 乗換", Vector2(x, info_rect.end.y - _ui_px(52.0)), _font_size(15.0), Color("#f0fcff"), info_rect.size.x - pad * 2.0)
-		_draw_fit_label("同じ印のHUBでTAP → 配達", Vector2(x, info_rect.end.y - _ui_px(23.0)), _font_size(15.0), Color("#fff3c4"), info_rect.size.x - pad * 2.0)
+		var guide_band := Rect2(info_rect.position.x + _ui_px(7.0), info_rect.end.y - _ui_px(67.0), info_rect.size.x - _ui_px(14.0), _ui_px(61.0))
+		_rounded_box(guide_band, Color("#142f43"), Color("#5d9cbd"), 9, 1)
+		_draw_fit_label("交差点の緑でTAP → 乗換", Vector2(x, info_rect.end.y - _ui_px(52.0)), _font_size(16.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label("同じ印のHUBでTAP → 配達", Vector2(x, info_rect.end.y - _ui_px(23.0)), _font_size(16.0), Color("#fff6c9"), info_rect.size.x - pad * 2.0)
 
 
 func _draw_intro_overlay() -> void:
