@@ -55,7 +55,47 @@ function inside(rect, width, height) {
       });
 
       await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 120000 });
-      await page.waitForFunction(() => window.__P021_ORBIT && window.__P021_ORBIT.ready, null, { timeout: 120000 });
+      // GAME-076: preserve early boot errors if Godot never exposes the QA bridge.
+      // Read-only diagnostics only; a boot failure must still fail the CI smoke.
+      try {
+        await page.waitForFunction(() => window.__P021_ORBIT && window.__P021_ORBIT.ready, null, { timeout: 120000 });
+      } catch (bootError) {
+        const boot = await page.evaluate(() => ({
+          documentReadyState: document.readyState,
+          statusOverlay: document.querySelector('#status')?.style.visibility || null,
+          statusNotice: document.querySelector('#status-notice')?.textContent || null,
+          statusProgress: document.querySelector('#status-progress')?.value ?? null,
+          godotEngineLoaded: typeof window.Engine === 'function',
+          canvasFound: Boolean(document.querySelector('#canvas')),
+          gameBridgeFound: Boolean(window.__P021_ORBIT),
+          gameBridgeReady: Boolean(window.__P021_ORBIT && window.__P021_ORBIT.ready),
+        })).catch(err => ({ evaluationError: String(err.message || err) }));
+        const evidenceDir = '/tmp/p021-g030-real-input';
+        fs.mkdirSync(evidenceDir, { recursive: true });
+        const diagnostic = {
+          viewport: target.name,
+          step: 'godot-boot-ready',
+          status: 'FAIL',
+          waitError: String(bootError.message || bootError),
+          boot,
+          runtimeErrors: errors,
+        };
+        fs.writeFileSync(evidenceDir + '/' + target.name + '-boot-failure.json',
+          JSON.stringify(diagnostic, null, 2));
+        try {
+          await page.screenshot({
+            path: evidenceDir + '/' + target.name + '-boot-failure.png',
+            fullPage: true,
+            timeout: 10000,
+          });
+        } catch (screenshotError) {
+          diagnostic.screenshotError = String(screenshotError.message || screenshotError);
+          fs.writeFileSync(evidenceDir + '/' + target.name + '-boot-failure.json',
+            JSON.stringify(diagnostic, null, 2));
+        }
+        throw new Error(target.name + ': Godot boot did not become ready; ' +
+          JSON.stringify(diagnostic));
+      }
 
       let data = await snapshot(page);
       assert(data.build === 'GAME-069-20261011', target.name + ': wrong build');
