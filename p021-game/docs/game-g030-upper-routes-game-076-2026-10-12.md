@@ -481,3 +481,11 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - QAに長文cueの「結果・ルート・次操作」2行保持の静的回帰契約を追加。QA commit [291b87d34e49281ae5493d0ee91e04f1efdf24d9](https://github.com/kobitworks/autoai_poc/commit/291b87d34e49281ae5493d0ee91e04f1efdf24d9)、blob `6a7d60b1a542939f3ee38de9f8750ee115d8e3c8` を再取得して一致確認。静的契約は画像の可読性や実機検証の代替ではない。
 - 新コードCIは [run 38294400906](https://github.com/kobitworks/autoai_poc/actions/runs/38294400906)。本記録時点、contract=success、export-web=in_progress、browser-qualityは未判定。4 viewport自然実入力4/4、44 PNG+JSON、長文stress4画面の独立画像レビュー、独立10軸80点判定は**新コードでは未検証**。品質暫定76/100を据え置き、一般公開品質80点は未認定。
 - 実機スピーカー/イヤホン音量・FPS/発熱・初見ユーザー30秒・文字可読性/誤タップは引き続きHuman Gate（未検証）。新コードのCI結果を追跡し、画像確認と独立10軸採点が揃うまではGAME-076をDoneにしない。mainマージ・有料利用・本番公開変更・他の実タスク着手なし。
+
+### 2026-10-13 04:04 JST / 20261013-0350 — 新CI・実画像の独立判定（GAME-076）
+
+- [run38294400906](https://github.com/kobitworks/autoai_poc/actions/runs/38294400906) のcontract / export-web / browser-quality全3ジョブsuccess。head=291b87d34e49281ae5493d0ee91e04f1efdf24d9。
+- [artifact11768195849](https://github.com/kobitworks/autoai_poc/actions/runs/38294400906/artifacts/11768195849) ZIPを展開：44PNG＋results.json、JSON SHA256=c4c9a9d4a779afaa6109b3f94718c18c00324afc8a21e77d28c77fbf0369034a。
+- スマホ縦横・タブレット縦横の自然タップ/クリック4/4 PASS。NIGHT3→ACE6、SOUND ON/OFF、RETRY、BEST復元4/4成功（1110/1112/1108/1109点）。QA成功コマンド不使用・state直接変更なし。
+- 長文cue stress4枚を旧artifact11767136879と独立目視比較。旧1行の末尾省略で失われた結果/ルート/次操作の3要素を新2行で全4画面表示、明白な枠外はみ出し・HUD/ボタン重なりなし。実機の文字可読性は未判定。
+- 10軸暫定76/100（ゲーム8・操作8・難度7・UI8・描画7・演出6・音6・変化8・リプレイ9・技術9）を維持、80点/一般公開品質未認定。実機音声/イヤホン、FPS/発熱、初見30秒、可読性/誤タップはHuman Gate。今回は同GAME-076のみ、Done未達でToDoへ戻す。main/有償/本番変更なし。
