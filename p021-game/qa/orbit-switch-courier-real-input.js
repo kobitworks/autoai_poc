@@ -263,7 +263,8 @@ async function run(){
       }catch(err){
         evidence.failure=err.message;
         evidence.browserErrors=errors;
-        if (/NIGHT HUB0/.test(evidence.failure)) {
+        // Capture read-only trace for ANY NIGHT failure, including energy loss before HUB0.
+        if (/NIGHT/.test(evidence.failure)) {
           try {
             evidence.nightTelemetry=await page.evaluate(() => {
               if (window.__P021_NIGHT_TRACE_TIMER) clearInterval(window.__P021_NIGHT_TRACE_TIMER);
