@@ -471,3 +471,13 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - ブラウザジョブログの出力JSONを直接パースして確認した自然入力結果: **4/4 PASS**。Phone縦: ACE6件/1109点、Phone横: ACE6件/1110点、Tablet縦: ACE6件/1094点、Tablet横: ACE6件/1109点。全画面でNIGHT3配達（12秒）→ACE6配達（10秒）へ通常操作で到達。各画面の `restoredBest` と `localStorageBest` はスコアと一致（1109/1110/1094/1109）。SOUND OFF/ON、RETRYもE2Eチェック通過。全4ケースで `qaCommand=NEVER USED` / `stateOverride=NONE`。
 - `visualContract.result=PASS_STATIC`。長文cue stress fixtureは4/4 `CAPTURED`、各条件とも画面を自然入力で開始した時点で `deliveries=0,score=0`、ゲーム進捗を変更しないQA描画であることをログで確認。新artifact [11767136879](https://github.com/kobitworks/autoai_poc/actions/runs/38287586256/artifacts/11767136879) （3,212,471 bytes）はGitHubメタデータで存在とアップロード成功を確認。**今回のattempt2についてZIP内全PNGの独立展開・画像目視までは実施していない**ため、画像の文字判読性や情報保持はPASS扱いにしない。
 - ゲーム一般公開品質の10軸スコアは既存証跡限定暫定 **76/100据置**。80点・一般公開品質は未認定。初見30秒操作、実機スピーカー/イヤホン音質、FPS/発熱、文字可読性/誤タップはHuman Gate。次回再開点: 上記2行情報保持案の実装方針を承認確認し、cueStressの4画面視覚比較と独立10軸再採点を行う。今回のコード改変・mainマージ・有償/本番・他タスクなし、GAME-076は完了条件未達のためToDoで継続する。
+
+## 2026-10-13 03:58 JST / AUTOAI-GAME076-20261013-0350 — 重要情報2行cueへの実装・QA契約
+
+- 今回のAutoAI実作業は **P021 / GAME-076の1件のみ**。Runner v1.38.0、P021 rule v1.2.0をFresh-read。直近実行P021から循環してP005〜P020の各正本とタスク状態を確認し、要確認/Blocked/前提未完了/定期間隔未到達等を除外。GAME-075=Done、GAME-076=ToDo、他Doingなしを確認してDoing排他取得した。新規明示@autoai指示なし、09:00より前につき日次全体監視対象外。
+- 直前の読戻しで [run 38287586256 attempt2](https://github.com/kobitworks/autoai_poc/actions/runs/38287586256) は4 viewport自然実入力4/4PASSであることを確認済みだが、その旧コードだけを根拠に**今回の新コードをPASSとは扱わない**。
+- Godot Main.gdに `_cue_priority_lines()` を追加し、区切り付き長文案内の意味要素を「配達結果＋ROUTE」「次操作（TAP NOW表示時→目標HUB）」へ要約して上部cue帯2行に描画。通常の短いcue表示は既存1行表示を維持。Tablet横の副案内は配達結果＋ルート要約だけに限定し、任意の長文で肝心の意味要素を表示から落とさない。スコア、配送物理、操作判定、状態書込み、保存、QA成功コマンドには変更なし。
+- ソース変更 develop commit [e3ca7d8fcdf7b60f0bc0431b0927a4f295f0e92d](https://github.com/kobitworks/autoai_poc/commit/e3ca7d8fcdf7b60f0bc0431b0927a4f295f0e92d)、blob `706f1381d30c2346a55adc7df536d612b82ad278` を再取得して一致確認。
+- QAに長文cueの「結果・ルート・次操作」2行保持の静的回帰契約を追加。QA commit [291b87d34e49281ae5493d0ee91e04f1efdf24d9](https://github.com/kobitworks/autoai_poc/commit/291b87d34e49281ae5493d0ee91e04f1efdf24d9)、blob `6a7d60b1a542939f3ee38de9f8750ee115d8e3c8` を再取得して一致確認。静的契約は画像の可読性や実機検証の代替ではない。
+- 新コードCIは [run 38294400906](https://github.com/kobitworks/autoai_poc/actions/runs/38294400906)。本記録時点、contract=success、export-web=in_progress、browser-qualityは未判定。4 viewport自然実入力4/4、44 PNG+JSON、長文stress4画面の独立画像レビュー、独立10軸80点判定は**新コードでは未検証**。品質暫定76/100を据え置き、一般公開品質80点は未認定。
+- 実機スピーカー/イヤホン音量・FPS/発熱・初見ユーザー30秒・文字可読性/誤タップは引き続きHuman Gate（未検証）。新コードのCI結果を追跡し、画像確認と独立10軸採点が揃うまではGAME-076をDoneにしない。mainマージ・有料利用・本番公開変更・他の実タスク着手なし。
