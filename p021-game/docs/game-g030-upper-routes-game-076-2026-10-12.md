@@ -228,3 +228,20 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - [GitHub Actions run 38247148806](https://github.com/kobitworks/autoai_poc/actions/runs/38247148806) : `contract`=SUCCESS、`export-web`=SUCCESS、`browser-quality`=IN_PROGRESS / final未確認（報告書更新時点）。新コミットの4 viewport実入力テスト、40PNG/JSONおよび複数runでの再現性は最終検証前。未確認をPASSと扱わない。
 - 品質スコアは**前コミット時点の証跡限定暫定76/100**。今回の文字改善による増点、80点到達・一般公開品質を未認定とする。実機スピーカー/イヤホン音質、FPS・発熱、初見ユーザー30秒はHuman Gateで未確認。
 - **次回再開点**：①上記Actions runの最終状態とartifact `results.json` / 4 viewport画像を取得し、実タップ/クリックNIGHT→ACE6配達、SOUND/RETRY/BEST保存復元を独立readback、②Phone横の2行の文字あふれ・実表示コントラスト、Tablet横マイルストーンを旧画像と比較、③同一commitの再CIで単発Tablet Portrait timeoutの再現性を判断、④10軸の根拠付き採点を更新。80点未達ならGAME-076はToDo継続。別タスクは実行しない。
+
+
+### 2026-10-12 21:16:29 JST 追補：新コードCI完走・実操作証跡の独立読戻し
+
+- 新コード commit [5b1d944ebc9661688c9d31367a57c6a62b46eb5b](https://github.com/kobitworks/autoai_poc/commit/5b1d944ebc9661688c9d31367a57c6a62b46eb5b) の [Actions run 38247148806](https://github.com/kobitworks/autoai_poc/actions/runs/38247148806) は **attempt1でcontract / export-web / browser-qualityの全3ジョブ completed/success**。未完了時に追記した「browser-quality進行中」はこの追補をもって更新する。
+- [artifact 11746208642](https://github.com/kobitworks/autoai_poc/actions/runs/38247148806/artifacts/11746208642) をZIP実体として取得・解凍し、**40 PNG + results.jsonの計41ファイル**を読戻し。JSON SHA-256=`9c8d49dea6d9b20c125fb84c480c33443aa5061ab21b2509dcdbee1c67d66be1`。各ケースは `status=PASS`、`qaCommand=NEVER USED`、`stateOverride=NONE`。正常なマウス/タップでNIGHT3→ACE6件に到達、全11移動/配達イベントを観測。
+
+| ビューポート | 入力 | 自然実操作E2E | ACE配達 | スコア | SOUND OFF/ON・RETRY・BEST復元 |
+| --- | --- | --- | ---: | ---: | --- |
+| Phone Portrait 390×844 | touch | PASS | 6 | 1108 | PASS |
+| Phone Landscape 844×390 | mouse | PASS | 6 | 1111 | PASS |
+| Tablet Portrait 768×1024 | touch | PASS | 6 | 1104 | PASS |
+| Tablet Landscape 1024×768 | mouse | PASS | 6 | 1108 | PASS |
+
+- `audio.soundOff=true` / `audio.soundOn=true` の各4件、結果 `best`・再起動 `restoredBest`・localStorage保存 `localStorageBest` の全4件一致をJSONで確認。再挑戦処理はQAのPASS判定に含む。実音声のスピーカー出力・音質は未確認。
+- PNGの **Phone Landscape intro / route-ace、Tablet Landscape intro** を目視。新2行説明「光る交差点でTAP」「同じ印でTAP・配達」は表示領域内で省略記号なく読め、右カラムとの重なりはなし。NEXT ACTIONおよびROUTE MILESTONES見出しも表示あり。一方、初見用オーバーレイの淡い補助文字・SOUNDボタンなどの視認性には引き続き課題がある。今回は旧コミットの全画面ZIPとの画像差分比較・実機での読みやすさは行っていない。
+- **独立10軸は暫定76/100を維持**。今回の実操作4/4 PASSのみでは初見30秒成功率・端末音声/FPS・将来の間欠的timeoutの安定性が解決したとは扱えない。80点以上の一般公開品質は未認定。次回は同一コードでの別CI試行/Tablet Portrait単発失敗比較、全4画面の文字領域監査と10軸再採点、Human Gateを実施する。GAME-076は未完了 **ToDo継続**、今回ほかの実タスクへは着手しない。
