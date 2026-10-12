@@ -436,3 +436,10 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - 既存の自然タップ・クリック4画面E2E後に同じブラウザでQA-only fixtureを開き、実入力でイントロからplayingへ進み、score/deliveries=0を検証して `-cue-stress.png` を各viewport1枚（合計4枚）保存する工程を追加。QA commit [1057812e4d76996d6fd0b183aca944f51d3da57a](https://github.com/kobitworks/autoai_poc/commit/1057812e4d76996d6fd0b183aca944f51d3da57a)。強制成功コマンド・配送進行の直接書き換えなし。
 - 新コードのGitHub Actions [run 38287092113](https://github.com/kobitworks/autoai_poc/actions/runs/38287092113) は本記録時点で実行待ち／未判定。Godot build・4画面自然入力・4 stress画像・結果JSONおよび実画像の独立目視が揃うまでPASSを主張しない。失敗した場合は同GAME-076で失敗理由を調査して修正する。
 - 証拠限定の品質スコアは **76/100（据置）**、80点・一般公開品質は未認定。実機スピーカー/イヤホン、FPS/発熱、初見30秒、実機文字可読性/誤タップは依然Human Gate。今回はmainマージ・有償利用・本番環境変更・他タスクなし。完了条件未達のためGAME-076はToDoへ戻して次回検証。
+
+
+### 2026-10-13 02:57 JST / 同一GAME-076内のCI不一致修正（追補）
+
+- 初回長文stress実装の[Actions run 38287092113](https://github.com/kobitworks/autoai_poc/actions/runs/38287092113) は contract・export-webがsuccess、レスポンシブsmokeも4/4 PASSだが、自然入力E2Eは**FAIL**。テスト開始前の静的品質契約が旧`_draw_center_fit_text(cue_text, cue_r`を検索していたのに、QA専用描画helper導入により実コードが`_draw_center_fit_text(_visible_cue(), cue_r`へ変わったことが原因。ゲームの自然配達テスト自体は未実行であり、4画面stress画像も未生成。FAILをPASSと見なさない。
+- コントラスト閾値・cueの最低12px・ellipsis判定・実入力テストを維持したまま、静的検査文字列1箇所のみを実際の表示関数へ修正。QAソース[commit 57bd8caaf593282fa8c40b0ae5c7ff29dd9f85ce](https://github.com/kobitworks/autoai_poc/commit/57bd8caaf593282fa8c40b0ae5c7ff29dd9f85ce)。Godot本体、物理・配達判定・スコア・保存・強制成功操作は変更なし。
+- 再試行[Actions run 38287586256](https://github.com/kobitworks/autoai_poc/actions/runs/38287586256) は作成済み、**未確定**。次回は3ジョブ完了・通常実入力4/4・長文cue4画像とresults.jsonをFresh-readし、目視レビュー・10軸採点へ。80点未達、Human Gateを維持、GAME-076はToDoで継続。
