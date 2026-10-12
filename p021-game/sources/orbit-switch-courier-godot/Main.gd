@@ -707,7 +707,8 @@ func _draw_info_panel() -> void:
 	# Echo successful transfers and missed timing in the otherwise empty lower
 	# tablet-landscape panel. The prompt card keeps priority during gameplay.
 	if state == "playing" and cue_clock > 0.0 and info_rect.size.y > _ui_px(525.0):
-		var feedback_rect := Rect2(x, info_rect.end.y - _ui_px(88.0), info_rect.size.x - pad * 2.0, _ui_px(27.0))
+		# Keep a clear gap from the route milestone tiles above and help lines below.
+		var feedback_rect := Rect2(x, info_rect.end.y - _ui_px(94.0), info_rect.size.x - pad * 2.0, _ui_px(24.0))
 		_rounded_box(feedback_rect, Color("#125f4d") if cue_good else Color("#712f4b"), Color("#94f8d9") if cue_good else Color("#ffbbd0"), 8, 1)
 		_draw_center_fit_text(cue_text, feedback_rect, _font_size(13.0), Color("#ffffff"))
 	# Keep longer help away from the live action card and the milestone strip.
