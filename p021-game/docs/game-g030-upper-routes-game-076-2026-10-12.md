@@ -161,3 +161,22 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 1. 上記新コミットのrun 38235947964を最終読戻しし、contract/export-web/browser-quality各ジョブを判定。失敗時は失敗ログを確認し `GAME-076` 内で修正する。
 2. 4 viewportの実際のタップ/クリックでNIGHT3件→ACE6件到達、SOUND ON/OFF・RETRY・BEST保存を確認。QAコマンドやゲーム状態直接書換で合格を偽装しない。
 3. 画像（スマホ縦横、タブレット縦横の初見・通常・成功・結果等）を独立比較し10項目の品質を再評価する。80点未満なら同タスク改善を継続し、実機人間確認Gateは未検証扱いのまま維持する。
+
+## 2026-10-12 19:47:07 JST / 自動実行 20261012-194125-AUTOAI-GAME076 — 新UXコードの独立CI・画像比較
+
+- **今回の実行タスクはGAME-076の1件だけ**。GAME-075=Done・GAME-076=ToDo・他Doingなしを確認してDoing排他を取得。Godotゲーム本体は今回変更していない。
+- 前回画面改修 [commit 0334a3a](https://github.com/kobitworks/autoai_poc/commit/0334a3a4395359ee974de685941f207141da1fe7) の [GitHub Actions run 38235947964](https://github.com/kobitworks/autoai_poc/actions/runs/38235947964) を最終再取得し、**contract/export-web/browser-qualityは3件すべてcompleted/success**。
+- [新コードのartifact 11740542312](https://github.com/kobitworks/autoai_poc/actions/runs/38235947964/artifacts/11740542312) のZIPを独立ダウンロード/展開、4 viewport × 10状態 = 40 PNGとresults.json、計41ファイルを確認。JSON SHA-256 = 9d9670784618422b51ed721f6449900c401ba92a1290857fcb8478d29976c0fd。比較用に [前回artifact 11739921175](https://github.com/kobitworks/autoai_poc/actions/runs/38231177626/artifacts/11739921175) もダウンロードし、同じ画面を並置比較した。
+
+| viewport | 実入力E2E | NIGHT→ACE | ACE配達 | スコア | SOUND/RETRY/BEST |
+| --- | --- | --- | ---: | ---: | --- |
+| Phone Portrait 390×844 | PASS | PASS | 6 | 1109 | PASS |
+| Phone Landscape 844×390 | PASS | PASS | 6 | 1110 | PASS |
+| Tablet Portrait 768×1024 | PASS | PASS | 6 | 1106 | PASS |
+| Tablet Landscape 1024×768 | PASS | PASS | 6 | 1108 | PASS |
+
+- 4環境すべてで qaCommand=NEVER USED / stateOverride=NONE。自然なタップ/クリック11操作によりNIGHT3件からACE6件到達、BEST保存と復元の一致をJSONで確認。ブラウザ内音声状態は確認したが実スピーカー/イヤホンの音量・音質は未確認。
+- **画像独立比較**：Phone Landscapeのintroは前回より短い3ステップの文字が大きくなり、色の区別と余白で読み取りやすい。playingは盤面下端の行動ヒント帯が新設される改善。一方、Phone Landscape右情報欄の淡色・細字/長文省略、ACE通知・盤面下ヒントの小ささ、Tablet Landscape右欄の大きな余白は残存。静止画比較は実機アクセシビリティ・初見30秒の実測ではない。
+- **P021 10軸の独立暫定品質は76/100（前回75→+1）**。内訳：ゲーム性8、操作感8、難易度設計7、UI/UX8（前回7、画像上の導入とヒント改善）、グラフィック7、演出・エフェクト6、サウンド6、コンテンツ量・変化8、リプレイ性9、技術品質9。**80点未達・一般公開品質は未認定**。今回の新コードCIは1回成功、反復実行での再現性はまだ未確認。
+- **次回再開点**：(1) 現行commit 0334a3aの実入力E2Eを再実行して再現性を確認。(2) Phone Landscape右情報欄の補助文可読性・Tablet Landscape情報欄の余白/次アクション強調を改善。(3) 4 viewport実入力/画像と10軸再採点を行い、80点を目指す。実機スピーカー/イヤホン、FPS・発熱、初見30秒と誤タップ率はHuman Gate未確認のまま維持。
+- 今回変更するGitHubファイルはdevelopのこの監査文書のみ。main変更・新規公開・課金・契約なし。GAME-076は未完了のためToDoへ戻して継続し、他タスクには着手しない。
