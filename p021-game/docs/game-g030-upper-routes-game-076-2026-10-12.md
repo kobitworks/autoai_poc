@@ -618,10 +618,10 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - **Human Gate未検証**：実機スピーカー/イヤホン音質・音量、初見ユーザー30秒理解・誤タップ、実機文字可読性、端末FPS/発熱。次回は本実証2回成功を起点に、小さな補助文字/淡色cue・演出/音の改善方針を同一GAME-076で検討し、変更後の自然入力4viewport QAと独立10軸再採点を行う。実機Human Gateは実測後に反映。Done条件未達でGAME-076はToDo継続。main・有料利用・本番公開範囲・他タスク変更なし。
 
 
-## 2026-10-13 07 (sekund: 45) JST / AUTOAI-GAME076-20261013-0750 / 補助文字の可読性改善（同一タスク継続）
+## 2026-10-13 07:51:45 JST / AUTOAI-GAME076-20261013-0750 / 補助文字の可読性改善（同一タスク継続）
 
 - 本Runnerの唯一の実作業はGAME-076。依存GAME-075=Done・他Doingなしを確認して排他取得。前回attempt1/2の実入力4viewport 4/4 PASS・品質76/100は参照基準であり、今回の修正後CIのPASSを代用しない。
 - GitHub developの `p021-game/sources/orbit-switch-courier-godot/Main.gd` について、前回の画像レビューで残った小さい補助文字のうち、①上段cue 13→15 CSS px基準、②下段cue 12→14、③次ルート進捗 13→15、④HOW TO PLAY見出し14→16、⑤ROUTE MILESTONES見出し15→16、⑥タブレット横feedback 13→15 の6箇所のみ強調。既存`_draw_center_fit_text`の横幅適応・12px下限と省略表示を維持。タップ判定、物理タイマー、スコア、QA成功コマンド、ゲーム状態は変更なし。
 - 実装commit: https://github.com/kobitworks/autoai_poc/commit/022dea23f61fe9b81804627d057f7da94a45fb98 （source blob `bda2315445898ba4ad4991ec56132bca838d733f`）。GitHub develop実体を再読戻しし、6箇所を照合。main・課金・本番化なし。
-- 修正後CI: https://github.com/kobitworks/autoai_poc/actions/runs/38318973637 （07:51時点 contract=success、export-web=in_progress、browser-qualityは未開始）。**CI最終結果、画像の見やすさ、4viewport実操作の回帰合否はまだ未確認でありPASSとはしない**。ここで76/100据置・一般公開品質80点未達、実機の音/イヤホン、初見ユーザー30秒、FPS/発熱、タップ・可読性はHuman Gate未確認。
+- 修正後CI: https://github.com/kobitworks/autoai_poc/actions/runs/38318973637 （07:53時点 contract/export-web=success、browser-quality=in_progress。新実入力結果は未確定）。**CI最終結果、画像の見やすさ、4viewport実操作の回帰合否はまだ未確認でありPASSとはしない**。ここで76/100据置・一般公開品質80点未達、実機の音/イヤホン、初見ユーザー30秒、FPS/発熱、タップ・可読性はHuman Gate未確認。
 - 次回再開: 上記runの3ジョブと新artifactのJSON/PNGをFresh-readし、4画面NIGHT3→ACE6・SOUND/RETRY/BEST・初回救済・cue読取/重なりを独立検証。新CI FAILなら原因を特定して同GAME-076を続行。人間のみ判定可能な実機項目はPASSにしない。
