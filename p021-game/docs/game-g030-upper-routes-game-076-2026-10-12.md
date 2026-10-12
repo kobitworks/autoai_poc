@@ -419,3 +419,11 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - [Actions run 38284393464](https://github.com/kobitworks/autoai_poc/actions/runs/38284393464): contract=success、export-web=success、browser-qualityは本メモ記録時点で実行中。**新QAの4画面実入力・40PNG・静的契約のCI結果はまだ確定させない**。
 - 前回の実証評価は10軸暫定**76/100**、一般公開目標80点未達。本変更だけで加点しない。実機音質・音量、FPS・発熱、初見30秒、実機の文字可読性/誤タップ、および長文cue専用stress screenshotは未検証のHuman Gate/追加検証項目として維持。
 - 次回再開点は今回runのbrowser-qualityとresults.json内visualContractの読戻し、4 viewport自然入力のNIGHT3→ACE6・SOUND/RETRY/BEST確認、長文cueストレス画像・10軸再採点。未達の場合はGAME-076をToDoで継続する。
+
+
+### 2026-10-13 02:34:29 JST / AUTOAI-GAME076-20261013-0219 / CI最終追補
+- GitHub Actions [run 38284393464](https://github.com/kobitworks/autoai_poc/actions/runs/38284393464) の contract / export-web / browser-quality **全3ジョブ completed/success** を確認。browser-qualityの4 viewport通常操作E2E・レスポンシブsmokeも両step成功。成功コマンド不使用（qaCommand=NEVER USED）、状態直接改変なし（stateOverride=NONE）。
+- browser-quality実行ログの `visualContract.result=PASS_STATIC` を独立読戻し。Phone横2行ガイド：17px、前景/背景12.65:1と11.85:1、Tablet下部2行：16px、13.84:1と12.70:1。設定した下限16px / 7:1を4表示項目とも満たす。長文cueの特殊ケースはソース存在検査のみで、専用stress screenshotは未検証。
+- 証跡artifact [11762698209](https://github.com/kobitworks/autoai_poc/actions/runs/38284393464/artifacts/11762698209) のアップロード成功をジョブログ・メタデータで確認。ブラウザジョブログ上の結果JSONで4画面いずれも`status=PASS`。ZIP全画像を今回独立目視したことまでは主張しない。
+- 10軸独立品質評価は従前の**暫定76/100**を据置、一般公開目標80点を未達。実機音声・FPS/発熱・初見30秒・実機文字サイズ/誤タップ、長文cueのstress screenshotはHuman Gate/次回作業として残る。
+- 1タスクのみ処理しGAME-076はDoneにしない。SheetのDoingをToDoへ戻して次回継続、他タスク/本番/main/有償利用は変更しない。
