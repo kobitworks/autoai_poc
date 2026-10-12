@@ -665,8 +665,14 @@ func _draw_info_panel() -> void:
 		var card_h := minf(_ui_px(56.0), info_rect.end.y - card_y - _ui_px(11.0))
 		if card_h >= _ui_px(43.0):
 			var action_card := Rect2(x, card_y, info_rect.size.x - pad * 2.0, card_h)
-			_rounded_box(action_card, Color("#125b4b") if action_ready else Color("#183a51"), Color("#9affdc") if action_ready else Color("#89d7fc"), 11, 2)
-			_draw_label("TAP NOW" if action_ready else "NEXT ACTION", action_card.position + Vector2(_ui_px(10.0), _ui_px(16.0)), _font_size(14.0), Color("#ffffff"))
+			_rounded_box(action_card, Color("#125b4b") if action_ready else Color("#183a51"), Color("#9affdc") if action_ready else Color("#89d7fc"), 11, 3 if action_ready else 2)
+			# A short, pulsing green rail makes a genuinely legal TAP window visible
+			# without touching orbit, input, score, or the QA state.
+			if action_ready:
+				var ready_pulse := 0.5 + 0.5 * sin(elapsed * 8.0)
+				var ready_rail := Rect2(action_card.position.x + _ui_px(6.0), action_card.position.y + _ui_px(6.0), _ui_px(5.0), card_h - _ui_px(12.0))
+				draw_rect(ready_rail, Color(0.60, 1.0, 0.85, 0.55 + 0.45 * ready_pulse), true)
+			_draw_label("TAP NOW" if action_ready else "NEXT ACTION", action_card.position + Vector2(_ui_px(14.0 if action_ready else 10.0), _ui_px(16.0)), _font_size(14.0), Color("#ffffff"))
 			_draw_center_fit_text(action_line, Rect2(action_card.position.x + _ui_px(5.0), action_card.position.y + _ui_px(18.0), action_card.size.x - _ui_px(10.0), card_h - _ui_px(20.0)), _font_size(16.0 if action_ready else 15.0), Color("#ffffff"))
 		else:
 			_draw_fit_label(action_line, Vector2(x, y), _font_size(14.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
@@ -681,6 +687,9 @@ func _draw_info_panel() -> void:
 	# Keep two bright, readable steps below (not inside) the NEXT ACTION card.
 	# The <220px portrait panel uses its existing single-line fallback instead.
 	if info_rect.size.y >= _ui_px(220.0) and info_rect.size.y <= _ui_px(275.0):
+		# Keep both steps on a distinct high-contrast strip below NEXT ACTION.
+		var help_band := Rect2(info_rect.position.x + _ui_px(7.0), info_rect.end.y - _ui_px(48.0), info_rect.size.x - _ui_px(14.0), _ui_px(42.0))
+		_rounded_box(help_band, Color("#16364a"), Color("#5ba7c9"), 9, 1)
 		_draw_fit_label("1  光る交差点でTAP", Vector2(x, info_rect.end.y - _ui_px(32.0)), _font_size(17.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
 		_draw_fit_label("2  同じ印でTAP・配達", Vector2(x, info_rect.end.y - _ui_px(12.0)), _font_size(17.0), Color("#fff8d9"), info_rect.size.x - pad * 2.0)
 	# Tablet landscape: use otherwise empty lower-panel space to show which
@@ -695,6 +704,12 @@ func _draw_info_panel() -> void:
 			var milestone_rect := Rect2(x + float(step) * (milestone_width + milestone_gap), milestones_y, milestone_width, _ui_px(29.0))
 			_rounded_box(milestone_rect, Color("#116252") if unlocked else Color("#172e42"), Color("#89ffce") if unlocked else Color("#5186a6"), 8, 1)
 			_draw_center_fit_text(str(ROUTE_NAMES[step + 1]), milestone_rect, _font_size(13.0), Color("#ffffff"))
+	# Echo successful transfers and missed timing in the otherwise empty lower
+	# tablet-landscape panel. The prompt card keeps priority during gameplay.
+	if state == "playing" and cue_clock > 0.0 and info_rect.size.y > _ui_px(525.0):
+		var feedback_rect := Rect2(x, info_rect.end.y - _ui_px(88.0), info_rect.size.x - pad * 2.0, _ui_px(27.0))
+		_rounded_box(feedback_rect, Color("#125f4d") if cue_good else Color("#712f4b"), Color("#94f8d9") if cue_good else Color("#ffbbd0"), 8, 1)
+		_draw_center_fit_text(cue_text, feedback_rect, _font_size(13.0), Color("#ffffff"))
 	# Keep longer help away from the live action card and the milestone strip.
 	if info_rect.size.y > _ui_px(275.0):
 		_draw_fit_label("交差点の緑でTAP → 乗換", Vector2(x, info_rect.end.y - _ui_px(52.0)), _font_size(15.0), Color("#f0fcff"), info_rect.size.x - pad * 2.0)
