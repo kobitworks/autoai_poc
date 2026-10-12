@@ -561,3 +561,12 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - 反映: [develop commit 58246674ab983f905575dca09ff38fbd44aad358](https://github.com/kobitworks/autoai_poc/commit/58246674ab983f905575dca09ff38fbd44aad358)、blob `35947e8ef7271084230b8a7dd03e2dffa6a60592` は develop から再読込一致。
 - 再CI: [run 38309169560](https://github.com/kobitworks/autoai_poc/actions/runs/38309169560) 起動済み。最終3ジョブと4画面の実入力・warning/音声/保存の判定は別途確認し、不明な時点ではPASS扱いしない。
 - 品質: 独立暫定76/100据置。80点を達成したとは認定しない。実機音声・初見30秒・FPS/発熱・可読性/誤タップのHuman Gateは未確認。main/課金/本番変更なし。
+
+
+### 2026-10-13 06:20 JST — GAME-076 起動修正後の独立E2E最終検証
+
+- [GitHub Actions run 38309169560](https://github.com/kobitworks/autoai_poc/actions/runs/38309169560) は `contract` / `export-web` / `browser-quality` **3/3 SUCCESS**。元の GDScript 起動 Parse Error は再現せず、4画面実入力E2Eまで完走した。
+- artifact **11773534163** (3,529,484 bytes) のZIP実体を取得・展開。**48 PNG + results.json** を検査。結果JSON SHA-256: `530ce7550534241863f769e1ccedded810190bbbd6a5b51006fa6ec470527b89`。
+- スマホ縦390x844（タッチ）1109点、横844x390（マウス）1110点、タブレット縦768x1024（タッチ）1103点、横1024x768（マウス）1108点で **4/4 PASS**。正規タップ・クリックでNIGHT3配達→ACE6配達、SOUND ON/OFF、RETRY、BEST保存・再読込が一致。QA成功コマンド使用なし、直接state改変なし。
+- 残り3秒警告の専用PNG4枚を独立目視。全4画面で赤い `03s LEFT! HURRY` 帯を確認。以前のタブレット横 `SCARLET / SQ...` という途中省略は、新画像で `SQUARE` が切れずに表示されることを確認。明白なHUD衝突は見られない。これは静的契約だけではない画像確認であり、実機可読性の保証ではない。
+- **独立10軸品質の既存暫定76/100は据置き**。80点一般公開品質を認定しない。実機スピーカー/イヤホン、初見30秒、FPS・発熱、指による誤タップ・文字の読みやすさはHuman Gate未確認。GAME-076はDone条件未達のためToDo継続。mainへの変更、課金・本番公開は実施していない。
