@@ -313,6 +313,34 @@ async function run(){
         await input(page,t);
         await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.state==='playing','replay after reload');
         await page.screenshot({path:dir+'/'+t.name+'-replay.png'});
+        // GAME-076: independent cue-overflow image fixture, not a scoring cheat.
+        // Only an extra QA query flag substitutes the banner DRAWN TEXT.
+        // We start by a real tap and verify progress remains at zero.
+        await page.goto(url+'&cue_stress=1',{waitUntil:'domcontentloaded',timeout:120000});
+        await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.ready,'read-only long-cue ready',120000);
+        d=await snapshot(page);
+        check(d.qa_mode && d.cue_stress && d.state==='intro',
+          'QA-only long-cue flag unavailable');
+        const stressCanvas=await page.locator('#canvas').boundingBox();
+        check(stressCanvas,'QA-only long-cue canvas unavailable');
+        t.hitPoint={
+          x:stressCanvas.x+(d.field[0]+d.field[2]/2)*stressCanvas.width/d.viewport_w,
+          y:stressCanvas.y+(d.field[1]+d.field[3]/2)*stressCanvas.height/d.viewport_h
+        };
+        check(d.deliveries===0 && d.score===0,
+          'QA display fixture affected delivery or score before input');
+        await input(page,t);
+        await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.state==='playing',
+          'read-only long-cue normal physical start');
+        await page.waitForTimeout(110);
+        d=await snapshot(page);
+        check(d.cue_stress && d.state==='playing' && d.score===0 && d.deliveries===0,
+          'QA display fixture altered game progress or did not render');
+        await page.screenshot({path:dir+'/'+t.name+'-cue-stress.png'});
+        evidence.cueStress={result:'CAPTURED',stage:'natural real-input playing',
+          deliveries:d.deliveries,score:d.score,readOnlyDisplay:true,
+          screenshot:t.name+'-cue-stress.png',
+          physicalTextLegibility:'REQUIRES INDEPENDENT VISUAL REVIEW'};
         check(errors.length===0,'Browser console/runtime errors: '+errors.join(' | '));
         // Stop the diagnostic observer before releasing this browser context.
         await page.evaluate(() => {
@@ -344,7 +372,7 @@ async function run(){
   }finally{await browser.close();}
   const output={task:'GAME-076',game:'GAME-G030',visualContract,
     method:'real touch/mouse STARTER/RUSH/NIGHT/ACE natural delivery and BEST persistence; read-only QA telemetry; no QA command/state override',
-    screenshotStates:['intro','playing','route-rush','route-ace','miss-feedback','result','retry','sound-off','sound-on','replay'],
+    screenshotStates:['intro','playing','route-rush','route-ace','miss-feedback','result','retry','sound-off','sound-on','replay','cue-stress'],
     physicalOutput:'NOT VERIFIED – must check actual device audio and first-time user experience',
     independentQualityScore:'NOT ASSESSED (manual visual/audio/human checks separate)',viewports:results};
   fs.writeFileSync(dir+'/results.json',JSON.stringify(output,null,2));
