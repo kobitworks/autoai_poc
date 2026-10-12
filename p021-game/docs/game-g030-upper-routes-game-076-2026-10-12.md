@@ -347,3 +347,13 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - 10軸独立品質スコアは **暫定76/100を据置**（ゲーム性8、操作8、難度7、UI/UX8、描画7、演出6、サウンド6、変化8、リプレイ9、技術9）。今回はUIの証跡改善と4/4自然入力成功が確認できたが、未実測の音声/FPS/ユーザビリティへ加点して80点/一般公開品質認定しない。
 - **Human Gate未検証**：実機スピーカー/イヤホン音質・音量、実機FPS/発熱、Phone/Tablet実機可読性・誤タップ、初見ユーザー30秒理解。これらを自動CIの成功と混同しない。次の同一タスクでは不足4点のうち演出/サウンドの非実機で検証可能な範囲と小画面コントラストを改めて監査し、実機結果の受領後に10軸を再採点する。
 - 今回は終了時にGAME-076をDoing→ToDoに戻す。完了条件80点未達、別タスク・本番/課金/mainの変更なし。
+
+
+## 2026-10-13 00:06 JST / AUTOAI-20261012-2356-GAME076 — 長文cue・狭幅表示の安全な文字収まり改善
+
+- **今回の実作業は GAME-076 の1件のみ。** AutoAI共通Runner v1.38.0、P021 project_rule v1.2.0、GAME-075=Done、GAME-076=ToDo、他DoingなしをFresh-readし、GAME-076をDoingへ変更して排他取得。前回の最終E2E記録は4 viewport 4/4 PASS、独立10軸暫定76/100、Human Gate未確認。
+- **確認した品質上の欠落:** `_draw_center_fit_text` はテキストを最小12 CSS-px相当まで縮小しても文字列が幅を超えた場合、切り詰めずに描画していた。Phone横やTablet右カードで長い英語cue/案内が領域外に出るリスクがある。実機での発生を確認したものではなくコード上の境界条件として扱う。
+- **修正:** 最低フォントサイズ12 CSS-pxを保ちながら、許容幅を超える場合に限り文字列を末尾「…」で切り詰めて中央配置する。収まる文字列の表示は変更せず、成功判定・配送・タイミング・サウンド・得点・保存・QA入力・stateには触れない。対象は `p021-game/sources/orbit-switch-courier-godot/Main.gd` の描画補助関数のみ。
+- **GitHub develop commit:** https://github.com/kobitworks/autoai_poc/commit/3401bfd8624accde5f8833c3af5432ef801353e9 （更新後blob SHA `8969940a0c6214eb5fe231ed9c070a16fad4fd06` をGitHubから独立readbackして一致）。main/有料機能/公開基盤拡張/別タスク変更なし。
+- **追加CI:** コミット後のGitHub Actions https://github.com/kobitworks/autoai_poc/actions/runs/38267716799 は00:06 JST時点でcontract=success、export-web=in_progress、browser-quality=未判定。完成した証跡や新コード4 viewport の実操作結果をまだ確認していないため、新版を4/4 PASSとは記載しない。実機FPS・音声・可読性・初見30秒も未確認。
+- **品質判定:** 暫定76/100を据置き、80点/一般公開品質は未認定。最新CIの3ジョブ結果・artifact 40PNG+results.json、4 viewport自然タップ/クリック・SOUND/RETRY/BEST、狭幅cue文字の収まりと独立10軸の再評価を次回再開点とする。完了条件未達のためDoingを終了時ToDoへ戻す。
