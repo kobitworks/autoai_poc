@@ -707,13 +707,23 @@ func _draw_intro_overlay() -> void:
 	var height := minf(field_rect.size.y - _ui_px(20.0), _ui_px(240.0))
 	var r := Rect2(field_rect.get_center() - Vector2(width, height) * 0.5, Vector2(width, height))
 	_rounded_box(r, Color("#0b1a2b"), Color("#46dce9"), 22, 2)
-	_draw_center_text("ORBIT SWITCH COURIER", Rect2(r.position.x, r.position.y + _ui_px(18.0), width, _ui_px(32.0)), _font_size(21.0), Color("#f5fbff"))
-	_draw_center_fit_text("1  START → 目標 %s" % HUB_SHORT[cargo_target], Rect2(r.position.x, r.position.y + _ui_px(62.0), width, _ui_px(29.0)), _font_size(18.0), Color("#ffffff"))
-	_draw_center_fit_text("2  TAP NOWで画面をタップ", Rect2(r.position.x, r.position.y + _ui_px(96.0), width, _ui_px(29.0)), _font_size(18.0), Color("#b6fff0"))
-	_draw_center_fit_text("3  同じ印のHUBでタップ→配達", Rect2(r.position.x, r.position.y + _ui_px(130.0), width, _ui_px(29.0)), _font_size(18.0), Color("#fff3be"))
-	var start_rect := Rect2(r.position.x + _ui_px(22.0), r.end.y - _ui_px(59.0), width - _ui_px(44.0), _ui_px(48.0))
+	# GAME-076: On a short phone landscape, fixed step positions could touch
+	# the start button. Fit all three steps above the button without clipping.
+	var short_panel := height < _ui_px(230.0)
+	var title_y := _ui_px(13.0 if short_panel else 18.0)
+	var step_y := _ui_px(46.0 if short_panel else 62.0)
+	var step_gap := clampf((height - _ui_px(124.0)) * 0.5, _ui_px(23.0), _ui_px(33.0)) if short_panel else _ui_px(34.0)
+	var step_h := _ui_px(21.0 if short_panel else 29.0)
+	var step_font := _font_size(16.0 if short_panel else 18.0)
+	_draw_center_text("ORBIT SWITCH COURIER", Rect2(r.position.x, r.position.y + title_y, width, _ui_px(30.0)), _font_size(20.0 if short_panel else 21.0), Color("#f5fbff"))
+	_draw_center_fit_text("1  START → 目標 %s" % HUB_SHORT[cargo_target], Rect2(r.position.x, r.position.y + step_y, width, step_h), step_font, Color("#ffffff"))
+	_draw_center_fit_text("2  TAP NOWで画面をタップ", Rect2(r.position.x, r.position.y + step_y + step_gap, width, step_h), step_font, Color("#b6fff0"))
+	_draw_center_fit_text("3  同じ印のHUBでタップ→配達", Rect2(r.position.x, r.position.y + step_y + step_gap * 2.0, width, step_h), step_font, Color("#fff3be"))
+	var button_height := _ui_px(44.0 if short_panel else 48.0)
+	var button_offset := _ui_px(53.0 if short_panel else 59.0)
+	var start_rect := Rect2(r.position.x + _ui_px(22.0), r.end.y - button_offset, width - _ui_px(44.0), button_height)
 	_rounded_box(start_rect, Color("#14647a"), Color("#8dfbff"), 12, 2)
-	_draw_center_text("TAP TO START", start_rect, _font_size(18.0), Color.WHITE)
+	_draw_center_text("TAP TO START", start_rect, _font_size(17.0 if short_panel else 18.0), Color.WHITE)
 
 
 func _draw_result_overlay() -> void:
@@ -722,12 +732,17 @@ func _draw_result_overlay() -> void:
 	var height := minf(field_rect.size.y - _ui_px(20.0), _ui_px(224.0))
 	var r := Rect2(field_rect.get_center() - Vector2(width, height) * 0.5, Vector2(width, height))
 	_rounded_box(r, Color("#0b1a2b"), Color("#ffd166"), 22, 2)
-	_draw_center_text("DELIVERY RESULT", Rect2(r.position.x, r.position.y + _ui_px(20.0), width, _ui_px(30.0)), _font_size(16.0), Color("#ffd166"))
-	_draw_center_text("%d pts" % score, Rect2(r.position.x, r.position.y + _ui_px(62.0), width, _ui_px(50.0)), _font_size(32.0), Color("#f7fbff"))
-	_draw_center_text("%d deliveries  ·  BEST %d" % [deliveries, best_score], Rect2(r.position.x, r.position.y + _ui_px(113.0), width, _ui_px(31.0)), _font_size(15.0), Color("#d7f0ff"))
-	retry_rect = Rect2(r.position.x + _ui_px(22.0), r.end.y - _ui_px(61.0), width - _ui_px(44.0), _ui_px(50.0))
+	# GAME-076: Compact layout keeps the deliveries/BEST line clear of RETRY
+	# (the previous fixed y=113 and bottom anchored button overlapped).
+	var short_panel := height < _ui_px(220.0)
+	var heading_y := _ui_px(12.0 if short_panel else 20.0)
+	var score_y := _ui_px(41.0 if short_panel else 62.0)
+	var detail_y := _ui_px(87.0 if short_panel else 113.0)
+	_draw_center_text("DELIVERY RESULT", Rect2(r.position.x, r.position.y + heading_y, width, _ui_px(28.0 if short_panel else 30.0)), _font_size(16.0), Color("#ffd166"))
+	_draw_center_text("%d pts" % score, Rect2(r.position.x, r.position.y + score_y, width, _ui_px(40.0 if short_panel else 50.0)), _font_size(30.0 if short_panel else 32.0), Color("#f7fbff"))
+	_draw_center_fit_text("%d deliveries  ·  BEST %d" % [deliveries, best_score], Rect2(r.position.x, r.position.y + detail_y, width, _ui_px(24.0 if short_panel else 31.0)), _font_size(14.0 if short_panel else 15.0), Color("#d7f0ff"))
+	retry_rect = Rect2(r.position.x + _ui_px(22.0), r.end.y - _ui_px(55.0 if short_panel else 61.0), width - _ui_px(44.0), _ui_px(46.0 if short_panel else 50.0))
 	_draw_button(retry_rect, "RETRY  ·  TAP / SPACE", true)
-
 
 func _draw_sparks() -> void:
 	for p in sparks:
