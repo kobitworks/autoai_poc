@@ -72,3 +72,21 @@
 - [run 38228449796](https://github.com/kobitworks/autoai_poc/actions/runs/38228449796) は **contract=success, export-web=success, browser-quality=failure** と確定。全4 viewportのうちphone縦横2/4 PASS、tablet縦は **RUSH 1->2 lost energy**、tablet横は **NIGHT 1->0 lost energy**。4/4 PASSは未達。
 - [artifact 11737247573](https://github.com/kobitworks/autoai_poc/actions/runs/38228449796/artifacts/11737247573) ZIPをダウンロードし results.json を独立読戻し。新規診断対象のtablet横にnightTelemetry=131 samples を確認。NIGHT 2->1はエネルギー3のまま実際に転送成功。直後の軌道1で angle=4.627 (19.691秒) → 4.443 (19.887秒) と飛び、QAが待つ 4.55..4.62rad の狭い観測帯をサンプルが通過した一方で入力イベントは発生していない。そのまま軌道1を周回して cargoLeft=0.03 (29.888秒) → 11.87・energy=2 (30.086秒) へ変わった。したがって **NIGHT1→0の失敗は貨物期限切れ前の初回有効交差をQAが捕捉できなかったことに整合**する。ゲーム自体の交差判定、端末実機の挙動、なぜPlaywright観測が遅れたかまでは未確定。
 - tablet縦の失敗はRUSH段階のため現在のnightTelemetry収集範囲外。新規コードは診断情報を増やしたのみでゲームの成功条件・点数は無変更。根拠がない修正を重ねず、再開時にはQAの観測窓/ブラウザスケジューリングの設計とRUSH/NIGHT双方の証跡を照合する。タイミング依存テストの基盤自体を検討し直す。10軸独立80点/実機Human Gateは未完了、GAME-076はToDo維持。
+
+
+## 2026-10-12 18:44 JST / AutoAI実行ID 20261012183458-AUTOAI — 実入力QA改善・CI完走
+
+- 本実行の唯一の実作業は **GAME-076**。GAME-075=Done、他Doingなしを確認して開始。GitHub `develop` の [QA実入力スクリプト](../qa/orbit-switch-courier-real-input.js) の角度観測域だけを変更し、[commit 8a6d7e6](https://github.com/kobitworks/autoai_poc/commit/8a6d7e6657fee5f0ba58d6cfa53be26b7c6db7e6) / blob `ea9fb092443856566e876bcea4ae7b03f4df3c56` で独立読戻し一致。Godotゲーム本体、QA成功コマンド、ゲームstateの直接書換は変更していない。
+- 変更した13箇所の観測域について、初期2入力＋上位11実操作の範囲がGodot正規物理判定（交差点 `SWITCH_WINDOW=0.19rad`、HUB `HUB_WINDOW=0.23rad`）内であることを静的検証。前回 [run 38228449796](https://github.com/kobitworks/autoai_poc/actions/runs/38228449796) の独立ZIP読戻しでもタブレット横の軌道角度 `4.627→4.443rad` / `196ms` 飛びを確認。以前の待機帯 `4.55..4.62` を観測できず、NIGHT 1→0 が期限切れに至った原因候補に整合する。
+- 修正後の [GitHub Actions run 38231177626](https://github.com/kobitworks/autoai_poc/actions/runs/38231177626) を再取得し、**contract / export-web / browser-quality = success 3/3** を確認。保存済み [artifact 11739290056](https://github.com/kobitworks/autoai_poc/actions/runs/38231177626/artifacts/11739290056) の **results.json＋40 PNG** を実体ダウンロードし独立読戻し。
+
+| viewport | 自然実入力E2E | NIGHT→ACE | ACE配達件数 | 最終スコア | SOUND・RETRY・BEST | 
+|---|---|---|---:|---:|---|
+| phone portrait 390×844 | PASS | PASS | 6 | 1109 | PASS |
+| phone landscape 844×390 | PASS | PASS | 6 | 1110 | PASS |
+| tablet portrait 768×1024 | PASS | PASS | 6 | 1108 | PASS |
+| tablet landscape 1024×768 | PASS | PASS | 6 | 1110 | PASS |
+
+- 全11のRUSH/NIGHT/ACE操作は通常のPlaywright `touchscreen.tap` / `mouse.click` によるもの。成果物JSONの `qaCommand=NEVER USED` / `stateOverride=NONE` を確認。ブラウザ内部のAudioStreamPlayer起動・SOUND ON/OFFは確認したが、実スピーカーの音質や音量は未確認。
+- phone landscape のACE画像を目視。ルート/HUD/盤面/操作案内は画面内にあり、失敗前よりタイミング検証の自動化は改善。一方、小さい補助文字・暗いコントラストと操作中の初見理解には改善余地。前回の品質暫定 **74/100** は今回のCI PASSだけでは引き上げず、**80点の一般公開品質は未認定**。単一runの4/4PASSを再現性の証明にしない。
+- **次回再開点**: 同じQAで複数回のCI再現性を確認。4端末サイズの画像と10軸の品質を独立採点し、スマホ横補助文字/余白活用/最初の30秒のガイドを改善。AIで到達可能な公開品質80点を目指す。実機スピーカー/イヤホン、FPS・発熱、初見ユーザーの操作成功率はHuman Gateで未検証継続。外部課金、mainマージ、本番化なし。GAME-076はToDo継続。
