@@ -397,3 +397,14 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - 今回attempt2の通常入力E2E: Phone縦390×844/touch=1109点、Phone横844×390/mouse=1110点、Tablet縦768×1024/touch=1108点、Tablet横1024×768/mouse=1110点、すべてPASS。全4条件でNIGHT3件→ACE6件、SOUND OFF/ON・エンジン音声Player起動観測・RETRY・BEST保存/再読込復元がJSON一致。`qaCommand=NEVER USED`、`stateOverride=NONE`。実端末の可聴音は未検証。
 - Intro/ACEの8画面を独立目視。要素に明白な重なりは見られないがPhone横/Tablet横の補助文字は小さく、実機可読性は未認定。専用長文cueの省略分岐を発火させるstress screenshot、初見30秒・実機音質/イヤホン・FPS/発熱・誤タップは未検証。今回はUI改修や別タスクには着手せず。
 - 10軸の証拠限定暫定スコアは**76/100据置**（8/8/7/8/7/6/6/8/9/9）。CIの再現性改善だけで品質点を加算しない。**80点・一般公開品質は未認定**。次回は同一GAME-076で長文cue stress screenshot と横画面補助文字・演出の改善、4画面再確認、10軸再採点を行う。実機Human Gateは人間による確認待ち。mainマージ/有償利用/本番化なし。Done条件未達によりタスクはToDo継続。
+
+
+## 2026-10-13 02:11 JST / AUTOAI-GAME076-20261013-0204 — 下部ガイド可読性の描画改善・4画面E2E再確認
+
+- 今回の実作業はP021 GAME-076の1件のみ。GAME-075=Done、GAME-076=ToDo、他Doingなしを正本でFresh-readしDoing排他取得後、Godot表示専用`p021-game/sources/orbit-switch-courier-godot/Main.gd`を修正。ソースcommit [6cd75758e89c334bfe481cb8bdd8161712030144](https://github.com/kobitworks/autoai_poc/commit/6cd75758e89c334bfe481cb8bdd8161712030144)、readback blob `54308a69c981e60e691bd5ac451daff8065ec370`。差分はMain.gdの1ファイルのみ。
+- 幅の限られたタブレット情報パネル下部2行ガイドを15→16 CSS-pixel相当へ拡大し、背景`#142f43`・枠`#5d9cbd`の独立帯と明るい文字色へ変更。上部cue帯とは3 CSS-pixel相当の間隔を設計。ゲーム物理、得点、成功判定、localStorage、自然入力、QA状態変更は未変更。Phone横は既存の別ガイド帯を保持。
+- [GitHub Actions run 38281789966](https://github.com/kobitworks/autoai_poc/actions/runs/38281789966) のcontract・export-web・browser-quality全3ジョブ`success`。証跡[artifact 11761637809](https://github.com/kobitworks/autoai_poc/actions/runs/38281789966/artifacts/11761637809)をZIP実体展開し、40 PNG＋`results.json`＝計41ファイルを検証。results.json SHA256=`da947a671d603723b70464e6012427e43677c4d6f9db9d643bcddc0078dd5d06`。
+- 通常タップ/クリック E2E は**4 viewportすべてPASS**。Phone縦390x844/touch 1109点、Phone横844x390/mouse 1110点、Tablet縦768x1024/touch 1102点、Tablet横1024x768/mouse 1108点。4条件ともNIGHT 3件→ACE 6件、SOUND ON/OFF、RETRY、BESTのlocalStorage保存と再読み込み復元がJSON一致。`qaCommand=NEVER USED`、`stateOverride=NONE`。実機スピーカー/イヤホンの可聴確認は未実施。
+- 新証跡のTablet横playing/ACEおよびPhone横playing画面を独立目視。改修した下部ガイド帯の描画と上下cue非重複を確認。ただし小さな補助文字の視認性は依然改善余地があり、全40枚の視覚精査完了とはしない。長文cueを強制する専用stress screenshotは未実施。
+- 独立10軸評価は証拠限定で**76/100据置**（ゲーム性8、操作8、難度7、UI/UX8、描画7、演出6、音声6、コンテンツ変化8、リプレイ9、技術9）。CI PASSだけで80点や一般公開品質を認定しない。実機音声/イヤホン、FPS/発熱、初見30秒理解、実機可読性/誤タップはHuman Gateのまま未検証。
+- 次回同GAME-076で長文cue専用stress screenshot、Phone/Tablet横の文字視認性と演出の再改善、4画面実入力E2E、独立10軸再採点を行う。ユーザーは実機で音質・FPS/発熱・初見操作・文字サイズを確認。Done条件未達のため終了時Doing→ToDoへ戻す。main変更・課金・本番変更・別タスク着手なし。
