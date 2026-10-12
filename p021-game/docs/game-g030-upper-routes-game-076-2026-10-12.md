@@ -500,3 +500,13 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - 変更後CI: [GitHub Actions run 38297105130](https://github.com/kobitworks/autoai_poc/actions/runs/38297105130) は 2026-10-13 04:22:12 JSTの初回確認時点でpending。contract / export-web / browser-quality の最終結果、4 viewport実入力、ACE6配達、SOUND・RETRY・BEST、画像の独立確認は今回の新コードではまだ未確定。
 - 品質10軸スコアは直近独立評価76/100据置。80点/一般公開品質は未認定。Human Gate（実機音質/イヤホン、FPS/発熱、初見30秒理解、誤タップ、実機文字可読性）は未検証。main変更・有料課金・本番拡大なし。
 - 再開点: run 38297105130 の3ジョブ成否とartifact実画像/JSONを確認し、4 viewportで合法操作NIGHT3→ACE6、SOUND、RETRY、BESTを再検証。新UIの標準/残3秒内スクリーンショットを比較し10軸独立再採点。Human Gateは引き続き別確認とし、80点未達なら同一GAME-076を継続。
+
+## 2026-10-13 04:36 JST / AUTOAI-GAME076-20261013-0430 — 残3秒強調版CIと実画像を独立検証
+
+- **今回の実タスクは P021 / GAME-076 の1件のみ。** 共通Runner v1.38.0 / P021 rule v1.2.0。Slackの新規明示@autoai指示なし、09:00前のため日次全体監視なし。親管理表直近実行P021の次P005から循環走査し、P005〜P018・P020は要確認/Blocked、依存未完了、定期スキャン24時間未経過（P009）、当日記事ネタ生成済み（P018）などにより今回は着手対象なし。GAME-075=Done、GAME-076=ToDo、他Doingなしを確認してDoing排他取得。
+- 前回pendingだった[Actions run 38297105130](https://github.com/kobitworks/autoai_poc/actions/runs/38297105130)をGitHub Connectorから独立Fresh-read。**contract / export-web / browser-qualityの3ジョブすべてcompleted/success**。最新attemptのjob ID=114971117863/114971190018/114971588956。
+- [artifact 11768479931](https://github.com/kobitworks/autoai_poc/actions/runs/38297105130/artifacts/11768479931)のZIP実体をダウンロード・展開。**44PNG＋results.json（45ファイル）**、JSON SHA256=`71adf7e81a0c36569a0d01e64d268db128f7ed8cd5031a8160de3e8835362991` を取得。
+- `results.json`を独立パースし、通常操作の4 viewport（phone縦390x844/横844x390、tablet縦768x1024/横1024x768）**4/4 PASS**。全画面で実タップ/クリックによりNIGHT 3配達（12秒）→ACE 6配達（10秒）へ到達。BEST保存・リロード後復元=1109/1111/1107/1110、SOUND ON/OFF・RETRYのQA経路成功。全4ケース`qaCommand=NEVER USED`、`stateOverride=NONE`。静的可読性契約`visualContract=PASS_STATIC`（Phone横17px/11.85:1以上、Tablet下16px/12.70:1以上）。
+- 4 viewport × 3状態（`cue-stress`、`route-rush`、`route-ace`）のPNG**12枚を独立目視**。4つのstress画像で2行の結果・ルート・次操作メッセージが表示され、画面外への明らかなはみ出しや大きなHUD/操作部との重なりは見られない。RUSH/ACE状態の画面も取得できている。ただし**今回の44PNGには配達残り3秒以下の瞬間を特定した専用キャプチャは存在しない**ため、残り3秒警告色・枠の**実描画PASSは未認定**。ソース静的契約だけで実機の可読性・タイミングを証明しない。
+- 現行独立10軸の証拠限定暫定品質は**76/100（据置）**、一般公開品質目標80点未達。実機スピーカー/イヤホン音質、FPS/発熱、初見30秒の理解度、実機文字可読性/誤タップはHuman Gateとして未確認。合格扱いせず、ユーザーの実機テスト入力を要する。
+- **再開点:** 同じGAME-076で「残り3秒以下」時のwarning UI専用自然操作スクリーンショットを4 viewportで追加取得し、画面表示・HUD重なり・可読性を独立レビュー。そのうえで必要なら視認性や音の改善、CI再現性・10軸再採点を行う。GAME-076は1回でDoneにせず進捗を記録してToDoへ戻す。ゲームコード・main・本番・課金・他タスク変更なし。
