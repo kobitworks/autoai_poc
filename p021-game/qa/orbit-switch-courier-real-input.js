@@ -73,10 +73,14 @@ function verifyGuideContrast() {
     cargoPanel.includes('cargo_left <= 3.0') &&
     cargoPanel.includes('Color("#ff5877") if cargo_urgent') &&
     cargoPanel.includes('Color("#ff9dab")') &&
+    cargoPanel.includes('"%02ds LEFT!  HURRY  ·  %s"') &&
+    cargoPanel.includes('var warning_chip := Rect2(') &&
+    cargoPanel.includes('_rounded_box(warning_chip, Color("#8b2030"), Color("#fff0aa"), 7, 2)') &&
+    cargoPanel.includes('_font_size(18.0) if cargo_urgent') &&
     cargoPanel.includes('cargo_left / _cargo_limit()'),
     'Visible cargo countdown / <=3s warning contract missing');
   return {result:'PASS_STATIC',labels:results,minimumContrast:7,
-    cargoDeadline:'SOURCE_CONTRACT_ONLY: countdown first, last 3 seconds highlighted; actual visual/physical timing requires screenshot and device review',
+    cargoDeadline:'SOURCE_CONTRACT_ONLY: seconds first; last 3 seconds show HURRY text and contrasting frame; physical legibility requires device review',
     longCueBoundary:'SOURCE_CONTRACT_ONLY: two-line priority summary; human legibility not yet verified',
     realDevice:'NOT_VERIFIED'};
 }
