@@ -728,7 +728,22 @@ function gisGroupOptions(){
 function setGisVisible(v){state.gis.visible=!!v;persistUiPrefs();render();}
 function setGisGroup(v){state.gis.group=v||'ALL';render();}
 function setGisRadius(v){const n=Number(v);if([500,1500,3000].includes(n)){state.gis.radiusM=n;state.gis.listLimit=20;persistUiPrefs();render();}}
-function mapMarkerIcon(kind='target'){
+// Book別のGISマーカー設定。原本のBookが未インポートの段階ではスポットを追加しない。
+const BOOK_SPOT_MARKER_ICONS=Object.freeze({
+ '日本の紅葉百選':'https://img.icons8.com/?size=100&id=LYuqTx0iQmyO&format=png&color=000000'
+});
+function gisBookMarkerUrl(spot){
+ const bookRef=String(spot.book_id??spot.bookId??spot.book_key??spot.bookKey??'').trim();
+ const book=bookRef?state.books.find(item=>[item.key,item.id,item.book_id].some(id=>id!=null&&String(id)===bookRef)):null;
+ const bookTitle=String(spot.book_title??spot.bookTitle??book?.title??'').trim();
+ const value=spot.map_icon_url??spot.mapIconUrl??book?.map_icon_url??book?.mapIconUrl??BOOK_SPOT_MARKER_ICONS[bookTitle]??'';
+ const url=String(value).trim();
+ return /^https:\/\/img\.icons8\.com\//.test(url)?url:'';
+}
+function mapMarkerIcon(kind='target',bookMarkerUrl=''){
+ if((kind==='gis'||kind==='gis-selected')&&bookMarkerUrl){
+  return L.icon({iconUrl:bookMarkerUrl,iconSize:[28,28],iconAnchor:[14,28],popupAnchor:[0,-28]});
+ }
  const cls=kind==='friend'?'map-pin friend':kind==='current'?'map-pin current':kind==='gis-selected'?'map-pin gis-selected':kind==='gis'?'map-pin gis':'map-pin';
  const icon=kind==='current'?'fa-location-crosshairs':'fa-location-dot';
  return L.divIcon({className:'',html:'<div class="'+cls+'"><i class="fa-solid '+icon+'" aria-hidden="true"></i></div>',iconSize:[24,24],iconAnchor:[12,24],popupAnchor:[0,-24]});
@@ -743,7 +758,7 @@ function initLeafletMap(){
  L.marker(target,{icon:mapMarkerIcon('target'),title:'目的地：青い壁の広場'}).addTo(leafletMapInstance).bindPopup('<strong>青い壁の広場</strong><br>物語上の目的地（PoC）');
  L.marker([35.66018,139.69898],{icon:mapMarkerIcon('friend'),title:'周辺マーカー：Mobian A'}).addTo(leafletMapInstance).bindPopup('Mobian A');
  L.marker([35.65858,139.70173],{icon:mapMarkerIcon('friend'),title:'周辺マーカー：Mobian B'}).addTo(leafletMapInstance).bindPopup('Mobian B');
- visibleGisItems().forEach(x=>{const lat=Number(x.latitude??x.lat),lon=Number(x.longitude??x.lon);if(!Number.isFinite(lat)||!Number.isFinite(lon))return;const name=x.name||x.a_name||'GIS地点',group=x.group||x.gis_group||'',addr=x.address||x.adress1||[x.pref_name,x.city_name].filter(Boolean).join(' ');L.marker([lat,lon],{icon:mapMarkerIcon(String(x.gis_id)===String(state.gis.selectedId)?'gis-selected':'gis'),title:name}).addTo(leafletMapInstance).bindPopup('<strong>'+safeText(name)+'</strong>'+(group?'<br>'+safeText(group):'')+(addr?'<br>'+safeText(addr):'')+(Number.isFinite(Number(x.distance_m))?'<br>約'+Math.round(Number(x.distance_m))+'m':''));});
+ visibleGisItems().forEach(x=>{const lat=Number(x.latitude??x.lat),lon=Number(x.longitude??x.lon);if(!Number.isFinite(lat)||!Number.isFinite(lon))return;const name=x.name||x.a_name||'GIS地点',group=x.group||x.gis_group||'',addr=x.address||x.adress1||[x.pref_name,x.city_name].filter(Boolean).join(' ');L.marker([lat,lon],{icon:mapMarkerIcon(String(x.gis_id)===String(state.gis.selectedId)?'gis-selected':'gis',gisBookMarkerUrl(x)),title:name}).addTo(leafletMapInstance).bindPopup('<strong>'+safeText(name)+'</strong>'+(group?'<br>'+safeText(group):'')+(addr?'<br>'+safeText(addr):'')+(Number.isFinite(Number(x.distance_m))?'<br>約'+Math.round(Number(x.distance_m))+'m':''));});
  if(current)showMapCurrentLocation(current,false);
  L.control.scale({imperial:false,position:'bottomleft'}).addTo(leafletMapInstance);
  const refreshMapSize=()=>{if(leafletMapInstance){leafletMapInstance.invalidateSize({pan:false});}};
