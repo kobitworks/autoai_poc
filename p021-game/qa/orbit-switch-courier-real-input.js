@@ -15,7 +15,7 @@ function fits(r,w,h) { return r && r.length===4 && r[0]>=-2 && r[1]>=-2 &&
   r[2]>100 && r[3]>70 && r[0]+r[2]<=w+2 && r[1]+r[3]<=h+2; }
 async function snapshot(page) { return page.evaluate(() => window.__P021_ORBIT || null); }
 async function until(page, predicate, stage, waitMs=16000, arg=null) {
-  // GAME-076: poll narrow real-input windows on wall time rather than animation
+  // GAME-076: poll wider physics-valid real-input windows on wall time rather than animation
   // frames. Tablet WASM rendering can delay rAF; this ONLY observes state and
   // leaves all deliveries/transfers to real Playwright mouse/touch input.
   const inputWindow = /(?:crossing|target HUB|natural switch|natural delivery)/i.test(stage);
@@ -134,10 +134,10 @@ async function run(){
         d=await snapshot(page);
         check(d.orbit===1 && d.cargo_target===0 && d.energy===3 && d.mission_tier===0 && d.cargo_limit===16,'Unexpected initial route, cargo or double start input');
         await page.screenshot({path:dir+'/'+t.name+'-playing.png'});
-        // Orbit 1 angular velocity is negative. Wait for crossing at 4.50 radians.
+        // Orbit 1 angular velocity is negative. Observe within the actual 4.50 +/- 0.19 crossing physics window.
         await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
-          x.orbit===1&&x.angle>=4.62&&x.angle<=4.68;},'approach natural switch');
-        evidence.switchTrigger='4.62..4.68 rad, real-time observation';
+          x.orbit===1&&x.angle>=4.38&&x.angle<=4.68;},'approach natural switch');
+        evidence.switchTrigger='4.38..4.68 rad, real-time observation within actual crossing window';
         await input(page,t);
         evidence.switchAfter=await snapshot(page);
         await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.orbit===0,'real orbit transfer',4000);
@@ -145,13 +145,13 @@ async function run(){
         check(d.energy===3,'Energy lost at switch');
         evidence.transfer={orbit:d.orbit,energy:d.energy};
         // Orbit 0 angular velocity is positive; Hub 0 is at 1.48 radians.
-        // The actual scoring window is 1.33..1.63 (HUB_WINDOW=0.15).
-        // Observe the middle 1.37..1.49 band, not a 0.05-rad sliver that
+        // The actual HUB0 scoring window is 1.48 +/- 0.23 (HUB_WINDOW=0.23).
+        // Observe a physics-valid 1.31..1.60 band instead of a narrow sliver that
         // can be skipped when the browser or a tablet frame is delayed.
         // Delivery and full energy are still required: never force physics/state.
         await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
-          x.orbit===0&&x.cargo_target===0&&x.angle>=1.37&&x.angle<=1.49;},'approach natural delivery');
-        evidence.hubTrigger='1.37..1.49 rad, real-time observation within natural HUB window';
+          x.orbit===0&&x.cargo_target===0&&x.angle>=1.31&&x.angle<=1.60;},'approach natural delivery');
+        evidence.hubTrigger='1.31..1.60 rad, real-time observation within natural HUB window';
         await input(page,t);
         evidence.hubAfter=await snapshot(page);
         await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.deliveries>=1,'real delivery',4000);
@@ -166,9 +166,9 @@ async function run(){
         // Physical input paths: 0 -> 1 -> HUB1; 1 -> 2 -> HUB2 (NIGHT at 3);
         // 2 -> 1 -> 0 -> HUB0; 0 -> 1 -> HUB1; 1 -> 2 -> HUB2 (ACE at 6).
         evidence.routeMoves=[];
-        evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.37,4.45,'RUSH 0->1'));
-        evidence.routeMoves.push(await physicalDeliver(page,t,1,3.53,3.68,2,'RUSH HUB1'));
-        evidence.routeMoves.push(await physicalSwitch(page,t,1,2,2.55,2.63,'RUSH 1->2'));
+        evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.35,4.57,'RUSH 0->1'));
+        evidence.routeMoves.push(await physicalDeliver(page,t,1,3.46,3.76,2,'RUSH HUB1'));
+        evidence.routeMoves.push(await physicalSwitch(page,t,1,2,2.41,2.66,'RUSH 1->2'));
         // GAME-076: passive, bounded telemetry to diagnose missed NIGHT HUB0 on tablets.
         // It never sends commands or mutates the Godot game state.
         await page.evaluate(() => {
@@ -186,7 +186,7 @@ async function run(){
             if (trace.length>320) trace.shift();
           },75);
         });
-        evidence.routeMoves.push(await physicalDeliver(page,t,2,5.06,5.22,3,'NIGHT HUB2'));
+        evidence.routeMoves.push(await physicalDeliver(page,t,2,5.02,5.29,3,'NIGHT HUB2'));
         d=await snapshot(page);
         check(d.mission_tier===2&&d.mission_name==='NIGHT'&&d.cargo_limit===12,
           'Natural 3 deliveries did not unlock NIGHT/12 seconds');
@@ -197,15 +197,14 @@ async function run(){
         // that crossing, forcing a whole extra orbit and expiring the NIGHT cargo.
         // Record the genuine route milestone in evidence.night; keep screenshots
         // for non-critical states instead of perturbing natural timed gameplay.
-        evidence.routeMoves.push(await physicalSwitch(page,t,2,1,5.60,5.69,'NIGHT 2->1'));
-        evidence.routeMoves.push(await physicalSwitch(page,t,1,0,4.55,4.62,'NIGHT 1->0'));
-        // GAME-076: Watch the full usable touch zone, not an easily skipped 0.16-rad sliver.
-        // 1.28..1.68 stays inside the genuine ±0.23 HUB physics window.
-        evidence.routeMoves.push(await physicalDeliver(page,t,0,1.28,1.68,4,'NIGHT HUB0'));
-        evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.37,4.45,'NIGHT 0->1'));
-        evidence.routeMoves.push(await physicalDeliver(page,t,1,3.53,3.68,5,'NIGHT HUB1'));
-        evidence.routeMoves.push(await physicalSwitch(page,t,1,2,2.55,2.63,'NIGHT 1->2'));
-        evidence.routeMoves.push(await physicalDeliver(page,t,2,5.06,5.22,6,'ACE HUB2'));
+        evidence.routeMoves.push(await physicalSwitch(page,t,2,1,5.57,5.82,'NIGHT 2->1'));
+        evidence.routeMoves.push(await physicalSwitch(page,t,1,0,4.38,4.68,'NIGHT 1->0'));
+        // GAME-076: Use a broad 1.31..1.60 band inside the real HUB0 +/- 0.23 window.
+        evidence.routeMoves.push(await physicalDeliver(page,t,0,1.31,1.60,4,'NIGHT HUB0'));
+        evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.35,4.57,'NIGHT 0->1'));
+        evidence.routeMoves.push(await physicalDeliver(page,t,1,3.46,3.76,5,'NIGHT HUB1'));
+        evidence.routeMoves.push(await physicalSwitch(page,t,1,2,2.41,2.66,'NIGHT 1->2'));
+        evidence.routeMoves.push(await physicalDeliver(page,t,2,5.02,5.29,6,'ACE HUB2'));
         d=await snapshot(page);
         check(d.mission_tier===3&&d.mission_name==='ACE'&&d.cargo_limit===10,
           'Natural 6 deliveries did not unlock ACE/10 seconds');
