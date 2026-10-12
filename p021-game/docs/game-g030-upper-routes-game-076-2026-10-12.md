@@ -636,3 +636,12 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - **画像独立レビュー**: 4端末のintro/cue-stress/cargo-warning-3s/novice-first-tap-guide/route-ace/resultから計24枚の代表画像を並べて確認。大きなHUD・操作部の領域衝突や画面外欠落は見られない。直前の[artifact11776937081](https://github.com/kobitworks/autoai_poc/actions/runs/38313195871/artifacts/11776937081)のcue-stress画像4画面と並列比較し、改修後の補助文字拡大を目視確認。ただし縦スマホ等では小さい補助文字が残り、ブラウザ画像比較だけでは物理端末可読性PASSを判定できない。全52枚の独立目視完了とは主張しない。
 - **品質10軸は証跡限定暫定76/100を据置**: ゲーム性8、操作感8、難度7、UI/UX8、グラフィック7、演出6、音6、コンテンツ変化8、リプレイ9、技術9。CI成功・可読性の部分改善だけでは+4点を実証できず、**80点一般公開完了Gate未達**。スピーカー/イヤホンの実音、初見ユーザー30秒、物理画面の文字・誤タップ、FPS/発熱はHuman Gate未検証として維持。
 - 今回の成果は新CIと実証証跡の検証・監査記録。ゲーム/QAコード本体とmain・本番・有償設定を変更しない。**GAME-076はDoneとせず終了前にDoing→ToDoへ戻す**。次回は残る小文字/演出・音フィードバックを実画像と実機回答で評価し、80点到達可否を同タスクで継続。別タスクへの着手なし。
+
+
+## 2026-10-13 08:20 JST / AUTOAI-GAME076-20261013-0814 — 操作ボタン・行動cueの可読性改善（同一タスク継続）
+
+- Runner v1.38.0 / P021 project_rule v1.2.0 をFresh-read。新規明示Slack指示なし、09:00前のため日次全体監視対象外。P005〜P018/P020の順次確認では、人間確認待ち・依存未達・日次実行済み・定期スキャン24時間未到達等により着手可能な別タスクなし。GAME-075=Done、GAME-076=ToDo、他Doingなしを確認してGAME-076を今回唯一の実タスクとしてDoing排他取得し、再読込一致。
+- 以前の実入力4 viewport 4/4PASSおよび10軸暫定76/100を基準とし、残る小さいUIの文字可読性をコード上で3点改善。Godot Main.gdで (1) SOUND ON/OFF・GAME HUB・RETRY等の共通ボタンを14→16 CSS-pixel基準、文字の幅適応描画に変更、(2) プレイフィールド下段の非TAP-NOW行動案内を14→16 CSS-pixel基準、(3) タブレット横のROUTE MILESTONES各名称を13→15 CSS-pixel基準に変更。既存の幅適応描画は12pxを下限として省略表示へ縮退。正規タップ判定、物理/配達時間、スコア、音処理、QA成功命令、ゲーム状態には変更なし。
+- GitHub develop実装commit: https://github.com/kobitworks/autoai_poc/commit/da64ca735c53151c5dd9975e1673cdefa9df7787 。新ソースblob SHA=9be018b26f2ad550dbb7827691c3789552de10df を独立再取得し、3箇所の変更内容を検証。main、本番公開、有料設定変更なし。
+- 新コードに対応する GitHub Actions run https://github.com/kobitworks/autoai_poc/actions/runs/38321552983 (head_sha=da64ca73...) を識別。08:20 JST確認時は contract=completed/success、export-web=in_progress、browser-qualityは未開始。前コードの4/4PASSを新コードへ流用しない。新コード実入力4 viewport、52PNG+results.json、画像の視認性・10軸再採点は未検証。
+- **完了条件未達：**品質評価は証跡限定暫定76/100据置（80点未達）で一般公開品質を認定しない。実機のスピーカー/イヤホン音、初見30秒、文字可読性・誤タップ、FPS/発熱はHuman Gate未実施。次回はrun38321552983の3ジョブ最終結果とartifactを独立読戻しし、4画面で自然操作NIGHT3→ACE6、SOUND ON/OFF、RETRY、BEST復元、初見誤タップガイドと新ボタン/案内表示を比較・再採点する。失敗時は成功扱いにせず原因調査を同GAME-076で継続。今回は他タスクなし。終了時Doing→ToDoに戻す。
