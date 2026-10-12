@@ -13,6 +13,53 @@ const url = 'http://127.0.0.1:8000/p021-game/games/orbit-switch-courier/?qa=1';
 function check(value, message) { if (!value) throw new Error(message); }
 function fits(r,w,h) { return r && r.length===4 && r[0]>=-2 && r[1]>=-2 &&
   r[2]>100 && r[3]>70 && r[0]+r[2]<=w+2 && r[1]+r[3]<=h+2; }
+
+// GAME-076 visual-quality contract: inspect the actual Godot source under QA.
+// This checks authored colors and sizes only; no game state manipulation.
+function colorLuminance(hex) {
+  const [r,g,b] = hex.slice(1).match(/../g).map(x => parseInt(x,16)/255)
+    .map(x => x<=0.04045 ? x/12.92 : Math.pow((x+0.055)/1.055,2.4));
+  return r*0.2126+g*0.7152+b*0.0722;
+}
+function textContrast(fg,bg) {
+  const a=colorLuminance(fg), b=colorLuminance(bg);
+  return (Math.max(a,b)+0.05)/(Math.min(a,b)+0.05);
+}
+function verifyGuideContrast() {
+  const source=fs.readFileSync('p021-game/sources/orbit-switch-courier-godot/Main.gd','utf8');
+  const cases=[
+    {name:'phone-landscape two-step guide',from:'var help_band :=',
+      to:'# Tablet landscape:',shape:'help_band'},
+    {name:'tablet bottom guide',from:'var guide_band :=',
+      to:'func _draw_intro_overlay()',shape:'guide_band'}
+  ];
+  const results=[];
+  for(const c of cases) {
+    const a=source.indexOf(c.from), b=source.indexOf(c.to,a);
+    check(a>=0 && b>a,'Missing Godot guide section: '+c.name);
+    const snippet=source.slice(a,b);
+    const background=snippet.match(new RegExp('_rounded_box\\('+c.shape+', Color\\("(#[0-9a-fA-F]{6})"\\)'));
+    check(background,'Missing guide background: '+c.name);
+    const labels=[...snippet.matchAll(/_draw_fit_label\([^\n]*?_font_size\((\d+(?:\.\d+)?)\), Color\("(#[0-9a-fA-F]{6})"\)/g)];
+    check(labels.length===2,'Expected exactly two guide label colors: '+c.name);
+    for(const label of labels) {
+      const fontPx=Number(label[1]), contrast=textContrast(label[2],background[1]);
+      check(fontPx>=16,'Guide text smaller than 16 CSS pixels: '+c.name);
+      check(contrast>=7,'Guide contrast below 7:1: '+c.name+' '+contrast.toFixed(2));
+      results.push({area:c.name,fontCssPx:fontPx,foreground:label[2],
+        background:background[1],wcagContrast:Number(contrast.toFixed(2)),
+        status:'PASS_STATIC'});
+    }
+  }
+  check(source.includes('var minimum_size := _font_size(12.0)') &&
+    source.includes('while shown.length() > 1') &&
+    source.includes('_draw_center_fit_text(cue_text, cue_r'),
+    'Cue min-size / ellipsis / banner render contract missing');
+  return {result:'PASS_STATIC',labels:results,minimumContrast:7,
+    longCueBoundary:'SOURCE_CONTRACT_ONLY: special long-cue screenshot not verified',
+    realDevice:'NOT_VERIFIED'};
+}
+
 async function snapshot(page) { return page.evaluate(() => window.__P021_ORBIT || null); }
 async function until(page, predicate, stage, waitMs=16000, arg=null) {
   // GAME-076: poll wider physics-valid real-input windows on wall time rather than animation
@@ -69,6 +116,7 @@ async function physicalDeliver(page,t,target,lo,hi,total,label) {
     orbit:d.orbit,mission:d.mission_name,limit:d.cargo_limit,energy:d.energy};
 }
 async function run(){
+  const visualContract=verifyGuideContrast();
   fs.mkdirSync(dir,{recursive:true});
   const browser=await chromium.launch({headless:true});
   const results=[];
@@ -294,7 +342,7 @@ async function run(){
       }
     }
   }finally{await browser.close();}
-  const output={task:'GAME-076',game:'GAME-G030',
+  const output={task:'GAME-076',game:'GAME-G030',visualContract,
     method:'real touch/mouse STARTER/RUSH/NIGHT/ACE natural delivery and BEST persistence; read-only QA telemetry; no QA command/state override',
     screenshotStates:['intro','playing','route-rush','route-ace','miss-feedback','result','retry','sound-off','sound-on','replay'],
     physicalOutput:'NOT VERIFIED – must check actual device audio and first-time user experience',
