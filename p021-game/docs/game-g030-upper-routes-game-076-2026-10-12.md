@@ -316,3 +316,14 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 
 - 改修後の新コードは現時点で**CI 1回のみ**。4/4 PASSは確認したが再試行による安定再現性までは未確定。10軸の証跡限定暫定評価は**76/100（ゲーム性8・操作8・難度7・UI/UX8・描画7・演出6・サウンド6・変化8・リプレイ9・技術9）を据置**。品質80点・一般公開完了は未認定。
 - 実機スピーカー/イヤホンでの音質、FPS/発熱、実際のスマホ/タブレットでの可読性、初見利用者30秒での理解と誤タップは **Human Gate未検証**。次回は同一新コードの別CI試行、4画面の視認性と演出、10軸再評価をGAME-076として続ける。ユーザー操作を自動代行せず、この回は他タスク実行なし。完了条件未達のため管理表はDoing→ToDoへ戻して終了する。
+
+
+## 2026-10-12 23:21:41 JST / AUTOAI-GAME076-20261012231512 — 同一コードで4画面自然入力CI再現性を確認
+
+- **今回の唯一の実タスクはGAME-076。** P005以降の有効プロジェクトを循環確認し、承認待ち・前提未完了・実行間隔待ちを除外。GAME-075=Done、GAME-076=ToDo、他Doingなしを正本で再読込後、Doing排他取得。
+- GitHub `develop` 同一コード commit [b538128a33fb159f886799ff4f94f198f20a5605](https://github.com/kobitworks/autoai_poc/commit/b538128a33fb159f886799ff4f94f198f20a5605) の [Actions run 38258928362](https://github.com/kobitworks/autoai_poc/actions/runs/38258928362) で browser-quality job [114844879808](https://github.com/kobitworks/autoai_poc/actions/runs/38258928362/job/114844879808) を再実行。**attempt2 browser-quality job 114853140666=success**、contract/export-web=success。初回・再実行とも実入力4/4 PASSで、この2回の再現性を確認。ただし将来・実機の安定性は保証しない。
+- 初回 artifact [11752246355](https://github.com/kobitworks/autoai_poc/actions/runs/38258928362/artifacts/11752246355) と再実行artifact [11752602830](https://github.com/kobitworks/autoai_poc/actions/runs/38258928362/artifacts/11752602830)を両方ZIP実体取得・独立展開。各 **40PNG + results.json = 41ファイル**。results.json SHA256: 初回 `7f1c6c8d66b19fb90b7fd0f73d008e6dc109dd871da787ee8d22ef637ee650c1`、再実行 `9cd7a9d1c812c6dd278ab36dbf8e15c6d06b6785623067607235966d36a31cc4`。代表16画面（4viewport×intro/playing/ACE/result）を両attempt目視比較し、明確なUI要素の重なりなし。
+- attempt2の自然入力E2E: Phone縦390x844=touch/PASS/ACE6件/score1108、Phone横844x390=mouse/PASS/ACE6件/1112、Tablet縦768x1024=touch/PASS/ACE6件/1102、Tablet横1024x768=mouse/PASS/ACE6件/1097。各画面のNIGHT3件、SOUND OFF/ON、RETRY、BEST復元とlocalStorage値をJSONで読戻し一致。すべて `qaCommand=NEVER USED`、`stateOverride=NONE`。NIGHT 0→1の実入力呼び出し時間は順に103/36/204/70msで、前attemptの62/21/124/42msより長い条件でも全4画面PASS。
+- 品質10軸証跡限定の**暫定76/100を維持**（ゲーム性8・操作8・難度7・UI/UX8・描画7・演出6・サウンド6・変化8・リプレイ9・技術9）。2回4/4 PASSだけで80点/一般公開品質へ加点しない。Phone横右側の補助文字の小ささ、全体の低コントラスト、演出/サウンドの独立評価が残る。
+- **Human Gate未確認**: 実機スピーカー/イヤホンの音質・音量、初見者30秒の理解、実機の文字可読性/誤タップ、FPS/発熱。未実測をPASS扱いしない。
+- **次回のAI作業**: 同じGAME-076内でPhone横/Tablet横の補助テキストと演出フィードバックを安全に改善し、4viewportの実入力E2Eと代表画像/10軸評価を再検証する。Human Gateは別途ユーザー確認。今回ゲームロジック・QA成功コマンド・main・本番範囲・有償利用・別タスクには変更なし。完了条件80点未達のため終了時Doing→ToDoへ戻す。
