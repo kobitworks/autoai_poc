@@ -443,9 +443,17 @@ func _draw_center_text(text_value: String, rect: Rect2, font_size: int, color: C
 func _draw_center_fit_text(text_value: String, rect: Rect2, preferred_size: int, color: Color) -> void:
 	var fit_size := preferred_size
 	var minimum_size := _font_size(12.0)
-	while fit_size > minimum_size and ui_font.get_string_size(text_value, HORIZONTAL_ALIGNMENT_LEFT, -1, fit_size).x > rect.size.x - _ui_px(12.0):
+	var available_width := maxf(_ui_px(32.0), rect.size.x - _ui_px(12.0))
+	while fit_size > minimum_size and ui_font.get_string_size(text_value, HORIZONTAL_ALIGNMENT_LEFT, -1, fit_size).x > available_width:
 		fit_size -= 1
-	_draw_center_text(text_value, rect, fit_size, color)
+	# A 12 CSS-pixel minimum keeps text readable, but a long translated cue can
+	# still overrun a narrow panel. Ellipsize only in that final case.
+	var shown := text_value
+	if ui_font.get_string_size(shown, HORIZONTAL_ALIGNMENT_LEFT, -1, fit_size).x > available_width:
+		while shown.length() > 1 and ui_font.get_string_size(shown + "…", HORIZONTAL_ALIGNMENT_LEFT, -1, fit_size).x > available_width:
+			shown = shown.substr(0, shown.length() - 1)
+		shown += "…"
+	_draw_center_text(shown, rect, fit_size, color)
 
 
 func _draw_button(rect: Rect2, label: String, accent: bool = false) -> void:
