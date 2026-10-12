@@ -510,3 +510,12 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - 4 viewport × 3状態（`cue-stress`、`route-rush`、`route-ace`）のPNG**12枚を独立目視**。4つのstress画像で2行の結果・ルート・次操作メッセージが表示され、画面外への明らかなはみ出しや大きなHUD/操作部との重なりは見られない。RUSH/ACE状態の画面も取得できている。ただし**今回の44PNGには配達残り3秒以下の瞬間を特定した専用キャプチャは存在しない**ため、残り3秒警告色・枠の**実描画PASSは未認定**。ソース静的契約だけで実機の可読性・タイミングを証明しない。
 - 現行独立10軸の証拠限定暫定品質は**76/100（据置）**、一般公開品質目標80点未達。実機スピーカー/イヤホン音質、FPS/発熱、初見30秒の理解度、実機文字可読性/誤タップはHuman Gateとして未確認。合格扱いせず、ユーザーの実機テスト入力を要する。
 - **再開点:** 同じGAME-076で「残り3秒以下」時のwarning UI専用自然操作スクリーンショットを4 viewportで追加取得し、画面表示・HUD重なり・可読性を独立レビュー。そのうえで必要なら視認性や音の改善、CI再現性・10軸再採点を行う。GAME-076は1回でDoneにせず進捗を記録してToDoへ戻す。ゲームコード・main・本番・課金・他タスク変更なし。
+
+
+## 2026-10-13 04:50 JST / AUTOAI-GAME076-20261013-0444 — 期限3秒warningの自然操作画像取得QA追加
+
+- 共通Runner v1.38.0とP021正本 v1.2.0をFresh-read。Slack対象23チャネルの04:37以降の新規明示@autoai指示0件。日次全体監視は09:00前で対象外。親projects.xlsx最終実行P021の次P005〜P018・P020の正本を確認し、実行可能タスク0件・最終確認日時のみ更新。P021 GAME-075 Done / GAME-076 ToDo / 他Doing 0を再確認し、今回の唯一のタスクGAME-076をDoing排他取得。
+- QA本体 `p021-game/qa/orbit-switch-courier-real-input.js` に4 viewport共通の**実経過時間での「残り3秒以下」専用PNG取得シナリオ**を追加。通常ゲーム `?qa=1` を新規ロードし、通常のマウス/タッチ START 入力でプレイ開始、read-only `window.__P021_ORBIT.cargo_left`を観測。残り時間1.5〜2.95秒の時に `*-cargo-warning-3s.png` を保存し、保存前後で `cargo_left>0 / state=playing / deliveries=0 / energy=3` を確認。JSONに物理入力・開始時刻とスクリーンショット名・残秒前後を記録する。**成功命令・状態直書き・時間早送りなし**。
+- develop限定のQAソース変更: [commit dbdda95ea875b33b5cb26f64ef83c5ad0a20d0eb](https://github.com/kobitworks/autoai_poc/commit/dbdda95ea875b33b5cb26f64ef83c5ad0a20d0eb)、blob `921c603b170072e2d5d538acb7d4320cacec0859` を再取得して実装内容一致確認。Godot本体Main.gd/ゲーム判定/配達時間のコード変更なし。
+- 同push CI [run 38300290645](https://github.com/kobitworks/autoai_poc/actions/runs/38300290645) は開始を確認。初回取得時 contract=success、export-web=in_progress、browser-quality未確定。**当時点で新規4画面warning実画像の取得成功・視覚PASS・品質80点は未認定**。次の回または後続検証で3ジョブ結果、artifact 4PNGとresults.jsonを独立確認する。
+- 10軸独立品質は直近の暫定76/100を維持。実機スピーカー/イヤホン音質、FPS/発熱、初見30秒、文字可読性・誤タップはHuman Gate未確認。一般公開品質80点未達。main/本番/課金/追加タスク着手なし。
