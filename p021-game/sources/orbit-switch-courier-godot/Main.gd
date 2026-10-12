@@ -684,7 +684,13 @@ func _draw_info_panel() -> void:
 	# without obscuring the normal TAP NOW action or altering game timing.
 	var cargo_urgent := state == "playing" and cargo_left <= 3.0
 	var cargo_countdown := "%02ds LEFT  ·  %s" % [int(ceil(cargo_left)), HUB_NAMES[cargo_target]]
-	_draw_fit_label(cargo_countdown, Vector2(x, y), _font_size(17.0), Color("#ffb9c8") if cargo_urgent else HUB_COLORS[cargo_target], info_rect.size.x - pad * 2.0)
+	if cargo_urgent:
+		# Text and shape reinforce the warning, so urgency is not color-only.
+		# Keep remaining seconds first and retain the target hub when space permits.
+		cargo_countdown = "%02ds LEFT!  HURRY  ·  %s" % [int(ceil(cargo_left)), HUB_NAMES[cargo_target]]
+		var warning_chip := Rect2(x - _ui_px(6.0), y - _ui_px(18.0), info_rect.size.x - pad * 2.0 + _ui_px(12.0), _ui_px(26.0))
+		_rounded_box(warning_chip, Color("#8b2030"), Color("#fff0aa"), 7, 2)
+	_draw_fit_label(cargo_countdown, Vector2(x, y), _font_size(18.0) if cargo_urgent else _font_size(17.0), Color("#ffffff") if cargo_urgent else HUB_COLORS[cargo_target], info_rect.size.x - pad * 2.0)
 	y += _ui_px(20.0)
 	var cargo_bar := Rect2(x, y, info_rect.size.x - pad * 2.0, _ui_px(9.0))
 	draw_rect(cargo_bar, Color("#68283b") if cargo_urgent else Color("#244a64"), true)
