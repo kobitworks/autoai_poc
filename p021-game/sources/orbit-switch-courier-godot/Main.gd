@@ -18,11 +18,14 @@ const HUB_NAMES := ["SCARLET / SQUARE", "CYAN / TRIANGLE", "GOLD / CIRCLE"]
 const HUB_SHORT := ["SQUARE", "TRIANGLE", "CIRCLE"]
 const HUB_COLORS := [Color("#ff6b81"), Color("#42d9ee"), Color("#ffd166")]
 const ROUTE_NAMES := ["STARTER", "RUSH", "NIGHT", "ACE"]
+# GAME-076 read-only display stress fixture, enabled only by ?qa=1&cue_stress=1.
+const QA_LONG_CUE := "配達成功・作業を継続できます / ROUTE NIGHT→ACE / DELIVERY CONFIRMED / NEXT ACTION: 画面のTAP NOW表示と目標HUBを確かめて、安全なタイミングでタップしてください / THIS EXTRA-LONG TEST STATUS MUST STAY INSIDE THE BANNER."
 
 var ui_font: Font
 var rng := RandomNumberGenerator.new()
 var state := "intro"
 var qa_mode := false
+var qa_cue_stress := false
 var sound_on := true
 # Logical Godot units per visible browser CSS pixel; recomputed on resize.
 var ui_scale := 1.0
@@ -75,6 +78,7 @@ func _ready() -> void:
 	_load_best()
 	if OS.get_name() == "Web":
 		qa_mode = bool(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('qa') === '1'", true))
+		qa_cue_stress = qa_mode and bool(JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('cue_stress') === '1'", true))
 	rng.seed = 69030 if qa_mode else int(Time.get_unix_time_from_system())
 	_reset_round(false)
 	grab_focus()
@@ -248,6 +252,10 @@ func _route_color() -> Color:
 		2: return Color("#bc91ff")
 		1: return Color("#55e3c7")
 		_: return Color("#1e5772")
+
+func _visible_cue() -> String:
+	# Never touches physics, route, score or player progress.
+	return QA_LONG_CUE if qa_cue_stress else cue_text
 
 func _show_cue(message: String, positive: bool = true) -> void:
 	cue_text = message
@@ -582,12 +590,12 @@ func _draw_playfield() -> void:
 	if flash_bad > 0:
 		draw_circle(p, 20.0 + flash_bad * 10.0, Color(1.0, 0.28, 0.42, flash_bad * 0.22))
 
-	if cue_clock > 0.0 and state == "playing":
+	if (cue_clock > 0.0 or qa_cue_stress) and state == "playing":
 		var cue_w := minf(field_rect.size.x - _ui_px(20.0), _ui_px(360.0))
 		var cue_r := Rect2(field_rect.position.x + (field_rect.size.x - cue_w) * 0.5, field_rect.position.y + _ui_px(12.0), cue_w, _ui_px(39.0))
 		_rounded_box(cue_r, Color("#11463f") if cue_good else Color("#542039"), Color("#72f4d3") if cue_good else Color("#ff91a9"), 10, 1)
 		# Even an unusually long status cue must fit its visible banner.
-		_draw_center_fit_text(cue_text, cue_r, _font_size(14.0), Color("#ffffff"))
+		_draw_center_fit_text(_visible_cue(), cue_r, _font_size(14.0), Color("#ffffff"))
 
 	# Important live actions remain visible on short phone-landscape screens.
 	var prompt := _near_action_prompt()
@@ -715,11 +723,11 @@ func _draw_info_panel() -> void:
 			_draw_center_fit_text(str(ROUTE_NAMES[step + 1]), milestone_rect, _font_size(13.0), Color("#ffffff"))
 	# Echo successful transfers and missed timing in the otherwise empty lower
 	# tablet-landscape panel. The prompt card keeps priority during gameplay.
-	if state == "playing" and cue_clock > 0.0 and info_rect.size.y > _ui_px(525.0):
+	if state == "playing" and (cue_clock > 0.0 or qa_cue_stress) and info_rect.size.y > _ui_px(525.0):
 		# Keep a clear gap from the route milestone tiles above and help lines below.
 		var feedback_rect := Rect2(x, info_rect.end.y - _ui_px(94.0), info_rect.size.x - pad * 2.0, _ui_px(24.0))
 		_rounded_box(feedback_rect, Color("#125f4d") if cue_good else Color("#712f4b"), Color("#94f8d9") if cue_good else Color("#ffbbd0"), 8, 1)
-		_draw_center_fit_text(cue_text, feedback_rect, _font_size(13.0), Color("#ffffff"))
+		_draw_center_fit_text(_visible_cue(), feedback_rect, _font_size(13.0), Color("#ffffff"))
 	# GAME-076: Give the two bottom instructions a stronger contrast-safe
 	# background and 16 CSS-pixel labels on tablet-sized information panels.
 	# Keep a 3px gap after the optional feedback cue above and a 6px bottom inset.
@@ -922,6 +930,7 @@ func _update_debug_bridge() -> void:
 		"info": _rect_payload(info_rect),
 		"viewport_w": int(get_viewport_rect().size.x),
 		"viewport_h": int(get_viewport_rect().size.y),
-		"qa_mode": qa_mode
+		"qa_mode": qa_mode,
+		"cue_stress": qa_cue_stress
 	}
 	JavaScriptBridge.eval("window.__P021_ORBIT = %s;" % JSON.stringify(payload), true)
