@@ -651,15 +651,37 @@ func _draw_info_panel() -> void:
 		var progress := "NEXT %s · %d more" % [next_route, maxi(0, next_goal - deliveries)] if next_goal > 0 else "ALL ROUTES UNLOCKED"
 		_draw_fit_label(progress, Vector2(x, y), _font_size(13.0), Color("#8ceec7"), info_rect.size.x - pad * 2.0)
 		y += _ui_px(23.0)
+	# GAME-076: Give the actual next legal action a contrast-safe, unclipped home.
+	# Compact portrait layouts retain the single-line fallback rather than drawing outside the card.
 	if info_rect.size.y >= _ui_px(158.0):
 		var live_action := _near_action_prompt()
 		var action_ready := state == "playing" and live_action.begins_with("TAP NOW")
-		var feedback_line := live_action if action_ready else feedback_text
-		_draw_fit_label(feedback_line, Vector2(x, y), _font_size(15.0 if action_ready else 14.0), Color("#a8ffe2") if action_ready else Color("#e2f4fc"), info_rect.size.x - pad * 2.0)
-	# Use the free space in wide layouts for short, high-contrast directions.
-	if info_rect.size.y > _ui_px(215.0):
-		_draw_fit_label("光る交差点でTAP → 乗換", Vector2(x, info_rect.end.y - _ui_px(52.0)), _font_size(14.0), Color("#e8fcff"), info_rect.size.x - pad * 2.0)
-		_draw_fit_label("同じ印のHUBでTAP → 配達", Vector2(x, info_rect.end.y - _ui_px(23.0)), _font_size(14.0), Color("#fff3bb"), info_rect.size.x - pad * 2.0)
+		var action_line := live_action
+		if state == "intro":
+			action_line = "START → %sを目指そう" % HUB_SHORT[cargo_target]
+		elif state == "result":
+			action_line = "RETRYで再挑戦"
+		var card_y := y - _ui_px(13.0)
+		var card_h := minf(_ui_px(56.0), info_rect.end.y - card_y - _ui_px(11.0))
+		if card_h >= _ui_px(43.0):
+			var action_card := Rect2(x, card_y, info_rect.size.x - pad * 2.0, card_h)
+			_rounded_box(action_card, Color("#125b4b") if action_ready else Color("#183a51"), Color("#9affdc") if action_ready else Color("#89d7fc"), 11, 2)
+			_draw_label("TAP NOW" if action_ready else "NEXT ACTION", action_card.position + Vector2(_ui_px(10.0), _ui_px(16.0)), _font_size(12.0), Color("#ffffff"))
+			_draw_center_fit_text(action_line, Rect2(action_card.position.x + _ui_px(5.0), action_card.position.y + _ui_px(18.0), action_card.size.x - _ui_px(10.0), card_h - _ui_px(20.0)), _font_size(16.0 if action_ready else 15.0), Color("#ffffff"))
+		else:
+			_draw_fit_label(action_line, Vector2(x, y), _font_size(14.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
+	# The tablet-landscape information area is taller: put a readable step guide near
+	# the action card instead of leaving the next input unexplained in empty space.
+	if info_rect.size.y > _ui_px(470.0):
+		_draw_label("HOW TO PLAY", Vector2(x, y + _ui_px(94.0)), _font_size(14.0), Color("#8fe8fa"))
+		_draw_fit_label("1  緑に光る交差点でTAP", Vector2(x, y + _ui_px(126.0)), _font_size(16.0), Color("#f3fcff"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label("2  同じ記号のHUBでTAP", Vector2(x, y + _ui_px(161.0)), _font_size(16.0), Color("#fff3be"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label("3  配達を重ねACEへ", Vector2(x, y + _ui_px(196.0)), _font_size(16.0), Color("#b3ffe4"), info_rect.size.x - pad * 2.0)
+	# Reserve low-height landscape panels for the action card; extra help never
+	# collides with the action cue in the narrowest phone-landscape viewport.
+	if info_rect.size.y > _ui_px(275.0):
+		_draw_fit_label("交差点の緑でTAP → 乗換", Vector2(x, info_rect.end.y - _ui_px(52.0)), _font_size(15.0), Color("#f0fcff"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label("同じ印のHUBでTAP → 配達", Vector2(x, info_rect.end.y - _ui_px(23.0)), _font_size(15.0), Color("#fff3c4"), info_rect.size.x - pad * 2.0)
 
 
 func _draw_intro_overlay() -> void:
