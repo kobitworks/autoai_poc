@@ -180,3 +180,22 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - **P021 10軸の独立暫定品質は76/100（前回75→+1）**。内訳：ゲーム性8、操作感8、難易度設計7、UI/UX8（前回7、画像上の導入とヒント改善）、グラフィック7、演出・エフェクト6、サウンド6、コンテンツ量・変化8、リプレイ性9、技術品質9。**80点未達・一般公開品質は未認定**。今回の新コードCIは1回成功、反復実行での再現性はまだ未確認。
 - **次回再開点**：(1) 現行commit 0334a3aの実入力E2Eを再実行して再現性を確認。(2) Phone Landscape右情報欄の補助文可読性・Tablet Landscape情報欄の余白/次アクション強調を改善。(3) 4 viewport実入力/画像と10軸再採点を行い、80点を目指す。実機スピーカー/イヤホン、FPS・発熱、初見30秒と誤タップ率はHuman Gate未確認のまま維持。
 - 今回変更するGitHubファイルはdevelopのこの監査文書のみ。main変更・新規公開・課金・契約なし。GAME-076は未完了のためToDoへ戻して継続し、他タスクには着手しない。
+
+
+## 2026-10-12 20:27:12 JST / AutoAI GAME-076 継続 — failed-job再実行の証跡監査
+
+- 本Runnerの実タスクはGAME-076の1件のみ。依存GAME-075=Done、開始時GAME-076=ToDoを確認してDoing取得。P021 develop限定、mainマージ・課金・公開範囲変更なし。
+- UX改修commit a9db3174c1db76d3f10027928510636c57305362 の [GitHub Actions run 38240179220](https://github.com/kobitworks/autoai_poc/actions/runs/38240179220) を独立確認。初回attemptは contract/export-web=SUCCESS、browser-quality=FAIL。Tablet Portrait RUSH 0→1で3.5秒Timeoutとなり3/4 PASS。初回の失敗をPASSに書き換えない。
+- 同一commitで開始済みだったfailed-job再実行attempt2は contract/export-web/browser-quality=completed/success。新artifact [11742913618](https://github.com/kobitworks/autoai_poc/actions/runs/38240179220/artifacts/11742913618) を取得・ZIP展開。results.json（SHA256=29f7646993bb8c2f77cffda314d607c3a2c7d418872cd19bb104e97a466ae2bd）と40 PNGを独立確認。初回の失敗artifact [11743130827](https://github.com/kobitworks/autoai_poc/actions/runs/38240179220/artifacts/11743130827) と区別。
+
+| 実操作viewport | 再実行E2E | ACE配達 | score | SOUND切替/RETRY/BEST復元 |
+| --- | --- | ---: | ---: | --- |
+| Phone Portrait 390×844 | PASS | 6 | 1109 | PASS |
+| Phone Landscape 844×390 | PASS | 6 | 1110 | PASS |
+| Tablet Portrait 768×1024 | PASS | 6 | 1107 | PASS |
+| Tablet Landscape 1024×768 | PASS | 6 | 1110 | PASS |
+
+- 4環境とも qaCommand=NEVER USED、stateOverride=NONE。通常のタッチ/マウス操作でNIGHT→ACEを経て配達6件、SOUND ON/OFF、RETRY、BEST保存復元が成功。ゲーム状態の直書きで成功を偽装していない。
+- 40 PNGを取得し代表的なintro/playing/route-aceなど10画像を独立目視。Phone LandscapeはNEXT ACTIONの情報量が増えた一方、HUD補助説明の一部が小さく淡い。Tablet LandscapeはHOW TO PLAYで右情報欄を活用しているが、実際の初見ユーザーの理解度は未確認。Portraitもタップ領域/構成は概ね収まるが実機での可読性は未確認。
+- **独立暫定品質は前回の76/100を維持**。最新commitの再実行成功は確認できたが、同一commitの初回失敗もあり安定性が未確認で、80点以上の一般公開品質認定は不可。根拠のないゲームロジック修正を行わない。実機音声/FPS/発熱/初見者30秒はHuman Gateで未確認。
+- **次回再開点**: ①Tablet Portrait RUSH 0→1の初回FAILと再実行PASSの時系列/入力観測を比較して原因を特定、②HUD・Phone横/Tablet横のコントラスト・文字・次アクション表示を改善、③4 viewport自然入力E2Eを複数回再現し40画像/10軸で80点を再判定。1件制限のため他タスク未着手、GAME-076は未完了につきToDoで継続。
