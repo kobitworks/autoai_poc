@@ -439,6 +439,15 @@ func _draw_center_text(text_value: String, rect: Rect2, font_size: int, color: C
 	var y := rect.position.y + (rect.size.y + ui_font.get_ascent(font_size) - ui_font.get_descent(font_size)) * 0.5
 	draw_string(ui_font, Vector2(x, y), text_value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
 
+# Keep important onboarding and action prompts legible without clipping on phone landscape.
+func _draw_center_fit_text(text_value: String, rect: Rect2, preferred_size: int, color: Color) -> void:
+	var fit_size := preferred_size
+	var minimum_size := _font_size(12.0)
+	while fit_size > minimum_size and ui_font.get_string_size(text_value, HORIZONTAL_ALIGNMENT_LEFT, -1, fit_size).x > rect.size.x - _ui_px(12.0):
+		fit_size -= 1
+	_draw_center_text(text_value, rect, fit_size, color)
+
+
 func _draw_button(rect: Rect2, label: String, accent: bool = false) -> void:
 	_rounded_box(rect, Color("#15314a") if not accent else Color("#14647a"), Color("#335d78") if not accent else Color("#65e7f3"), 11, 1)
 	_draw_center_text(label, rect, _font_size(14.0), Color("#f2fbff"))
@@ -571,8 +580,13 @@ func _draw_playfield() -> void:
 		_rounded_box(cue_r, Color("#11463f") if cue_good else Color("#542039"), Color("#72f4d3") if cue_good else Color("#ff91a9"), 10, 1)
 		_draw_center_text(cue_text, cue_r, _font_size(14.0), Color("#ffffff"))
 
+	# Important live actions remain visible on short phone-landscape screens.
 	var prompt := _near_action_prompt()
-	_draw_center_text(prompt, Rect2(field_rect.position.x, field_rect.end.y - _ui_px(38.0), field_rect.size.x, _ui_px(28.0)), _font_size(14.0), Color("#e0fbff"))
+	if not prompt.is_empty():
+		var action_ready := prompt.begins_with("TAP NOW")
+		var prompt_rect := Rect2(field_rect.position.x + _ui_px(9.0), field_rect.end.y - _ui_px(45.0), field_rect.size.x - _ui_px(18.0), _ui_px(36.0))
+		_rounded_box(prompt_rect, Color("#116750") if action_ready else Color("#153349"), Color("#a8ffe2") if action_ready else Color("#3f839b"), 10, 2 if action_ready else 1)
+		_draw_center_fit_text(prompt, prompt_rect, _font_size(17.0 if action_ready else 14.0), Color("#ffffff") if action_ready else Color("#e5f9ff"))
 
 func _draw_hub_symbol(pos: Vector2, hub: int, color: Color) -> void:
 	if hub == 0:
@@ -638,11 +652,14 @@ func _draw_info_panel() -> void:
 		_draw_fit_label(progress, Vector2(x, y), _font_size(13.0), Color("#8ceec7"), info_rect.size.x - pad * 2.0)
 		y += _ui_px(23.0)
 	if info_rect.size.y >= _ui_px(158.0):
-		_draw_fit_label(feedback_text, Vector2(x, y), _font_size(14.0), Color("#e2f4fc"), info_rect.size.x - pad * 2.0)
-	# Wide landscape panels have actual space for persistent novice instructions.
+		var live_action := _near_action_prompt()
+		var action_ready := state == "playing" and live_action.begins_with("TAP NOW")
+		var feedback_line := live_action if action_ready else feedback_text
+		_draw_fit_label(feedback_line, Vector2(x, y), _font_size(15.0 if action_ready else 14.0), Color("#a8ffe2") if action_ready else Color("#e2f4fc"), info_rect.size.x - pad * 2.0)
+	# Use the free space in wide layouts for short, high-contrast directions.
 	if info_rect.size.y > _ui_px(215.0):
-		_draw_label("光る交差点で TAP → 軌道を切替", Vector2(x, info_rect.end.y - _ui_px(52.0)), _font_size(13.0), Color("#b7f5ff"))
-		_draw_label("同じ記号のHUBで TAP → 配達", Vector2(x, info_rect.end.y - _ui_px(23.0)), _font_size(13.0), Color("#ffe0a0"))
+		_draw_fit_label("光る交差点でTAP → 乗換", Vector2(x, info_rect.end.y - _ui_px(52.0)), _font_size(14.0), Color("#e8fcff"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label("同じ印のHUBでTAP → 配達", Vector2(x, info_rect.end.y - _ui_px(23.0)), _font_size(14.0), Color("#fff3bb"), info_rect.size.x - pad * 2.0)
 
 
 func _draw_intro_overlay() -> void:
@@ -652,9 +669,9 @@ func _draw_intro_overlay() -> void:
 	var r := Rect2(field_rect.get_center() - Vector2(width, height) * 0.5, Vector2(width, height))
 	_rounded_box(r, Color("#0b1a2b"), Color("#46dce9"), 22, 2)
 	_draw_center_text("ORBIT SWITCH COURIER", Rect2(r.position.x, r.position.y + _ui_px(18.0), width, _ui_px(32.0)), _font_size(19.0), Color("#f5fbff"))
-	_draw_center_text("1. STARTで開始 · %sが最初の目標" % HUB_SHORT[cargo_target], Rect2(r.position.x, r.position.y + _ui_px(62.0), width, _ui_px(27.0)), _font_size(13.0), Color("#f4fdff"))
-	_draw_center_text("2. 下に TAP NOW が出たら盤面を1回押す", Rect2(r.position.x, r.position.y + _ui_px(96.0), width, _ui_px(27.0)), _font_size(13.0), Color("#ddfbff"))
-	_draw_center_text("3. 同じ記号のHUBまで乗換→配達", Rect2(r.position.x, r.position.y + _ui_px(130.0), width, _ui_px(27.0)), _font_size(13.0), Color("#ffefc7"))
+	_draw_center_fit_text("1  START → 目標 %s" % HUB_SHORT[cargo_target], Rect2(r.position.x, r.position.y + _ui_px(62.0), width, _ui_px(29.0)), _font_size(16.0), Color("#ffffff"))
+	_draw_center_fit_text("2  TAP NOWで画面をタップ", Rect2(r.position.x, r.position.y + _ui_px(96.0), width, _ui_px(29.0)), _font_size(16.0), Color("#b6fff0"))
+	_draw_center_fit_text("3  同じ印のHUBでタップ→配達", Rect2(r.position.x, r.position.y + _ui_px(130.0), width, _ui_px(29.0)), _font_size(16.0), Color("#fff3be"))
 	var start_rect := Rect2(r.position.x + _ui_px(22.0), r.end.y - _ui_px(59.0), width - _ui_px(44.0), _ui_px(48.0))
 	_rounded_box(start_rect, Color("#14647a"), Color("#8dfbff"), 12, 2)
 	_draw_center_text("TAP TO START", start_rect, _font_size(16.0), Color.WHITE)
