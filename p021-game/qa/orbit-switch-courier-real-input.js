@@ -74,6 +74,8 @@ function verifyGuideContrast() {
     cargoPanel.includes('Color("#ff5877") if cargo_urgent') &&
     cargoPanel.includes('Color("#ff9dab")') &&
     cargoPanel.includes('"%02ds LEFT!  HURRY  ·  %s"') &&
+    cargoPanel.includes('info_rect.size.x < _ui_px(400.0)') &&
+    cargoPanel.includes('cargo_target_label = HUB_SHORT[cargo_target]') &&
     cargoPanel.includes('var warning_chip := Rect2(') &&
     cargoPanel.includes('_rounded_box(warning_chip, Color("#8b2030"), Color("#fff0aa"), 7, 2)') &&
     cargoPanel.includes('_font_size(18.0) if cargo_urgent') &&
