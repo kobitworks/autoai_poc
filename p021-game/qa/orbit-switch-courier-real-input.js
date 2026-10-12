@@ -55,8 +55,16 @@ function verifyGuideContrast() {
     source.includes('while shown.length() > 1') &&
     source.includes('_draw_center_fit_text(_visible_cue(), cue_r'),
     'Cue min-size / ellipsis / banner render contract missing');
+  // GAME-076: long structured cues must preserve three semantic priorities
+  // across two rows. These source assertions do not substitute for screenshot review.
+  check(source.includes('func _cue_priority_lines()') &&
+    source.includes('route = phrase.substr(6).strip_edges()') &&
+    source.includes('NEXT · TAP NOW表示で目標HUBへ') &&
+    source.includes('_draw_center_fit_text(key_lines[0], top_cue_r') &&
+    source.includes('_draw_center_fit_text(key_lines[1], bottom_cue_r'),
+    'Long-cue result/route/next-action two-line contract missing');
   return {result:'PASS_STATIC',labels:results,minimumContrast:7,
-    longCueBoundary:'SOURCE_CONTRACT_ONLY: special long-cue screenshot not verified',
+    longCueBoundary:'SOURCE_CONTRACT_ONLY: two-line priority summary; new screenshots and human legibility not yet verified',
     realDevice:'NOT_VERIFIED'};
 }
 
