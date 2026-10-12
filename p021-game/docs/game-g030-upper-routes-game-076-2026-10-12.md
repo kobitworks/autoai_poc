@@ -388,3 +388,12 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - 4端末条件の `miss-feedback.png` を独立目視。盤面内の「MISS · ENERGY -1」はPhone縦/横・Tablet縦/横で枠内に収まり、Tablet横でも下部説明と重ならないことを代表画像上で確認。Phone横の2行操作ガイドやTablet横の小さな補助文字は依然として可読性・コントラスト改善余地があり、全40枚の独立視覚監査完遂とは扱わない。長文cueの専用stress test/screenshotではないため、省略分岐の発火は未実証。
 - **独立10軸の暫定評価は76/100据置**（ゲーム性8、操作8、難度7、UI/UX8、描画7、演出6、サウンド6、変化8、リプレイ9、技術9）。CI成功だけで加点して80点/一般公開品質認定しない。実機スピーカー/イヤホン音質・FPS/発熱・文字の実機可読性/誤タップ・初見者30秒理解はHuman Gate未確認。
 - 今回は前回未確定CIの結果と画面証跡を正本へ確定する監査回であり、ゲームソースの変更、mainマージ、本番化、有料機能、別タスク着手なし。**次回は長文cue専用stressケース、Phone横/Tablet横の小文字・演出と独立10軸再評価**。80点未達なのでタスクは終了時Doing→ToDoに戻す。
+
+
+## 2026-10-13 01:48 JST / AUTOAI-GAME076-20261013-0143 — 同一コードの再現性確認
+
+- 今回の実作業はP021/GAME-076のみ。GAME-075=Done、GAME-076=ToDo、他Doingなしを確認して排他取得。前回コードcommit `362a4ca91d0139e1e8fb0439a7133e46dd57b373` の[GitHub Actions run 38275077863](https://github.com/kobitworks/autoai_poc/actions/runs/38275077863)について、browser-quality job 114899118192 の再実行を起動（attempt 2、job 114912788301）。3ジョブ contract/export-web/browser-quality は再実行後全success。ゲームコードとQAスクリプトの変更なし。
+- 新[artifact 11760537263](https://github.com/kobitworks/autoai_poc/actions/runs/38275077863/artifacts/11760537263) ZIPを取得・実体展開し、40PNG+results.json（41ファイル）を確認。JSON SHA256=`4c7c8a41b37db70a5bfa7858eeac3d148c3c0404c8d07fecc046b88d5ecf1209`。初回artifact 11759056919 と合わせ、同一コードの2回のCIが4viewport全PASS。
+- 今回attempt2の通常入力E2E: Phone縦390×844/touch=1109点、Phone横844×390/mouse=1110点、Tablet縦768×1024/touch=1108点、Tablet横1024×768/mouse=1110点、すべてPASS。全4条件でNIGHT3件→ACE6件、SOUND OFF/ON・エンジン音声Player起動観測・RETRY・BEST保存/再読込復元がJSON一致。`qaCommand=NEVER USED`、`stateOverride=NONE`。実端末の可聴音は未検証。
+- Intro/ACEの8画面を独立目視。要素に明白な重なりは見られないがPhone横/Tablet横の補助文字は小さく、実機可読性は未認定。専用長文cueの省略分岐を発火させるstress screenshot、初見30秒・実機音質/イヤホン・FPS/発熱・誤タップは未検証。今回はUI改修や別タスクには着手せず。
+- 10軸の証拠限定暫定スコアは**76/100据置**（8/8/7/8/7/6/6/8/9/9）。CIの再現性改善だけで品質点を加算しない。**80点・一般公開品質は未認定**。次回は同一GAME-076で長文cue stress screenshot と横画面補助文字・演出の改善、4画面再確認、10軸再採点を行う。実機Human Gateは人間による確認待ち。mainマージ/有償利用/本番化なし。Done条件未達によりタスクはToDo継続。
