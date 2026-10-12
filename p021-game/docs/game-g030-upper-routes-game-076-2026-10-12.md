@@ -218,3 +218,13 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - **操作証跡**：4画面とも `qaCommand=NEVER USED` / `stateOverride=NONE`。通常のマウス/タップで11個のtransfer/deliveryを実行し、NIGHT→ACE・score・SOUND ON/OFF、RETRYとBEST復元がPASS。前回の同一コード以外のCIでTablet Portraitに単発タイムアウトがあったことは引き続き再現性課題として保持。
 - **10軸品質は証跡限定の暫定76/100を維持**（ゲーム8・操作8・難度7・UI/UX8・グラフィック7・演出6・サウンド6・変化8・リプレイ9・技術9）。改善表示は確認したが、phone横の文字の小ささ、初見30秒、実機スピーカー/イヤホン、FPS・発熱、再現性の複数run確認は未検証。80点未到達につき一般公開品質認定なし。今回1回のCI PASSだけで、先行runのタイムアウト問題が解決したとは断定しない。
 - **次回再開点**：Phone Landscapeの最小フォント・コントラスト調整、tabletのマイルストーン視認性/色弱対応の評価を行う。実入力4viewportを別runでも再実施し、前回単発timeoutとの比較を行う。独立証跡の10軸評価とHuman Gateを明確に分離し、80点に達した場合のみ完了可否を判断する。今回は他タスクに着手せず、GAME-076はToDoで継続。
+
+
+## 2026-10-12 21:13:10 JST / AutoAI — GAME-076 Phone Landscape視認性の追加改善（次回継続）
+
+- 今回実行した実タスクは **GAME-076の1件のみ**。依存GAME-075=Done、着手時GAME-076=ToDo、他Doingなしを確認して排他取得。対象は `kobitworks/autoai_poc` の **developのみ**。mainマージ・有償契約・本番公開範囲変更なし。
+- [commit 5b1d944ebc9661688c9d31367a57c6a62b46eb5b](https://github.com/kobitworks/autoai_poc/commit/5b1d944ebc9661688c9d31367a57c6a62b46eb5b) にてGodot `p021-game/sources/orbit-switch-courier-godot/Main.gd` の5つの表示箇所のみを修正。Phone Landscapeの2ステップ案内を「光る交差点でTAP」「同じ印でTAP・配達」へ短文化し、14→16相当の文字サイズと白/淡黄の高コントラストへ改善。ROUTE見出し12→14、NEXT ACTION見出し12→14、Tablet LandscapeのROUTE MILESTONES見出し13→15へ変更。ゲームの配達・移動・採点・入力判定、QA成功コマンドおよび状態操作は変更なし。
+- GitHub差分は `Main.gd` **1ファイルのみ・5か所**。新blob `b35b3b3ccaf6209ccac805969e3f288c670125b0` をdevelopから独立再取得し一致を確認。
+- [GitHub Actions run 38247148806](https://github.com/kobitworks/autoai_poc/actions/runs/38247148806) : `contract`=SUCCESS、`export-web`=SUCCESS、`browser-quality`=IN_PROGRESS / final未確認（報告書更新時点）。新コミットの4 viewport実入力テスト、40PNG/JSONおよび複数runでの再現性は最終検証前。未確認をPASSと扱わない。
+- 品質スコアは**前コミット時点の証跡限定暫定76/100**。今回の文字改善による増点、80点到達・一般公開品質を未認定とする。実機スピーカー/イヤホン音質、FPS・発熱、初見ユーザー30秒はHuman Gateで未確認。
+- **次回再開点**：①上記Actions runの最終状態とartifact `results.json` / 4 viewport画像を取得し、実タップ/クリックNIGHT→ACE6配達、SOUND/RETRY/BEST保存復元を独立readback、②Phone横の2行の文字あふれ・実表示コントラスト、Tablet横マイルストーンを旧画像と比較、③同一commitの再CIで単発Tablet Portrait timeoutの再現性を判断、④10軸の根拠付き採点を更新。80点未達ならGAME-076はToDo継続。別タスクは実行しない。
