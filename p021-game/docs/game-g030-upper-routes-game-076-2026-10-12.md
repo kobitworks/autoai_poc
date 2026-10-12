@@ -55,3 +55,15 @@
 - 本実行で `qa/orbit-switch-courier-real-input.js` のcrossing / target HUB等の実入力タイミング検出をrAFポーリングから20msタイマーポーリングへ変更。[commit 29815639](https://github.com/kobitworks/autoai_poc/commit/29815639e6209a9a09653c5e94bcace45021ed1b)。ゲームロジック、難易度、成功判定、QA stateは無変更。新Blob SHA `333156d8a5d5ffcf67a73555450801b87ff2fb06` 再読込一致。
 - **静的差分反映のみ。新コミット後の4 viewport実入力E2E、44画像、SOUND/RETRY/BEST、独立10軸80点は未検証・未認定。** 実機音声・FPS・発熱・初見30秒はHuman Gate継続。
 - 再開点: [GitHub Actions](https://github.com/kobitworks/autoai_poc/actions) の最新develop/GAME-G030 browser-quality run ID/URLを取得し `results.json` の `nightTelemetry` と実操作証跡を確認。必要なら原因を特定した最小差分修正後、4/4PASS・80点評価。GAME-076はToDoで継続。mainマージ・課金・本番範囲拡大なし。
+
+
+## 2026-10-12 18:15 JST / AutoAI 継続診断（今回の唯一の作業：GAME-076）
+
+- 正本 GAME-075=Done / GAME-076=ToDo、他Doingなしを Fresh-read し、GAME-076 を Doing で排他取得。P010〜P020の有効先行PJには別のAI実行可能タスクなし。main、課金、本番化には着手しない。
+- GitHub Actions develop push のrunを REST GitHub connector \`GET /repos/kobitworks/autoai_poc/actions/runs?branch=develop\` で直接取得可能であることを検証。以前のPR専用workflow取得経路でrun ID不明だった問題を回避し、新しい外部認証を追加せずCI証跡を参照できた。
+- [run 38220480639](https://github.com/kobitworks/autoai_poc/actions/runs/38220480639) (commit 3e97a830) は contract/export-web/browser-quality=3/3 success。実物 [artifact 11733947099](https://github.com/kobitworks/autoai_poc/actions/runs/38220480639/artifacts/11733947099) の results.json + 40 PNG を読戻し。全4 viewport で実入力NIGHT 3件→ACE 6件、SOUND切替、RETRY、BEST復元PASS（スコア1110/1111/1107/1110）。これは**技術CIの1回の成功であり、安定性や品質80点を認定するものではない**。
+- 続く [run 38223455169](https://github.com/kobitworks/autoai_poc/actions/runs/38223455169) (commit 29815639) は contract/export-web success、browser-quality failure。[artifact 11734938939](https://github.com/kobitworks/autoai_poc/actions/runs/38223455169/artifacts/11734938939) の results.json + 36 PNG を読戻し、phone縦横・tablet横=3/4 PASS、**tablet縦のみ NIGHT 1->0 lost energy**。成功と誤認していない。失敗時 snapshot は orbit=0 / deliveries=3 / energy=2 / cargo_target=1 / cargo_left≈8.25s / cue=TRANSFER OK。前のNIGHT 2->1はenergy=3。どの時点でenergyが減ったかは、既存失敗トレースが「NIGHT HUB0」の失敗時だけを収集する条件だったため不明。
+- 3e97→29815 の比較で変更されたQAロジックは narrow inputWindow 待機を rAF→20ms polling に切り替えた点（Godotゲームのソースロジック変更なし）。ただし現時点では時間窓観測・配送タイムアウト・イベント重複のどれが根因か**未確定**であり、ゲームルールを推測で改変しない。
+- 新たな証拠収集として既存のread-only 75ms \`__P021_NIGHT_TRACE\` を「NIGHT HUB0だけでなく全NIGHT失敗時」に添付するQA最小変更をdevelopに反映：[commit 77fcad6](https://github.com/kobitworks/autoai_poc/commit/77fcad6ae669648c8e78f815ae818260a74a621a)。ゲーム成功コマンド/state直書き/QA成績緩和なし。新CI [run 38228449796](https://github.com/kobitworks/autoai_poc/actions/runs/38228449796) はこの記録時点で進行中。前runのfailed-jobs rerunは新pushの並列排他でcancelledのため結果として数えない。
+- 成功runの4 viewport intro/ACE画像8枚を独立で開き、指示とルート表示を確認。スマホ横では小型テキストと暗いHUDの可読性に改善余地がある。10軸80/100の証跡付き独立採点と初見30秒・実機音質/FPS/発熱のHuman Gateは**未完了**。
+- **再開点**：run 38228449796 の3ジョブ結果とartifactを取得。FAILなら \`nightTelemetry\` のenergy/cargoLeft/angle/orbit時系列から根因を切り分け、原因の確定後に最小修正と実入力4/4再検証を行う。PASSでも1回だけの合格は安定性未証明として扱い、画像比較・10軸独立採点・必要なUX改善を継続する。GAME-076はToDo継続。実機Human Gate、80点未認定。
