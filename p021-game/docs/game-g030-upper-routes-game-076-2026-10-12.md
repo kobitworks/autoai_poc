@@ -551,3 +551,13 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - GitHub developの p021-game/sources/orbit-switch-courier-godot/Main.gd で情報欄幅400 UI px未満のとき配送先表示をフル色名＋記号から短い記号名（SQUARE/TRIANGLE/CIRCLE）へ自動切替。残秒先頭＋HURRYと配送先記号を同時に残す最小改修。配達秒数・ゲーム判定・得点・入力・保存は無変更。[code commit 346145cf](https://github.com/kobitworks/autoai_poc/commit/346145cf2ce3b90ba9cbf754791965df05683b0c) / blob ad3e5f483859a35ab5f0bdfc2d97eb7a20f02a09 をread-back一致。
 - QAソースに狭幅用HUB_SHORT/しきい値の静的契約を追加。[QA commit f29aaf35](https://github.com/kobitworks/autoai_poc/commit/f29aaf35ec2445fc79e490e61c21114985aab342) / blob 3285ce9ca4014bd600da387a4b32010b5b2a547f をread-back一致。[新run 38305861101](https://github.com/kobitworks/autoai_poc/actions/runs/38305861101)のcontract=SUCCESS、export-web・browser-qualityは現時点で未確定。新コードの4 viewport実画像や80点達成は未認定。
 - 品質は証跡限定の独立10軸暫定76/100据置、公開品質80点未達。実機音声・イヤホン、FPS/発熱、初見30秒、誤タップ、物理文字可読性はHuman Gate未確認。main変更・課金・本番範囲拡大・別タスク実行なし。再開点は新CI全3ジョブとartifact 4 viewport warning PNGを実体確認し、改修後の配送先短縮効果を画像で再評価する。
+
+
+### 2026-10-13 06:14:13 JST — GAME-076 Godot起動不能の根因特定と最小修正
+
+- 先行 CI: [run 38307595479](https://github.com/kobitworks/autoai_poc/actions/runs/38307595479)。contract/export-web=success、browser-quality=failure。実入力E2Eはskip。
+- 実行ログの一次証跡: Godotの `SCRIPT ERROR: Parse Error: Cannot infer the type of "cargo_target_label" variable`（`res://Main.gd:688`）、`Failed to load script`、QA bridge `ready=false`。120秒待機は原因ではなく結果。起動失敗JSONとPNGを artifact 11773820690へ保存済み。
+- 改修: `p021-game/sources/orbit-switch-courier-godot/Main.gd` の当該1行のみ `var cargo_target_label: String = str(HUB_NAMES[cargo_target])` として型を明示。判定・入力・タイミング・保存処理は無変更。
+- 反映: [develop commit 58246674ab983f905575dca09ff38fbd44aad358](https://github.com/kobitworks/autoai_poc/commit/58246674ab983f905575dca09ff38fbd44aad358)、blob `35947e8ef7271084230b8a7dd03e2dffa6a60592` は develop から再読込一致。
+- 再CI: [run 38309169560](https://github.com/kobitworks/autoai_poc/actions/runs/38309169560) 起動済み。最終3ジョブと4画面の実入力・warning/音声/保存の判定は別途確認し、不明な時点ではPASS扱いしない。
+- 品質: 独立暫定76/100据置。80点を達成したとは認定しない。実機音声・初見30秒・FPS/発熱・可読性/誤タップのHuman Gateは未確認。main/課金/本番変更なし。
