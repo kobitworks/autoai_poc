@@ -570,3 +570,16 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - スマホ縦390x844（タッチ）1109点、横844x390（マウス）1110点、タブレット縦768x1024（タッチ）1103点、横1024x768（マウス）1108点で **4/4 PASS**。正規タップ・クリックでNIGHT3配達→ACE6配達、SOUND ON/OFF、RETRY、BEST保存・再読込が一致。QA成功コマンド使用なし、直接state改変なし。
 - 残り3秒警告の専用PNG4枚を独立目視。全4画面で赤い `03s LEFT! HURRY` 帯を確認。以前のタブレット横 `SCARLET / SQ...` という途中省略は、新画像で `SQUARE` が切れずに表示されることを確認。明白なHUD衝突は見られない。これは静的契約だけではない画像確認であり、実機可読性の保証ではない。
 - **独立10軸品質の既存暫定76/100は据置き**。80点一般公開品質を認定しない。実機スピーカー/イヤホン、初見30秒、FPS・発熱、指による誤タップ・文字の読みやすさはHuman Gate未確認。GAME-076はDone条件未達のためToDo継続。mainへの変更、課金・本番公開は実施していない。
+
+
+## 2026-10-13 06:34 JST / AUTOAI-GAME076-20261013-0632 — 初見の誤タップを1度だけ救済する操作案内
+
+- Runner v1.38.0 / P021 v1.2.0をFresh-read。Slack @autoaiの新規指示なし、全体監視09:00前。P005〜P018/P020の正本を確認し、候補はいずれも要確認/依存未解除/24時間未経過/日次完了などで実作業なし。P021のGAME-075=Done、GAME-076=ToDo、他Doing=0を確認してGAME-076のみDoingへ排他取得。
+- 新機能: 最初の配達前、ゲーム開始から30秒以内に発生した**初回のタイミング外タップ**を、1回だけENERGYを減らさず「FIRST TAP GUIDE · ENERGY SAVED」「緑のTAP NOWが出た時だけタップ」と案内。2回目以降・誤配送先HUB・上位ルートの難度/当たり判定・配送期限・採点・BESTは元のまま。リトライ時は救済フラグを初期化。オート成功・state書換えのQA命令は追加しない。
+- ゲーム本体: [GitHub commit 1b12abe3](https://github.com/kobitworks/autoai_poc/commit/1b12abe32d0030d031d2029e1f3f609d99d4663f)、develop Blob SHA `8be058e3c9f101ec500e05dc1fa2eb5a0bfa9848`。
+- QA: [GitHub commit 1e67c853](https://github.com/kobitworks/autoai_poc/commit/1e67c8538c4521b0781309d115804d3ff57c6c8e)、develop Blob SHA `66a8b2a1f0235aaad50730bb75d1beaf2f28b36a`。4 viewportの正規NIGHT3→ACE6/SOUND/RETRY/BESTシナリオに加え、BEST再読み込み後の正規プレイで角度4.0〜4.2radの非判定窓を待ち、実タッチ/クリックを1回実施してENERGY3・配達0・救済フラグtrue・実際の説明cue表示を検証し、各画面`*-novice-first-tap-guide.png`を保存する試験を追加。QAからゲームの成功状態・score・energyなどを変更しない。
+- developから本体・QAを再取得し、それぞれBlob SHA一致および変更箇所存在を確認。これは**静的・反映検証**であり、新コードの実入力E2E PASSを意味しない。
+- 新CI: [GitHub Actions run 38311488593](https://github.com/kobitworks/autoai_poc/actions/runs/38311488593) が開始、初回確認時はpending。contract/export-web/browser-quality最終結果、4 viewportの新cue画像・成功JSONはこの時点で未検証。直前に始まったrun38311457280は旧QA commitに基づく可能性があるため新バージョンの代替証拠としない。
+- 独立品質スコア暫定 **76/100据置**（一般公開80点未達）。初見30秒の実人間UX、実機音声/イヤホン、FPS・発熱、可読性・誤タップはHuman Gate未検証。AI変更だけで実機確認完了・80点達成と扱わない。main・有料契約・本番範囲拡大なし。
+- 次回: run38311488593の3ジョブ、結果JSONと最低52 PNG（旧48 PNG＋新novice4 PNGの期待値）を実物確認。4/4の合法NIGHT3→ACE6・SOUND/RETRY/BESTと初回無減点cueを再検証。FAILなら原因特定後に同GAME-076で最小修正し、10軸を証拠付きで再採点。Human Gateは実機ユーザー検証待ち。
+
