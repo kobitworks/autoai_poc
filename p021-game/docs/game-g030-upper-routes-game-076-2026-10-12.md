@@ -327,3 +327,23 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - 品質10軸証跡限定の**暫定76/100を維持**（ゲーム性8・操作8・難度7・UI/UX8・描画7・演出6・サウンド6・変化8・リプレイ9・技術9）。2回4/4 PASSだけで80点/一般公開品質へ加点しない。Phone横右側の補助文字の小ささ、全体の低コントラスト、演出/サウンドの独立評価が残る。
 - **Human Gate未確認**: 実機スピーカー/イヤホンの音質・音量、初見者30秒の理解、実機の文字可読性/誤タップ、FPS/発熱。未実測をPASS扱いしない。
 - **次回のAI作業**: 同じGAME-076内でPhone横/Tablet横の補助テキストと演出フィードバックを安全に改善し、4viewportの実入力E2Eと代表画像/10軸評価を再検証する。Human Gateは別途ユーザー確認。今回ゲームロジック・QA成功コマンド・main・本番範囲・有償利用・別タスクには変更なし。完了条件80点未達のため終了時Doing→ToDoへ戻す。
+
+
+## 2026-10-12 23:54 JST / AUTOAI-20261012234017-GAME076 — 横画面の可読性と入力フィードバック改修・4画面実操作検証
+
+- **今回のRunnerで処理した実タスクはGAME-076の1件のみ。** タスク管理のGAME-075=Done / GAME-076=ToDo / 他DoingなしをFresh-read後、GAME-076をDoingで排他取得。対象はGitHub develop限定であり、main手動マージ・有料利用・別タスク着手なし。
+- 表示のみの改修コミット [2b254dac](https://github.com/kobitworks/autoai_poc/commit/2b254dac861231d60d44e092e620169a3da534db)：(1) 既存の正規判定でTAP NOWが使える時だけ、NEXT ACTIONに緑の点滅レールと強い輪郭を追加。(2) Phone横画面の2行操作ガイドを高コントラスト帯に格納。(3) Tablet横画面の空き部分に既存の正規成功/失敗cueを表示。1ファイル Main.gd の描画処理のみ、ゲーム物理/成功判定/得点/セーブ/QA入力ロジックは変更しない。初回新コード [Actions run 38264770836](https://github.com/kobitworks/autoai_poc/actions/runs/38264770836) contract/export-web/browser-qualityの3ジョブsuccess、artifact [11753609375](https://github.com/kobitworks/autoai_poc/actions/runs/38264770836/artifacts/11753609375) の40 PNG+JSONを取得。4画面実入力PASS。ただしTablet横の新cue帯と下部説明文の文字が画像上で数px重なる不具合を検出し、そのまま合格とせず修正した。
+- 重なり解消コミット [0c8957d9](https://github.com/kobitworks/autoai_poc/commit/0c8957d9e6f0d7a28b4d9713192ccd1632a47eae)：Tablet横cue帯の位置を下端-88→-94 CSS px相当、高さを27→24 CSS px相当に調整。変更前後のMain.gd GitHub blob readback一致。最終コミットの [Actions run 38265593266](https://github.com/kobitworks/autoai_poc/actions/runs/38265593266) はcontract / export-web / browser-quality **3ジョブともsuccess**。
+- 最終証跡 [artifact 11754607461](https://github.com/kobitworks/autoai_poc/actions/runs/38265593266/artifacts/11754607461) をZIP実体で取得し、40 PNG+results.json（計41ファイル）を列挙して結果JSONを独立読戻し。results.json SHA-256=`27bf46284729b066af3402c8eaebc415c0075b66663d2b16850ad7ef0eba9c69`。正常操作は強制成功コマンド不使用（`qaCommand=NEVER USED`）、ゲーム状態直書きなし（`stateOverride=NONE`）。
+
+| 4 viewport（自然操作） | 結果 | NIGHT | ACE | Score | SOUND OFF/ON・RETRY・BEST保存復元 |
+| --- | --- | ---: | ---: | ---: | --- |
+| Phone縦 390x844 / touch | PASS | 3件 | 6件 | 1108 | PASS |
+| Phone横 844x390 / mouse | PASS | 3件 | 6件 | 1110 | PASS |
+| Tablet縦 768x1024 / touch | PASS | 3件 | 6件 | 1103 | PASS |
+| Tablet横 1024x768 / mouse | PASS | 3件 | 6件 | 1109 | PASS |
+
+- 初回実行のTablet横 miss-feedback画像でcue帯と説明文の重なりを検出し、最終artifactの同画像では帯の下端と「交差点の緑でTAP→乗換」行が分離したことを独立目視確認。Phone横playing画面も旧版と比較しガイド用帯の追加・ガイド文字の領域内表示を確認。**全40画面の独立視覚監査完遂や実機可読性は主張しない**。
+- 10軸独立品質スコアは **暫定76/100を据置**（ゲーム性8、操作8、難度7、UI/UX8、描画7、演出6、サウンド6、変化8、リプレイ9、技術9）。今回はUIの証跡改善と4/4自然入力成功が確認できたが、未実測の音声/FPS/ユーザビリティへ加点して80点/一般公開品質認定しない。
+- **Human Gate未検証**：実機スピーカー/イヤホン音質・音量、実機FPS/発熱、Phone/Tablet実機可読性・誤タップ、初見ユーザー30秒理解。これらを自動CIの成功と混同しない。次の同一タスクでは不足4点のうち演出/サウンドの非実機で検証可能な範囲と小画面コントラストを改めて監査し、実機結果の受領後に10軸を再採点する。
+- 今回は終了時にGAME-076をDoing→ToDoに戻す。完了条件80点未達、別タスク・本番/課金/mainの変更なし。
