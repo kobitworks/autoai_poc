@@ -677,8 +677,25 @@ func _draw_info_panel() -> void:
 		_draw_fit_label("1  緑に光る交差点でTAP", Vector2(x, y + _ui_px(126.0)), _font_size(16.0), Color("#f3fcff"), info_rect.size.x - pad * 2.0)
 		_draw_fit_label("2  同じ記号のHUBでTAP", Vector2(x, y + _ui_px(161.0)), _font_size(16.0), Color("#fff3be"), info_rect.size.x - pad * 2.0)
 		_draw_fit_label("3  配達を重ねACEへ", Vector2(x, y + _ui_px(196.0)), _font_size(16.0), Color("#b3ffe4"), info_rect.size.x - pad * 2.0)
-	# Reserve low-height landscape panels for the action card; extra help never
-	# collides with the action cue in the narrowest phone-landscape viewport.
+	# GAME-076: Phone landscape has no room for the large HOW TO PLAY guide.
+	# Keep two bright, readable steps below (not inside) the NEXT ACTION card.
+	# The <220px portrait panel uses its existing single-line fallback instead.
+	if info_rect.size.y >= _ui_px(220.0) and info_rect.size.y <= _ui_px(275.0):
+		_draw_fit_label("1  交差点が光ったらTAP", Vector2(x, info_rect.end.y - _ui_px(32.0)), _font_size(14.0), Color("#f0fcff"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label("2  同じ印のHUBでTAP", Vector2(x, info_rect.end.y - _ui_px(12.0)), _font_size(14.0), Color("#fff3c4"), info_rect.size.x - pad * 2.0)
+	# Tablet landscape: use otherwise empty lower-panel space to show which
+	# naturally-earned route tiers are unlocked. This is a display only.
+	if info_rect.size.y > _ui_px(525.0):
+		var milestones_y := info_rect.end.y - _ui_px(126.0)
+		_draw_label("ROUTE MILESTONES", Vector2(x, milestones_y - _ui_px(13.0)), _font_size(13.0), Color("#d9faff"))
+		var milestone_gap := _ui_px(6.0)
+		var milestone_width := (info_rect.size.x - pad * 2.0 - milestone_gap * 2.0) / 3.0
+		for step in range(3):
+			var unlocked := _mission_tier() >= step + 1
+			var milestone_rect := Rect2(x + float(step) * (milestone_width + milestone_gap), milestones_y, milestone_width, _ui_px(29.0))
+			_rounded_box(milestone_rect, Color("#116252") if unlocked else Color("#172e42"), Color("#89ffce") if unlocked else Color("#5186a6"), 8, 1)
+			_draw_center_fit_text(str(ROUTE_NAMES[step + 1]), milestone_rect, _font_size(13.0), Color("#ffffff"))
+	# Keep longer help away from the live action card and the milestone strip.
 	if info_rect.size.y > _ui_px(275.0):
 		_draw_fit_label("交差点の緑でTAP → 乗換", Vector2(x, info_rect.end.y - _ui_px(52.0)), _font_size(15.0), Color("#f0fcff"), info_rect.size.x - pad * 2.0)
 		_draw_fit_label("同じ印のHUBでTAP → 配達", Vector2(x, info_rect.end.y - _ui_px(23.0)), _font_size(15.0), Color("#fff3c4"), info_rect.size.x - pad * 2.0)
