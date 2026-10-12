@@ -199,3 +199,22 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - 40 PNGを取得し代表的なintro/playing/route-aceなど10画像を独立目視。Phone LandscapeはNEXT ACTIONの情報量が増えた一方、HUD補助説明の一部が小さく淡い。Tablet LandscapeはHOW TO PLAYで右情報欄を活用しているが、実際の初見ユーザーの理解度は未確認。Portraitもタップ領域/構成は概ね収まるが実機での可読性は未確認。
 - **独立暫定品質は前回の76/100を維持**。最新commitの再実行成功は確認できたが、同一commitの初回失敗もあり安定性が未確認で、80点以上の一般公開品質認定は不可。根拠のないゲームロジック修正を行わない。実機音声/FPS/発熱/初見者30秒はHuman Gateで未確認。
 - **次回再開点**: ①Tablet Portrait RUSH 0→1の初回FAILと再実行PASSの時系列/入力観測を比較して原因を特定、②HUD・Phone横/Tablet横のコントラスト・文字・次アクション表示を改善、③4 viewport自然入力E2Eを複数回再現し40画像/10軸で80点を再判定。1件制限のため他タスク未着手、GAME-076は未完了につきToDoで継続。
+
+
+## 2026-10-12 20:49:51 JST / AutoAI 20261012-2041-AUTOAI-GAME076 — 横画面UI改善・CI実操作証跡確認
+
+- **今回の実タスクはGAME-076の1件のみ**。GAME-075=Done、GAME-076=ToDo、他Doingなしを確認してDoing取得。GitHub developの `p021-game/sources/orbit-switch-courier-godot/Main.gd` のみを改修し、commit [409060d6d1100858cd1d9ca58728e5f920c3d667](https://github.com/kobitworks/autoai_poc/commit/409060d6d1100858cd1d9ca58728e5f920c3d667) に保存。新blob SHA `b84b959abecd7e1ec76f0dcf14e6de33973c9d3a` を独立読戻し一致。mainの変更、有償利用、契約、公開範囲拡大なし。
+- **画面のみ改善**。Phone Landscapeの低い情報欄に「交差点が光ったらTAP」「同じ印のHUBでTAP」の2行を追加。Tablet Landscapeの空き領域に `ROUTE MILESTONES` を配置し、実際の配達数から導いたミッション状態でRUSH/NIGHT/ACEを可視化。ゲーム内の軌道運動・入力判定・得点・QA操作は無変更。
+- **CI [run 38244399819](https://github.com/kobitworks/autoai_poc/actions/runs/38244399819)**：同code commitに対し `contract` / `export-web` / `browser-quality` の3ジョブすべてcompleted/success、今回のrunはattempt1で成功。構成/表示スモークも4/4 PASS。
+- **独立artifact実体読戻し**：artifact [11744394309](https://github.com/kobitworks/autoai_poc/actions/runs/38244399819/artifacts/11744394309) をZIP展開。40 PNG＋results.json、JSON SHA-256=`e335239286b11a1e83e17eed9ee767b70acc0957a9368bb0c65b3bea96556a73`。前回の成功artifact11742913618と同名画面を比較した。Phone Landscapeの2ステップは新規表示されるが文字サイズが小さく、初見者可読性はなお課題。Tablet Landscapeは従来の余白へ3つのルートマイルストーンが収まり、情報の重なりなし。代表的なintro/playing画面の独立目視結果であり、全端末の実機外観を保証するものではない。
+
+| viewport | 新コード実入力E2E | ACE配達 | score | SOUND/RETRY/BEST |
+| --- | --- | ---: | ---: | --- |
+| Phone Portrait 390x844 | PASS | 6 | 1109 | PASS |
+| Phone Landscape 844x390 | PASS | 6 | 1110 | PASS |
+| Tablet Portrait 768x1024 | PASS | 6 | 1106 | PASS |
+| Tablet Landscape 1024x768 | PASS | 6 | 1110 | PASS |
+
+- **操作証跡**：4画面とも `qaCommand=NEVER USED` / `stateOverride=NONE`。通常のマウス/タップで11個のtransfer/deliveryを実行し、NIGHT→ACE・score・SOUND ON/OFF、RETRYとBEST復元がPASS。前回の同一コード以外のCIでTablet Portraitに単発タイムアウトがあったことは引き続き再現性課題として保持。
+- **10軸品質は証跡限定の暫定76/100を維持**（ゲーム8・操作8・難度7・UI/UX8・グラフィック7・演出6・サウンド6・変化8・リプレイ9・技術9）。改善表示は確認したが、phone横の文字の小ささ、初見30秒、実機スピーカー/イヤホン、FPS・発熱、再現性の複数run確認は未検証。80点未到達につき一般公開品質認定なし。今回1回のCI PASSだけで、先行runのタイムアウト問題が解決したとは断定しない。
+- **次回再開点**：Phone Landscapeの最小フォント・コントラスト調整、tabletのマイルストーン視認性/色弱対応の評価を行う。実入力4viewportを別runでも再実施し、前回単発timeoutとの比較を行う。独立証跡の10軸評価とHuman Gateを明確に分離し、80点に達した場合のみ完了可否を判断する。今回は他タスクに着手せず、GAME-076はToDoで継続。
