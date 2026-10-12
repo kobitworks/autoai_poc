@@ -500,7 +500,7 @@ func _draw_center_fit_text(text_value: String, rect: Rect2, preferred_size: int,
 
 func _draw_button(rect: Rect2, label: String, accent: bool = false) -> void:
 	_rounded_box(rect, Color("#15314a") if not accent else Color("#14647a"), Color("#335d78") if not accent else Color("#65e7f3"), 11, 1)
-	_draw_center_text(label, rect, _font_size(14.0), Color("#f2fbff"))
+	_draw_center_fit_text(label, rect, _font_size(16.0), Color("#f2fbff"))
 
 func _draw() -> void:
 	var w := size.x
@@ -645,7 +645,7 @@ func _draw_playfield() -> void:
 		var action_ready := prompt.begins_with("TAP NOW")
 		var prompt_rect := Rect2(field_rect.position.x + _ui_px(9.0), field_rect.end.y - _ui_px(45.0), field_rect.size.x - _ui_px(18.0), _ui_px(36.0))
 		_rounded_box(prompt_rect, Color("#116750") if action_ready else Color("#153349"), Color("#a8ffe2") if action_ready else Color("#3f839b"), 10, 2 if action_ready else 1)
-		_draw_center_fit_text(prompt, prompt_rect, _font_size(17.0 if action_ready else 14.0), Color("#ffffff") if action_ready else Color("#e5f9ff"))
+		_draw_center_fit_text(prompt, prompt_rect, _font_size(17.0 if action_ready else 16.0), Color("#ffffff") if action_ready else Color("#e5f9ff"))
 
 func _draw_hub_symbol(pos: Vector2, hub: int, color: Color) -> void:
 	if hub == 0:
@@ -780,7 +780,7 @@ func _draw_info_panel() -> void:
 			var unlocked := _mission_tier() >= step + 1
 			var milestone_rect := Rect2(x + float(step) * (milestone_width + milestone_gap), milestones_y, milestone_width, _ui_px(29.0))
 			_rounded_box(milestone_rect, Color("#116252") if unlocked else Color("#172e42"), Color("#89ffce") if unlocked else Color("#5186a6"), 8, 1)
-			_draw_center_fit_text(str(ROUTE_NAMES[step + 1]), milestone_rect, _font_size(13.0), Color("#ffffff"))
+			_draw_center_fit_text(str(ROUTE_NAMES[step + 1]), milestone_rect, _font_size(15.0), Color("#ffffff"))
 	# Echo successful transfers and missed timing in the otherwise empty lower
 	# tablet-landscape panel. The prompt card keeps priority during gameplay.
 	if state == "playing" and (cue_clock > 0.0 or qa_cue_stress) and info_rect.size.y > _ui_px(525.0):
