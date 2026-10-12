@@ -19,7 +19,8 @@ body.login-mode .app-header,body.login-mode .page-title,body.login-mode .bottomn
 body.login-mode .main{top:0;bottom:0;padding:0;background:linear-gradient(180deg,#e7f4f5 0%,#dceff1 100%)}body.safety-mode .main{bottom:calc(64px + var(--safe-bottom))}.legacy-shell{display:contents}.main.map-mode{padding:0;overflow:hidden}.main.map-mode .map-screen{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0}.main.map-mode #leafletMap{position:absolute;inset:0;width:100%;height:100%;min-height:0;margin:0;border:0}.main.map-mode .map-overlay{left:50%;bottom:10px}
 button{font:inherit}button:focus-visible,[role="button"]:focus-visible,summary:focus-visible{outline:3px solid var(--focus);outline-offset:2px}.app-header{position:fixed;inset:0 0 auto 0;height:calc(100px + var(--safe-top));padding-top:var(--safe-top);z-index:30;background:var(--base);box-shadow:0 1px 4px #0002}
 .head-top{height:70px;padding:4px 8px;display:flex;align-items:center;justify-content:space-between;background:#d8eeee}
-.logo{display:flex;align-items:center;color:#000}.logo-img{width:60px;height:60px;object-fit:contain;display:block;border-radius:6px}.mode{display:flex;align-items:center;gap:8px}.book-mini{display:none}.mock{display:none}.mobian-world{min-width:170px;padding:7px 16px 6px;background:linear-gradient(#e7c47a,#f4dda5 45%,#d0a457);border:1px solid #a67c36;border-radius:3px;box-shadow:inset 0 0 9px #7f5f2a88,0 1px 2px #0002;color:#392713;font:700 25px/0.9 Georgia,serif;text-align:center;transform:skew(-1deg)}
+.logo{display:flex;align-items:center;color:#000}.logo-img{width:60px;height:60px;object-fit:contain;display:block;border-radius:6px}.mode{display:flex;align-items:center;gap:8px}.book-mini{display:none}.mock{display:none}.book-banner{box-sizing:border-box;width:170px;min-width:170px;height:52px;padding:5px 12px;display:flex;align-items:center;justify-content:center;overflow:hidden;background:linear-gradient(#e7c47a,#f4dda5 45%,#d0a457);border:1px solid #a67c36;border-radius:3px;box-shadow:inset 0 0 9px #7f5f2a88,0 1px 2px #0002;color:#392713;font:700 20px/1.12 Georgia,"Yu Gothic",serif;text-align:center;transform:skew(-1deg)}
+.book-banner-text{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere;max-width:100%;max-height:2.24em}
 .subnav{height:30px;background:var(--option);display:flex;align-items:center;gap:4px;padding:0 8px;overflow-x:auto;white-space:nowrap}.subnav button{border:0;background:transparent;color:var(--link);font-weight:700;padding:4px 9px;border-bottom:3px solid transparent}.subnav button.active{border-bottom-color:#004797;color:#004797}
 .page-title{position:fixed;top:calc(100px + var(--safe-top));left:0;right:0;height:30px;z-index:25;background:color-mix(in srgb,var(--main) 50%,white);display:flex;align-items:center;padding:0 10px;font-weight:800;color:color-mix(in srgb,var(--accent) 50%,black);overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 .main{position:fixed;top:calc(130px + var(--safe-top));left:0;right:0;bottom:calc(118px + var(--safe-bottom));overflow:auto;padding:8px;background:color-mix(in srgb,var(--base) 50%,white)}
@@ -66,7 +67,7 @@ dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(10
   .actions .btn{flex:1 1 140px}
   .head-top{padding-left:6px;padding-right:6px}
   .logo-img{width:54px;height:54px}
-  .mobian-world{min-width:138px;padding:7px 9px 6px;font-size:20px}
+  .book-banner{width:138px;min-width:138px;padding:6px 8px;font-size:18px}
   .page-title{padding-right:min(58vw,220px);font-size:14px}
   .session-chip{top:calc(103px + var(--safe-top));right:5px;max-width:min(56vw,215px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:3px 7px}
   body[data-screen="U01"] .book-container,body[data-screen="U09"] .book-container{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:8px 2px 14px}
@@ -167,7 +168,7 @@ dialog{border:1px solid #789;border-radius:6px;padding:0;width:min(440px,calc(10
 @media(max-width:359px){
   body[data-screen="U01"] .book-container,body[data-screen="U09"] .book-container{grid-template-columns:1fr 1fr;gap:8px}
   body[data-screen="U01"] .book-card,body[data-screen="U09"] .book-card{height:166px}
-  .mobian-world{min-width:124px;font-size:18px}
+  .book-banner{width:124px;min-width:124px;font-size:17px}
 }
 @media(min-width:1024px){.app-header{height:calc(140px + var(--safe-top))}.desktop-nav{display:flex;height:40px;background:color-mix(in srgb,var(--main) 50%,white);align-items:center;gap:2px;padding:0 10px}.desktop-nav button{background:transparent;border:0;border-right:1px solid #777;padding:0 12px;font-size:17px;font-weight:800;color:var(--link)}.page-title{top:calc(140px + var(--safe-top))}.main{top:calc(170px + var(--safe-top));bottom:calc(64px + var(--safe-bottom))}.banner{bottom:0;height:calc(64px + var(--safe-bottom));padding-bottom:var(--safe-bottom)}.bottomnav{display:none}.book-card{width:125px;height:165px}.ops-grid{grid-template-columns:340px 1fr}body.safety-mode .main{bottom:0}.reviewbar{top:calc(177px + var(--safe-top))}}
 @media(max-width:1023px){.desktop-nav{display:none}.ops-grid{grid-template-columns:1fr}.reviewbar{top:calc(134px + var(--safe-top))}#leafletMap{min-height:100%!important}}@media(min-width:600px) and (max-width:1023px){body:not(.login-mode) .main:not(.map-mode){padding-left:24px;padding-right:24px}.paper{width:100%}.btn{min-height:42px}.story{font-size:18px;line-height:1.9}.map-status{font-size:14px;line-height:1.5}.map-status .btn{min-height:42px}}
@@ -190,7 +191,7 @@ body:not(.login-mode) .main:not(.map-mode) .paper::after{display:none}
 </head>
 <body data-ui-baseline="biblio-v2-mobile-20261005">
 <header class="app-header">
-  <div class="head-top"><div class="logo"><img class="logo-img" src="./assets/biblio-logo.png" alt="Biblio"></div><div class="mode"><div class="mobian-world">Mobian’s<br>World</div></div></div>
+  <div class="head-top"><div class="logo"><img class="logo-img" src="./assets/biblio-logo.png" alt="Biblio"></div><div class="mode"><div class="book-banner" id="selectedBookBanner" aria-live="polite"><span class="book-banner-text" id="selectedBookBannerText">Book</span></div></div></div>
   <nav class="desktop-nav" aria-label="メインメニュー"><button type="button" data-menu="map" onclick="go('U04')"><i class="fa-solid fa-map-location-dot" aria-hidden="true"></i><span>Map</span></button><button type="button" data-menu="list" onclick="go('U12')"><i class="fa-solid fa-list" aria-hidden="true"></i><span>List</span></button><button type="button" data-menu="book" onclick="go('U01')"><i class="fa-solid fa-book-open" aria-hidden="true"></i><span>Book</span></button><button type="button" data-menu="message" onclick="go('U14')"><i class="fa-solid fa-comments" aria-hidden="true"></i><span>メッセージ</span></button><button type="button" data-menu="info" onclick="go('U13')"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Info</span></button><button type="button" data-menu="config" onclick="go('U11')"><i class="fa-solid fa-gear" aria-hidden="true"></i><span>Config</span></button></nav>
   <nav class="subnav" id="subnav"></nav>
 </header>
@@ -304,6 +305,15 @@ const LEGACY_UI_BASELINE=Object.freeze({
 const reviewMode=new URLSearchParams(location.search).get('review')==='1';
 document.body.classList.toggle('review-mode',reviewMode);
 function b(){return state.books.find(x=>x.key===state.book)||state.books[0]}
+function renderSelectedBookBanner(){
+ // BookごとにbannerTextを指定可能。未指定の場合はタイトルを表示する。
+ const book=b();
+ const banner=document.getElementById('selectedBookBanner');
+ const text=document.getElementById('selectedBookBannerText');
+ const label=String(book?.bannerText??book?.title??'Book').trim()||'Book';
+ if(text&&text.textContent!==label)text.textContent=label;
+ if(banner)banner.title=String(book?.title??label);
+}
 function safeText(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function progressStateItems(value,kind){
  if(kind==='clue'){const a=Array.isArray(value)?value:[];return a.length?a.map(v=>'<span class="story-state-item">'+safeText(v)+'</span>').join(''):'<span class="story-state-none">なし</span>'}
@@ -420,6 +430,7 @@ function go(s){if(s!=='LOGIN'&&state.auth.status!=='logged_in'){state.screen='LO
 function btn(t,a,c=''){return '<button class="btn '+c+'" onclick="'+a+'">'+t+'</button>'}
 function page(body){return '<div class="paper">'+body+'<div class="dev">実行モード: '+(serverEnabled()?'PHP API / MySQL':'GitHub Pages mock')+'。Clientは表示/入力、確定判定はServer権威境界へ接続します。</div></div>'}
 function renderNav(){
+ renderSelectedBookBanner();
  const isLogin=state.screen==='LOGIN';
  document.body.dataset.screen=state.screen;
  document.body.classList.toggle('login-mode',isLogin);
