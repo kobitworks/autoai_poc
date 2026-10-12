@@ -519,3 +519,14 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - develop限定のQAソース変更: [commit dbdda95ea875b33b5cb26f64ef83c5ad0a20d0eb](https://github.com/kobitworks/autoai_poc/commit/dbdda95ea875b33b5cb26f64ef83c5ad0a20d0eb)、blob `921c603b170072e2d5d538acb7d4320cacec0859` を再取得して実装内容一致確認。Godot本体Main.gd/ゲーム判定/配達時間のコード変更なし。
 - 同push CI [run 38300290645](https://github.com/kobitworks/autoai_poc/actions/runs/38300290645) は開始を確認。初回取得時 contract=success、export-web=in_progress、browser-quality未確定。**当時点で新規4画面warning実画像の取得成功・視覚PASS・品質80点は未認定**。次の回または後続検証で3ジョブ結果、artifact 4PNGとresults.jsonを独立確認する。
 - 10軸独立品質は直近の暫定76/100を維持。実機スピーカー/イヤホン音質、FPS/発熱、初見30秒、文字可読性・誤タップはHuman Gate未確認。一般公開品質80点未達。main/本番/課金/追加タスク着手なし。
+
+## 2026-10-13 05時台 / AUTOAI-GAME076-20261013-0501 — 3秒warning実画像・自然操作の独立検証
+
+- 今回の実作業は **P021 / GAME-076 1件のみ**。Runner rule v1.38.0 / P021 project rule v1.2.0。Slackの新規明示`@autoai`指示なし。09時以前のため日次総合監視は未実施。P005〜P018、P020の正本を調査し、要確認・前提未完了・定期間隔未到達等により他の実作業は選定せず。GAME-075=Done / GAME-076=ToDo / 他Doingなしを確認後、GAME-076=Doingで排他取得。
+- 前回未確定だった[Actions run 38300290645](https://github.com/kobitworks/autoai_poc/actions/runs/38300290645)を再確認。**contract、export-web、browser-quality の3ジョブすべて completed/success**。最新E2Eの実体証跡は [artifact 11770810058](https://github.com/kobitworks/autoai_poc/actions/runs/38300290645/artifacts/11770810058)、ZIP 49ファイル=48PNG+results.json。JSON SHA256=`eb397513cdfb1c08333ec78364b2869b04c36a38f38e48a837c9457b899d4556`。
+- `results.json`を独立パース。Phone Portrait 390×844: ACE6件・1108点・BEST1108、Phone Landscape 844×390: ACE6件・1110点・BEST1110、Tablet Portrait 768×1024: ACE6件・1093点・BEST1093、Tablet Landscape 1024×768: ACE6件・1097点・BEST1097。**自然タップ/クリックによるNIGHT3件→ACE6件、SOUND OFF/ON、RETRY、BEST保存・復元が4/4 PASS**。全画面`qaCommand=NEVER USED`/`stateOverride=NONE`、成功コマンドや状態直書きなし。
+- 新規`*-cargo-warning-3s.png` 4枚をZIPから展開し、`playing`画面と独立目視比較。通常のSTART入力後に時間を進めた（時間早送り/状態直接更新なし）証跡で、撮影前→後`cargo_left`はPhone縦2.81→2.50秒、Phone横2.91→2.61秒、Tablet縦2.88→2.33秒、Tablet横2.86→2.29秒。全4枚で **`03s LEFT` の残秒先頭表示・警告色のタイマー帯と外枠**を実画像上で確認、明白なHUD・ボタン重なり/枠外はみ出しなし。前回の「残3秒警告UIの実描画未確認」は**ブラウザ画面の証跡取得・表示確認に限り解消**した。
+- **独立視認性の留保:** 一般のカウントダウンも色つきタイマー帯を使っているため、スクリーンショット比較では警告時の緊急度差は強くない。Phone縦等の小さな補助文字を実機の物理画面で読めるかは未判定。次回のAI改善候補は警告時専用の短い大文字/高コントラストな危険表示（例: 残3秒）と、通常時との差の拡大。ただし色だけに依存しないこと。ブラウザ4画面の実画像の確認を実機可読性PASSや音声PASSと混同しない。
+- **独立10軸の証拠限定暫定品質=76/100据置:** ゲーム性8、操作感8、難度7、UI/UX8、描画7、演出6、音6、変化8、リプレイ9、技術9。今回の画像証跡で警告の描画動作は証明できたが、公開品質80点の差4点を満たす実機UX・演出・音声/品質の改善証拠はない。**一般公開品質80点は未認定**。
+- Human Gateとして **スピーカー/イヤホンの実音、実端末FPS/発熱、初見30秒の自然操作/誤タップ、実画面での文字可読性**を未検証のまま維持。今回ゲーム本体コード・QAコード・main・有料リソース・本番公開範囲は変更しない。
+- 1件のDone条件未達につき、正本タスク`GAME-076`は実行終了時にDoing→ToDoへ戻し、次回は独立警告UX改善案と実画像E2E・10軸再評価から再開する。別タスクは実行しない。
