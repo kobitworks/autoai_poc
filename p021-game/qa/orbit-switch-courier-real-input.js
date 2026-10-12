@@ -165,6 +165,23 @@ async function run(){
         evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.37,4.45,'RUSH 0->1'));
         evidence.routeMoves.push(await physicalDeliver(page,t,1,3.53,3.68,2,'RUSH HUB1'));
         evidence.routeMoves.push(await physicalSwitch(page,t,1,2,2.55,2.63,'RUSH 1->2'));
+        // GAME-076: passive, bounded telemetry to diagnose missed NIGHT HUB0 on tablets.
+        // It never sends commands or mutates the Godot game state.
+        await page.evaluate(() => {
+          if (window.__P021_NIGHT_TRACE_TIMER) clearInterval(window.__P021_NIGHT_TRACE_TIMER);
+          window.__P021_NIGHT_TRACE=[];
+          window.__P021_NIGHT_TRACE_TIMER=setInterval(() => {
+            const x=window.__P021_ORBIT;
+            if (!x || x.state!=='playing') return;
+            const trace=window.__P021_NIGHT_TRACE;
+            if (!Array.isArray(trace)) return;
+            trace.push({ms:Math.round(performance.now()),orbit:x.orbit,
+              angle:Math.round(x.angle*1000)/1000,cargo:x.cargo_target,
+              cargoLeft:Math.round(x.cargo_left*100)/100,
+              energy:x.energy,deliveries:x.deliveries});
+            if (trace.length>320) trace.shift();
+          },75);
+        });
         evidence.routeMoves.push(await physicalDeliver(page,t,2,5.06,5.22,3,'NIGHT HUB2'));
         d=await snapshot(page);
         check(d.mission_tier===2&&d.mission_name==='NIGHT'&&d.cargo_limit===12,
@@ -234,10 +251,22 @@ async function run(){
         await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.state==='playing','replay after reload');
         await page.screenshot({path:dir+'/'+t.name+'-replay.png'});
         check(errors.length===0,'Browser console/runtime errors: '+errors.join(' | '));
+        // Stop the diagnostic observer before releasing this browser context.
+        await page.evaluate(() => {
+          if (window.__P021_NIGHT_TRACE_TIMER) clearInterval(window.__P021_NIGHT_TRACE_TIMER);
+        });
         evidence.status='PASS';
       }catch(err){
         evidence.failure=err.message;
         evidence.browserErrors=errors;
+        if (/NIGHT HUB0/.test(evidence.failure)) {
+          try {
+            evidence.nightTelemetry=await page.evaluate(() => {
+              if (window.__P021_NIGHT_TRACE_TIMER) clearInterval(window.__P021_NIGHT_TRACE_TIMER);
+              return window.__P021_NIGHT_TRACE||[];
+            });
+          } catch (traceErr) { evidence.nightTelemetryError=String(traceErr); }
+        }
         try{evidence.lastSnapshot=await snapshot(page);
           await page.screenshot({path:dir+'/'+t.name+'-FAIL.png'});}catch(e){
             evidence.screenshotError=String(e);
