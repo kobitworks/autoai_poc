@@ -541,3 +541,13 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - 静的WCAGコントラスト計算で白字/#8b2030が約8.95:1、黄色枠/#8b2030が約7.80:1。これだけを根拠に実画面・実機の可読性PASSとは断定しない。
 - 最新のゲーム専用[GitHub Actions run38304048826](https://github.com/kobitworks/autoai_poc/actions/runs/38304048826)は本記録時点でcontract=SUCCESS、export-web=実行中、browser-quality/新警告PNG/自然入力4 viewportの最終結果は**未判定**。前のrun38303972268は新QA push時にconcurrencyでcancelledされており、そのPASSを流用しない。新runのresult.json＋48PNGの実体読戻し・4端末画面での警告差分目視・NIGHT3→ACE6、SOUND/RETRY/BEST成功確認が次回再開点。
 - 10軸独立の証拠限定暫定品質=**76/100（据置）**。目標80点未達、一般公開品質未認定。実機スピーカー/イヤホン音量・FPS/発熱・初見30秒理解・誤タップ率・実機文字可読性は**Human Gate未確認**。main変更、有料契約、本番公開拡大なし、他タスク着手なし。完了条件を満たすまでGAME-076=ToDoで次回継続。
+
+
+## 2026-10-13 05:42 JST / AUTOAI-GAME076-20261013-0535 — 警告3秒の配送先ラベル短縮と新CI検証
+
+- Runner v1.38.0・P021 rule v1.2.0をFresh-read。Slack新規明示@autoai指示なし、09時前につき日次全体監視対象外。最新実行P021の次P005〜P018・P020を循環確認し、実行可能な別タスクなし。依存GAME-075=Done、GAME-076=ToDo、他Doingなしを確認して今回の実タスク1件をDoingで排他取得。
+- 直前の未確定[run 38304048826](https://github.com/kobitworks/autoai_poc/actions/runs/38304048826)をFresh-readし、contract/export-web/browser-qualityの3ジョブすべてSUCCESS。[artifact 11772195943](https://github.com/kobitworks/autoai_poc/actions/runs/38304048826/artifacts/11772195943) ZIPを実体展開、48PNG + results.json を確認。Phone縦390×844／横844×390、Tablet縦768×1024／横1024×768の自然タップ・クリック実入力で全4/4 PASS、NIGHT3→ACE6件、SOUND ON/OFF、RETRY、BEST保存と再読み込み復元4/4。QA成功コマンド不使用・状態直書きなし。
+- 4 viewport各cargo-warning-3s.pngを独立目視。全4枚に実経過残り約2.3〜2.9秒の赤色・黄色枠の「03s LEFT! HURRY」警告表示、TAP NOW操作帯との明白な重なりなし。ただしTablet Landscape (1024×768) では配送先フル表記が「SCARLET / SQ…」へ末尾省略されることを検出。実機可読性まで合格したわけではない。
+- GitHub developの p021-game/sources/orbit-switch-courier-godot/Main.gd で情報欄幅400 UI px未満のとき配送先表示をフル色名＋記号から短い記号名（SQUARE/TRIANGLE/CIRCLE）へ自動切替。残秒先頭＋HURRYと配送先記号を同時に残す最小改修。配達秒数・ゲーム判定・得点・入力・保存は無変更。[code commit 346145cf](https://github.com/kobitworks/autoai_poc/commit/346145cf2ce3b90ba9cbf754791965df05683b0c) / blob ad3e5f483859a35ab5f0bdfc2d97eb7a20f02a09 をread-back一致。
+- QAソースに狭幅用HUB_SHORT/しきい値の静的契約を追加。[QA commit f29aaf35](https://github.com/kobitworks/autoai_poc/commit/f29aaf35ec2445fc79e490e61c21114985aab342) / blob 3285ce9ca4014bd600da387a4b32010b5b2a547f をread-back一致。[新run 38305861101](https://github.com/kobitworks/autoai_poc/actions/runs/38305861101)のcontract=SUCCESS、export-web・browser-qualityは現時点で未確定。新コードの4 viewport実画像や80点達成は未認定。
+- 品質は証跡限定の独立10軸暫定76/100据置、公開品質80点未達。実機音声・イヤホン、FPS/発熱、初見30秒、誤タップ、物理文字可読性はHuman Gate未確認。main変更・課金・本番範囲拡大・別タスク実行なし。再開点は新CI全3ジョブとartifact 4 viewport warning PNGを実体確認し、改修後の配送先短縮効果を画像で再評価する。
