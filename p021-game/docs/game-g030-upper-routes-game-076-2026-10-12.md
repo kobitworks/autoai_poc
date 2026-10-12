@@ -245,3 +245,22 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - `audio.soundOff=true` / `audio.soundOn=true` の各4件、結果 `best`・再起動 `restoredBest`・localStorage保存 `localStorageBest` の全4件一致をJSONで確認。再挑戦処理はQAのPASS判定に含む。実音声のスピーカー出力・音質は未確認。
 - PNGの **Phone Landscape intro / route-ace、Tablet Landscape intro** を目視。新2行説明「光る交差点でTAP」「同じ印でTAP・配達」は表示領域内で省略記号なく読め、右カラムとの重なりはなし。NEXT ACTIONおよびROUTE MILESTONES見出しも表示あり。一方、初見用オーバーレイの淡い補助文字・SOUNDボタンなどの視認性には引き続き課題がある。今回は旧コミットの全画面ZIPとの画像差分比較・実機での読みやすさは行っていない。
 - **独立10軸は暫定76/100を維持**。今回の実操作4/4 PASSのみでは初見30秒成功率・端末音声/FPS・将来の間欠的timeoutの安定性が解決したとは扱えない。80点以上の一般公開品質は未認定。次回は同一コードでの別CI試行/Tablet Portrait単発失敗比較、全4画面の文字領域監査と10軸再採点、Human Gateを実施する。GAME-076は未完了 **ToDo継続**、今回ほかの実タスクへは着手しない。
+
+
+## 2026-10-12 21:43 JST / AutoAI 20261012-2130-AUTOAI-GAME076 — 同一コード再現性・UI改修・CI読戻し（今回の1件）
+
+- 今回の実タスクは **P021 GAME-076の1件のみ**。管理正本で先行GAME-075=Done、GAME-076=ToDo、他DoingなしをFresh-readした上で排他Doingを取得。GitHub develop限定で継続し、main・課金・本番公開範囲変更なし。
+- 前回コード `5b1d944ebc9661688c9d31367a57c6a62b46eb5b` の [Actions run 38247148806](https://github.com/kobitworks/autoai_poc/actions/runs/38247148806) に対してbrowser-qualityを同一コード再実行。初回attempt1と再実行attempt2（job 114811927243）はいずれもcontract/export-web/browser-quality全success、実入力4 viewport 4/4 PASS。証跡ZIPは初回artifact 11746208642（results.json SHA256 `9c8d49dea6d9b20c125fb84c480c33443aa5061ab21b2509dcdbee1c67d66be1`）、再実行artifact 11747167277（SHA256 `71974a429f00bc20793844e22e7394cefc99655e8a5da158cee273b699b30c0`）、それぞれ40 PNG＋JSON。成功コマンドとstate直書きなし。
+- 同一GAME-076改善として [develop commit 590d5de65e4a172027dff558f484528283ff00c2](https://github.com/kobitworks/autoai_poc/commit/590d5de65e4a172027dff558f484528283ff00c2) を実装。変更対象は `p021-game/sources/orbit-switch-courier-godot/Main.gd` **1ファイル・表示だけ9箇所**：初見3行16→18px相当、導入見出し19→21、開始ボタン16→18、Phone横ガイド16→17、HUD項目ラベル11→13・高コントラスト化、SOUND ONだけaccent配色。軌道運動/配送判定/スコア/ゲームstate/QA成功経路は変更なし。新Blob SHA `86bb2f8a349e83680564e989dbf1caa90aefcce0`、全文読戻し一致、GitHub commit diffも1ファイルのみ。
+- **新コードCI** [Actions run 38250054275](https://github.com/kobitworks/autoai_poc/actions/runs/38250054275) : contract/export-web/browser-quality **全3ジョブcompleted/success（attempt1）**。artifact [11746768580](https://github.com/kobitworks/autoai_poc/actions/runs/38250054275/artifacts/11746768580) を実体ZIP取得・解凍し、40PNG＋results.json（SHA256 `4699172378b3bfac420230c63adcc116eeead096bf4d8d6496192a83006a4009`）を独立読戻し。通常タッチ/マウス入力、NIGHT3件→ACE6件の全11操作とSOUND OFF/ON、RETRY、BEST保存・再起動復元が **全4/4 PASS**、`qaCommand=NEVER USED`、`stateOverride=NONE`。
+
+| 端末・方向 | 実入力E2E | ACE配達 | Score | SOUND OFF/ON・RETRY・BEST保存復元 |
+| --- | --- | ---: | ---: | --- |
+| Phone縦 390×844 | PASS | 6 | 1109 | PASS |
+| Phone横 844×390 | PASS | 6 | 1111 | PASS |
+| Tablet縦 768×1024 | PASS | 6 | 1105 | PASS |
+| Tablet横 1024×768 | PASS | 6 | 1107 | PASS |
+
+- Phone横intro/playing/SOUND OFF/SOUND ON、Tablet横introの新旧PNGを独立並列目視。文字サイズ/コントラスト・SOUND ON配色差分を確認、主要要素のクリップ/重なりは代表画面で検出せず。ただし初見画面の日本語補助文はまだ小さめで、実機での可読性や色識別は未検証。
+- P021の証跡限定10軸独立暫定評価は **76/100を維持**（ゲーム性8・操作感8・難度7・UI/UX8・グラフィック7・演出6・サウンド6・コンテンツ変化8・リプレイ9・技術9）。視認性の改善だけで初見30秒体験や実機品質まで加点しない。目標80未達につき一般公開品質・GAME-076完了は未認定。
+- **Human Gate未確認**：実機スピーカー/イヤホンでの音声、FPS/発熱、初見利用者30秒理解/誤タップと実機可読性。次回は同じGAME-076で実際の初見操作レビューの制約を整理し、phone横文字と配色改善・4 viewport画像/CI再現性・10軸再採点を行う。今回は他タスク実行なし、Doing→ToDoに戻し次回継続。
