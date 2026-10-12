@@ -50,6 +50,8 @@ var cue_good := true
 var result_clock := 0.0
 var bridge_clock := 0.0
 var elapsed := 0.0
+# Beginner timing assistance: forgive the first out-of-window tap before any delivery.
+var novice_miss_guard_used := false
 var last_action_angle := -99.0
 # Ignore a browser-emulated second event for the same physical tap/click.
 var last_pointer_down_msec: int = -100000
@@ -149,6 +151,7 @@ func _reset_round(to_intro: bool = true) -> void:
 	time_left = PLAY_TIME
 	cargo_left = CARGO_TIME
 	energy = 3
+	novice_miss_guard_used = false
 	deliveries = 0
 	streak = 0
 	score = 0
@@ -314,7 +317,16 @@ func _attempt_action() -> void:
 	if best_switch >= 0 and best_delta <= SWITCH_WINDOW:
 		_switch_orbit(best_switch)
 	else:
-		_lose_energy("MISS — 乗換/HUBのタイミング外")
+		# GAME-076: One first-30-seconds timing hint for a new player.
+		# Wrong-HUB taps, valid crossings, score, cargo timer and higher routes are unchanged.
+		if not novice_miss_guard_used and deliveries == 0 and PLAY_TIME - time_left <= 30.0:
+			novice_miss_guard_used = true
+			action_text = "GUIDE · WAIT FOR GREEN"
+			feedback_text = "初回ヒント: 緑のTAP NOWが出た時だけタップ"
+			_show_cue("FIRST TAP GUIDE · ENERGY SAVED", true)
+			_update_debug_bridge()
+		else:
+			_lose_energy("MISS — 乗換/HUBのタイミング外")
 
 func _switch_orbit(index: int) -> void:
 	var pair: Array = SWITCH_PAIRS[index]
@@ -958,6 +970,7 @@ func _update_debug_bridge() -> void:
 		"best": best_score,
 		"deliveries": deliveries,
 		"energy": energy,
+		"novice_guard_used": novice_miss_guard_used,
 		"streak": streak,
 		"combo": _combo_multiplier(),
 		"time_left": time_left,
