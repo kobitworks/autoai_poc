@@ -586,7 +586,8 @@ func _draw_playfield() -> void:
 		var cue_w := minf(field_rect.size.x - _ui_px(20.0), _ui_px(360.0))
 		var cue_r := Rect2(field_rect.position.x + (field_rect.size.x - cue_w) * 0.5, field_rect.position.y + _ui_px(12.0), cue_w, _ui_px(39.0))
 		_rounded_box(cue_r, Color("#11463f") if cue_good else Color("#542039"), Color("#72f4d3") if cue_good else Color("#ff91a9"), 10, 1)
-		_draw_center_text(cue_text, cue_r, _font_size(14.0), Color("#ffffff"))
+		# Even an unusually long status cue must fit its visible banner.
+		_draw_center_fit_text(cue_text, cue_r, _font_size(14.0), Color("#ffffff"))
 
 	# Important live actions remain visible on short phone-landscape screens.
 	var prompt := _near_action_prompt()
@@ -638,7 +639,7 @@ func _draw_info_panel() -> void:
 	var pad := _ui_px(16.0)
 	var x := info_rect.position.x + pad
 	var y := info_rect.position.y + _ui_px(22.0)
-	_draw_fit_label("ROUTE %d · %s  /  CARGO" % [_mission_tier() + 1, _mission_name()], Vector2(x, y), _font_size(14.0), Color("#d7f7ff"), info_rect.size.x - pad * 2.0)
+	_draw_fit_label("ROUTE %d · %s  /  CARGO" % [_mission_tier() + 1, _mission_name()], Vector2(x, y), _font_size(14.0), Color("#f5fdff"), info_rect.size.x - pad * 2.0)
 	y += _ui_px(24.0)
 	_draw_label(HUB_NAMES[cargo_target], Vector2(x, y), _font_size(17.0), HUB_COLORS[cargo_target])
 	y += _ui_px(20.0)
@@ -657,7 +658,7 @@ func _draw_info_panel() -> void:
 		var next_goal := 1 if deliveries < 1 else (3 if deliveries < 3 else (6 if deliveries < 6 else 0))
 		var next_route := "RUSH" if deliveries < 1 else ("NIGHT" if deliveries < 3 else ("ACE" if deliveries < 6 else "ACE MASTER"))
 		var progress := "NEXT %s · %d more" % [next_route, maxi(0, next_goal - deliveries)] if next_goal > 0 else "ALL ROUTES UNLOCKED"
-		_draw_fit_label(progress, Vector2(x, y), _font_size(13.0), Color("#8ceec7"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label(progress, Vector2(x, y), _font_size(13.0), Color("#c1ffe9"), info_rect.size.x - pad * 2.0)
 		y += _ui_px(23.0)
 	# GAME-076: Give the actual next legal action a contrast-safe, unclipped home.
 	# Compact portrait layouts retain the single-line fallback rather than drawing outside the card.
