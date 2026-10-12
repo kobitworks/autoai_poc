@@ -46,3 +46,12 @@
 - 修正2 [871686aa](https://github.com/kobitworks/autoai_poc/commit/871686aa9f9025e114ba120df23650647f269a6d): NIGHT HUB0の実入力E2E観測域を1.36..1.52→1.28..1.68radへ変更。拡大後の自然なゲーム側HUB窓内に限定し、実タップと自然配達の成立を必須とする。
 - 再CI [38177790865](https://github.com/kobitworks/autoai_poc/actions/runs/38177790865): contractとexport-web SUCCESS、レスポンシブ4画面スモーク試験SUCCESS、実入力E2Eは実行中（この行の記録時点）。最終4画面・ACE6件・44 PNG+JSON・独立10軸採点は後続結果の確認まで**未検証**。mainマージ/課金/有償利用なし。
 - GAME-075の36画像と前回GAME-076の36画像を実際に展開し、intro、PLAY、RUSH/NIGHT/ACE画面を比較。正しいTAPタイミングの文言と緑の操作リングの改善は確認できるが、スマホ横画面の情報密度と実機表示視認性・実音声/イヤホン/FPS・初見ユーザー実評価には改善/未検証余地が残る。
+
+## 2026-10-12 17:26 JST 継続実行（AutoAI 1件）
+
+- GAME-075=Done / GAME-076=ToDo、他DoingなしをFresh-readし、GAME-076のみDoingとして排他取得。別タスクには着手しない。
+- CI [run 38177790865](https://github.com/kobitworks/autoai_poc/actions/runs/38177790865) を独立再確認。contract / export-web=SUCCESS、browser-quality=FAIL。タブレット縦横のNIGHT HUB0入力待機が18秒タイムアウト。失敗を合格扱いしない。
+- 前回のread-only軌道75ms診断コミット [3e97a830](https://github.com/kobitworks/autoai_poc/commit/3e97a83001cb3fd8a6312b2e9e9fb2a4a362a4ef) を確認。ただしGitHub連携のWorkflow一覧はpull_request由来のrunのみ返すため、同コミット以降のpush由来run ID/証跡は本実行では特定できず、合否不明。
+- 本実行で `qa/orbit-switch-courier-real-input.js` のcrossing / target HUB等の実入力タイミング検出をrAFポーリングから20msタイマーポーリングへ変更。[commit 29815639](https://github.com/kobitworks/autoai_poc/commit/29815639e6209a9a09653c5e94bcace45021ed1b)。ゲームロジック、難易度、成功判定、QA stateは無変更。新Blob SHA `333156d8a5d5ffcf67a73555450801b87ff2fb06` 再読込一致。
+- **静的差分反映のみ。新コミット後の4 viewport実入力E2E、44画像、SOUND/RETRY/BEST、独立10軸80点は未検証・未認定。** 実機音声・FPS・発熱・初見30秒はHuman Gate継続。
+- 再開点: [GitHub Actions](https://github.com/kobitworks/autoai_poc/actions) の最新develop/GAME-G030 browser-quality run ID/URLを取得し `results.json` の `nightTelemetry` と実操作証跡を確認。必要なら原因を特定した最小差分修正後、4/4PASS・80点評価。GAME-076はToDoで継続。mainマージ・課金・本番範囲拡大なし。
