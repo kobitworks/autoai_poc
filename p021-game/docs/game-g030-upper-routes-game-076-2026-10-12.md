@@ -357,3 +357,13 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - **GitHub develop commit:** https://github.com/kobitworks/autoai_poc/commit/3401bfd8624accde5f8833c3af5432ef801353e9 （更新後blob SHA `8969940a0c6214eb5fe231ed9c070a16fad4fd06` をGitHubから独立readbackして一致）。main/有料機能/公開基盤拡張/別タスク変更なし。
 - **追加CI:** コミット後のGitHub Actions https://github.com/kobitworks/autoai_poc/actions/runs/38267716799 は00:06 JST時点でcontract=success、export-web=in_progress、browser-quality=未判定。完成した証跡や新コード4 viewport の実操作結果をまだ確認していないため、新版を4/4 PASSとは記載しない。実機FPS・音声・可読性・初見30秒も未確認。
 - **品質判定:** 暫定76/100を据置き、80点/一般公開品質は未認定。最新CIの3ジョブ結果・artifact 40PNG+results.json、4 viewport自然タップ/クリック・SOUND/RETRY/BEST、狭幅cue文字の収まりと独立10軸の再評価を次回再開点とする。完了条件未達のためDoingを終了時ToDoへ戻す。
+
+
+## 2026-10-13 00:47:36 JST / AUTOAI-GAME076-20261013-0044 — 前回狭幅修正後CIと4画面証跡の独立読戻し
+
+- 今回のAutoAI実作業は **P021 / GAME-076 の1件のみ**。前提 GAME-075=Done、GAME-076=ToDo、他Doingなしを正本確認後にDoing排他取得。直前のdevelop修正コミット `3401bfd8624accde5f8833c3af5432ef801353e9`（長文cueの最低12 CSS px保持と必要時の省略）を対象に、保留だったCIの最終結果と実証跡を新規取得した。main、課金、他タスクは変更しない。
+- [GitHub Actions run 38267716799](https://github.com/kobitworks/autoai_poc/actions/runs/38267716799): contract / export-web / browser-quality **3ジョブすべてsuccess** を今回Fresh-read。browser-qualityジョブログと [artifact 11756165684](https://github.com/kobitworks/autoai_poc/actions/runs/38267716799/artifacts/11756165684) ZIP実体を独立取得。ZIP内は **40 PNG+results.json（41ファイル）**。JSON SHA256=`683688427b2e561e5c2db20359254192ed2ac26f26cebdd0c130307324241a17`。
+- 通常タップ/クリックによる4 viewport実入力E2E **4/4 PASS**。Phone縦(touch)1109点、Phone横(mouse)1111点、Tablet縦(touch)1104点、Tablet横(mouse)1087点。全画面でNIGHT3配達→ACE6配達、SOUND OFF/ON、RETRY、BEST保存/復元がJSONで一致。 `qaCommand=NEVER USED` / `stateOverride=NONE` でゲーム状態を直接操作していない。実端末での音質やFPSとは区別。
+- 旧成功artifact `11754607461` と新artifact `11756165684` の同名画像（4 viewport×intro/ACE/result）を独立比較。Phone縦/横・Tablet横のintro画像はピクセル同一で、境界条件の省略表示が今回の標準シナリオで発火した証拠は**得られていない**。スコア/軌道等の動的表示に差分はあった。代表40PNGを画面別に検査し、Phone横/Tablet横の小さな低コントラスト補助文字は依然として可読性課題。静的コードはGitHub `develop` blob `8969940a0c6214eb5fe231ed9c070a16fad4fd06` と一致。
+- **独立10軸スコアは従前の暫定76/100を据置（目標80点未達）**。本回はCIと証跡の未判定を解消したが、音質・可読性等未実測を加点しない。一般公開品質/完了は未認定。実機スピーカー・イヤホン、FPS/発熱、初見者30秒、実機可読性・誤タップはHuman Gate未確認。
+- **次回の同一タスク継続点:** 長文cueを確実に表示させる安全な検証ケースで省略・最小文字サイズを画像確認し、Phone横/Tablet横の補助文字コントラストを改善、実入力4画面・サウンド切替・保存回帰を再検証し、独立10軸を再採点。人間による実機評価を自動PASS扱いしない。完了条件未達のため今回はGAME-076をToDoへ戻す。
