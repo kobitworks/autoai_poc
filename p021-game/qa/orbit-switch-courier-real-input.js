@@ -15,7 +15,11 @@ function fits(r,w,h) { return r && r.length===4 && r[0]>=-2 && r[1]>=-2 &&
   r[2]>100 && r[3]>70 && r[0]+r[2]<=w+2 && r[1]+r[3]<=h+2; }
 async function snapshot(page) { return page.evaluate(() => window.__P021_ORBIT || null); }
 async function until(page, predicate, stage, waitMs=16000, arg=null) {
-  await page.waitForFunction(predicate,arg,{timeout:waitMs,polling:'raf'})
+  // GAME-076: poll narrow real-input windows on wall time rather than animation
+  // frames. Tablet WASM rendering can delay rAF; this ONLY observes state and
+  // leaves all deliveries/transfers to real Playwright mouse/touch input.
+  const inputWindow = /(?:crossing|target HUB|natural switch|natural delivery)/i.test(stage);
+  await page.waitForFunction(predicate,arg,{timeout:waitMs,polling:inputWindow?20:'raf'})
     .catch(e=>{throw new Error(stage+': '+e.message);});
 }
 async function inputAt(page,t,p) {
