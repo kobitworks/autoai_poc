@@ -583,3 +583,14 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - 独立品質スコア暫定 **76/100据置**（一般公開80点未達）。初見30秒の実人間UX、実機音声/イヤホン、FPS・発熱、可読性・誤タップはHuman Gate未検証。AI変更だけで実機確認完了・80点達成と扱わない。main・有料契約・本番範囲拡大なし。
 - 次回: run38311488593の3ジョブ、結果JSONと最低52 PNG（旧48 PNG＋新novice4 PNGの期待値）を実物確認。4/4の合法NIGHT3→ACE6・SOUND/RETRY/BESTと初回無減点cueを再検証。FAILなら原因特定後に同GAME-076で最小修正し、10軸を証拠付きで再採点。Human Gateは実機ユーザー検証待ち。
 
+
+
+## 2026-10-13 06:51:45 JST / AUTOAI-GAME076-20261013-0643 — 直前CI失敗解析と正規入力観測幅の修正
+
+- 今回の唯一の実タスク: P021 GAME-076。依存GAME-075=Done、他Doingなしを確認し、タスク管理をDoingへ排他取得。Runner v1.38.0/P021 v1.2.0準拠、09:00前の全体監視は実行しない。
+- 前回保留の [run 38311488593](https://github.com/kobitworks/autoai_poc/actions/runs/38311488593) は **contract=SUCCESS、export-web=SUCCESS、browser-quality=FAILURE**。ジョブログと実出力JSONを独立再読込して、phone portrait/landscape・tablet landscapeは実入力NIGHT3→ACE6等をPASS、**tablet portraitのみNIGHT 0→1でENERGY 3→2、4配達止まり**を特定。初回ミスタップ案内は他3画面でPASS、失敗画面では後続試験未到達。失敗もPASSとしていない。
+- 失敗時のread-only nightTelemetryから、tablet portraitでは配送4件目成立後、orbit0の物理角が**4.467rad（残9.51秒）**と**4.370rad（残3.99秒）**で有効切替区間を通過した一方、QAの旧観測条件**4.32..4.44rad**で入力が成立しなかった。配送期限0.09秒経過後にENERGYが3→2、次の4.341radで初めて実タップが成立。入力呼出し観測約210ms。タブレット縦のフレーム/QA pollingによる有効域見逃しが疑われ、因果の全確定と実機評価は未了。
+- Godot Main.gdをFresh-readし、実際の切替定義**中心4.50rad±0.19rad（4.31..4.69rad）**を確認。ゲームルールは変更せず、QA実入力シナリオのNIGHT 0→1だけ観測角度を **4.31..4.47rad** に変更して、有効域前半の観測時間を広げた。タップ/クリックはPlaywrightの物理入力のみ。QA成功コマンド・強制state/score/energy変更はなく、orbit遷移・ENERGY3・配達数等の既存アサートも保持。
+- [develop QA修正commit 345d6057](https://github.com/kobitworks/autoai_poc/commit/345d60574af86054f30533719c42312a5d0d5642) 、Blob SHA **6281211374aa70da5839ee98b3a3b98cbc9ef795**。GitHub側の更新後に同ファイルを独立再取得し、全文一致・SHA一致を検証した。
+- **新commitのActions 3ジョブ、4画面実入力、スクリーンショットの最終結果は現時点で未確認**。修正による解消は未認定。独立10軸品質は暫定**76/100**据置、一般公開80点未達。実機音質/イヤホン・初見30秒・FPS/発熱・タップ可読性はHuman Gate未実施。main・課金・本番範囲拡大なし。
+- 次回はcommit345d6057のdevelop Actions run/最終artifactをFresh-readし、tablet portraitの4配達後切替が正常化し4 viewportすべて合法入力NIGHT3→ACE6/SOUND/RETRY/BEST/novice初回案内PASSとなることを確認。失敗の場合は同ゲームでread-only telemetryから再診断し、証拠付き10軸品質再採点/実機Human Gate判定を行う。GAME-076はDone条件未達としてToDo継続。
