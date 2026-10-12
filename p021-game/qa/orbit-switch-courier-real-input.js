@@ -42,8 +42,16 @@ function physicalRect(r,c,d) {
 async function physicalSwitch(page,t,from,to,lo,hi,label) {
   await until(page,(a)=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
     x.orbit===a.from&&x.angle>=a.lo&&x.angle<=a.hi;},label+' crossing',18000,{from,lo,hi});
+  // Record real Playwright input latency without sampling the game on the critical path.
+  // These are passive wall-clock timestamps, not simulated input or state writes.
+  const timing={label,action:'switch',from,to,observedWallMs:Date.now()};
+  if (!Array.isArray(t.inputTimings)) t.inputTimings=[];
+  t.inputTimings.push(timing);
   await input(page,t);
+  timing.inputFinishedWallMs=Date.now();
+  timing.inputCallMs=timing.inputFinishedWallMs-timing.observedWallMs;
   await until(page,(a)=>{const x=window.__P021_ORBIT;return x&&x.orbit===a.to;},label+' transfer',3500,{to});
+  timing.transferConfirmedWallMs=Date.now();
   const d=await snapshot(page);
   check(d.energy===3&&d.state==='playing',label+' lost energy');
   return {action:'transfer',label,orbit:d.orbit,angle:d.angle,energy:d.energy};
@@ -166,7 +174,9 @@ async function run(){
         // Physical input paths: 0 -> 1 -> HUB1; 1 -> 2 -> HUB2 (NIGHT at 3);
         // 2 -> 1 -> 0 -> HUB0; 0 -> 1 -> HUB1; 1 -> 2 -> HUB2 (ACE at 6).
         evidence.routeMoves=[];
-        evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.35,4.57,'RUSH 0->1'));
+        // Orbit 0 moves forward at 1.12rad/s: select an earlier *valid* 4.50 +/- 0.19 window.
+        // The former 4.35..4.57 band could observe too late for a real tablet tap.
+        evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.32,4.44,'RUSH 0->1'));
         evidence.routeMoves.push(await physicalDeliver(page,t,1,3.46,3.76,2,'RUSH HUB1'));
         evidence.routeMoves.push(await physicalSwitch(page,t,1,2,2.41,2.66,'RUSH 1->2'));
         // GAME-076: passive, bounded telemetry to diagnose missed NIGHT HUB0 on tablets.
@@ -179,7 +189,7 @@ async function run(){
             if (!x || x.state!=='playing') return;
             const trace=window.__P021_NIGHT_TRACE;
             if (!Array.isArray(trace)) return;
-            trace.push({ms:Math.round(performance.now()),orbit:x.orbit,
+            trace.push({ms:Math.round(performance.now()),wallMs:Date.now(),orbit:x.orbit,
               angle:Math.round(x.angle*1000)/1000,cargo:x.cargo_target,
               cargoLeft:Math.round(x.cargo_left*100)/100,
               energy:x.energy,deliveries:x.deliveries});
@@ -201,7 +211,9 @@ async function run(){
         evidence.routeMoves.push(await physicalSwitch(page,t,1,0,4.38,4.68,'NIGHT 1->0'));
         // GAME-076: Use a broad 1.31..1.60 band inside the real HUB0 +/- 0.23 window.
         evidence.routeMoves.push(await physicalDeliver(page,t,0,1.31,1.60,4,'NIGHT HUB0'));
-        evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.35,4.57,'NIGHT 0->1'));
+        // Prefer the leading edge (4.32..4.44) of the physical switch window.
+        // Keep actual touchscreen/mouse input and require an observed orbit transfer.
+        evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.32,4.44,'NIGHT 0->1'));
         evidence.routeMoves.push(await physicalDeliver(page,t,1,3.46,3.76,5,'NIGHT HUB1'));
         evidence.routeMoves.push(await physicalSwitch(page,t,1,2,2.41,2.66,'NIGHT 1->2'));
         evidence.routeMoves.push(await physicalDeliver(page,t,2,5.02,5.29,6,'ACE HUB2'));
@@ -276,6 +288,7 @@ async function run(){
             evidence.screenshotError=String(e);
           }
       }finally{
+        evidence.actionTimings=t.inputTimings||[];
         results.push(evidence);
         await context.close();
       }
