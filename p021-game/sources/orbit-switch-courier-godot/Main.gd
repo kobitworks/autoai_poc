@@ -257,6 +257,28 @@ func _visible_cue() -> String:
 	# Never touches physics, route, score or player progress.
 	return QA_LONG_CUE if qa_cue_stress else cue_text
 
+# GAME-076: preserve result, route and next action in a narrow two-line cue.
+# The display summary never changes real physics, progress, or input windows.
+func _cue_priority_lines() -> PackedStringArray:
+	var original := _visible_cue()
+	var chunks := original.split(" / ", false)
+	if chunks.size() < 3:
+		return PackedStringArray([original, ""])
+	var outcome := str(chunks[0]).strip_edges().get_slice("・", 0)
+	var route := ""
+	var next_action := ""
+	for chunk in chunks:
+		var phrase := str(chunk).strip_edges()
+		if phrase.begins_with("ROUTE "):
+			route = phrase.substr(6).strip_edges()
+		elif phrase.begins_with("NEXT ACTION:"):
+			# Show when TAP NOW lights up, not an unconditional tap instruction.
+			next_action = "NEXT · TAP NOW表示で目標HUBへ" if phrase.contains("TAP NOW") else phrase.substr(12).strip_edges()
+	var top_line := outcome + (" · ROUTE " + route if not route.is_empty() else "")
+	var bottom_line := next_action if not next_action.is_empty() else str(chunks[1]).strip_edges()
+	return PackedStringArray([top_line, bottom_line])
+
+
 func _show_cue(message: String, positive: bool = true) -> void:
 	cue_text = message
 	cue_good = positive
@@ -594,8 +616,16 @@ func _draw_playfield() -> void:
 		var cue_w := minf(field_rect.size.x - _ui_px(20.0), _ui_px(360.0))
 		var cue_r := Rect2(field_rect.position.x + (field_rect.size.x - cue_w) * 0.5, field_rect.position.y + _ui_px(12.0), cue_w, _ui_px(39.0))
 		_rounded_box(cue_r, Color("#11463f") if cue_good else Color("#542039"), Color("#72f4d3") if cue_good else Color("#ff91a9"), 10, 1)
-		# Even an unusually long status cue must fit its visible banner.
-		_draw_center_fit_text(_visible_cue(), cue_r, _font_size(14.0), Color("#ffffff"))
+		# Split structured long feedback into outcome/route and next safe action.
+		# The normal one-line feedback remains unchanged.
+		if _visible_cue().contains(" / "):
+			var key_lines := _cue_priority_lines()
+			var top_cue_r := Rect2(cue_r.position.x, cue_r.position.y + _ui_px(1.0), cue_r.size.x, _ui_px(19.0))
+			var bottom_cue_r := Rect2(cue_r.position.x, cue_r.position.y + _ui_px(19.0), cue_r.size.x, _ui_px(19.0))
+			_draw_center_fit_text(key_lines[0], top_cue_r, _font_size(13.0), Color("#ffffff"))
+			_draw_center_fit_text(key_lines[1], bottom_cue_r, _font_size(12.0), Color("#fff5d9"))
+		else:
+			_draw_center_fit_text(_visible_cue(), cue_r, _font_size(14.0), Color("#ffffff"))
 
 	# Important live actions remain visible on short phone-landscape screens.
 	var prompt := _near_action_prompt()
@@ -727,7 +757,9 @@ func _draw_info_panel() -> void:
 		# Keep a clear gap from the route milestone tiles above and help lines below.
 		var feedback_rect := Rect2(x, info_rect.end.y - _ui_px(94.0), info_rect.size.x - pad * 2.0, _ui_px(24.0))
 		_rounded_box(feedback_rect, Color("#125f4d") if cue_good else Color("#712f4b"), Color("#94f8d9") if cue_good else Color("#ffbbd0"), 8, 1)
-		_draw_center_fit_text(_visible_cue(), feedback_rect, _font_size(13.0), Color("#ffffff"))
+		# The tablet side echo carries the short outcome/route summary only.
+		var side_cue := _cue_priority_lines()[0] if _visible_cue().contains(" / ") else _visible_cue()
+		_draw_center_fit_text(side_cue, feedback_rect, _font_size(13.0), Color("#ffffff"))
 	# GAME-076: Give the two bottom instructions a stronger contrast-safe
 	# background and 16 CSS-pixel labels on tablet-sized information panels.
 	# Keep a 3px gap after the optional feedback cue above and a 6px bottom inset.
