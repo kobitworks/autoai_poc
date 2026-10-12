@@ -443,3 +443,14 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - 初回長文stress実装の[Actions run 38287092113](https://github.com/kobitworks/autoai_poc/actions/runs/38287092113) は contract・export-webがsuccess、レスポンシブsmokeも4/4 PASSだが、自然入力E2Eは**FAIL**。テスト開始前の静的品質契約が旧`_draw_center_fit_text(cue_text, cue_r`を検索していたのに、QA専用描画helper導入により実コードが`_draw_center_fit_text(_visible_cue(), cue_r`へ変わったことが原因。ゲームの自然配達テスト自体は未実行であり、4画面stress画像も未生成。FAILをPASSと見なさない。
 - コントラスト閾値・cueの最低12px・ellipsis判定・実入力テストを維持したまま、静的検査文字列1箇所のみを実際の表示関数へ修正。QAソース[commit 57bd8caaf593282fa8c40b0ae5c7ff29dd9f85ce](https://github.com/kobitworks/autoai_poc/commit/57bd8caaf593282fa8c40b0ae5c7ff29dd9f85ce)。Godot本体、物理・配達判定・スコア・保存・強制成功操作は変更なし。
 - 再試行[Actions run 38287586256](https://github.com/kobitworks/autoai_poc/actions/runs/38287586256) は作成済み、**未確定**。次回は3ジョブ完了・通常実入力4/4・長文cue4画像とresults.jsonをFresh-readし、目視レビュー・10軸採点へ。80点未達、Human Gateを維持、GAME-076はToDoで継続。
+
+
+## 2026-10-13 03:11:40 JST / AUTOAI-GAME076-20261013-0304 — 長文cueのCI再実行確定・4画面PNG独立レビュー
+
+- 今回のAutoAI実行はP021/GAME-076の1件のみ。GAME-075=Done、GAME-076=ToDo、他Doingなしを正本で確認し、GAME-076をDoingとして排他取得した。Runner v1.38.0 / P021 rule v1.2.0、develop限定。
+- 前回未確定だった[GitHub Actions run 38287586256](https://github.com/kobitworks/autoai_poc/actions/runs/38287586256)を最終readback。contract / export-web / browser-qualityの3ジョブすべてcompleted/success。修正commit [57bd8caaf](https://github.com/kobitworks/autoai_poc/commit/57bd8caaf593282fa8c40b0ae5c7ff29dd9f85ce)後のCI結果であり、失敗した初回run 38287092113と混同しない。
+- [artifact 11763717834](https://github.com/kobitworks/autoai_poc/actions/runs/38287586256/artifacts/11763717834)のZIP実体を展開。合計45ファイル=44 PNG + results.json、results.jsonのSHA256は `b8e05c3869b8676caf3b4448adc52bee1c5b3a64658c828d3c36aaaa0aa0edb7`。4 viewportすべてresults.status=PASS、自然入力でNIGHT3配達→ACE6配達・SOUND OFF/ON・RETRY・BEST保存/復元。qaCommand=`NEVER USED`、stateOverride=`NONE`。
+- 追加の長文cue専用PNG 4枚（phone-portrait 390x844 / phone-landscape 844x390 / tablet-portrait 768x1024 / tablet-landscape 1024x768）をZIPから抽出し、実画像を独立目視。全4画面で表示メッセージとHUD/ボタンの明瞭な重なり・領域外への大きなはみ出しは見られない。cueStressは各画面でCAPTURED、自然操作後のplayingで deliveries=0 / score=0 / readOnlyDisplay=true をJSONで確認。
+- **残課題:** 長文の日本語/英語混在cueは4画面とも末尾が省略記号で切られ、重要情報が表示上欠落する可能性がある。特にphone-portraitで表示文字が小さい。静的visualContractはPASS_STATIC（Phone横17px/コントラスト12.65・11.85:1、Tablet下部16px/13.84・12.70:1）だが、cue本文・実機の物理的可読性までは合格と判定しない。次回は長文の情報保持/2行表示等の設計案、画面内占有領域と視認性を比較し、再度4画面E2E・独立採点する。
+- 証拠限定の10軸暫定品質スコアは**76/100据置**。80点・一般公開品質を未認定とする。実機スピーカー/イヤホンの可聴・FPS/発熱・初見30秒での自然操作・誤タップ・実機文字サイズはHuman Gateとして未検証を明記し、推測でPASSにしない。
+- 本回は新規ゲーム本体コード変更なし。監査ドキュメントを更新するのみ。mainマージ・有償利用・本番化・別タスク処理なし。Done条件未達のため今回終了時にGAME-076をDoing→ToDoへ戻す。
