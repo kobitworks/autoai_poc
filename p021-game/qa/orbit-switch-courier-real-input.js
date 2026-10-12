@@ -362,6 +362,45 @@ async function run(){
           deliveries:d.deliveries,score:d.score,readOnlyDisplay:true,
           screenshot:t.name+'-cue-stress.png',
           physicalTextLegibility:'REQUIRES INDEPENDENT VISUAL REVIEW'};
+        // GAME-076: capture the *actual* last-3-seconds warning on the
+        // ordinary game UI, after a physical START tap and real elapsed time.
+        // This intentionally does not change the clock, score, state, physics,
+        // success conditions, or any game's internal values.
+        await page.goto(url,{waitUntil:'domcontentloaded',timeout:120000});
+        await until(page,()=>window.__P021_ORBIT && window.__P021_ORBIT.ready,
+          'normal deadline view ready',120000);
+        d=await snapshot(page);
+        check(d.state==='intro' && d.cargo_left>3,
+          'Normal countdown scenario did not begin from intro');
+        const deadlineCanvas=await page.locator('#canvas').boundingBox();
+        check(deadlineCanvas,'Normal countdown canvas unavailable');
+        const deadlinePoint={
+          x:deadlineCanvas.x+(d.field[0]+d.field[2]/2)*deadlineCanvas.width/d.viewport_w,
+          y:deadlineCanvas.y+(d.field[1]+d.field[3]/2)*deadlineCanvas.height/d.viewport_h
+        };
+        await inputAt(page,t,deadlinePoint);
+        await until(page,()=>{const x=window.__P021_ORBIT;return x&&
+          x.state==='playing' && x.cargo_left>3 && x.deliveries===0;},
+          'normal countdown after genuine start');
+        await page.waitForFunction(()=>{const x=window.__P021_ORBIT;return x&&
+          x.state==='playing' && x.cargo_left<=2.95 && x.cargo_left>=1.5 &&
+          x.energy===3 && x.deliveries===0;},
+          null,{timeout:20000,polling:50});
+        const warningBefore=await snapshot(page);
+        const warningFile=t.name+'-cargo-warning-3s.png';
+        await page.screenshot({path:dir+'/'+warningFile});
+        const warningAfter=await snapshot(page);
+        check(warningBefore.cargo_left>0 && warningBefore.cargo_left<=3.0 &&
+          warningAfter.state==='playing' && warningAfter.cargo_left>0 &&
+          warningAfter.deliveries===0 && warningAfter.energy===3,
+          'Last-three-seconds image did not remain inside live warning window');
+        evidence.cargoWarning={result:'CAPTURED_UNREVIEWED',
+          method:'physical START, natural elapsed game time, screenshot while cargo_left<=3',
+          secondsBefore:warningBefore.cargo_left,
+          secondsAfter:warningAfter.cargo_left,deliveries:warningAfter.deliveries,
+          energy:warningAfter.energy,screenshot:warningFile,
+          visualWarningPass:'NOT VERIFIED - inspect actual PNG independently',
+          physicalLegibility:'HUMAN GATE'};
         check(errors.length===0,'Browser console/runtime errors: '+errors.join(' | '));
         // Stop the diagnostic observer before releasing this browser context.
         await page.evaluate(() => {
@@ -393,7 +432,7 @@ async function run(){
   }finally{await browser.close();}
   const output={task:'GAME-076',game:'GAME-G030',visualContract,
     method:'real touch/mouse STARTER/RUSH/NIGHT/ACE natural delivery and BEST persistence; read-only QA telemetry; no QA command/state override',
-    screenshotStates:['intro','playing','route-rush','route-ace','miss-feedback','result','retry','sound-off','sound-on','replay','cue-stress'],
+    screenshotStates:['intro','playing','route-rush','route-ace','miss-feedback','result','retry','sound-off','sound-on','replay','cue-stress','cargo-warning-3s'],
     physicalOutput:'NOT VERIFIED – must check actual device audio and first-time user experience',
     independentQualityScore:'NOT ASSESSED (manual visual/audio/human checks separate)',viewports:results};
   fs.writeFileSync(dir+'/results.json',JSON.stringify(output,null,2));
