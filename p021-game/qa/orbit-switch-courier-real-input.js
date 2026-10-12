@@ -53,7 +53,7 @@ function verifyGuideContrast() {
   }
   check(source.includes('var minimum_size := _font_size(12.0)') &&
     source.includes('while shown.length() > 1') &&
-    source.includes('_draw_center_fit_text(cue_text, cue_r'),
+    source.includes('_draw_center_fit_text(_visible_cue(), cue_r'),
     'Cue min-size / ellipsis / banner render contract missing');
   return {result:'PASS_STATIC',labels:results,minimumContrast:7,
     longCueBoundary:'SOURCE_CONTRACT_ONLY: special long-cue screenshot not verified',
