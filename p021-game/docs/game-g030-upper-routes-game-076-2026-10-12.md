@@ -408,3 +408,14 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - 新証跡のTablet横playing/ACEおよびPhone横playing画面を独立目視。改修した下部ガイド帯の描画と上下cue非重複を確認。ただし小さな補助文字の視認性は依然改善余地があり、全40枚の視覚精査完了とはしない。長文cueを強制する専用stress screenshotは未実施。
 - 独立10軸評価は証拠限定で**76/100据置**（ゲーム性8、操作8、難度7、UI/UX8、描画7、演出6、音声6、コンテンツ変化8、リプレイ9、技術9）。CI PASSだけで80点や一般公開品質を認定しない。実機音声/イヤホン、FPS/発熱、初見30秒理解、実機可読性/誤タップはHuman Gateのまま未検証。
 - 次回同GAME-076で長文cue専用stress screenshot、Phone/Tablet横の文字視認性と演出の再改善、4画面実入力E2E、独立10軸再採点を行う。ユーザーは実機で音質・FPS/発熱・初見操作・文字サイズを確認。Done条件未達のため終了時Doing→ToDoへ戻す。main変更・課金・本番変更・別タスク着手なし。
+
+
+## 2026-10-13 02:31 JST / AUTOAI-GAME076-20261013-0219 — モバイル操作ガイドの定量コントラスト回帰検査
+
+- **今回の自動実行対象はP021/GAME-076の1件のみ。** GAME-075=Done、GAME-076=ToDo、他Doingなしを正本再取得してからDoing排他取得。共通Runner v1.38.0 / P021 rule v1.2.0、develop限定、mainマージ・課金・別タスクなし。
+- 今回の残課題のうち、スマホ横・タブレット案内文字の**静的可読性を再現可能なCI品質契約**へ変換。実ゲームのGodotソース `Main.gd` をQA側で毎回読み、Phone横2行ガイドとTablet下部2行ガイドを対象に、最低フォント16 CSS px・前景/背景コントラスト比7:1以上を検査。最低値未達・要素欠落・色設定変更時はCIをFAILにする。長文cueの12px下限と幅超過時ellipsis処理がソースに存在することも静的検査するが、**専用stress screenshot実証ではない**。
+- 監査計算値（WCAG相対輝度）: Phone横ガイド #ffffff / #16364a = **12.65:1**、#fff8d9 / #16364a = **11.85:1**、フォント17px。Tablet下部 #ffffff / #142f43 = **13.84:1**、#fff6c9 / #142f43 = **12.70:1**、フォント16px。4組とも契約7:1以上。これはソース上の文字色/背景色であり、実機表示や表示領域全体の保証ではない。
+- GitHub develop QA専用コミット [a9b9e9db12e2123cb70928690188a9477ec73a86](https://github.com/kobitworks/autoai_poc/commit/a9b9e9db12e2123cb70928690188a9477ec73a86)、変更ファイル `p021-game/qa/orbit-switch-courier-real-input.js` のみ。Blob SHA `ecff2177745a44625204119bc954288892dc2c33`、変更後全文GitHub再取得一致。Godotゲーム・物理判定・得点・セーブ・成功コマンド・QA state overrideは無変更。
+- [Actions run 38284393464](https://github.com/kobitworks/autoai_poc/actions/runs/38284393464): contract=success、export-web=success、browser-qualityは本メモ記録時点で実行中。**新QAの4画面実入力・40PNG・静的契約のCI結果はまだ確定させない**。
+- 前回の実証評価は10軸暫定**76/100**、一般公開目標80点未達。本変更だけで加点しない。実機音質・音量、FPS・発熱、初見30秒、実機の文字可読性/誤タップ、および長文cue専用stress screenshotは未検証のHuman Gate/追加検証項目として維持。
+- 次回再開点は今回runのbrowser-qualityとresults.json内visualContractの読戻し、4 viewport自然入力のNIGHT3→ACE6・SOUND/RETRY/BEST確認、長文cueストレス画像・10軸再採点。未達の場合はGAME-076をToDoで継続する。
