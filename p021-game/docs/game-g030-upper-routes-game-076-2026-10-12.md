@@ -145,3 +145,19 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 4. 実機の音質/FPS/発熱/初見ユーザー30秒理解度はHuman Gateとして未確認維持。mainマージ、契約・課金・一般公開範囲拡大なし。
 
 結論: **再現性検証は2回連続全PASSへ前進したが、品質80点未達のためGAME-076はToDo継続**。
+
+
+## 2026-10-12 19:22 JST / AutoAI実行 20261012-191933-AUTOAI — 初見ガイド・行動表示の視認性改修
+
+- 正本にて GAME-075=Done・GAME-076=ToDo・他Doingなしを確認し、今回の実行タスク **GAME-076の1件のみ** をDoingで排他取得。既存の2連続CI実入力4/4成功と75/100点の独立暫定品質評価を基準とした。
+- `p021-game/sources/orbit-switch-courier-godot/Main.gd` だけをGitHub **develop** に修正反映。コミット: [0334a3a](https://github.com/kobitworks/autoai_poc/commit/0334a3a4395359ee974de685941f207141da1fe7)、blob SHA `5458e9f7bc7a3f7d3d032532a65478f359431a1c`（connector独立read-backで内容一致）。main、課金、有償サービス、本番化の変更なし。
+- 初見3行を短い手順へ変更し、表示希望サイズを13→16 CSS px相当に拡大。描画可能幅を超える場合は12pxまで自動調整する `_draw_center_fit_text` を導入した。
+- ゲーム盤面下の操作案内を36px高さの高コントラスト帯にし、実際に操作可能な `TAP NOW` の瞬間だけ緑色表示・17px優先文字で明示。既存のゲーム操作可能判定 `_near_action_prompt` に依存し、成功判定/コマンドや位置状態は改変していない。
+- 右情報欄では実操作可能時の `TAP NOW` を優先表示し、広い横画面の説明を簡潔化、文字色/サイズ(13→14px)を改善。特に横画面での初見案内・次操作認知負荷を対象にした。
+- GitHub commit diffは `Main.gd` **1ファイルのみ**であることを独立確認。Web版CIは新コミット [run 38235947964](https://github.com/kobitworks/autoai_poc/actions/runs/38235947964) に自動起動、`contract` はsuccess、`export-web` は実行中（19:22 JST確認時点）。新コードのGodot import/export、4 viewport browser-quality 実入力E2E、スクリーンショット比較、10軸再採点は**未確認**であり、以前の別コミットのPASSを新コードのPASSと混同しない。
+- 実機スピーカー/イヤホン・初見ユーザー30秒操作・FPS・発熱は Human Gate に残す。公開品質80/100には**未到達/未認定**。タスクは未完了のため**ToDoへ戻して次回継続**とし、作業を他Taskへ切り替えない。
+
+### 再開点
+1. 上記新コミットのrun 38235947964を最終読戻しし、contract/export-web/browser-quality各ジョブを判定。失敗時は失敗ログを確認し `GAME-076` 内で修正する。
+2. 4 viewportの実際のタップ/クリックでNIGHT3件→ACE6件到達、SOUND ON/OFF・RETRY・BEST保存を確認。QAコマンドやゲーム状態直接書換で合格を偽装しない。
+3. 画像（スマホ縦横、タブレット縦横の初見・通常・成功・結果等）を独立比較し10項目の品質を再評価する。80点未満なら同タスク改善を継続し、実機人間確認Gateは未検証扱いのまま維持する。
