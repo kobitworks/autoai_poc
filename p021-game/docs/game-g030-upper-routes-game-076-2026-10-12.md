@@ -367,3 +367,13 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - 旧成功artifact `11754607461` と新artifact `11756165684` の同名画像（4 viewport×intro/ACE/result）を独立比較。Phone縦/横・Tablet横のintro画像はピクセル同一で、境界条件の省略表示が今回の標準シナリオで発火した証拠は**得られていない**。スコア/軌道等の動的表示に差分はあった。代表40PNGを画面別に検査し、Phone横/Tablet横の小さな低コントラスト補助文字は依然として可読性課題。静的コードはGitHub `develop` blob `8969940a0c6214eb5fe231ed9c070a16fad4fd06` と一致。
 - **独立10軸スコアは従前の暫定76/100を据置（目標80点未達）**。本回はCIと証跡の未判定を解消したが、音質・可読性等未実測を加点しない。一般公開品質/完了は未認定。実機スピーカー・イヤホン、FPS/発熱、初見者30秒、実機可読性・誤タップはHuman Gate未確認。
 - **次回の同一タスク継続点:** 長文cueを確実に表示させる安全な検証ケースで省略・最小文字サイズを画像確認し、Phone横/Tablet横の補助文字コントラストを改善、実入力4画面・サウンド切替・保存回帰を再検証し、独立10軸を再採点。人間による実機評価を自動PASS扱いしない。完了条件未達のため今回はGAME-076をToDoへ戻す。
+
+
+## 2026-10-13 01:08:19 JST / AUTOAI-GAME076-20261013-0056 — 狭幅cue収まり・ルート表示コントラスト改善
+
+- **処理対象はP021/GAME-076の1件のみ。** 共通Runner v1.38.0、P021ルールv1.2.0と正本SheetをFresh-read。GAME-075=Done、GAME-076=ToDo、他Doingなしを確認し、今回の実行時のみDoing排他取得した。Slackで新規@autoai指示なし。巡回による1件選定。
+- 前回監査の残課題（Phone横/Tablet横の補助文字の淡さ、長文cue描画境界）に対し、Godot `p021-game/sources/orbit-switch-courier-godot/Main.gd` の**表示のみ3箇所**を修正。(1)盤面上の成功/失敗cueを既存の最低12 CSS pxと長文時末尾省略を持つ `_draw_center_fit_text` 経由で描画、(2)右情報パネルのROUTEヘッダーを`#d7f7ff`→`#f5fdff`、(3)NEXT ROUTE進捗を`#8ceec7`→`#c1ffe9`に変更。正規入力/配送/得点/セーブ/ゲーム状態/テスト用成功経路は改変していない。
+- GitHub developコードcommit: https://github.com/kobitworks/autoai_poc/commit/362a4ca91d0139e1e8fb0439a7133e46dd57b373 。新blob `9890bbacf6cf41e8f4e36de9c405cfa831c9b36d` をGitHubから再取得し3変更を照合した。mainへのマージ、別タスク、有償サービス、本番化なし。
+- 新コードGitHub Actions: https://github.com/kobitworks/autoai_poc/actions/runs/38275077863 。2026-10-13 01:08:19 JSTの初回確認では`contract=success`、`export-web=in_progress`、`browser-quality=未判定`。CI完了結果・4viewport実入力・画像証跡の最終判定前に新コードのPASSを主張しない。長文cue省略の特殊条件については専用stress screenshot未検証のまま。
+- 独立10軸品質は**暫定76/100を維持**（ゲーム性8、操作8、難度7、UI/UX8、描画7、演出6、音6、変化8、リプレイ9、技術9）。80点/一般公開品質未認定。実機スピーカー/イヤホン、FPS/発熱、初見30秒、Phone/Tablet実機可読性/誤タップはHuman Gate未確認。UI修正だけで証拠なく加点しない。
+- 次回継続点: 上記CIの3ジョブと40 PNG+results.jsonを確認し、自然操作でNIGHT3→ACE6、SOUND/RETRY/BESTが4/4PASSか照合。長文cue stress screenshot、4画面比較、独立10軸再採点、未達なら同じGAME-076継続。未完了のため終了時Doing→ToDoへ戻す。
