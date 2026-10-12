@@ -264,3 +264,16 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - Phone横intro/playing/SOUND OFF/SOUND ON、Tablet横introの新旧PNGを独立並列目視。文字サイズ/コントラスト・SOUND ON配色差分を確認、主要要素のクリップ/重なりは代表画面で検出せず。ただし初見画面の日本語補助文はまだ小さめで、実機での可読性や色識別は未検証。
 - P021の証跡限定10軸独立暫定評価は **76/100を維持**（ゲーム性8・操作感8・難度7・UI/UX8・グラフィック7・演出6・サウンド6・コンテンツ変化8・リプレイ9・技術9）。視認性の改善だけで初見30秒体験や実機品質まで加点しない。目標80未達につき一般公開品質・GAME-076完了は未認定。
 - **Human Gate未確認**：実機スピーカー/イヤホンでの音声、FPS/発熱、初見利用者30秒理解/誤タップと実機可読性。次回は同じGAME-076で実際の初見操作レビューの制約を整理し、phone横文字と配色改善・4 viewport画像/CI再現性・10軸再採点を行う。今回は他タスク実行なし、Doing→ToDoに戻し次回継続。
+
+
+## 2026-10-12 22:05:57 JST / AutoAI 20261012-2158-AUTOAI-GAME076 — 短画面レイアウト改善と新コードCI実操作確認
+
+- **今回の実作業はGAME-076の1件のみ**。GAME-075=Done、GAME-076=ToDo、他Doingなしを確認し、Doingを排他取得。改修はGitHub **developのみ**。mainマージ、有料サービス利用、外部公開範囲変更なし。
+- Main.gdの **導入／結果オーバーレイ2関数の表示配置のみ**を修正。小さいランドスケープ画面で、導入の3行目がSTARTボタンへ接近し、結果の配達/BEST行がRETRYボタンに接近する可変高さ問題を、short_panel分岐・段落間隔のclamp・表示要素の高さ/座標を調整して緩和。移動、配達、難度、得点、ゲーム入力、QA成功コマンドを変更しない。
+- GitHub develop commit [32241f927c733609db0ec9db2a6244951f65ebe3](https://github.com/kobitworks/autoai_poc/commit/32241f927c733609db0ec9db2a6244951f65ebe3)、更新blob SHA `ebb59e8693b86f9d1f29bb9d7d6cb71321b84416`。保存直後の同ファイルを再取得して全文一致。
+- **静的ジオメトリ検証**：UIスケール1.0/1.5/2.5、描画域高さ190/200/234/260/320相当を試算。導入第3行とボタンの計算上の空きは最小4 CSS px、結果の詳細行とボタンの最小空きも4 CSS px。実機ピクセルの可読性保証ではない。
+- **新コードGitHub Actions [run 38252571037](https://github.com/kobitworks/autoai_poc/actions/runs/38252571037)**：contract、export-web、browser-quality **全3ジョブcompleted/success（attempt1）**。
+- **独立証跡**：[artifact 11749057190](https://github.com/kobitworks/autoai_poc/actions/runs/38252571037/artifacts/11749057190) をZIP実体で読戻し。40 PNG + results.json（SHA-256 `015f642b80ca23dbcab4669e8bd0cfd06cc2665859416348ce00fcd5d11e0b29`）。旧artifact 11746768580のPhone Landscape intro/result画像と新画像を目視比較し、INTROの第3行とSTARTボタンが分離し、RESULT詳細/BEST行とRETRYの空きも確保されたことを確認。Phone Landscapeの新画像に主要要素の明確な重なりは見つからなかった。
+- **4 viewport自然操作E2Eは4/4 PASS**。Phone Portrait 390x844 = touch / 6配達 / score1108、Phone Landscape 844x390 = mouse / 6配達 / score1111、Tablet Portrait 768x1024 = touch / 6配達 / score1103、Tablet Landscape 1024x768 = mouse / 6配達 / score1108。各11件の実操作を記録し、NIGHT3件→ACE6件まで到達。SOUND OFF/ON、RETRY、BEST localStorage保存・復元とも全4画面PASS。`qaCommand=NEVER USED`、`stateOverride=NONE`。
+- **品質10軸の証跡限定暫定評価76/100を維持**（ゲーム性8、操作感8、難度7、UI/UX8、描画7、演出6、音声6、変化8、リプレイ9、技術9）。今回の横画面改善は確認したが実機初見30秒・実機読みやすさ・実際の音量/イヤホン/FPS/発熱は未評価。別runでの新コード安定再現性も未検証。根拠なく80点/一般公開品質を認定しない。
+- **次回継続点**：①現コミットの別CI試行でTablet Portrait断続Timeoutの再現性確認、②Phone横・Tablet横のコントラストと演出品質を4画面の画像/実入力で独立評価、③実機音声/初見30秒/FPS等のHuman Gateは人間の実測に委ねる。80点と品質Gate未達につきGAME-076は終了時にDoing→ToDoへ戻す。他タスクには着手しない。
