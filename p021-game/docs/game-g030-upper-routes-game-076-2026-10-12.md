@@ -277,3 +277,21 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - **4 viewport自然操作E2Eは4/4 PASS**。Phone Portrait 390x844 = touch / 6配達 / score1108、Phone Landscape 844x390 = mouse / 6配達 / score1111、Tablet Portrait 768x1024 = touch / 6配達 / score1103、Tablet Landscape 1024x768 = mouse / 6配達 / score1108。各11件の実操作を記録し、NIGHT3件→ACE6件まで到達。SOUND OFF/ON、RETRY、BEST localStorage保存・復元とも全4画面PASS。`qaCommand=NEVER USED`、`stateOverride=NONE`。
 - **品質10軸の証跡限定暫定評価76/100を維持**（ゲーム性8、操作感8、難度7、UI/UX8、描画7、演出6、音声6、変化8、リプレイ9、技術9）。今回の横画面改善は確認したが実機初見30秒・実機読みやすさ・実際の音量/イヤホン/FPS/発熱は未評価。別runでの新コード安定再現性も未検証。根拠なく80点/一般公開品質を認定しない。
 - **次回継続点**：①現コミットの別CI試行でTablet Portrait断続Timeoutの再現性確認、②Phone横・Tablet横のコントラストと演出品質を4画面の画像/実入力で独立評価、③実機音声/初見30秒/FPS等のHuman Gateは人間の実測に委ねる。80点と品質Gate未達につきGAME-076は終了時にDoing→ToDoへ戻す。他タスクには着手しない。
+
+## 2026-10-12 22:32:19 JST / AutoAI GAME-076 継続 — 同一コミットCI再実行・タブレット縦の入力窓失敗を確認
+
+- **今回の唯一の実タスクは GAME-076**。GAME-075=Done / GAME-076=ToDo / 他Doingなしを正本で確認後、Doing排他取得。新たなゲーム・QAコード変更はなし。GitHub `develop` のゲームソース commit [32241f927](https://github.com/kobitworks/autoai_poc/commit/32241f927c733609db0ec9db2a6244951f65ebe3) に対する既存 [Actions run 38252571037](https://github.com/kobitworks/autoai_poc/actions/runs/38252571037) のブラウザ品質ジョブを**同一コードで1回だけ再実行**（attempt2、job [114832198409](https://github.com/kobitworks/autoai_poc/actions/runs/38252571037/job/114832198409)）。contract と export-web は success、browser-quality は **failure**。再試行FAILをPASS扱いしない。
+- 初回attempt1: **4/4 PASS**、[artifact 11749057190](https://github.com/kobitworks/autoai_poc/actions/runs/38252571037/artifacts/11749057190) 実体ZIPから results.json SHA256 `015f642b80ca23dbcab4669e8bd0cfd06cc2665859416348ce00fcd5d11e0b29`＋40PNG確認。
+- 今回attempt2: **3/4 PASS**、[artifact 11750676049](https://github.com/kobitworks/autoai_poc/actions/runs/38252571037/artifacts/11750676049) 実体ZIPから results.json SHA256 `d9efade3dd382a644ba50014b7561c51950a656fac064fb7cf2cb37a6c5d0c38`＋36PNG（タブレット縦のFAIL画像含む）を独立読戻し。
+
+| 端末／画面 | attempt1 | attempt2 | attempt2の自然入力到達 | SOUND / RETRY / BEST |
+|---|---|---|---|---|
+| Phone縦 390×844 | PASS | PASS | ACE 6配達、score 1108 | PASS |
+| Phone横 844×390 | PASS | PASS | ACE 6配達、score 1110 | PASS |
+| Tablet縦 768×1024 | PASS | **FAIL** | NIGHT 4配達、score 573 で停滞 | 未完走。SOUND ON/OFFはPASS |
+| Tablet横 1024×768 | PASS | PASS | ACE 6配達、score 1108 | PASS |
+
+- Tablet縦の失敗: `NIGHT 0->1 transfer: page.waitForFunction: Timeout 3500ms exceeded.`。失敗時 `lastSnapshot.orbit=0`, `energy=2`, `deliveries=4`, `cargo_target=2`。read-onlyの `nightTelemetry` に、同一地点で角度4.411rad（27,647ms、energy3）→4.568rad（27,787ms、energy3）→4.802rad（28,000ms、energy2）が記録された。ゲームの交差判定はおおむね4.50±0.19radなので、観測時点と実際のタップ処理の間に角度が有効範囲を越えたことが**有力な原因候補**。フレーム/Playwright入力遅延の寄与割合は未確定、実機不具合と断定しない。QAの `qaCommand=NEVER USED` / `stateOverride=NONE` は全ケースで維持、ゲーム状態の直接変更で合格を偽装していない。
+- Tablet縦の失敗PNGを独立目視。NIGHTのルートとHUDは描画されているが、エネルギー2、DELIVER 4の停滞状態が残る。4画面の安定再現性は**未達**。本回にゲーム本体・QAコード修正は行わず、無根拠な許容角の拡大や連続リトライは避けた。
+- **品質10軸暫定76/100を維持、80点・一般公開品質は未認定**。今回の再現性FAILにより加点しない。実機音質/スピーカー/イヤホン、初見30秒、誤タップ、FPS/発熱、実機可読性は引き続き Human Gate 未確認。mainマージ、契約、課金、公開範囲拡大は一切なし。
+- **次回再開点**: (1) QA実入力のcrossing観測→Playwright touch処理→実際の状態更新を各段階で時刻付きread-onlyログにして、Tablet縦NIGHT 0→1の遅延を計測する。(2) 物理判定域内で早めに入力できる観測帯と入力経路を検討するが、成功コマンド・状態直書き禁止を保持。(3) 修正後に別runを含む4/4自然入力 E2E、40PNG、品質10軸再採点。80点未満ならGAME-076のToDoを継続、Human Gateは人間検証待ちであることを明記する。本Runnerでは他タスク未実施。
