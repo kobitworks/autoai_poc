@@ -90,3 +90,58 @@
 - 全11のRUSH/NIGHT/ACE操作は通常のPlaywright `touchscreen.tap` / `mouse.click` によるもの。成果物JSONの `qaCommand=NEVER USED` / `stateOverride=NONE` を確認。ブラウザ内部のAudioStreamPlayer起動・SOUND ON/OFFは確認したが、実スピーカーの音質や音量は未確認。
 - phone landscape のACE画像を目視。ルート/HUD/盤面/操作案内は画面内にあり、失敗前よりタイミング検証の自動化は改善。一方、小さい補助文字・暗いコントラストと操作中の初見理解には改善余地。前回の品質暫定 **74/100** は今回のCI PASSだけでは引き上げず、**80点の一般公開品質は未認定**。単一runの4/4PASSを再現性の証明にしない。
 - **次回再開点**: 同じQAで複数回のCI再現性を確認。4端末サイズの画像と10軸の品質を独立採点し、スマホ横補助文字/余白活用/最初の30秒のガイドを改善。AIで到達可能な公開品質80点を目指す。実機スピーカー/イヤホン、FPS・発熱、初見ユーザーの操作成功率はHuman Gateで未検証継続。外部課金、mainマージ、本番化なし。GAME-076はToDo継続。
+
+
+## 2026-10-12 再現性再検証・40画面画像独立採点（AutoAI）
+
+実施日時: 2026-10-12 19:04 JST。今回のRunner実作業は **GAME-076の継続1件のみ**。前回のコード/QA commit `8a6d7e6657fee5f0ba58d6cfa53be26b7c6db7e6` の再現性と公開品質評価を分けて実施した。実機音質や初見ユーザーが未検証であることを維持する。
+
+### 1. GitHub Actions 2回連続の実操作E2E（同じQA・同じコード）
+
+- [workflow run 38231177626](https://github.com/kobitworks/autoai_poc/actions/runs/38231177626) の初回attemptは contract / export-web / browser-quality **3/3 success**。初回artifact [11739290056](https://github.com/kobitworks/autoai_poc/actions/runs/38231177626/artifacts/11739290056)、results.json SHA-256 `94b85f7926b9766f02b3a4de171836eccbf95a9c0e71d9bb3a415ddabfc414e7` をZIP実体から読戻し。
+- GitHub Actionsのブラウザ品質ジョブ（当初job 114751200300）をGitHub上で **re-run** した。新attemptの browser-quality job 114758268629 も **completed/success**。contract / export-web / browser-quality は再試行時も3/3 success。[新artifact 11739921175](https://github.com/kobitworks/autoai_poc/actions/runs/38231177626/artifacts/11739921175)、results.json SHA-256 `3ba2cf1f5c1d819740f5834fd1d877e119c0d11a1902f0267aa243c9eeb6d5f3` を独立読戻し。
+- 2つのZIPそれぞれに **4サイズ×10状態=40 PNGとresults.json（計41ファイル）**。QAの方法は通常のタッチ/マウス操作で、全ケース `qaCommand=NEVER USED`、`stateOverride=NONE`。ゲームのスコア/クリア状態を直接上書きした成果ではない。
+
+| viewport | 初回E2E | 再実行E2E | 初回 ACE 6件 score | 再実行 ACE 6件 score | SOUND / RETRY / BEST |
+| --- | --- | --- | ---: | ---: | --- |
+| Phone Portrait 390×844 | PASS | PASS | 1109 | 1109 | 2回ともPASS |
+| Phone Landscape 844×390 | PASS | PASS | 1110 | 1111 | 2回ともPASS |
+| Tablet Portrait 768×1024 | PASS | PASS | 1108 | 1107 | 2回ともPASS |
+| Tablet Landscape 1024×768 | PASS | PASS | 1110 | 1110 | 2回ともPASS |
+
+前回のRUSH/NIGHTタイミング失敗に対して、同一commitで **4/4 PASSが2回連続**することを確認した。ただし2回の成功だけで将来の断続的失敗がゼロになると断定しない。
+
+### 2. PNGを独立目視した残課題
+
+- Phone Portrait: 最初のSTARTボタン・操作ステップ・HUD・SOUND/GAME HUBは区別可能。補助説明が細字/小文字で、初見者に届くかは未測定。
+- **Phone Landscape 844×390**: 音声操作ボタンと2カラムは画面内に収まる一方、導入3行・右パネル下部の補助説明・HUD補助文字が淡色の小文字で読み取りづらい。とくに狭い高さで最初の操作を理解するまでの認知負荷が課題。
+- Tablet Portrait: ルートACE時の3軌道と目標HUBが判別可能。結果/説明は中心にあるが、テキストとゲーム盤面のメリハリを改善できる。
+- Tablet Landscape: 左の大きな盤面と右情報の分離は明瞭。一方、右パネルに余白が大きく、次の入力の具体的説明を上部へ強調できる。
+- 静止画はレンダリング状態の確認に限る。**実機スピーカー/イヤホンの音量音質、FPS/発熱、初見30秒成功率、アクセシビリティ実測は未検証**。
+
+### 3. P021 10軸・独立暫定採点（各10点）
+
+| 指標 | 点数 | 根拠・次の不足 |
+| --- | ---: | --- |
+| ゲーム性 | 8 | 軌道乗換→配達→ルート昇格、実ユーザーの楽しさは未確認 |
+| 操作感 | 8 | 4サイズ2回の実入力PASS。実機の誤タップ率は未測定 |
+| 難易度設計 | 7 | STARTER/RUSH/NIGHT/ACEの配達数1/3/6件と時間制限の進行を全4サイズで実証 |
+| UI/UX | 7 | 初見案内は存在するが、特にPhone Landscapeの小文字/低コントラストが残る |
+| グラフィック | 7 | 統一した軌道/HUB/色・図形、素材/動きの洗練は残る |
+| 演出・エフェクト | 6 | 色分けした昇格・成功/失敗の瞬間演出あり、動画での独立審査なし |
+| サウンド | 6 | ON/OFFとエンジン内部再生は確認、実機出力未検証 |
+| コンテンツ量・変化 | 8 | 4ルート/3段階昇格が実入力で成立、盤面/体験変化は少ない |
+| リプレイ性 | 9 | RETRY・BEST永続化の2回×4サイズで再確認 |
+| 技術品質 | 9 | 3ジョブ成功と実入力4/4×2、FPS/発熱未確認 |
+| **合計** | **75/100（証跡限定暫定）** | **一般公開品質の80点には未達** |
+
+GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変化の確認を加点した一方、実画像からPhone Landscapeの読みづらさを減点して、今回75/100とした。点数は独立した目視と自動証跡に基づく暫定値である。
+
+### 4. 同一GAME-076の残作業・次回再開点
+
+1. `Main.gd` の初見3ステップを短く読みやすい日本語へ修正し、Phone Landscape 844×390の文字サイズ・配色・ボタン/案内の強調を改善する。
+2. 「TAP NOW」で入力可能な瞬間を盤面下端へ視認しやすく強調し、右情報ペインの余白には次の行動を優先表示する。ゲームの配送判定やQA成功状態の直書きは禁止。
+3. 改修後に **4 viewport×intro/playing/route-rush/route-ace/result/retry/sound等の実画像** と実入力E2Eを再取得して可読性と10軸を再採点する。80点未満ならGAME-076の改善を継続する。
+4. 実機の音質/FPS/発熱/初見ユーザー30秒理解度はHuman Gateとして未確認維持。mainマージ、契約・課金・一般公開範囲拡大なし。
+
+結論: **再現性検証は2回連続全PASSへ前進したが、品質80点未達のためGAME-076はToDo継続**。
