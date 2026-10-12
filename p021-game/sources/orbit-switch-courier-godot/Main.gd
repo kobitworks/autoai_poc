@@ -630,7 +630,7 @@ func _draw_info_panel() -> void:
 	var pad := _ui_px(16.0)
 	var x := info_rect.position.x + pad
 	var y := info_rect.position.y + _ui_px(22.0)
-	_draw_fit_label("ROUTE %d · %s  /  CARGO" % [_mission_tier() + 1, _mission_name()], Vector2(x, y), _font_size(12.0), _route_color().lightened(0.42), info_rect.size.x - pad * 2.0)
+	_draw_fit_label("ROUTE %d · %s  /  CARGO" % [_mission_tier() + 1, _mission_name()], Vector2(x, y), _font_size(14.0), Color("#d7f7ff"), info_rect.size.x - pad * 2.0)
 	y += _ui_px(24.0)
 	_draw_label(HUB_NAMES[cargo_target], Vector2(x, y), _font_size(17.0), HUB_COLORS[cargo_target])
 	y += _ui_px(20.0)
@@ -666,7 +666,7 @@ func _draw_info_panel() -> void:
 		if card_h >= _ui_px(43.0):
 			var action_card := Rect2(x, card_y, info_rect.size.x - pad * 2.0, card_h)
 			_rounded_box(action_card, Color("#125b4b") if action_ready else Color("#183a51"), Color("#9affdc") if action_ready else Color("#89d7fc"), 11, 2)
-			_draw_label("TAP NOW" if action_ready else "NEXT ACTION", action_card.position + Vector2(_ui_px(10.0), _ui_px(16.0)), _font_size(12.0), Color("#ffffff"))
+			_draw_label("TAP NOW" if action_ready else "NEXT ACTION", action_card.position + Vector2(_ui_px(10.0), _ui_px(16.0)), _font_size(14.0), Color("#ffffff"))
 			_draw_center_fit_text(action_line, Rect2(action_card.position.x + _ui_px(5.0), action_card.position.y + _ui_px(18.0), action_card.size.x - _ui_px(10.0), card_h - _ui_px(20.0)), _font_size(16.0 if action_ready else 15.0), Color("#ffffff"))
 		else:
 			_draw_fit_label(action_line, Vector2(x, y), _font_size(14.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
@@ -681,13 +681,13 @@ func _draw_info_panel() -> void:
 	# Keep two bright, readable steps below (not inside) the NEXT ACTION card.
 	# The <220px portrait panel uses its existing single-line fallback instead.
 	if info_rect.size.y >= _ui_px(220.0) and info_rect.size.y <= _ui_px(275.0):
-		_draw_fit_label("1  交差点が光ったらTAP", Vector2(x, info_rect.end.y - _ui_px(32.0)), _font_size(14.0), Color("#f0fcff"), info_rect.size.x - pad * 2.0)
-		_draw_fit_label("2  同じ印のHUBでTAP", Vector2(x, info_rect.end.y - _ui_px(12.0)), _font_size(14.0), Color("#fff3c4"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label("1  光る交差点でTAP", Vector2(x, info_rect.end.y - _ui_px(32.0)), _font_size(16.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label("2  同じ印でTAP・配達", Vector2(x, info_rect.end.y - _ui_px(12.0)), _font_size(16.0), Color("#fff8d9"), info_rect.size.x - pad * 2.0)
 	# Tablet landscape: use otherwise empty lower-panel space to show which
 	# naturally-earned route tiers are unlocked. This is a display only.
 	if info_rect.size.y > _ui_px(525.0):
 		var milestones_y := info_rect.end.y - _ui_px(126.0)
-		_draw_label("ROUTE MILESTONES", Vector2(x, milestones_y - _ui_px(13.0)), _font_size(13.0), Color("#d9faff"))
+		_draw_label("ROUTE MILESTONES", Vector2(x, milestones_y - _ui_px(13.0)), _font_size(15.0), Color("#ffffff"))
 		var milestone_gap := _ui_px(6.0)
 		var milestone_width := (info_rect.size.x - pad * 2.0 - milestone_gap * 2.0) / 3.0
 		for step in range(3):
