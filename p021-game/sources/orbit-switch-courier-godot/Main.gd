@@ -685,7 +685,7 @@ func _draw_info_panel() -> void:
 	var cargo_urgent := state == "playing" and cargo_left <= 3.0
 	# Keep the destination readable in narrower landscape info columns.
 	# HUB_SHORT preserves the target symbol when the full color/shape label would clip.
-	var cargo_target_label := HUB_NAMES[cargo_target]
+	var cargo_target_label: String = str(HUB_NAMES[cargo_target])
 	if info_rect.size.x < _ui_px(400.0):
 		cargo_target_label = HUB_SHORT[cargo_target]
 	var cargo_countdown := "%02ds LEFT  ·  %s" % [int(ceil(cargo_left)), cargo_target_label]
