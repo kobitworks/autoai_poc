@@ -794,9 +794,16 @@ func _draw_info_panel() -> void:
 		# Extremely short landscape panels cannot fit two help lines below the
 		# next-action card. A single 24px strip leaves a positive visible gap.
 		if info_rect.size.y < _ui_px(240.0):
-			var short_help_band := Rect2(info_rect.position.x + _ui_px(7.0), info_rect.end.y - _ui_px(30.0), info_rect.size.x - _ui_px(14.0), _ui_px(24.0))
-			_rounded_box(short_help_band, Color("#16364a"), Color("#5ba7c9"), 9, 1)
-			_draw_center_fit_text("緑=乗換  ·  同じ印=配達", short_help_band, _font_size(19.0), Color("#ffffff"))
+			# Two independent, readable actions replace one crowded sentence.
+			# The chips explain the existing real TAP window without altering input.
+			var short_help_gap := _ui_px(6.0)
+			var short_help_width := (info_rect.size.x - _ui_px(14.0) - short_help_gap) * 0.5
+			var switch_chip := Rect2(info_rect.position.x + _ui_px(7.0), info_rect.end.y - _ui_px(36.0), short_help_width, _ui_px(30.0))
+			var deliver_chip := Rect2(switch_chip.end.x + short_help_gap, switch_chip.position.y, short_help_width, switch_chip.size.y)
+			_rounded_box(switch_chip, Color("#154e45"), Color("#77e9cf"), 9, 1)
+			_rounded_box(deliver_chip, Color("#5a4428"), Color("#ffe5a2"), 9, 1)
+			_draw_center_fit_text("緑でTAP→乗換", switch_chip, _font_size(18.0), Color("#ffffff"))
+			_draw_center_fit_text("同じ印でTAP→配達", deliver_chip, _font_size(18.0), Color("#ffffff"))
 		else:
 			# Taller phone landscape panels have room for two high-contrast steps.
 			var help_band := Rect2(info_rect.position.x + _ui_px(7.0), info_rect.end.y - _ui_px(48.0), info_rect.size.x - _ui_px(14.0), _ui_px(42.0))
