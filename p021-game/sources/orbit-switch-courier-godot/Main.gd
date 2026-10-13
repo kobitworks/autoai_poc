@@ -61,6 +61,7 @@ var sparks: Array[Dictionary] = []
 var field_rect := Rect2()
 var info_rect := Rect2()
 var sound_rect := Rect2()
+var header_text_region_rect := Rect2()
 var hub_rect := Rect2()
 var hud_rect := Rect2()
 var retry_rect := Rect2()
@@ -522,10 +523,16 @@ func _draw() -> void:
 	var margin := _ui_px(12.0 if compact else 18.0)
 	# Reserve the second header row for GAME HUB on portrait/tablet layouts.
 	var title_h := _ui_px(56.0 if compact else 112.0)
-	# GAME-076: concise first-action cue instead of a small engine/version caption.
-	_draw_label("GAME-G030  /  TAP THE GLOW", Vector2(margin, margin + _ui_px(15.0)), _font_size(14.0), Color("#a4f8ff"))
+	# GAME-076: reserve a distinct text lane to prevent the title and the
+	# SOUND control from colliding on 320px portrait screens.
+	# Draw-fit ellipsizes only if needed; the useful action stays visible.
+	var header_text_width := maxf(_ui_px(100.0), w - margin * 2.0 - _ui_px(130.0))
+	header_text_region_rect = Rect2(margin, margin, header_text_width, _ui_px(63.0))
+	var caption := "TAP THE GLOW" if phys_w < 405.0 else "GAME-G030  /  TAP THE GLOW"
+	_draw_fit_label(caption, Vector2(margin, margin + _ui_px(15.0)), _font_size(14.0), Color("#a4f8ff"), header_text_width)
 	var heading := "ORBIT COURIER" if phys_w < 520.0 else "ORBIT SWITCH COURIER"
-	_draw_label(heading, Vector2(margin, margin + _ui_px(50.0 if compact else 58.0)), _font_size(23.0), Color("#f4fbff"))
+	var heading_size := _font_size(20.0 if phys_w < 405.0 else 23.0)
+	_draw_fit_label(heading, Vector2(margin, margin + _ui_px(50.0 if compact else 58.0)), heading_size, Color("#f4fbff"), header_text_width)
 
 	# Physical 116x48 CSS-pixel SOUND button, including narrow phone landscape.
 	sound_rect = Rect2(w - margin - _ui_px(116.0), margin + _ui_px(3.0), _ui_px(116.0), _ui_px(48.0))
@@ -1045,6 +1052,7 @@ func _update_debug_bridge() -> void:
 		"audio_playing": audio_player.playing,
 		"ui_scale": ui_scale,
 		"sound_rect": _rect_payload(sound_rect),
+		"header_text_region_rect": _rect_payload(header_text_region_rect),
 		"hub_rect": _rect_payload(hub_rect),
 		"hud_rect": _rect_payload(hud_rect),
 		"retry_rect": _rect_payload(retry_rect),
