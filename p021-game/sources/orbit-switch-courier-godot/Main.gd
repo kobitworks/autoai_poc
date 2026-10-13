@@ -776,10 +776,10 @@ func _draw_info_panel() -> void:
 				var ready_pulse := 0.5 + 0.5 * sin(elapsed * 8.0)
 				var ready_rail := Rect2(action_card.position.x + _ui_px(6.0), action_card.position.y + _ui_px(6.0), _ui_px(5.0), card_h - _ui_px(12.0))
 				draw_rect(ready_rail, Color(0.60, 1.0, 0.85, 0.55 + 0.45 * ready_pulse), true)
-			_draw_label("TAP NOW" if action_ready else "NEXT ACTION", action_card.position + Vector2(_ui_px(14.0 if action_ready else 10.0), _ui_px(16.0)), _font_size(14.0), Color("#ffffff"))
-			_draw_center_fit_text(action_line, Rect2(action_card.position.x + _ui_px(5.0), action_card.position.y + _ui_px(18.0), action_card.size.x - _ui_px(10.0), card_h - _ui_px(20.0)), _font_size(16.0 if action_ready else 15.0), Color("#ffffff"))
+			_draw_label("TAP NOW" if action_ready else "NEXT ACTION", action_card.position + Vector2(_ui_px(14.0 if action_ready else 10.0), _ui_px(16.0)), _font_size(16.0), Color("#ffffff"))
+			_draw_center_fit_text(action_line, Rect2(action_card.position.x + _ui_px(5.0), action_card.position.y + _ui_px(18.0), action_card.size.x - _ui_px(10.0), card_h - _ui_px(20.0)), _font_size(18.0 if action_ready else 17.0), Color("#ffffff"))
 		else:
-			_draw_fit_label(action_line, Vector2(x, y), _font_size(14.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
+			_draw_fit_label(action_line, Vector2(x, y), _font_size(16.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
 	# The tablet-landscape information area is taller: put a readable step guide near
 	# the action card instead of leaving the next input unexplained in empty space.
 	if info_rect.size.y > _ui_px(470.0):
@@ -814,7 +814,7 @@ func _draw_info_panel() -> void:
 			var unlocked := _mission_tier() >= step + 1
 			var milestone_rect := Rect2(x + float(step) * (milestone_width + milestone_gap), milestones_y, milestone_width, _ui_px(29.0))
 			_rounded_box(milestone_rect, Color("#116252") if unlocked else Color("#172e42"), Color("#89ffce") if unlocked else Color("#5186a6"), 8, 1)
-			_draw_center_fit_text(str(ROUTE_NAMES[step + 1]), milestone_rect, _font_size(17.0), Color("#ffffff"))
+			_draw_center_fit_text(str(ROUTE_NAMES[step + 1]), milestone_rect, _font_size(18.0), Color("#ffffff"))
 	# Echo successful transfers and missed timing in the otherwise empty lower
 	# tablet-landscape panel. The prompt card keeps priority during gameplay.
 	if state == "playing" and (cue_clock > 0.0 or qa_cue_stress) and info_rect.size.y > _ui_px(525.0):
@@ -823,7 +823,7 @@ func _draw_info_panel() -> void:
 		_rounded_box(feedback_rect, Color("#125f4d") if cue_good else Color("#712f4b"), Color("#94f8d9") if cue_good else Color("#ffbbd0"), 8, 1)
 		# The tablet side echo carries the short outcome/route summary only.
 		var side_cue := _cue_priority_lines()[0] if _visible_cue().contains(" / ") else _visible_cue()
-		_draw_center_fit_text(side_cue, feedback_rect, _font_size(17.0), Color("#ffffff"))
+		_draw_center_fit_text(side_cue, feedback_rect, _font_size(18.0), Color("#ffffff"))
 	# Medium panels retain the bottom two-step guide. Tall tablet landscape
 	# already shows HOW TO PLAY and route milestones, so avoid repeating the
 	# same instructions beneath the milestone/feedback row.
