@@ -154,8 +154,19 @@ async function run(){
   fs.mkdirSync(dir,{recursive:true});
   const browser=await chromium.launch({headless:true});
   const results=[];
+  // Keep a read-only, machine-parseable checkpoint on disk. GitHub Actions may
+  // cancel a long four-viewport run before the final results.json is written.
+  // This does not alter game state, scoring, or any physical input.
+  const checkpoint=(phase,activeViewport)=>fs.writeFileSync(
+    dir+'/results-checkpoint.json',JSON.stringify({
+      task:'GAME-076',game:'GAME-G030',status:'PARTIAL_CHECKPOINT_NOT_FINAL',
+      phase,activeViewport,completedViewportCount:results.length,
+      expectedViewportCount:targets.length,viewports:results
+    },null,2));
+  checkpoint('STARTING',null);
   try {
     for(const t of targets){
+      checkpoint('VIEWPORT_RUNNING',t.name);
       const context=await browser.newContext({
         viewport:{width:t.width,height:t.height},deviceScaleFactor:1,
         isMobile:t.width<=844,hasTouch:true
@@ -488,6 +499,7 @@ async function run(){
       }finally{
         evidence.actionTimings=t.inputTimings||[];
         results.push(evidence);
+        checkpoint('VIEWPORT_COMPLETED',t.name);
         await context.close();
       }
     }
