@@ -397,3 +397,14 @@
 - **GitHub develop コミット**: https://github.com/kobitworks/autoai_poc/commit/96006e3726ce8edf3ddc0faf45f655ed0884d924 。readback Main.gd blob `b4c2e0b6a6596abe0ecd78bdac3a6d420003d109`、QA blob `281c1541ef7c9feb27b16292df4e449c4236c53b` と一致。コードのゲーム入力、配達判定、スコア、時間、音声、BEST保存、QA勝利操作や状態直書きには変更なし。
 - **CI**: https://github.com/kobitworks/autoai_poc/actions/runs/38453434998 は確認時 in_progress（最初のcontractジョブ実行中）。今回の新長文assertion・4viewport自然E2E・小型3画面PASSは**未確定**。前回run38448558219のsuccessを新コミットの成功として流用しない。
 - **公開品質Gate**: 独立暫定76/100を据置（目標80未達）。物理端末での初見30秒理解・文字可読性/誤タップ・スピーカー/イヤホン実音・FPS/発熱はHuman Gate未確認。検証CI完走と証跡の独立再確認が次回作業。既存同理由Slack確認依頼は重複しない。完了条件未達につき本回終了時にGAME-076をDoing→ToDoへ解放。mainマージ、課金、production、公開範囲拡大なし。別タスクに着手しない。
+
+## 2026-10-14 04:33:53 JST / AUTOAI-GAME076-20261014-0432 — 長文cue QA新runのCI・証跡ZIP独立監査
+
+- **今回の唯一実タスク**: P021 GAME-076をToDo→Doingで排他取得しreadback一致。Runner v1.38.0 / P021 v1.2.0。明示新規Slack @autoai 指示0件、既存41件DONE。09:00前につき日次監視対象外。先行15有効PJは要確認・依存/HOLD・周期未到達・全完了で実タスク選定なし。
+- **新CI最終確定**: [GitHub Actions run 38453434998](https://github.com/kobitworks/autoai_poc/actions/runs/38453434998) は head_sha=`96006e3726ce8edf3ddc0faf45f655ed0884d924`, branch=develop, status=completed / conclusion=**success** (2026-10-14 04:23:04 JST)。`contract` (115489918097)、`export-web` (115490304087)、`browser-quality` (115491221984) の3ジョブすべてsuccess。前回04:17のin_progressを同じrunの完了結果に更新。
+- **ZIP実体検証**: evidence artifact [11841489023](https://github.com/kobitworks/autoai_poc/actions/runs/38453434998/artifacts/11841489023) を実体ダウンロードし、ZIP SHA-256=`1de2fd175147010d4f4cc8ed047f28c93454a265d0e406cc941b0e7c7d0ba963` がGitHub digestと一致。60 entries（58 PNG + `results.json` + `results-checkpoint.json`）、`ZipFile.testzip`でCRC破損なし、全PNG58枚のデコード成功。標準4画面×13枚＋小型3画面×2枚の画像サイズ分布も整合。
+- **JSON自然入力E2E**: 標準4画面 phone縦390x844（touch）、phone横844x390（mouse）、tablet縦768x1024（touch）、tablet横1024x768（mouse）は **4/4 PASS**。各画面でNIGHT到達自然3配達→ACE到達自然6配達、`qaCommand=NEVER USED` / `stateOverride=NONE`、初見1タップガイド/サウンドOFF-ON状態/RETRY/BEST保存・リロードのテレメトリを確認。音声の物理的な聴こえは評価していない。
+- **長文cue検証**: 新CI browser-quality=success。JSON各画面で`cueStress.result=CAPTURED` / `stage=natural real-input playing` / `readOnlyDisplay=true`、4件の`*-cue-stress.png`を確認。E2E新read-only優先表示契約はテスト成功。ただし実機上の長文可読性・初見理解をPASSとはしない。
+- **追加小型3画面**: 320x568、667x375、800x600は **3/3 PASS_GEOMETRY**（物理tap/click START→PLAYING、位置テレメトリ）。667x375のNEXT ACTIONカードと説明ガイドの`actionGuideSpacing.gapCssPx=8` は下限4 CSS pxを満たす。
+- **スクリーンショット代表目視**: 長文cueのphone横・phone縦・tablet横、small-phone横/縦PLAYING、phone横残3秒警告、phone横ACE、tablet横ACEの**8枚**を抽出・比較。抽出画像では明白なカード/ガイド重なりを認めないが、小文字の物理画面での可読性は未検証。残る50枚の全件目視は実施していない。
+- **判定**: 技術CI・証跡整合はPASS。独立暫定品質 **76/100を据置**（公開基準80未達）。実機の初見30秒・文字可読性/誤タップ・スピーカー/イヤホン音・FPS/発熱はHuman Gate未確認。今回ゲーム本体・E2Eテスト・main・課金・本番・公開範囲の変更はなし。監査文書のみdevelopへ追記。既存同一Human Gate確認のSlack通知は重複させない。完了条件未達につきタスクをDoing→ToDoへ復帰し、次回は実機回答を受けた再採点と必要な最小UX改善、未目視PNGの重点レビューを検討。2件目タスクには着手しない。
