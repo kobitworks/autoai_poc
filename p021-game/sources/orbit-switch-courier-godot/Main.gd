@@ -784,9 +784,9 @@ func _draw_info_panel() -> void:
 	# the action card instead of leaving the next input unexplained in empty space.
 	if info_rect.size.y > _ui_px(470.0):
 		_draw_label("HOW TO PLAY", Vector2(x, y + _ui_px(94.0)), _font_size(18.0), Color("#a4f8ff"))
-		_draw_fit_label("1  緑の交差点でTAP", Vector2(x, y + _ui_px(126.0)), _font_size(18.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
-		_draw_fit_label("2  同じ印のHUBでTAP", Vector2(x, y + _ui_px(161.0)), _font_size(18.0), Color("#fff3be"), info_rect.size.x - pad * 2.0)
-		_draw_fit_label("3  配達を重ねACEへ", Vector2(x, y + _ui_px(196.0)), _font_size(18.0), Color("#b3ffe4"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label("1  緑でTAP → 乗換", Vector2(x, y + _ui_px(126.0)), _font_size(19.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label("2  同じ印でTAP → 配達", Vector2(x, y + _ui_px(161.0)), _font_size(19.0), Color("#fff3be"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label("3  配達3回→NIGHT / 6回→ACE", Vector2(x, y + _ui_px(196.0)), _font_size(19.0), Color("#b3ffe4"), info_rect.size.x - pad * 2.0)
 	# GAME-076: Phone landscape has no room for the large HOW TO PLAY guide.
 	# Keep two bright, readable steps below (not inside) the NEXT ACTION card.
 	# The <220px portrait panel uses its existing single-line fallback instead.
@@ -796,13 +796,13 @@ func _draw_info_panel() -> void:
 		if info_rect.size.y < _ui_px(240.0):
 			var short_help_band := Rect2(info_rect.position.x + _ui_px(7.0), info_rect.end.y - _ui_px(30.0), info_rect.size.x - _ui_px(14.0), _ui_px(24.0))
 			_rounded_box(short_help_band, Color("#16364a"), Color("#5ba7c9"), 9, 1)
-			_draw_center_fit_text("緑でTAP → 同じ印のHUBでTAP", short_help_band, _font_size(18.0), Color("#ffffff"))
+			_draw_center_fit_text("緑=乗換  ·  同じ印=配達", short_help_band, _font_size(19.0), Color("#ffffff"))
 		else:
 			# Taller phone landscape panels have room for two high-contrast steps.
 			var help_band := Rect2(info_rect.position.x + _ui_px(7.0), info_rect.end.y - _ui_px(48.0), info_rect.size.x - _ui_px(14.0), _ui_px(42.0))
 			_rounded_box(help_band, Color("#16364a"), Color("#5ba7c9"), 9, 1)
-			_draw_fit_label("1  緑の交差点でTAP", Vector2(x, info_rect.end.y - _ui_px(32.0)), _font_size(18.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
-			_draw_fit_label("2  同じ印のHUBでTAP", Vector2(x, info_rect.end.y - _ui_px(12.0)), _font_size(18.0), Color("#fff8d9"), info_rect.size.x - pad * 2.0)
+			_draw_fit_label("1  緑でTAP → 乗換", Vector2(x, info_rect.end.y - _ui_px(32.0)), _font_size(19.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
+			_draw_fit_label("2  同じ印でTAP → 配達", Vector2(x, info_rect.end.y - _ui_px(12.0)), _font_size(19.0), Color("#fff8d9"), info_rect.size.x - pad * 2.0)
 	# Tablet landscape: use otherwise empty lower-panel space to show which
 	# naturally-earned route tiers are unlocked. This is a display only.
 	if info_rect.size.y > _ui_px(525.0):
