@@ -708,7 +708,16 @@ func _draw_info_panel() -> void:
 		cargo_countdown = "%02ds LEFT!  HURRY  ·  %s" % [int(ceil(cargo_left)), cargo_target_label]
 		var warning_chip := Rect2(x - _ui_px(6.0), y - _ui_px(18.0), info_rect.size.x - pad * 2.0 + _ui_px(12.0), _ui_px(26.0))
 		_rounded_box(warning_chip, Color("#8b2030"), Color("#fff0aa"), 7, 2)
-	_draw_fit_label(cargo_countdown, Vector2(x, y), _font_size(18.0) if cargo_urgent else _font_size(17.0), Color("#ffffff") if cargo_urgent else HUB_COLORS[cargo_target], info_rect.size.x - pad * 2.0)
+	# GAME-076: Pair the target name with the same square/triangle/circle
+	# used on its destination HUB. The icon keeps the target recognizable when
+	# a narrow panel shortens the label; no route, input or timer logic changes.
+	var target_marker_radius := _ui_px(12.0)
+	var target_marker_center := Vector2(info_rect.end.x - pad - target_marker_radius, y - _ui_px(8.0))
+	var countdown_text_width := maxf(_ui_px(70.0), info_rect.size.x - pad * 2.0 - _ui_px(33.0))
+	_draw_fit_label(cargo_countdown, Vector2(x, y), _font_size(18.0) if cargo_urgent else _font_size(17.0), Color("#ffffff") if cargo_urgent else HUB_COLORS[cargo_target], countdown_text_width)
+	draw_circle(target_marker_center, target_marker_radius, Color("#102a3d"))
+	draw_arc(target_marker_center, target_marker_radius, 0.0, TAU, 24, HUB_COLORS[cargo_target], _ui_px(2.0), true)
+	_draw_hub_symbol(target_marker_center, cargo_target, HUB_COLORS[cargo_target])
 	y += _ui_px(20.0)
 	var cargo_bar := Rect2(x, y, info_rect.size.x - pad * 2.0, _ui_px(9.0))
 	draw_rect(cargo_bar, Color("#68283b") if cargo_urgent else Color("#244a64"), true)
