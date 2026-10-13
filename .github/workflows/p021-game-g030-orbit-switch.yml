@@ -128,7 +128,9 @@ jobs:
   browser-quality:
     needs: export-web
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Full natural-input NIGHT->ACE checks need more than 20 min on some CI runners.
+    # Keep all four viewports and the three compact-layout checks unchanged.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
