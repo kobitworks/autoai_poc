@@ -357,3 +357,14 @@
 - **対応済みCI照合**: [Actions run38413318007](https://github.com/kobitworks/autoai_poc/actions/runs/38413318007) についてcontract / export-web / browser-qualityが全てcompleted/successをFresh-read。前回の4 viewport自然入力PASS/3小型画面幾何PASS/全58PNG証跡とは矛盾しないが、今回はZIP再ダウンロードも実機試験も実施していない。
 - **品質Gate**: 独立暫定76/100（一般公開目標80未達）を維持。初見利用者の30秒理解、小文字・タップ余白、実スピーカー/イヤホン、FPS/端末発熱はHuman Gate未検証。新規の無根拠な点数加算・実機PASS判定を行わない。同じ理由のSlack確認依頼は重複発行しない。
 - **変更範囲・再開点**: 今回は監査記録だけの追記で、Main.gd/QAコード、main、課金、本番化・公開範囲を変更しない。次回は実機結果が得られれば当該2ガイドの視認性・操作性・音声・性能と10軸を再採点し、不足時は承認済み範囲の最小改善を検討。未完了のためGAME-076はDoing→ToDoで維持。別タスク着手なし。
+
+
+## 2026-10-14 03:23 JST / AUTOAI-GAME076-20261014-0322 — 描画済み操作ガイド余白をread-only E2Eで監査する変更
+
+- **実タスクはP021 GAME-076の1件のみ**。runner v1.38.0 / project v1.2.0。Slack登録メッセージ41件DONE・当該ループの新規明示@autoai指示なし、全体監視は09:00前で対象外。P005〜P018/P020は要確認、外部制約、依存、周期未到達または完了により未着手。依存GAME-075 Doneを確認し、GAME-076 ToDo→Doingを管理正本で取得、readback一致。
+- **前回までの不足**: GAME-G030の小型横情報パネル内でNEXT ACTIONカードと2色説明チップ/ガイドの相互余白を、source式の推算だけでなくCIの実描画矩形から直接検査する仕組みがなかった。
+- **今回の変更**: Godot Main.gdにaction_card_rect/help_guide_rectの描画時記録を追加し、Web QAブリッジから矩形を読み取り専用で公開。既存Playwrightの小型横667×375 START→PLAYINGテストに、カード・説明チップの表示存在、情報パネル内包含、実CSS幾何での垂直間隔4px以上のassertionと証跡JSONを追加した。既存4viewport実タップ/クリックのRUSH→NIGHT→ACE、SOUND/BEST検証は残している。Godotの入力判定、物理状態、スコア、経路進行、サウンド、保存、成功用QAコマンドは変更していない。
+- **develop実装コミット**: https://github.com/kobitworks/autoai_poc/commit/dee6914358872c32714c1ebcd565929490ed9790 。ソース2ファイルを単一のGit commitへまとめ、readback blob Main.gd=62115455722c8c428c1bf86277c8e093f452b12a、real-input.js=b619b12bd88d8bf2fe560aed55b7d72c1875f9c7 を確認。mainへの変更なし。
+- **新CI**: https://github.com/kobitworks/autoai_poc/actions/runs/38446198116 は03:23時点でcontract成功、export-web実行中。browser-quality最終結果、新たなactionGuideSpacing値、4viewport自然入力と小型3サイズの合否、PNG/JSON artifactの確証は**未確定**。旧run38413318007の成功を新テスト成功とは呼ばない。
+- **品質と未解除Human Gate**: 独立暫定76/100を維持（公開目標80未達）。物理端末での初見30秒の理解、文字/タップ誤操作、スピーカー/イヤホン実音、FPS/発熱は未検証。同理由のSlack確認依頼は重複送信しない。課金/本番化/公開範囲拡大は行わない。
+- **次回再開点**: run38446198116の全ジョブをFresh-readし、ブラウザログ/新actionGuideSpacing・4viewportの自然入力・追加3画面の幾何・全証跡を独立検証する。failがあれば同一GAME-076の限定修正。人間実機レビューが入るまでは76/100を据置いて一般公開品質合格を宣言しない。今回のGAME-076は完了条件未達でToDo復帰予定、別タスク実施なし。
