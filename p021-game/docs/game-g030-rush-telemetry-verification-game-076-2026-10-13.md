@@ -242,3 +242,15 @@
 - **証跡manifest:** [artifact 11804822562](https://github.com/kobitworks/autoai_poc/actions/runs/38384231463/artifacts/11804822562) が存在。Actionsログに **54 files uploaded / 3,992,756 bytes / SHA256 c4d7f7ba05d868d4529ae9fff10110fe3e17aec33b56ab9889f44e7e6213d725**、GitHub artifact metadataのdigest・sizeと一致。**今回はZIP実体の独立ダウンロード・CRC検査、全PNGの独立目視は未実施**。ログのcargoWarningは `CAPTURED_UNREVIEWED` であり、実視認性PASSとして扱わない。
 - **品質未完:** 実機の初見30秒、補助日本語文字・タップ領域、実スピーカー/イヤホン音、FPS/発熱はHuman Gate未検証。独立10軸の新規実機根拠はないため、従前暫定 **76/100** 据置き、目標80未達。実操作CI成功と一般公開品質認定を混同しない。
 - **今回の判定:** source/QA/mainは変更なし。既存CIの確定結果とJSONを独立検証し、監査正本だけを追記した。GAME-076は継続可能未完了につき **Doing→ToDo** に戻す。次回はartifact ZIP実体・52 PNGの原寸比較、狭小横画面のガイド可読性改善、10軸再採点。既存Human Gateの重複確認依頼は発行しない。課金・本番化・公開範囲拡大なし、別タスクに着手しない。
+
+
+## 2026-10-13 20:12 JST / AUTOAI-GAME076-20261013-2001 — 最新CI artifact 54点の独立画面レビュー（今回の唯一の実作業）
+
+- 実行: Runner v1.38.0／P021 rule v1.2.0、P021 GAME-076のみ。候補P005〜P020はHuman Gate・依存・周期・全Doneで着手対象外。新規明示的@autoai投稿なし／メッセージ41件DONE／日次全体監視09:21:17済。GAME-075 Done、GAME-076 ToDo→Doingに排他取得して読戻し確認。
+- **今回の独立取得**: [Actions run38384231463](https://github.com/kobitworks/autoai_poc/actions/runs/38384231463)（前回source [07cc12593fd8a58b9a6e4ec288cfbe88e07a4c6c](https://github.com/kobitworks/autoai_poc/commit/07cc12593fd8a58b9a6e4ec288cfbe88e07a4c6c)）の [artifact11804822562](https://github.com/kobitworks/autoai_poc/actions/runs/38384231463/artifacts/11804822562) を新たにダウンロードしてZIP実体検査。ファイル長3,992,756 bytes、SHA-256=`c4d7f7ba05d868d4529ae9fff10110fe3e17aec33b56ab9889f44e7e6213d725` はGitHub公開digestと**完全一致**。ZIP全54ファイルCRC=正常。構成は4 viewport×13 PNG=52、`results.json`、`results-checkpoint.json`各1。
+- **画像の全件調査**: 52 PNGすべてをPNGとして読込・デコード。phone portrait=390x844、phone landscape=844x390、tablet portrait=768x1024、tablet landscape=1024x768、各13枚で寸法一致。4 viewportそれぞれ13状態を一覧化して画面内容を目視し、さらにphone landscapeの`novice-first-tap-guide`、tablet landscapeの`cue-stress`を原寸で確認。白紙・完全欠落・大規模な画面外逸脱はこの収集画像では確認されず。phone portrait／landscapeの`intro`と`sound-on`はそれぞれ完全同一ピクセル（2組）だが、ONへ復帰後の同じ初期状態であり独立アニメーション証明には使わない。残り50枚は画像内容が固有。
+- **最終JSONの独立読取**: `results.json`（途中checkpointは`PARTIAL_CHECKPOINT_NOT_FINAL`なので合格判定に使用しない）で4/4 viewport `status=PASS`、touch/mouse実操作、`qaCommand=NEVER USED`、`stateOverride=NONE`。NIGHT自然3配達→ACE自然6配達、ACE得点/BEST再読込はphone縦1109/1109、phone横1111/1111、tablet縦1106/1106、tablet横1109/1109。SOUND OFF/ON各4/4真、エンジン内音声プレーヤー観測4/4。残3秒警告PNG4/4あり、通常状態と異なる視覚警告を画像上で確認。
+- **目視で残る懸念**: phone landscapeのNEXT ACTION下段・下端2ステップ案内は他要素と比較して小さく、狭い高さで初見判読しづらい可能性がある。tablet landscape右欄のHOW TO PLAY・MILESTONES・状態情報は密集し、`cue-stress`の緑帯2行も窮屈。portraitの下部状態ラベルも小さい。いずれも静的画像での所見であり、実機タップや実ユーザーの読み取り試験に代わるものではない。
+- **判定**: 上記のCI・全画面画像・実入力JSONの根拠は強化されたが、画面品質を自動的に80点へ昇格させない。10軸独立暫定品質は**76/100据置（80点未達）**。とくに実スピーカー/イヤホンでの聞こえ、初見30秒理解、実機の文字判読・誤タップ・FPS/発熱は**Human Gate未確認**。既存Gateの同理由重複通知なし。
+- **次回再開**: 実機から初見理解/小文字/タップのフィードバックが得られれば、まず狭小phone landscapeの下段案内とtablet landscape右欄の文言の簡略化／優先度を限定改善し、同一ソースcommitに紐づくCI・52PNG・10軸採点を再検証。今回の独立画像監査で重大な新バグは立証できなかったためゲームコードは不用意に変更しない。
+- GitHub developの**監査文書のみ**を更新。ゲームコード、CI設定、main、本番公開範囲、有料契約は変更しない。完了条件（80点＋Human Gate根拠）未達につきGAME-076は**Doing→ToDoへ戻して継続**。2件目の実タスクには着手しない。
