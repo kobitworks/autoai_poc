@@ -104,3 +104,14 @@
 - **独立readback:** 変更後blob `04555124a4095ebb298cd8e02895537531f1c88c` がdevelopから取得した本文と6箇所一致。
 - **CI:** 新commitから [run38351970193](https://github.com/kobitworks/autoai_poc/actions/runs/38351970193) 自動起動。2026-10-13 14:33:39時点でジョブ完了前。新コードの4viewport実入力E2E、52PNG視覚監査、SOUND/RETRY/BESTは**未判定**であり、前run成功を新ソースのPASS証明に流用しない。
 - **品質/Human Gate:** 独立暫定76/100・目標80未達を維持。スマホ/タブレット実機の音量・イヤホン聴感、初見30秒、実タッチ操作、文字可読性、FPS/発熱は未検証。ブラウザCIと静的描画計算だけで実機PASSを宣言しない。新CIの最終結果・実画像を次回確認する。GAME-076完了条件には到達していないため、この実行終了時はToDoへ戻す。別タスク未実行、有料契約・本番公開範囲変更なし。
+
+  
+## 2026-10-13 15:01:30 JST / AUTOAI-GAME076-20261013-1458 — 補助文字6箇所改修後CI・実入力・画像の独立監査（今回唯一の実タスク）
+
+- **対象と排他**: 2026-10-13のRunner実行。共通Runner v1.38.0 / P021 v1.2.0・正本タスク管理をFresh-readし、新規明示@autoaiなし、本日の全体監視09:21:17済を確認。先行P005〜P018/P020は新規着手可能なタスクがないため、今回の実タスクは **P021 GAME-076 1件のみ**。GAME-075=Done、GAME-076=ToDo、他Doingなしを確認し、14:58:55 JSTにDoingロック取得・読戻し一致。developのみ・main/課金/本番公開範囲変更なし。
+- **CI確定**: 表示補助文字6箇所を拡大した [develop source commit 5d0bddd](https://github.com/kobitworks/autoai_poc/commit/5d0bddd90379d4a7fed6cd3471060fe9767a1fba) に対応する [GitHub Actions run 38351970193](https://github.com/kobitworks/autoai_poc/actions/runs/38351970193) は **completed/success（attempt 1）**。contract job115146166271、export-web job115146227136、browser-quality job115146518605が**3/3 completed/success**。前回のCI未確定を今回解消した。
+- **artifact ZIP実体検証**: [artifact 11790744223](https://github.com/kobitworks/autoai_poc/actions/runs/38351970193/artifacts/11790744223)（p021-game-g030-real-input-evidence）。実ZIP SHA256=`a3a529a97ce1da11a08b84772de5f280624c0d4739f55988e37f45887901e746` はGitHub Actionsアップロードdigestと一致。ZIP CRC `testzip=None`。計54ファイル＝**52 PNG（4 viewport×13）＋results.json＋results-checkpoint.json**。両JSONを独立パース。checkpointは`PARTIAL_CHECKPOINT_NOT_FINAL` / 4 of 4 完了であり最終合否ではない。
+- **最終results.json独立照合**: phone-portrait／phone-landscape／tablet-portrait／tablet-landscapeの**4/4 `PASS`**。実ブラウザtouch/mouse入力でNIGHT 3配達→ACE 6配達を全4画面で達成。`qaCommand=NEVER USED`、`stateOverride=NONE`。ACE scoreは順に **1109 / 1110 / 1106 / 1110**。SOUND OFF→ON、RETRY、BEST保存→再読み込み一致は4/4。`visualContract.result=PASS_STATIC`は静的コントラスト確認に限定し、実機視認性を保証しない。
+- **画像独立目視**: 各画面の`intro`／`novice-first-tap-guide`／`cargo-warning-3s`／`route-ace`の代表**16/52 PNGを一覧画像化して目視**。今回確認した代表画像で明白な重要UIの画面外欠落、補助文字の大きな相互重なりは認めず。残り36PNGの個別全数目視、実寸実機での可読性評価を実施したとは言わない。特にスマホ横の二次案内とtablet横の詳細文字は初見実機の可読性が未確定。
+- **品質と停止条件**: 過去の独立10軸暫定**76/100を据置き**（品質目標80点は未達）。`independentQualityScore=NOT ASSESSED`、`physicalOutput=NOT VERIFIED`の証拠区分を尊重し、CI PASSを品質80点/実機Human Gate PASSへ読み替えない。スマホ・タブレットの実スピーカー/イヤホン、初見30秒の理解、物理タッチ領域、FPS/発熱を実機確認できていない。
+- **今回の成果/次回再開点**: 未確定だったCIの完走を証拠付きで確定し、実入力JSON+ZIP+代表画像を独立検証・本書に保存。GAME-076は完了条件未達につき、今回終了時に**Doing→ToDoへ戻す**。次回は残りの実画像、初見UX/実機Human Gate、10軸品質改善の根拠を扱う。実機でしか取得できない証拠はユーザーの実機確認を待つ。同一回に2件目へ進まない。
