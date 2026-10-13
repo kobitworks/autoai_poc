@@ -316,3 +316,13 @@
 - **新しいCI**: [GitHub Actions run 38406231386](https://github.com/kobitworks/autoai_poc/actions/runs/38406231386)、head_sha=cb23bebc0...。`2026-10-13 22:38:05`時点のジョブ: contract=completed/success, export-web=completed/success, browser-quality=in_progress/pending。途中のCIを完走/全画面PASSと誤記しない。
 - **品質判定**: 従来の独立暫定76/100を据え置く（目標80未達）。新3サイズの自然START後幾何、画像、主4画面E2Eの新run結果はCI完走まで未確定。実機スピーカー/イヤホン音量、初見30秒の理解、物理画面の小文字判読と誤タップ、FPS/発熱はHuman Gate未確認。人間操作の代行・同一理由の重複Slack警報を行わない。
 - **次回再開点**: 新runのcontract/export-web/browser-quality最終結果・layoutSweep 3/3と基準4画面4/4・ZIP画像を独立読戻し。エラー時は同1件GAME-076で最小修正後再検証。80点品質の実機証跡が揃うまではGAME-076をToDo継続し完了としない。他のタスクには着手しない。
+
+
+## 2026-10-13 23:02:11 JST / AUTOAI-GAME076-20261013-2249 — 小型画面の自然START検査CIと証跡ZIPの独立確証
+
+- **本回の実作業はP021 GAME-076のみ**。共通Runner v1.38.0 / P021 v1.2.0、Slack登録メッセージ41件DONE、前回以降の明示@autoai新規指示なし、日次全体監視09:21実施済。実行順先行15件(P005〜P018/P020)はHuman Gate/依存/定期周期未到達/全完了につき実作業なし。GAME-075=Done、GAME-076=ToDoからDoingへ排他取得し再読込一致。
+- **GitHub Actionsの最終状態を初確認**: [run38406231386](https://github.com/kobitworks/autoai_poc/actions/runs/38406231386) (head=cb23bebc0afc2cf4afc4ee5d8894d93cb4b7427b) のcontract / export-web / browser-qualityの3件がすべてcompleted/success。前回のbrowser-quality進行中を本回で解消。
+- **生ログJSONを独立構文解析**: browser-quality job=115327287604最終GAME-076 results JSONを復元し、通常phone縦・phone横・tablet縦・tablet横の自然touch/mouse E2Eが4/4 PASS、qaCommand=NEVER USEDであることを確認。NIGHT/ACE進行・SOUND/BEST確認はこの4画面テスト範囲で成功。小型320x568、667x375、800x600の追加layoutSweepは3/3 PASS_GEOMETRY。各サイズで通常のtap/clickからstate=playing、orbit=1、energy=3、noQaCommand/noStateOverride=trueを確認し、INTROとPLAYING双方の幾何検査を満たす。3サイズのNIGHT/ACEフルE2Eや物理端末の可読性まで合格と見なさない。
+- **成果物ZIP実体の独立検証**: [artifact11819273549](https://github.com/kobitworks/autoai_poc/actions/runs/38406231386/artifacts/11819273549) を取得。実ZIPのSHA256=887f6ca2449e0d1b681e8b72acab1d3f51046a258e69e02e9151d4c6bff3aa3eでGitHub digestと一致。全60ファイルのZIP CRC正常、JSON2件が解析可能、PNG58件が全件画像デコード正常。うち小型3サイズのINTRO/PLAYING計6枚は320x568/667x375/800x600の寸法一致を確認し、6枚の比較一覧も目視。従来基準4画面の各13画像=52PNGも含む。
+- **範囲と品質**: 自動ブラウザの幾何PASSと保存証跡の整合性は実証したが、スクリーンショットだけでは実機の初見30秒理解、表示文字の可読性、誤タップ、スピーカー/イヤホン音、FPS/発熱は判定不可。小型横画面では下部アクション案内の表示余地が狭いため実機レビューの注目点とする。独立暫定品質76/100を維持し、80点以上の一般公開完了判定は保留。今回ゲームロジック/QAソース/公開用main/課金/本番範囲に変更なし。
+- **結論と再開点**: 新runのCIと58PNGを追跡・監査した。GAME-076は改善完了条件と実機Human Gate未充足のためToDoへ戻し継続。次回は実機結果の提供があれば小型画面の表示余地・文字サイズ・初見案内・音/端末性能を10軸再採点し、必要に応じ同タスク内で最小改善。既存Human Gateの同一理由通知は重複させない。別の実タスクは着手しない。
