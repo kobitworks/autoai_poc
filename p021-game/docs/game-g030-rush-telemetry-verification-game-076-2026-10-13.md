@@ -165,3 +165,20 @@
 - **コミットと再読込:** [develop commit 8e0f5be](https://github.com/kobitworks/autoai_poc/commit/8e0f5be901be555ae864cfce668085e29aa91811)。変更ファイル1件・16行追加、削除なし。新ソースblob `97e2296e3ffe14dc933450f0b449ea444ccf17df`。GitHubから新本文を再取得し、コミット前に構成した全文と完全一致。旧QA成功run38356945971は**本変更前**のもの。
 - **未検証・判定:** 当該新コミットに紐づくGitHub Actionsの完了結果・実入力E2E・PNGは現時点で確認できないためPASS扱いしない。品質独立暫定**76/100据置**（80点未達）。実機での初見30秒の正しい操作、HUBマーカーと副次文字の可読性、スピーカー/イヤホン聴感、タッチ誤操作、FPS・発熱はHuman Gate未検証。GAME-076のDone判定を行わずToDoで次回継続。
 - **次回:** 本commitに対するcontract/export-web/browser-qualityの3ジョブ、実ブラウザ通常入力による4 viewport NIGHT3→ACE6・SOUND OFF/ON・RETRY・BEST保存、52 PNG、短縮案内の実画像と10軸採点を確認し、不足なら再度限定改善。mainへのmerge、本番・課金・公開範囲拡大なし。ほかのタスクは実行していない。
+
+## 2026-10-13 17:36:00 JST / AUTOAI-GAME076-20261013-173318 — 17:06版ソースの新CIと自然操作ログ独立検証（今回の1件）
+
+- **対象と排他:** Runner v1.38.0/P021 v1.2.0、P021 GAME-076の1件のみ。17:33:18 JSTにタスク正本のDoingロック取得・再読込一致。依存GAME-075 Done。新Slack @autoai実作業指示なし、日次監視09:21済。先行P005〜P020はHuman Gate/Blocked/依存未達/周期未到達/全Doneで実着手なし。
+- **新コードCI:** [source commit 8e0f5be](https://github.com/kobitworks/autoai_poc/commit/8e0f5be901be555ae864cfce668085e29aa91811)に紐づく[GitHub Actions run 38367034033](https://github.com/kobitworks/autoai_poc/actions/runs/38367034033)はpush、completed/success。contract job115194515212、export-web job115194583695、browser-quality job115194977738の3ジョブすべてsuccess。別commitの旧CIのPASSは今回の根拠に流用しない。
+- **実入力E2Eの最終JSONを生ジョブログから解析:** GAME-076のreal-input E2E出力をsimulated smokeと区別して独立パース。4画面ともqaCommand=NEVER USED、stateOverride=NONE、routeMoves各11回。通常touch/mouseでNIGHT自然3配達/12秒→ACE自然6配達/10秒、SOUND OFF/ON、RETRY、BEST保存・リロード復元は4画面PASS。
+
+| Viewport | 入力 | E2E | NIGHT | ACE | ACE得点 | 再読込BEST |
+|---|---|---|---|---|---:|---:|
+| phone-portrait | touch | PASS | 3 / 12s | 6 / 10s | 1109 | 1109 |
+| phone-landscape | mouse | PASS | 3 / 12s | 6 / 10s | 1110 | 1110 |
+| tablet-portrait | touch | PASS | 3 / 12s | 6 / 10s | 1094 | 1094 |
+| tablet-landscape | mouse | PASS | 3 / 12s | 6 / 10s | 1108 | 1108 |
+
+- **新artifactのメタ情報:** [artifact11797443568](https://github.com/kobitworks/autoai_poc/actions/runs/38367034033/artifacts/11797443568)、p021-game-g030-real-input-evidence。ジョブログでは54ファイル・3,956,728 bytesのアップロードに成功、GitHub digest=sha256:d6d1e67ccdfc91930265c013b4629271cf85d1c632b73e120a839dcfaea1a3a0。本回はZIP実体の独立SHA/CRC検査や新52PNGの実画像確認はしていないため、画像監査のPASSは宣言しない。
+- **静的文字コントラスト:** 最終JSONの4種は11.85〜13.84、PASS_STATIC。phone横ガイドは18 CSS pxの静的契約。ただし原寸・実機の文字/HUB可読性、誤タップ、初見30秒、スピーカー/イヤホン実音、FPS/発熱はNOT_VERIFIED Human Gate。静的結果を物理端末の合格には用いない。
+- **判定/次回:** 独立10軸暫定76/100を据置、一般公開基準80点未達。次回は今回のartifact ZIPに含まれる実52PNG・最終JSONを独立精査し、短縮したphone横NEXT ACTIONとtablet補助文字の原寸確認/限定改善/再採点。実機Human Gate回答が届けば照合。今回は監査文書の追記だけでゲームソース/QA/main/本番/課金/公開範囲に変更なし。GAME-076は完了条件未達につきToDo継続、2件目は実行しない。
