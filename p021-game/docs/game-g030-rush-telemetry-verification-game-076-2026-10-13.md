@@ -294,3 +294,14 @@
 - **GitHub develop記録**: [commit 70bab9485973276019d997895983155fb51a8984](https://github.com/kobitworks/autoai_poc/commit/70bab9485973276019d997895983155fb51a8984)、Main.gd blob 26561554bf2ba09240ff0aeab37e81992091375c。GitHubの同ファイルを再取得し、新式が存在し旧固定190px式が消えたことを確認。
 - **新CI**: [run38398934377](https://github.com/kobitworks/autoai_poc/actions/runs/38398934377) は新commitをheadとして起動し、21:40 JST時点はin_progress。最終成果物の3サイズlayoutSweep合否・4 viewport自然入力・スクリーンショットは未確認であり、式からの期待のみをPASS実測と記さない。
 - **判定/次回**: 新CIで320x568/667x375/800x600のgeometryと既存4 viewportの自然入力E2Eを再確認し、必要ならさらに調整する。初見30秒理解、実機小文字視認性/誤タップ、スピーカー/イヤホン音、FPS/発熱はHuman Gate未確認。独立暫定品質76/100据置（80点未達）なのでGAME-076はToDo継続。既存Human Gateの同一理由Slack通知は重複しない。mainマージ・新規課金・本番化・公開範囲拡大・2件目タスク着手なし。
+
+
+## 2026-10-13 22:04:39 JST / AUTOAI-GAME076-20261013-2152 — 最小スマホ縦レイアウト修正後CIの独立再検証
+
+- 本Runnerの実作業は **P021 / GAME-076 の1件のみ**。共通Runner v1.38.0 / P021 project_rule v1.2.0をFresh-read。Slack明示 @autoai 新規指示0件・登録41件DONE・日次監視09:21:17実行済み。先行P005〜P018/P020はHuman Gate/依存/周期/全完了による対象外。
+- **GitHub Actions実測**: [修正後run 38398934377](https://github.com/kobitworks/autoai_poc/actions/runs/38398934377) の最新attemptをGitHub APIから再取得し、contract / export-web / browser-quality の全3ジョブがcompleted/successと確認。前回の実行中表示を本回で解消。
+- **ブラウザ実入力生ログの独立確認**: browser-quality job 115301929229 の生ログから最終GAME-076 JSONを抽出・JSON.parse成功。標準4 viewportは phone-portrait / phone-landscape / tablet-portrait / tablet-landscape の全てstatus=PASS。各 viewport の qaCommand は NEVER USED。NIGHT3配達→ACE6配達の自然な操作、SOUND OFF/ON、初見誤タップ保護、BEST再読込はQA PASS。ACE score/BEST は順に 1108/1108、1109/1109、1092/1092、1109/1109。成功コマンド・state overrideで実績を作っていない。
+- **追加3サイズ**: 結果JSONの layoutSweep は small-phone-portrait=320x568 / small-phone-landscape=667x375 / compact-tablet-landscape=800x600 のいずれも status=PASS_GEOMETRY。前runの320x568 field/info overflowを再検証し、この幾何検査では再現しなかった。ただし3サイズはINTRO_GEOMETRY_ONLYであり、自然入力E2E/初見可読性/物理操作の合格とは扱わない。
+- **証跡**: [artifact11814792803](https://github.com/kobitworks/autoai_poc/actions/runs/38398934377/artifacts/11814792803) p021-game-g030-real-input-evidence、GitHub上4030066 bytes / digest sha256:4e22e9c9f00f0a140604cb5ef0fd08397df1c41252f74a67e923518bdec5a9ec。今回はartifact実ZIP/PNG自体の独立ダウンロード・画像目視は未実施のため、証跡ファイル自体の完全性を独立PASSと断定しない。
+- **品質・未検証事項**: 独立暫定品質76/100を据え置く（一般公開閾値80未達）。実機スピーカー/イヤホン、初見利用者の30秒理解・長文cue可読性、小画面実タップ誤操作、FPS/端末発熱のHuman Gateは未確認。CI成功だけで完了・公開品質認定しない。
+- **結果と次回**: GAME-076はToDoで継続。次は実機観測が得られ次第、初見ガイド/横画面の可読性の改善と物理デバイス品質判定、必要に応じ独立画像監査を行う。今回はゲームソース・main・課金・本番/公開範囲を変更せず監査ドキュメントのみ追記。他の実タスクは実施しない。
