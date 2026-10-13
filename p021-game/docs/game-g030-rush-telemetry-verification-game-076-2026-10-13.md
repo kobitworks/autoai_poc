@@ -115,3 +115,12 @@
 - **画像独立目視**: 各画面の`intro`／`novice-first-tap-guide`／`cargo-warning-3s`／`route-ace`の代表**16/52 PNGを一覧画像化して目視**。今回確認した代表画像で明白な重要UIの画面外欠落、補助文字の大きな相互重なりは認めず。残り36PNGの個別全数目視、実寸実機での可読性評価を実施したとは言わない。特にスマホ横の二次案内とtablet横の詳細文字は初見実機の可読性が未確定。
 - **品質と停止条件**: 過去の独立10軸暫定**76/100を据置き**（品質目標80点は未達）。`independentQualityScore=NOT ASSESSED`、`physicalOutput=NOT VERIFIED`の証拠区分を尊重し、CI PASSを品質80点/実機Human Gate PASSへ読み替えない。スマホ・タブレットの実スピーカー/イヤホン、初見30秒の理解、物理タッチ領域、FPS/発熱を実機確認できていない。
 - **今回の成果/次回再開点**: 未確定だったCIの完走を証拠付きで確定し、実入力JSON+ZIP+代表画像を独立検証・本書に保存。GAME-076は完了条件未達につき、今回終了時に**Doing→ToDoへ戻す**。次回は残りの実画像、初見UX/実機Human Gate、10軸品質改善の根拠を扱う。実機でしか取得できない証拠はユーザーの実機確認を待つ。同一回に2件目へ進まない。
+
+## 2026-10-13 15:30 JST / AUTOAI-GAME076-20261013-1528 — 配達先HUBの形状マーカー追加（今回の1件）
+
+- **対象と排他**: Runner v1.38.0、P021 rule v1.2.0、projects.xlsx / GAME-075=Done / GAME-076=ToDo、他実行中タスクなしをFresh-readし、15:28:37 JSTにGAME-076のみDoingへ排他変更、readback一致。新規明示Slack @autoai指示なし、本日監視09:21:17済み、先行の有効15PJは要確認・依存・完了または定期24時間未到達により未実行。
+- **UI改善（本実行の実作業）**: [develop commit fa502e6](https://github.com/kobitworks/autoai_poc/commit/fa502e62f7540af00bc7abd6e3e1ffb9befc3c6b) で `p021-game/sources/orbit-switch-courier-godot/Main.gd` のみ改修。情報パネルの貨物制限時間・配達先名称の右端に、プレイフィールドのHUBと一致する**四角・三角・丸の図形マーカー**と色付き輪郭を描画する。テキスト描画幅はマーカー領域33 CSS px相当を差し引き、余白9 CSS px相当を確保。短い画面で配達先名の全表示が難しくても図形と期限を並行識別できる構成。通常/残3秒警告の両方に対応し、色だけに依存せず形でも目的地を示す。
+- **変更範囲**: 対象は1ファイルの表示処理のみ・追加9行。配達先選択、入力処理、軌道、許容窓、スコア、難易度、残り時間、SOUND、BEST、QA条件に変更なし。先行blob `04555124a4095ebb298cd8e02895537531f1c88c` → 更新blob `6dffaa591df8ae6b8ade3afafed070c52a9c19c2`。developから再取得した内容はコミット送信本文と全体一致。
+- **CI状況**: ソースcommitから [run38356945971](https://github.com/kobitworks/autoai_poc/actions/runs/38356945971)（P021 Godot Web）、[pages run38356945545](https://github.com/kobitworks/autoai_poc/actions/runs/38356945545) が自動起動。15:30時点でcontract=completed/success、export-web=in_progress、browser-quality未実施。**新マーカー付きの4 viewport E2E/実画面証跡は未確定**であり、直前の成功run38351970193の合格を今回の改修には流用しない。
+- **品質・Human Gate**: 過去の独立暫定 **76/100を維持**、目標80/100未達。実機の初見30秒、手触り、音声、可読性、FPS、発熱は未検証。CI成功時でも実機品質合格は自動で宣言しない。main、有料利用、本番・公開範囲の変更なし。
+- **次回継続**: 新run38356945971の3ジョブをFresh-readし、4 viewport実touch/mouse NIGHT3→ACE6、52PNG+2JSON、SOUND/RETRY/BEST保存、実画像の新HUBマーカー表示を独立確認する。実機Human Gateと10軸の再評価を保持し、未達ならGAME-076は今回終了時にToDoへ戻す。別タスク実施なし。
