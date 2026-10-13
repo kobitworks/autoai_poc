@@ -749,6 +749,22 @@ func _draw_info_panel() -> void:
 			action_line = "START → %sを目指そう" % HUB_SHORT[cargo_target]
 		elif state == "result":
 			action_line = "RETRYで再挑戦"
+		# GAME-076: short landscape panels use concise, unambiguous live-action
+		# copy to avoid automatic font shrinking under NEXT ACTION. The legal
+		# tap window is still computed by _near_action_prompt (unchanged).
+		if state == "playing" and info_rect.size.y >= _ui_px(220.0) and info_rect.size.y <= _ui_px(275.0):
+			if live_action == "OTHER HUB · WAIT TO SWITCH":
+				action_line = "WAIT · WRONG HUB"
+			elif live_action == "TAP NOW · TRANSFER":
+				action_line = "TAP · SWITCH"
+			elif live_action.begins_with("TAP NOW · DELIVER "):
+				action_line = live_action.replace("TAP NOW · DELIVER ", "TAP · HUB ")
+			elif live_action == "GET READY · TARGET HUB":
+				action_line = "READY · TARGET HUB"
+			elif live_action == "GET READY · CROSSING":
+				action_line = "READY · GREEN"
+			elif live_action.begins_with("TARGET "):
+				action_line = live_action.replace(" · WAIT FOR GLOW", " · WAIT")
 		var card_y := y - _ui_px(13.0)
 		var card_h := minf(_ui_px(56.0), info_rect.end.y - card_y - _ui_px(11.0))
 		if card_h >= _ui_px(43.0):
