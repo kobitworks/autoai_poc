@@ -470,3 +470,14 @@
 - **PNG独立目視**: 代表12枚（4標準画面のintro、3秒警告、初見1タップ、長文cue、result、playing等）を並べ、主要領域の明白な重なり・欠落がないことを確認。phone-landscapeのオリジナル警告画像で赤い帯に`03s LEFT! HURRY`、ゲージ警告および緑のTAP NOWを実画素で確認。各viewportのJSON `cargoWarning.secondsAfter` は2.33〜2.63秒で3秒以下。PNG**全枚を肉眼確認したとは扱わない**。現物の小文字の読みやすさと誤タップのしにくさは未判定。
 - **完了/品質Gate**: 暫定の独立10軸品質は76/100据置き（一般公開目標80未達）。実機初見30秒・日本語文字の可読性・誤タップ・スピーカー/イヤホン音声・FPS/発熱はHuman Gate未確認。CI成功・静的コントラスト計算・ブラウザスクリーンショットを実機合格として扱わず、同一理由のユーザー向け警告Slackは重複送信しない。
 - **再開点**: 実機結果受領後に10軸採点更新。残りPNGの重点視覚監査や実機で見つかった問題に限り同GAME-076で対応する。今回ゲーム本体・QAコード・main・課金・本番構成を変更しない。Done条件未達のためDoing→ToDoへ復帰、他タスクなし。
+
+
+## 2026-10-14 07:00:51 JST / AUTOAI-GAME076-20261014-INTRO-OVERLAP / 58枚画面監査と小型Portraitの初見説明修正
+
+- 今回の唯一の実タスクは P021 GAME-076。runner v1.38.0 / P021 v1.2.0、GAME-075=Done / GAME-076=ToDo→Doingを読戻し確認。P005〜P018/P020は人間確認/依存/HOLD/周期未到達/完了済み。Slack新規明示@autoai指示0件・メッセージ41件全DONE、9:00前なので日次監視は対象外。
+- Actions [run 38468420482](https://github.com/kobitworks/autoai_poc/actions/runs/38468420482) の過去合格artifact [11851840723](https://github.com/kobitworks/autoai_poc/actions/runs/38468420482/artifacts/11851840723) を再ダウンロード。ZIP 4,370,607BのSHA256は \`c9a942ad04944e246a0d155fe5ec4c08bd102cd3dc0fe1b92baad3cb961a3dda\` でGitHub digest一致、CRC異常0、PNG58枚デコード成功、4標準画面の13状態×4 + 小型3画面の各2状態をコンタクトシートで画面別に目視確認。
+- **新規実画面不具合**: \`small-phone-portrait-layout-intro.png\`（320x568）の3行目「同じ印のHUBでTAP → 配達」が「TAP TO START」ボタンと重なっていた。旧小型layoutSweepの \`PASS_GEOMETRY\` はheader↔SOUNDの間隔のみ測定しており、INTRO本文↔ボタンの非重複を検証していなかった。4標準viewportの4/4 PASSと区別する。
+- **原因と対応**: 320x568の旧キャプチャからfield/UI scaleを再計算するとINTROカード高さ約153.4 CSS px。従来の固定step_y=46・step_gap=23・step_h=21は、最後の説明行がSTARTボタン上端を約12.6 CSS px超過する計算。Godot本体 \`Main.gd\` の180 CSS px未満の短いINTROに限定し、タイトル・ステップの位置/間隔/フォントを調整。修正前の幾何に基づく**静的試算**では最下行↔STARTに約7 CSS px、他の小型Landscape 667x375では17px、compact tablet 800x600では22px（後二者の配置変更なし）。実画面の修正後PASSはまだ未検証と明記。
+- Godotソース \`p021-game/sources/orbit-switch-courier-godot/Main.gd\` のdevelop修正commit [69c57d242ca8](https://github.com/kobitworks/autoai_poc/commit/69c57d242ca820876cbcb9e06c21d615299dac6e)。read-onlyのINTRO末尾説明/START矩形テレメトリを追加。QA \`p021-game/qa/orbit-switch-courier-real-input.js\` に3小型画面の実描画矩形間隔>=4 CSS px、両矩形のplayfield内包含、STARTタップ継続を検証するassertionを追加、develop commit [b816bb561ff4](https://github.com/kobitworks/autoai_poc/commit/b816bb561ff4c00b08ba412a3555188912ee87f1)。2ファイルのGitHub develop読戻しblob一致。ゲームの配送判定・得点・BEST・音声・物理入力・一般公開mainは変更なし。
+- **未検証**: 新HEAD b816bb561ff4 のGitHub Actions contract/export-web/browser-qualityの完走結果と、修正後320x568 INTROスクリーンショット/実描画間隔は未確認。過去のrun38468420482の合格を新変更へ流用しない。次回は新HEADのCI 3 jobを確認し、artifactの \`small-phone-portrait-layout-intro.png\` と \`layoutSweep[].introStepButtonSpacing.gapCssPx\` が4 CSS px以上かを独立検証。CI失敗時は同GAME-076内で限定修正。
+- 独立暫定品質76/100（目標80未満）は据置き。実機の初見30秒、日本語文字可読性・誤タップ、スピーカー/イヤホン音、FPS/発熱は引き続きHuman Gate。一般公開品質と扱わず、既出の同一理由によるSlack要確認は重複送信しない。完了条件未達なのでGAME-076をToDoへ戻して次回再開する。今回ほかの実タスクなし。
