@@ -716,3 +716,12 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - **P021独立暫定品質は76/100のまま据置き**（ゲーム8・操作8・難度7・UI/UX8・グラフィック7・演出6・サウンド6・変化8・リプレイ9・技術9）。4/4の成功1回だけでは初回FAILの不安定性が解消された証明にならず、80点の一般公開品質には未達。
 - **次回再開点**: (1) RUSH 0→1のread-only angle/energy/cargo_left/入力観測時刻テレメトリ取得条件を追加するか、同一commitで複数attemptを再評価し、初回失敗と成功時の時系列差から根因を確定する（成功コマンドやstate直書きは禁止）;(2) phone-landscape小型副次文字とtablet-landscape右欄の初見導線を実画像で継続改善;(3) 4 viewport実入力E2E、13状態の画像および10軸独立採点を再実施。
 - **Human Gate未検証**: 実機スピーカー/イヤホンの音質/音量、端末FPS/発熱、初見ユーザー30秒理解度・誤タップ率。これらをCI PASSで代替しない。今回main変更・課金・本番化・追加外部公開なし。**GAME-076は未完了のためToDoへ戻して継続**。
+
+
+## 2026-10-13 11:04 JST / AUTOAI-GAME076-20261013-1058 — RUSH初回FAILの読取専用テレメトリ追加
+
+- 今回のRunner唯一の実作業は P021 GAME-076 継続1件。共通Runner v1.38.0／P021 v1.2.0をFresh-read。@autoai新規の明示指示なし、日次全体監視は09:21 JSTに実施済み。他の有効PJ P005〜P018/P020は人間確認・依存・日次/24h等の条件により実作業を実行せず、GAME-075=Done、GAME-076=ToDo、他Doingなしを確認して本タスクをDoing排他取得。
+- 比較対象は既存CI [run38330801226](https://github.com/kobitworks/autoai_poc/actions/runs/38330801226)。attempt1 browser-quality job115080187822はタブレット縦だけRUSH 0→1 crossingの `page.waitForFunction` 18000ms Timeout。失敗時の最終スナップショットは `state=playing, orbit=0, angle≈3.906, cargo_left≈9.09s, energy=2, deliveries=1`、ブラウザエラー0件。待機条件は `orbit=0` かつ `4.32<=angle<=4.44` であり、失敗時角度は範囲外。18秒の壁時計待機中に物理シミュレーション／観測が十分進まなかった可能性があるが、これだけでは原因を確定しない。attempt2 job115081389637は全4 viewport実入力PASSであり、attempt1の失敗を無視しない。
+- 切り分けに必要な時系列が既存失敗artifactにないため、[develop QA変更commit052cdf831a6e](https://github.com/kobitworks/autoai_poc/commit/052cdf831a6e8045e1b56aae0edd7895ba61db74) で `p021-game/qa/orbit-switch-courier-real-input.js` に**RUSH 0→1の受動テレメトリ**を追加。75ms周期・最大300標本で `wallMs/monoMs/state/orbit/angle/cargoLeft/timeLeft/energy/deliveries` を観測し、成功/例外の双方で `evidence.rushTelemetry` に保持する。観測はGodotの既存read-only `window.__P021_ORBIT` から取得し、ゲーム状態・得点・配達・成功コマンドは書き換えない。入力先と検証窓4.32..4.44、18秒の待機判定も変更しない。
+- GitHub developにQAファイル1件だけ反映され、新blob `c0f6a6da0c69f14efffd1ece9c6115fee7288704` の読戻しで差分29行を検証。ゲーム本体 `Main.gd`、main、課金・本番化は未変更。今回の**新しい診断コードに対応するCI完走、JSON結果、4viewport再実入力の成否はまだ検証していない**。
+- ゲーム10軸独立暫定評価は76/100据置（80点未達）。実機スピーカー/イヤホン音質・初見30秒・タップ視認性・FPS/発熱はHuman Gate未検証。次回は新診断の失敗・成功テレメトリを比較し、壁時計とゲーム時計の進み方、4.32..4.44窓の通過・サンプル捕捉を切り分けてから、必要な最小改善→4 viewport正規入力NIGHT3→ACE6→10軸再評価を実施。GAME-076は未完了につきToDoで継続。
