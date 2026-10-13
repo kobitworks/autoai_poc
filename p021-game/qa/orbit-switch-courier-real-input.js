@@ -582,6 +582,27 @@ async function run(){
         const playHub=physicalRect(playing.hub_rect,playCanvas,playing);
         if(playCanvas.height>520)check(playHub.y+playHub.height<=playHud.y-3,
           'Responsive PLAYING HUB/HUD overlap: '+t.name);
+        // GAME-076: verify ACTUALLY rendered Godot card and guide rectangles.
+        // Only read debug telemetry; no command, angle, score or physics changes.
+        if(t.name==='small-phone-landscape'){
+          const panel=physicalRect(playing.info,playCanvas,playing);
+          const card=physicalRect(playing.action_card_rect,playCanvas,playing);
+          const guide=physicalRect(playing.help_guide_rect,playCanvas,playing);
+          check(card.width>0&&card.height>=43&&guide.width>0&&guide.height>=30,
+            'Responsive action card or help guide missing: '+t.name+' '+JSON.stringify({card,guide}));
+          const gapCss=guide.y-(card.y+card.height);
+          check(gapCss>=4,
+            'Responsive action card overlaps or touches help guide: '+t.name+' gap='+gapCss.toFixed(2));
+          for(const [name,r] of [['card',card],['guide',guide]]){
+            check(r.x>=panel.x-2&&r.y>=panel.y-2&&
+              r.x+r.width<=panel.x+panel.width+2&&
+              r.y+r.height<=panel.y+panel.height+2,
+              'Responsive '+name+' exceeds info panel: '+t.name+' '+JSON.stringify({r,panel}));
+          }
+          proof.actionGuideSpacing={source:'GODOT_RENDERED_RECT_TELEMETRY_READ_ONLY',
+            gapCssPx:Math.round(gapCss*100)/100,minimumCssPx:4,
+            actionCard:card,helpGuide:guide,infoPanel:panel};
+        }
         await page.screenshot({path:dir+'/'+t.name+'-layout-playing.png'});
         check(failures.length===0,'Responsive PLAYING browser errors: '+failures.join(' | '));
         proof.naturalStart={input:starter.input,physicalTapOrClick:true,

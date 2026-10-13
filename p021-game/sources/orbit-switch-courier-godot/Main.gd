@@ -64,6 +64,9 @@ var sound_rect := Rect2()
 var hub_rect := Rect2()
 var hud_rect := Rect2()
 var retry_rect := Rect2()
+# GAME-076: read-only rectangles of actually rendered action/guide surfaces for CI.
+var action_card_rect := Rect2()
+var help_guide_rect := Rect2()
 
 var audio_player: AudioStreamPlayer
 var tone_switch: AudioStreamWAV
@@ -692,6 +695,8 @@ func _near_action_prompt() -> String:
 
 
 func _draw_info_panel() -> void:
+	action_card_rect = Rect2()
+	help_guide_rect = Rect2()
 	_rounded_box(info_rect, Color("#0a1625"), Color("#2f5b72"), 16, 1)
 	var pad := _ui_px(16.0)
 	var x := info_rect.position.x + pad
@@ -778,6 +783,7 @@ func _draw_info_panel() -> void:
 		var card_h := minf(_ui_px(56.0), info_rect.end.y - card_y - guide_clearance)
 		if card_h >= _ui_px(43.0):
 			var action_card := Rect2(x, card_y, info_rect.size.x - pad * 2.0, card_h)
+			action_card_rect = action_card
 			_rounded_box(action_card, Color("#125b4b") if action_ready else Color("#183a51"), Color("#9affdc") if action_ready else Color("#89d7fc"), 11, 3 if action_ready else 2)
 			# A short, pulsing green rail makes a genuinely legal TAP window visible
 			# without touching orbit, input, score, or the QA state.
@@ -809,6 +815,7 @@ func _draw_info_panel() -> void:
 			var short_help_width := (info_rect.size.x - _ui_px(14.0) - short_help_gap) * 0.5
 			var switch_chip := Rect2(info_rect.position.x + _ui_px(7.0), info_rect.end.y - _ui_px(36.0), short_help_width, _ui_px(30.0))
 			var deliver_chip := Rect2(switch_chip.end.x + short_help_gap, switch_chip.position.y, short_help_width, switch_chip.size.y)
+			help_guide_rect = Rect2(switch_chip.position.x, switch_chip.position.y, deliver_chip.end.x - switch_chip.position.x, switch_chip.size.y)
 			_rounded_box(switch_chip, Color("#154e45"), Color("#77e9cf"), 9, 1)
 			_rounded_box(deliver_chip, Color("#5a4428"), Color("#ffe5a2"), 9, 1)
 			_draw_center_fit_text("緑でTAP→乗換", switch_chip, _font_size(18.0), Color("#ffffff"))
@@ -816,6 +823,7 @@ func _draw_info_panel() -> void:
 		else:
 			# Taller phone landscape panels have room for two high-contrast steps.
 			var help_band := Rect2(info_rect.position.x + _ui_px(7.0), info_rect.end.y - _ui_px(48.0), info_rect.size.x - _ui_px(14.0), _ui_px(42.0))
+			help_guide_rect = help_band
 			_rounded_box(help_band, Color("#16364a"), Color("#5ba7c9"), 9, 1)
 			_draw_fit_label("1  緑でTAP → 乗換", Vector2(x, info_rect.end.y - _ui_px(32.0)), _font_size(19.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
 			_draw_fit_label("2  同じ印でTAP → 配達", Vector2(x, info_rect.end.y - _ui_px(12.0)), _font_size(19.0), Color("#fff8d9"), info_rect.size.x - pad * 2.0)
@@ -845,6 +853,7 @@ func _draw_info_panel() -> void:
 	# same instructions beneath the milestone/feedback row.
 	if info_rect.size.y > _ui_px(275.0) and info_rect.size.y <= _ui_px(470.0):
 		var guide_band := Rect2(info_rect.position.x + _ui_px(7.0), info_rect.end.y - _ui_px(67.0), info_rect.size.x - _ui_px(14.0), _ui_px(61.0))
+		help_guide_rect = guide_band
 		_rounded_box(guide_band, Color("#142f43"), Color("#5d9cbd"), 9, 1)
 		_draw_fit_label("緑の交差点でTAP → 乗換", Vector2(x, info_rect.end.y - _ui_px(52.0)), _font_size(18.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
 		_draw_fit_label("同じ印のHUBでTAP → 配達", Vector2(x, info_rect.end.y - _ui_px(23.0)), _font_size(18.0), Color("#fff6c9"), info_rect.size.x - pad * 2.0)
@@ -1039,6 +1048,8 @@ func _update_debug_bridge() -> void:
 		"hub_rect": _rect_payload(hub_rect),
 		"hud_rect": _rect_payload(hud_rect),
 		"retry_rect": _rect_payload(retry_rect),
+		"action_card_rect": _rect_payload(action_card_rect),
+		"help_guide_rect": _rect_payload(help_guide_rect),
 		"field": _rect_payload(field_rect),
 		"info": _rect_payload(info_rect),
 		"viewport_w": int(get_viewport_rect().size.x),
