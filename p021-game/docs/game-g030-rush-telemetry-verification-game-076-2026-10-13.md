@@ -124,3 +124,14 @@
 - **CI状況**: ソースcommitから [run38356945971](https://github.com/kobitworks/autoai_poc/actions/runs/38356945971)（P021 Godot Web）、[pages run38356945545](https://github.com/kobitworks/autoai_poc/actions/runs/38356945545) が自動起動。15:30時点でcontract=completed/success、export-web=in_progress、browser-quality未実施。**新マーカー付きの4 viewport E2E/実画面証跡は未確定**であり、直前の成功run38351970193の合格を今回の改修には流用しない。
 - **品質・Human Gate**: 過去の独立暫定 **76/100を維持**、目標80/100未達。実機の初見30秒、手触り、音声、可読性、FPS、発熱は未検証。CI成功時でも実機品質合格は自動で宣言しない。main、有料利用、本番・公開範囲の変更なし。
 - **次回継続**: 新run38356945971の3ジョブをFresh-readし、4 viewport実touch/mouse NIGHT3→ACE6、52PNG+2JSON、SOUND/RETRY/BEST保存、実画像の新HUBマーカー表示を独立確認する。実機Human Gateと10軸の再評価を保持し、未達ならGAME-076は今回終了時にToDoへ戻す。別タスク実施なし。
+
+
+## 2026-10-13 16:02:19 JST / AUTOAI-GAME076-20261013-1558 — 新HUB形状マーカー版CI・実入力・16画面視覚独立監査（今回の1件）
+
+- **正本・対象・排他**: Runner v1.38.0 / P021 v1.2.0。Slack新規の明示@autoai指示なし、日次全体監視は本日09:21:17済。先行P005〜P018/P020の各タスク正本をFresh-readし、要確認/Blocked/HOLD/前提未達/日次周期未達/完了済みのため着手せず。今回の実タスクは **GAME-076 1件のみ**。GAME-075 Done・GAME-076 ToDo、他Doingなし確認後、15:58:50 JSTにDoingロック、再読込でDoing一致。
+- **前回改修のCIを確定**: [develop source commit fa502e6](https://github.com/kobitworks/autoai_poc/commit/fa502e62f7540af00bc7abd6e3e1ffb9befc3c6b)（CARGOラベル右端のHUB四角/三角/丸マーカー）に対応する [GitHub Actions run38356945971](https://github.com/kobitworks/autoai_poc/actions/runs/38356945971) は contract job115161944267、export-web job115161993779、browser-quality job115162340841 が **3/3 completed/success**。Godotソースのdevelop読戻しblob=6dffaa591df8ae6b8ade3afafed070c52a9c19c2でHUB形状マーカー描画コードを確認。前回15:30の「新CI未確定」を本実行で解消。
+- **証拠ZIP実体の独立検証**: artifact [11793975259](https://github.com/kobitworks/autoai_poc/actions/runs/38356945971/artifacts/11793975259) を取得。実ZIPのSHA-256=0c3898830527934471623e45941040af99039bcbaae7e03cc19258282171fc97 はGitHubのdigestと完全一致、CRC異常なし。**54点＝52PNG＋results.json＋results-checkpoint.json**を確認。4画面×13枚、phone縦390×844・横844×390、tablet縦768×1024・横1024×768。全52PNGを開けること、寸法と縮小サンプルが空白一色でないことをプログラム確認。checkpointはPARTIAL_CHECKPOINT_NOT_FINALで最終合否には使っていない。
+- **最終results.json監査**: phone縦/横・tablet縦/横が4/4 PASS。QAコマンド・ゲーム状態直接変更なし（qaCommand=NEVER USED、stateOverride=NONE）で通常touch/mouse操作によるNIGHT到達3配達・ACE到達6配達を全4画面で確認。ACE得点は順に1109/1110/1107/1109、BEST保存→再読込復元は4/4一致、SOUND OFF/ON、リトライ、および初見のFIRST TAP GUIDE検証が全4画面でPASS。
+- **画像独立目視**: 52PNGのうち intro・novice-first-tap-guide・cargo-warning-3s・route-ace の各4画面＝計**16枚**をコンタクトシートで独立目視。新版の貨物カウントダウン右側にHUB形状マーカーが各画面で描画され、残3秒警告や上位ルート時にも領域外へ大きく逸脱しないことを観察。今回目視した16枚で重大な画面欠落は見られないが、スマホ横のサブ情報・HUBマーカー自体の小ささは実機での判読性確認が必要。残36PNGの個別全枚目視を行ったとは主張しない。
+- **品質ゲートと次回**: 独立10軸の既存暫定**76/100を据え置き**、一般公開の目標80未達。CIのPASS、静的コントラストPASS_STATIC、スクリーンショット目視は実機のスピーカー/イヤホン音・初見30秒の理解・物理タッチ/文字視認性・FPS/発熱のPASSを意味しない。実機Human Gateは未確認のまま。次回はマーカーの小画面での判読性、初見ユーザー実機の観察、10軸独立再採点を行い、80点へ届く限定改善を継続する。
+- **本実行の変更範囲**: CI・証拠ZIP・画像・GitHubソースのFresh-readと本監査文書の追記のみ。ゲームソース/QAコード、main、課金、本番/公開範囲の変更なし。GAME-076は完了条件未達のためDoingからToDoへ戻す。2件目には着手しない。
