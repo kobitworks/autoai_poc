@@ -258,7 +258,36 @@ async function run(){
         evidence.routeMoves=[];
         // Orbit 0 moves forward at 1.12rad/s: select an earlier *valid* 4.50 +/- 0.19 window.
         // The former 4.35..4.57 band could observe too late for a real tablet tap.
-        evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.32,4.44,'RUSH 0->1'));
+        // GAME-076: observe RUSH 0->1 on slow CI without touching game state or inputs.
+        // A wall-clock timeout can happen before a real angular crossing is rendered.
+        await page.evaluate(() => {
+          if (window.__P021_RUSH_TRACE_TIMER) clearInterval(window.__P021_RUSH_TRACE_TIMER);
+          window.__P021_RUSH_TRACE=[];
+          window.__P021_RUSH_TRACE_TIMER=setInterval(() => {
+            const x=window.__P021_ORBIT, a=window.__P021_RUSH_TRACE;
+            if (!x || !Array.isArray(a)) return;
+            a.push({wallMs:Date.now(),monoMs:Math.round(performance.now()),
+              state:x.state,orbit:x.orbit,angle:Math.round(x.angle*1000)/1000,
+              cargoLeft:Math.round(x.cargo_left*100)/100,
+              timeLeft:Math.round(x.time_left*100)/100,
+              energy:x.energy,deliveries:x.deliveries});
+            if (a.length>300) a.shift();
+          },75);
+        });
+        try {
+          evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.32,4.44,'RUSH 0->1'));
+        } finally {
+          // Capture whether QA timed out BEFORE the valid crossing was reached.
+          // The game itself, click path, deadlines and acceptance thresholds are untouched.
+          try {
+            evidence.rushTelemetry=await page.evaluate(() => {
+              if (window.__P021_RUSH_TRACE_TIMER) clearInterval(window.__P021_RUSH_TRACE_TIMER);
+              return {samplePeriodMs:75,readOnly:true,samples:window.__P021_RUSH_TRACE||[]};
+            });
+          } catch (traceErr) {
+            evidence.rushTelemetryError=String(traceErr.message);
+          }
+        }
         evidence.routeMoves.push(await physicalDeliver(page,t,1,3.46,3.76,2,'RUSH HUB1'));
         evidence.routeMoves.push(await physicalSwitch(page,t,1,2,2.41,2.66,'RUSH 1->2'));
         // GAME-076: passive, bounded telemetry to diagnose missed NIGHT HUB0 on tablets.
