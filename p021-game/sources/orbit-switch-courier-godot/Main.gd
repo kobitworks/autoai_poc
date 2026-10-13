@@ -1055,6 +1055,10 @@ func _update_debug_bridge() -> void:
 		"viewport_w": int(get_viewport_rect().size.x),
 		"viewport_h": int(get_viewport_rect().size.y),
 		"qa_mode": qa_mode,
-		"cue_stress": qa_cue_stress
+		"cue_stress": qa_cue_stress,
+		# Read-only evidence: prove QA long cue and the two displayed priority lines are selected.
+		"qa_visible_cue": _visible_cue() if qa_cue_stress else "",
+		"qa_priority_top": _cue_priority_lines()[0] if qa_cue_stress else "",
+		"qa_priority_next": _cue_priority_lines()[1] if qa_cue_stress else ""
 	}
 	JavaScriptBridge.eval("window.__P021_ORBIT = %s;" % JSON.stringify(payload), true)

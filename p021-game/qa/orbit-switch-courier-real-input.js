@@ -438,6 +438,14 @@ async function run(){
         d=await snapshot(page);
         check(d.cue_stress && d.state==='playing' && d.score===0 && d.deliveries===0,
           'QA display fixture altered game progress or did not render');
+        // Confirm the renderer selected the long cue and preserved its two critical lines.
+        // QA only reads Godot display telemetry; this cannot advance a delivery or score.
+        check(typeof d.qa_visible_cue==='string' &&
+          d.qa_visible_cue.includes('NEXT ACTION:') &&
+          d.qa_visible_cue.includes('EXTRA-LONG TEST STATUS') &&
+          d.qa_priority_top.includes('ROUTE NIGHT') &&
+          d.qa_priority_next.includes('TAP NOW'),
+          'Long-cue display priorities missing: '+JSON.stringify({top:d.qa_priority_top,next:d.qa_priority_next}));
         await page.screenshot({path:dir+'/'+t.name+'-cue-stress.png'});
         evidence.cueStress={result:'CAPTURED',stage:'natural real-input playing',
           deliveries:d.deliveries,score:d.score,readOnlyDisplay:true,
