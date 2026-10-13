@@ -283,3 +283,14 @@
 - **コード**: [develop commit d116c2f9d1dc79e201ee2cea0d2e18f95932a019](https://github.com/kobitworks/autoai_poc/commit/d116c2f9d1dc79e201ee2cea0d2e18f95932a019)／`p021-game/qa/orbit-switch-courier-real-input.js`。blob `e1c30d9ace5f17994f659844dd4d85802c90f66e`をAPI読戻し確認済み。
 - **未検証**: この新commitを対象とするGitHub Actions最終結果、追加3画面の`layoutSweep` PASS/FAIL、実機操作/可読性/音声/初見30秒/FPS/発熱はまだ実測確認できていない。旧run38390890913の4/4 PASSを新テストの合格と混同しない。
 - **判定**: 10軸品質スコアは独立暫定**76/100（80未達）**のまま。追加検査結果とユーザー実機フィードバックを次回の再開点とする。未完了なので正本GAME-076はDoing→ToDoへ復帰予定。mainへのマージ、本番化、有料契約、公開範囲変更なし。追加タスク実行なし。
+
+
+## 2026-10-13 21:40 JST / AUTOAI-GAME076-20261013-2128 — 320×568最小スマホ縦画面のレスポンシブ領域逸脱を修正
+
+- Runner v1.38.0 / P021 project_rule v1.2.0、今回の唯一の実作業はGAME-076。前回P021実行21:20の記録をFresh-read。Slack登録23chで新規明示@autoai指示なし、メッセージタスク41件完了、日次全体監視09:21:17実施済。先行プロジェクトでは依存未解消、Human Gate、HOLD/Blocked、周期未到達または全Doneで実行なし。
+- **前回新規追加したQAの結果を初検証**: source develop commit d116c2f9d1dc79e201ee2cea0d2e18f95932a019 に対する [GitHub Actions run38396183761](https://github.com/kobitworks/autoai_poc/actions/runs/38396183761) は contract/export-web=success、browser-quality=failure。生ログ最終JSONを独立解析したところ、4基準viewportの自然touch/mouse E2Eは4/4 PASS（phone縦1109、横1110、tablet縦1108、横1110、すべてBEST保存再読込一致）、初回誤タップ保護4/4 PASS。追加read-only geometry 3サイズでは320x568のみ「Responsive field/info overflow」でFAIL、667x375と800x600はPASS_GEOMETRY。したがって今回のCI失敗は新規小型縦画面のレイアウト逸脱であり、既存4画面の自然入力・NIGHT/ACE動作失敗とは区別する。
+- **原因**: Main.gd portrait分岐が情報欄最小170CSS pxに加えゲーム領域最小190CSS px、両欄間ギャップ8pxを個別に強制していた。小型縦画面では上部見出し/HUDの後の残高さが合計368pxに満たず、矩形の合計が表示域の下端を超えた。
+- **修正**: portraitで実際の available_h から8CSS px gapを控除した split_h を求め、情報欄高さを従来170〜194px目標と split_h*0.49 の小さい方、ゲーム欄を残りの高さとして割当。これにより field.end+gap+info_h=viewport_h-margin が数式上成立し、余白を超える固定最小高さを廃止。既存landscape分岐、ゲームロジック、入力・スコア・ルート判定、音声処理は無変更。
+- **GitHub develop記録**: [commit 70bab9485973276019d997895983155fb51a8984](https://github.com/kobitworks/autoai_poc/commit/70bab9485973276019d997895983155fb51a8984)、Main.gd blob 26561554bf2ba09240ff0aeab37e81992091375c。GitHubの同ファイルを再取得し、新式が存在し旧固定190px式が消えたことを確認。
+- **新CI**: [run38398934377](https://github.com/kobitworks/autoai_poc/actions/runs/38398934377) は新commitをheadとして起動し、21:40 JST時点はin_progress。最終成果物の3サイズlayoutSweep合否・4 viewport自然入力・スクリーンショットは未確認であり、式からの期待のみをPASS実測と記さない。
+- **判定/次回**: 新CIで320x568/667x375/800x600のgeometryと既存4 viewportの自然入力E2Eを再確認し、必要ならさらに調整する。初見30秒理解、実機小文字視認性/誤タップ、スピーカー/イヤホン音、FPS/発熱はHuman Gate未確認。独立暫定品質76/100据置（80点未達）なのでGAME-076はToDo継続。既存Human Gateの同一理由Slack通知は重複しない。mainマージ・新規課金・本番化・公開範囲拡大・2件目タスク着手なし。
