@@ -719,10 +719,10 @@ func _draw_info_panel() -> void:
 	var hearts := ""
 	for i in range(3):
 		hearts += "◆ " if i < energy else "◇ "
-	_draw_label("ENERGY  " + hearts, Vector2(x, y), _font_size(15.0), Color("#ffc4d0"))
+	_draw_label("ENERGY  " + hearts, Vector2(x, y), _font_size(16.0), Color("#ffc4d0"))
 	y += _ui_px(25.0)
 	# Clip low-priority combo metadata rather than allow overlap with the panel edge.
-	_draw_fit_label("STREAK %d  ·  x%d COMBO" % [streak, _combo_multiplier()], Vector2(x, y), _font_size(15.0), Color("#fff0bd"), info_rect.size.x - pad * 2.0)
+	_draw_fit_label("STREAK %d  ·  x%d COMBO" % [streak, _combo_multiplier()], Vector2(x, y), _font_size(16.0), Color("#fff0bd"), info_rect.size.x - pad * 2.0)
 	y += _ui_px(24.0)
 	if info_rect.size.y >= _ui_px(315.0):
 		var next_goal := 1 if deliveries < 1 else (3 if deliveries < 3 else (6 if deliveries < 6 else 0))
@@ -771,7 +771,7 @@ func _draw_info_panel() -> void:
 		if info_rect.size.y < _ui_px(240.0):
 			var short_help_band := Rect2(info_rect.position.x + _ui_px(7.0), info_rect.end.y - _ui_px(30.0), info_rect.size.x - _ui_px(14.0), _ui_px(24.0))
 			_rounded_box(short_help_band, Color("#16364a"), Color("#5ba7c9"), 9, 1)
-			_draw_center_fit_text("緑でTAP → 同じ印のHUBでTAP", short_help_band, _font_size(16.0), Color("#ffffff"))
+			_draw_center_fit_text("緑でTAP → 同じ印のHUBでTAP", short_help_band, _font_size(18.0), Color("#ffffff"))
 		else:
 			# Taller phone landscape panels have room for two high-contrast steps.
 			var help_band := Rect2(info_rect.position.x + _ui_px(7.0), info_rect.end.y - _ui_px(48.0), info_rect.size.x - _ui_px(14.0), _ui_px(42.0))
@@ -782,14 +782,14 @@ func _draw_info_panel() -> void:
 	# naturally-earned route tiers are unlocked. This is a display only.
 	if info_rect.size.y > _ui_px(525.0):
 		var milestones_y := info_rect.end.y - _ui_px(126.0)
-		_draw_label("ROUTE MILESTONES", Vector2(x, milestones_y - _ui_px(13.0)), _font_size(17.0), Color("#ffffff"))
+		_draw_label("ROUTE MILESTONES", Vector2(x, milestones_y - _ui_px(13.0)), _font_size(18.0), Color("#ffffff"))
 		var milestone_gap := _ui_px(6.0)
 		var milestone_width := (info_rect.size.x - pad * 2.0 - milestone_gap * 2.0) / 3.0
 		for step in range(3):
 			var unlocked := _mission_tier() >= step + 1
 			var milestone_rect := Rect2(x + float(step) * (milestone_width + milestone_gap), milestones_y, milestone_width, _ui_px(29.0))
 			_rounded_box(milestone_rect, Color("#116252") if unlocked else Color("#172e42"), Color("#89ffce") if unlocked else Color("#5186a6"), 8, 1)
-			_draw_center_fit_text(str(ROUTE_NAMES[step + 1]), milestone_rect, _font_size(16.0), Color("#ffffff"))
+			_draw_center_fit_text(str(ROUTE_NAMES[step + 1]), milestone_rect, _font_size(17.0), Color("#ffffff"))
 	# Echo successful transfers and missed timing in the otherwise empty lower
 	# tablet-landscape panel. The prompt card keeps priority during gameplay.
 	if state == "playing" and (cue_clock > 0.0 or qa_cue_stress) and info_rect.size.y > _ui_px(525.0):
@@ -798,7 +798,7 @@ func _draw_info_panel() -> void:
 		_rounded_box(feedback_rect, Color("#125f4d") if cue_good else Color("#712f4b"), Color("#94f8d9") if cue_good else Color("#ffbbd0"), 8, 1)
 		# The tablet side echo carries the short outcome/route summary only.
 		var side_cue := _cue_priority_lines()[0] if _visible_cue().contains(" / ") else _visible_cue()
-		_draw_center_fit_text(side_cue, feedback_rect, _font_size(16.0), Color("#ffffff"))
+		_draw_center_fit_text(side_cue, feedback_rect, _font_size(17.0), Color("#ffffff"))
 	# Medium panels retain the bottom two-step guide. Tall tablet landscape
 	# already shows HOW TO PLAY and route milestones, so avoid repeating the
 	# same instructions beneath the milestone/feedback row.
