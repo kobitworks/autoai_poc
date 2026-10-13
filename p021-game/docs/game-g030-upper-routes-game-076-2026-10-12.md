@@ -645,3 +645,35 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - GitHub develop実装commit: https://github.com/kobitworks/autoai_poc/commit/da64ca735c53151c5dd9975e1673cdefa9df7787 。新ソースblob SHA=9be018b26f2ad550dbb7827691c3789552de10df を独立再取得し、3箇所の変更内容を検証。main、本番公開、有料設定変更なし。
 - 新コードに対応する GitHub Actions run https://github.com/kobitworks/autoai_poc/actions/runs/38321552983 (head_sha=da64ca73...) を識別。08:20 JST確認時は contract=completed/success、export-web=in_progress、browser-qualityは未開始。前コードの4/4PASSを新コードへ流用しない。新コード実入力4 viewport、52PNG+results.json、画像の視認性・10軸再採点は未検証。
 - **完了条件未達：**品質評価は証跡限定暫定76/100据置（80点未達）で一般公開品質を認定しない。実機のスピーカー/イヤホン音、初見30秒、文字可読性・誤タップ、FPS/発熱はHuman Gate未実施。次回はrun38321552983の3ジョブ最終結果とartifactを独立読戻しし、4画面で自然操作NIGHT3→ACE6、SOUND ON/OFF、RETRY、BEST復元、初見誤タップガイドと新ボタン/案内表示を比較・再採点する。失敗時は成功扱いにせず原因調査を同GAME-076で継続。今回は他タスクなし。終了時Doing→ToDoに戻す。
+
+
+## 2026-10-13 09:45:08 JST / AutoAI GAME-076継続 — CI再試行と実物52 PNGの独立確認
+
+このRunnerの実作業はGAME-076の1件のみ。GAME-075=Done、GAME-076=ToDo、他DoingなしをFresh-readし、GAME-076のみDoingへ変更して検証した。develop限定、main変更・公開範囲拡大・課金・ゲーム本体変更なし。
+
+### 同一コードでの2回の実入力E2E結果
+- [GitHub Actions run 38321552983](https://github.com/kobitworks/autoai_poc/actions/runs/38321552983) / develop HEAD da64ca735c53151c5dd9975e1673cdefa9df7787。最新attempt2のcontract、export-web、browser-qualityは3ジョブすべてcompleted/success。browser-quality job 115060605776の実入力テストもsuccess。
+- 初回artifact [11779281241](https://github.com/kobitworks/autoai_poc/actions/runs/38321552983/artifacts/11779281241): ZIP実体読戻し、52 PNG＋results.json、JSON SHA-256 2518258bf3f395f76f9a78847c8761e21513dcaf586cf5a01922507384be0f42。
+- 再試行artifact [11780571333](https://github.com/kobitworks/autoai_poc/actions/runs/38321552983/artifacts/11780571333): ZIP実体読戻し、52 PNG＋results.json、JSON SHA-256 d4ed02544c5dc81d68374bc8623722d03a58fed8fcc9128735086e5d796db737。GitHubのartifact SHA-256 digest ad66b1176e931cfac2ddecd2710fc88aab1e7590833bf5ab53b6c168ac2cbe5c とZIP SHA-256が一致。
+- いずれもJSONでqaCommand=NEVER USED、stateOverride=NONE。通常のtouch/mouse入力によるNIGHT 3件、ACE 6件、SOUND ON/OFF、RETRY、BESTスコア復元が四画面すべてPASS。
+
+| Viewport | 初回 / 再試行 | ACE 6件のスコア（初回→再試行） | SOUND・RETRY・BEST |
+| --- | --- | --- | --- |
+| Phone portrait 390×844 | PASS / PASS | 1109→1110 | 両回PASS |
+| Phone landscape 844×390 | PASS / PASS | 1110→1111 | 両回PASS |
+| Tablet portrait 768×1024 | PASS / PASS | 1108→1108 | 両回PASS |
+| Tablet landscape 1024×768 | PASS / PASS | 1110→1109 | 両回PASS |
+
+### 画面監査・品質判定
+- 再試行の4 viewport×「intro／期限3秒HURRY／長い成功cue」合計12代表PNGを独立目視。導入、配送注意（03s LEFT! HURRY）、TAP NOW、NEXT ACTION、右情報欄は実画像上に表示。スマホ横の補助テキストはまだ小さく、暗い副次文字と初見理解への懸念が残る。
+- results.jsonの表示コントラスト契約はPASS_STATIC（対象キー文字は最低7:1以上）。静的コード検査であり、実機可読性や初見理解のPASSではない。cueStressは撮影済み、cargoWarningは視認できるがJSONのCAPTURED_UNREVIEWEDを人間合格に改変しない。
+- 独立暫定10軸採点は76/100据え置き（ゲーム性8、操作感8、難易度7、UI/UX8、グラフィック7、演出6、サウンド6、変化8、リプレイ性9、技術9）。4 viewport×2回の実入力再現性は強化されたが、視認性・演出・実機評価の不足は未解消。80点未達、一般公開品質未認定。
+- 実機のスピーカー・イヤホン音質、FPS・発熱、初見30秒の正しい操作と誤タップ率はHuman Gateで未検証。CI成功を実機成功と混同しない。
+
+### 次回GAME-076再開点
+1. Phone Landscapeの小文字・淡い補助説明とTablet Landscapeの情報欄余白を改善し、NEXT ACTIONやHURRYを優先表示する。
+2. developで必要な限定的UX改善後、4 viewport・実タップ/クリックNIGHT→ACE、SOUND/RETRY/BEST、画像証跡を改めて検証。成功コマンド・ゲーム状態直書きは禁止。
+3. 10軸80/100に届かなければ本タスクを継続。実機Human Gateは人間確認まで未検証。
+
+本実行は証跡read-backとこの監査文書の更新のみ。GAME-076は未完了のためToDoへ戻し、別タスクには進まない。
+
