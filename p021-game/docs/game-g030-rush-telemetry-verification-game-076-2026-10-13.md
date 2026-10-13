@@ -418,3 +418,12 @@
 - **追加の回帰検証契約**: Godotのread-only \`header_text_region_rect\` を小型3 viewport (320x568, 667x375, 800x600) で物理CSS矩形へ換算し、SOUND矩形との左右余白が **8 CSS px以上**か、ヘッダー領域が画面外へ出ないかを検証する。通常の自然入力E2E・NIGHT3→ACE6・SOUND・RETRY・BEST、従来の4標準viewportと58枚画像もCIの対象として維持。
 - **新CIの確認点**: [run 38459721309](https://github.com/kobitworks/autoai_poc/actions/runs/38459721309) はhead \`cf65ba3\` で起動されたが、本記録時点ではpending。今回の新しいヘッダー検証を**成功とは未認定**。前回run38453434998のPASSを新コードに流用しない。新run完走後に小型3画面/標準4画面、実画像/JSONを独立確認する必要がある。
 - **品質判定**: GAME-G030独立暫定 **76/100を維持**、80点未達。実機の初見30秒、文字可読性/誤タップ、スピーカー/イヤホン実音、FPS/発熱は人間確認Gateで未検証。既存同一Human Gate通知は重複させない。main・課金・本番変更なし。タスクDone条件に達しないので本回終了時にDoing→ToDoへ戻す。
+
+  
+## 2026-10-14 05:36:50 JST AutoAI GAME-076: CI runtime cap / partial artifact audit
+
+- 共通Runner v1.38.0、P021 project_rule v1.2.0、GAME-075 Done / GAME-076のみ排他取得。新規明示Slack @autoai 0件、メッセージ41件完了、日次監視は09:00前。
+- [旧CI run38459721309](https://github.com/kobitworks/autoai_poc/actions/runs/38459721309) のGitHubジョブ詳細と生ログをFresh-read。contract=success、export-web=success、browser-quality=cancelled。実入力E2E stepが約19分継続した後、The operation was canceled となった。browser-qualityジョブ上限は20分。キャンセルを成功・フルE2E合格とは扱わない。
+- [artifact11847131236](https://github.com/kobitworks/autoai_poc/actions/runs/38459721309/artifacts/11847131236) ZIPを独立ダウンロード。SHA256 d1a670df152c17aa02296d23c29c9dd0242db34265eee49cb442eae7d82e566b がGitHub digestと一致。51ファイル(50PNG + checkpoint JSON)、ZIP CRC破損なし。full results.jsonは未生成。checkpoint = VIEWPORT_RUNNING / tablet-landscape / completedViewportCount=3 of 4。phone-portrait / phone-landscape / tablet-portraitの3件のみPASSで、自然入力NIGHT(3配達)→ACE(6配達)、BEST復元、cue stress、通常3秒警告キャプチャを確認。tablet-landscapeは途中画像11枚のみで最終判定なし。小型3画面layoutSweep未実行。旧成功runの成績を今回runに転用しない。
+- 限定修正: [develop commit 9d92ea1](https://github.com/kobitworks/autoai_poc/commit/9d92ea1d50afdbb5f4f5d1af3d1481f5e77af845) にて .github/workflows/p021-game-g030-orbit-switch.yml の browser-quality.timeout-minutes のみ20→30分へ延長。4標準画面＋3小型画面、自然入力必須、assertion、ゲーム本体・配達・得点・main・有償・本番公開範囲は変更なし。GitHub readback blob 0ccf11c173cbb4daec02ae76d2b371927a0ccf14一致。
+- 新[run38464110209](https://github.com/kobitworks/autoai_poc/actions/runs/38464110209) は開始済みだが本記録時点in_progress、合否未確定。次回は3job完走、4標準viewport NIGHT→ACE/SOUND/RETRY/BEST、3小型画面headerSoundSpacing、full results.json/画像実体を独立検証。実機初見30秒・判読/誤タップ・音声/FPS/発熱はHuman Gate未確認。品質独立暫定76/100（80点未達）据置、同一理由Slack通知の重複なし。2件目タスク未実行。
