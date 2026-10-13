@@ -724,7 +724,7 @@ func _draw_info_panel() -> void:
 	# Clip low-priority combo metadata rather than allow overlap with the panel edge.
 	_draw_fit_label("STREAK %d  ·  x%d COMBO" % [streak, _combo_multiplier()], Vector2(x, y), _font_size(15.0), Color("#fff0bd"), info_rect.size.x - pad * 2.0)
 	y += _ui_px(24.0)
-	if info_rect.size.y >= _ui_px(255.0):
+	if info_rect.size.y >= _ui_px(315.0):
 		var next_goal := 1 if deliveries < 1 else (3 if deliveries < 3 else (6 if deliveries < 6 else 0))
 		var next_route := "RUSH" if deliveries < 1 else ("NIGHT" if deliveries < 3 else ("ACE" if deliveries < 6 else "ACE MASTER"))
 		var progress := "NEXT %s · %d more" % [next_route, maxi(0, next_goal - deliveries)] if next_goal > 0 else "ALL ROUTES UNLOCKED"
@@ -766,11 +766,18 @@ func _draw_info_panel() -> void:
 	# Keep two bright, readable steps below (not inside) the NEXT ACTION card.
 	# The <220px portrait panel uses its existing single-line fallback instead.
 	if info_rect.size.y >= _ui_px(220.0) and info_rect.size.y <= _ui_px(275.0):
-		# Keep both steps on a distinct high-contrast strip below NEXT ACTION.
-		var help_band := Rect2(info_rect.position.x + _ui_px(7.0), info_rect.end.y - _ui_px(48.0), info_rect.size.x - _ui_px(14.0), _ui_px(42.0))
-		_rounded_box(help_band, Color("#16364a"), Color("#5ba7c9"), 9, 1)
-		_draw_fit_label("1  緑の交差点でTAP", Vector2(x, info_rect.end.y - _ui_px(32.0)), _font_size(18.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
-		_draw_fit_label("2  同じ印のHUBでTAP", Vector2(x, info_rect.end.y - _ui_px(12.0)), _font_size(18.0), Color("#fff8d9"), info_rect.size.x - pad * 2.0)
+		# Extremely short landscape panels cannot fit two help lines below the
+		# next-action card. A single 24px strip leaves a positive visible gap.
+		if info_rect.size.y < _ui_px(240.0):
+			var short_help_band := Rect2(info_rect.position.x + _ui_px(7.0), info_rect.end.y - _ui_px(30.0), info_rect.size.x - _ui_px(14.0), _ui_px(24.0))
+			_rounded_box(short_help_band, Color("#16364a"), Color("#5ba7c9"), 9, 1)
+			_draw_center_fit_text("緑でTAP → 同じ印のHUBでTAP", short_help_band, _font_size(16.0), Color("#ffffff"))
+		else:
+			# Taller phone landscape panels have room for two high-contrast steps.
+			var help_band := Rect2(info_rect.position.x + _ui_px(7.0), info_rect.end.y - _ui_px(48.0), info_rect.size.x - _ui_px(14.0), _ui_px(42.0))
+			_rounded_box(help_band, Color("#16364a"), Color("#5ba7c9"), 9, 1)
+			_draw_fit_label("1  緑の交差点でTAP", Vector2(x, info_rect.end.y - _ui_px(32.0)), _font_size(18.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
+			_draw_fit_label("2  同じ印のHUBでTAP", Vector2(x, info_rect.end.y - _ui_px(12.0)), _font_size(18.0), Color("#fff8d9"), info_rect.size.x - pad * 2.0)
 	# Tablet landscape: use otherwise empty lower-panel space to show which
 	# naturally-earned route tiers are unlocked. This is a display only.
 	if info_rect.size.y > _ui_px(525.0):
@@ -792,10 +799,10 @@ func _draw_info_panel() -> void:
 		# The tablet side echo carries the short outcome/route summary only.
 		var side_cue := _cue_priority_lines()[0] if _visible_cue().contains(" / ") else _visible_cue()
 		_draw_center_fit_text(side_cue, feedback_rect, _font_size(16.0), Color("#ffffff"))
-	# GAME-076: Give the two bottom instructions a stronger contrast-safe
-	# background and 16 CSS-pixel labels on tablet-sized information panels.
-	# Keep a 3px gap after the optional feedback cue above and a 6px bottom inset.
-	if info_rect.size.y > _ui_px(275.0):
+	# Medium panels retain the bottom two-step guide. Tall tablet landscape
+	# already shows HOW TO PLAY and route milestones, so avoid repeating the
+	# same instructions beneath the milestone/feedback row.
+	if info_rect.size.y > _ui_px(275.0) and info_rect.size.y <= _ui_px(470.0):
 		var guide_band := Rect2(info_rect.position.x + _ui_px(7.0), info_rect.end.y - _ui_px(67.0), info_rect.size.x - _ui_px(14.0), _ui_px(61.0))
 		_rounded_box(guide_band, Color("#142f43"), Color("#5d9cbd"), 9, 1)
 		_draw_fit_label("緑の交差点でTAP → 乗換", Vector2(x, info_rect.end.y - _ui_px(52.0)), _font_size(18.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
