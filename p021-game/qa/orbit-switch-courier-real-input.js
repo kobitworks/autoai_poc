@@ -95,6 +95,14 @@ function verifyGuideContrast() {
     source.includes('"novice_guard_used": novice_miss_guard_used') &&
     source.includes('FIRST TAP GUIDE · ENERGY SAVED'),
     'Novice one-time no-penalty timing hint contract missing');
+  // GAME-076: Intro must say WHERE to press, not only "tap the screen".
+  // This is a source contract; phone legibility still needs a human on-device check.
+  const introSource=source.slice(source.indexOf('func _draw_intro_overlay()'),
+    source.indexOf('func _draw_result_overlay()'));
+  check(introSource.includes('var step_font := _font_size(16.0 if short_panel else 18.0)') &&
+    introSource.includes('2  緑の交差点でTAP → 乗換') &&
+    introSource.includes('3  同じ印のHUBでTAP → 配達'),
+    'First-30s intro must explain the green crossing and matching-symbol delivery');
   return {result:'PASS_STATIC',labels:results,minimumContrast:7,
     cargoDeadline:'SOURCE_CONTRACT_ONLY: seconds first; last 3 seconds show HURRY text and contrasting frame; physical legibility requires device review',
     longCueBoundary:'SOURCE_CONTRACT_ONLY: two-line priority summary; human legibility not yet verified',
