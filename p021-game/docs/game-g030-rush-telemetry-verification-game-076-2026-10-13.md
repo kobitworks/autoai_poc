@@ -458,3 +458,15 @@
 - この回でコード変更なし。developのGitHub Pages自動公開commit 7389f6f82df5b2e676963f540fa07f1bbf09acd7、Pages run38468821844 success。QA head39ded116の検証結果とは区別する。
 - 独立暫定品質76/100で80点未達。実機初見30秒・日本語視認性/誤タップ・実音声/イヤホン・FPS/発熱はHuman Gate未検証。同一理由のSlack確認依頼は重複送信しない。ゲーム挙動/スコア/main/課金/本番範囲変更なし。
 - 次回はartifactの実ZIP・PNG画像監査、実機の初見テストと独立10軸再採点。GAME-076は完了条件未達なのでDoing→ToDo復帰し、他タスクなし。
+
+
+## 2026-10-14 06:42:28 JST / AUTOAI-GAME076-20261014-ZIP-VERIFY-0642 / GitHub Actions artifact実体・PNG独立監査
+
+- **対象は今回1件のみ: P021 GAME-076**。runner_rule.md v1.38.0 / P021 v1.2.0、GAME-075=Done・GAME-076=ToDo→Doingの排他取得/readback済み。Slackに新規の明示的@autoai指示なし、メッセージ管理41件全DONE。09:00前なので日次全体監視対象外。P005〜P018・P020は承認/HOLD/依存/実行周期/完了のため先行スキップ。
+- CI [run 38468420482](https://github.com/kobitworks/autoai_poc/actions/runs/38468420482) をGitHub APIで再確認。head `39ded1163f4288473638491f05a81e57060bfe9d` / contract・export-web・browser-quality=全てcompleted/success、3/3合格。
+- [artifact 11851840723](https://github.com/kobitworks/autoai_poc/actions/runs/38468420482/artifacts/11851840723) の**ZIP実体を取得**（4,370,607 bytes）。ZIP実体SHA256=`c9a942ad04944e246a0d155fe5ec4c08bd102cd3dc0fe1b92baad3cb961a3dda` はGitHub Actions artifact digestと完全一致。ZIP CRC検査=異常なし、計60ファイル（58 PNG＋`results.json`＋`results-checkpoint.json`）。Pillowで58枚すべてデコード成功、破損0。7種類の実画像サイズは390x844／844x390／768x1024／1024x768／320x568／667x375／800x600。
+- **生JSON再解析**: 標準phone縦横・tablet縦横4viewportすべて`status=PASS`、自然タップ/クリックによるNIGHT 3配達→ACE 6配達（4/4）、`qaCommand=NEVER USED`・`stateOverride=NONE`。初見1タップガード4/4 PASS（誤操作時にenergy=3維持）、BESTの保存・再読込も数値一致（1109/1110/1108/1109）。以上は実行CIログの構造化結果を独立照合したもの。実機の体験確認ではない。
+- 小型3viewportの`layoutSweep`=`PASS_GEOMETRY` 3/3。各header/SOUNDの予約レーン間隔は約14 CSS px（最小8）、小型横667x375のNEXT ACTIONカードと説明ガイドの間隔は8 CSS px（最小4）。これはread-only描画矩形メトリクスであり、人間の文字可読性の合否ではない。
+- **PNG独立目視**: 代表12枚（4標準画面のintro、3秒警告、初見1タップ、長文cue、result、playing等）を並べ、主要領域の明白な重なり・欠落がないことを確認。phone-landscapeのオリジナル警告画像で赤い帯に`03s LEFT! HURRY`、ゲージ警告および緑のTAP NOWを実画素で確認。各viewportのJSON `cargoWarning.secondsAfter` は2.33〜2.63秒で3秒以下。PNG**全枚を肉眼確認したとは扱わない**。現物の小文字の読みやすさと誤タップのしにくさは未判定。
+- **完了/品質Gate**: 暫定の独立10軸品質は76/100据置き（一般公開目標80未達）。実機初見30秒・日本語文字の可読性・誤タップ・スピーカー/イヤホン音声・FPS/発熱はHuman Gate未確認。CI成功・静的コントラスト計算・ブラウザスクリーンショットを実機合格として扱わず、同一理由のユーザー向け警告Slackは重複送信しない。
+- **再開点**: 実機結果受領後に10軸採点更新。残りPNGの重点視覚監査や実機で見つかった問題に限り同GAME-076で対応する。今回ゲーム本体・QAコード・main・課金・本番構成を変更しない。Done条件未達のためDoing→ToDoへ復帰、他タスクなし。
