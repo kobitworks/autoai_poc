@@ -224,3 +224,12 @@
 - **results.json独立解析:** 全4 viewportでstatus=PASS、qaCommand=NEVER USED、stateOverride=NONE、NIGHT deliveries=3／ACE deliveries=6。通常touch/mouseシーケンスを保存した実入力E2E証跡を確認。結果score=BEST=localStorageBest=restoredBestは phone縦1109、phone横1110、tablet縦1106、tablet横1099 で全一致。全4画面でSOUND OFF/ONフラグ=true、初回タップガード=PASS。コード上の音声起動観測はあっても物理音声出力はNOT VERIFIED。cargoWarningはJSONではCAPTURED_UNREVIEWED、今回少なくともphone landscapeのHURRY画像を実目視したが、全viewport実機可読性合格とは区別する。
 - **品質判定と次回:** 新CI＋独立ZIP実体＋52PNG読込と画面比較により証拠欠落の一部を解消したが、独立10軸品質は保守的に**76/100据置**（目標80未達）。初見30秒、実タップの誤操作、実機日本語小文字、スピーカー/イヤホン実音、FPSと端末発熱はHuman Gateのまま。GAME-076完了・一般公開品質・実機PASSは未宣言。同じ確認依頼IDは重複発行しない。次回は実機フィードバックを反映してphone横ガイドの可読性・tablet右欄を限定改善し、4画面E2E・独立10軸を再評価する。
 - **変更境界:** 本実行でゲーム本体・QA・workflow・main・有償利用・本番・公開範囲は変更しない。監査記録とタスク・共通projects表だけを更新。完了条件未達のためGAME-076をToDoへ戻して次回継続、2件目の実タスクは実行しない。
+
+
+## 2026-10-13 19:35:56 JST / AUTOAI-GAME076-20261013-1924 — アクション文字とタブレット右ペインの5箇所を拡大
+
+- **本回の唯一の実タスク:** P021 GAME-076。Runner v1.38.0 / P021 v1.2.0をFresh-readし、Slack全23チャンネルで前回以降の新規明示 @autoai 指示なし、メッセージ管理41件DONE、全体日次監視09:21:17実施済みを確認。前回P021の次P005から走査し、P005〜P018とP020は要確認/Blocked/HOLD/実機確認、依存未完了、24時間・日次周期未達または全件Doneにつき今回実タスクなし。P019/P022およびP001〜P004は無効で除外。
+- **排他:** GAME-075=Done、GAME-076=ToDo、他Doingなしを正本Fresh-readで確認し、GAME-076のみDoingへ変更、読戻し一致。既存Human Gateは再発行しない。
+- **今回の実装変更（表示のみ）:** `p021-game/sources/orbit-switch-courier-godot/Main.gd` の (1) NEXT ACTION/TAP NOW ヘッダー14→16 CSS px、(2) 操作カード本文 ready16→18 / waiting15→17 px、(3) カードを置けない狭小レイアウトの代替action行14→16 px、(4) tablet横 ROUTE MILESTONES のルート名17→18 px、(5) tablet横 フィードバック短文17→18 px。初見者の可読性とタブレット右ペインの副次文字を改善する狙い。長い文言は従来の幅内縮小/末尾省略で画面外はみ出しを防止する。配達判定、タップの有効窓、軌道/配達数/制限時間/スコア、SOUND、BEST保存、QAの状態操作、mainや本番・課金設定は変更しない。
+- **コード正本・検証:** [develop commit 07cc12593fd8a58b9a6e4ec288cfbe88e07a4c6c](https://github.com/kobitworks/autoai_poc/commit/07cc12593fd8a58b9a6e4ec288cfbe88e07a4c6c)、Main.gd新blob `846611c4f5e78c5ffcc12f8f7b1b359b6784749c`、API読戻しで送信全文との完全一致。GitHub Actions [run38384231463](https://github.com/kobitworks/autoai_poc/actions/runs/38384231463) はこのcommitの新CI。取得時点でcontract completed/success、export-web completed/success、browser-quality in_progress。**最終CI・新52PNG・最新E2E JSONの合否は未確定**、過去コミットのPASSを新ソースへ流用しない。
+- **品質・Human Gate:** 変更意図は実機可読性の向上だが実機画面の改善効果を測定したものではない。独立10軸暫定76/100据え置き（目標80未達）。初見30秒の理解、スマホ横/tablet横の文字・形状マーカー判読性、実タップ誤操作、スピーカー/イヤホン実音、FPS/発熱は未検証のまま。GAME-076をDoneとせずToDoに戻し、次回は本source commitのbrowser-quality/E2E/52PNGを独立照合し、実機フィードバックが得られた場合に優先反映する。二件目の実タスクは実行しない。
