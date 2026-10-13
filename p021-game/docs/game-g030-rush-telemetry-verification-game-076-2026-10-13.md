@@ -378,3 +378,13 @@
 - 修正: Playwright real-input.jsの表示高さ存在チェックのみに許容誤差0.01 CSS pxを採用。既存の上下間隔4px以上・info panel包含・自然入力E2Eのチェックを緩和しない。Godotゲーム本体、ゲーム物理・入力・配達・得点・効果音・BEST保存のコード変更はしない。
 - develop実装コミット [a895e1ab](https://github.com/kobitworks/autoai_poc/commit/a895e1abf94e45ac9ac7732f2d43622ceb1f6c6d)、APIでreadbackしblob 237b6221bb2609c4da9c9974d6daa18bf83277cb一致。mainマージ、課金、本番化、公開範囲拡大なし。
 - 結果: 新コミットでのCI最終合否は未確認。独立暫定品質76/100（80目標未達）、物理端末での初見30秒・可読性/誤タップ・実音声・FPS/発熱はHuman Gate未検証。既出同理由の確認依頼は重複送信しない。GAME-076はDoingを解放してToDoに戻す。次回は新CI3ジョブ、4標準viewport自然入力NIGHT→ACE/SOUND/RETRY/BEST、3小型画面とactionGuideSpacing.gapCssPx、JSON/PNGを独立検証し、失敗時はGAME-076を再修正。他タスクなし。
+
+## 2026-10-14 03:59 JST / AUTOAI-GAME076-20261014-0358 — QA修正後CIと実体証跡の独立監査
+
+- **今回の実作業はP021 GAME-076の1件のみ**。Runner v1.38.0／P021 project_rule v1.2.0を確認、前回GAME-076=ToDo・GAME-075=Done・他Doingなしを確認し、GAME-076をDoing排他取得して読戻し一致。Slack対象23チャンネルの直近投稿に新しい明示的な@autoai指示なし、メッセージタスク41件DONE。09:00前のため日次全体監視なし。先行有効P005〜P018/P020は人間確認・未解除依存・周期未到達・全完了で実タスクなし。
+- **CI最終確定**: [GitHub Actions run 38448558219](https://github.com/kobitworks/autoai_poc/actions/runs/38448558219) / head_sha=`a895e1abf94e45ac9ac7732f2d43622ceb1f6c6d` / attempt 1 / completed **success** (2026-10-14 03:46:23 JST)。ジョブ3件はいずれもsuccess: contract (115473265984)、export-web (115473345748)、browser-quality (115473987456)。小型横の30px判定を0.01pxの誤差許容に修正した後のCIが成功したことを確認。
+- **ZIP独立検証**: [evidence artifact 11840216672](https://github.com/kobitworks/autoai_poc/actions/runs/38448558219/artifacts/11840216672) / GitHub記録SHA-256=`a10dadd83b31360ac29646af30445cb1a07e74a1457ee12a90499b4b52bea070`。ZIP実体を取得し、60エントリ（58 PNG + `results.json` + `results-checkpoint.json`）、CRC破損なしを確認。アップロード記録だけでなくZIP内部のJSON/PNGを独立取得した。
+- **自然入力E2E**: `results.json` でPhone縦390×844 (touch)、Phone横844×390 (mouse)、Tablet縦768×1024 (touch)、Tablet横1024×768 (mouse) は4/4 **PASS**。各画面でNIGHT自然3配達→ACE自然6配達、11 routeMoves、`qaCommand=NEVER USED`、`stateOverride=NONE`、初見タップガイドPASS、SOUND OFF/ON状態・RETRY/BEST保存/再読込を照合。音声出力そのものは未試聴。
+- **小型画面実描画**: 320×568、667×375、800×600は3/3 **PASS_GEOMETRY**。667×375の `actionGuideSpacing` はread-only描画矩形から `gapCssPx=8`、既定下限4pxを満たす。ガイドの実測高さ29.999998508pxは公称30pxとのサブピクセル誤差としてCI成功を再確認。間隔4px以上とinfoパネル包含のチェックは緩和していない。
+- **PNG実体の独立目視**: 12枚（小型縦横INTRO/PLAYING、コンパクトTablet PLAYING、4標準viewportのACE/CUE代表画面など）を抽出して比較。抽出画面で明白なカード/ガイド重なりや非表示は見つからなかった。ただし小型画面の日本語説明は小さく見える箇所があり、物理画面上の可読性合格までは断定しない。残る46枚の全件目視、初見の実利用者30秒、実機スピーカー/イヤホン、誤タップ、FPS/発熱は未検証。
+- **品質・状態判定**: 10軸の独立暫定 **76/100のまま**（一般公開80未達）。CI全体の成功は技術回帰の証跡であり、人間の実機品質Gate合格ではない。今回ゲーム本体・QAコードは変更せず、developの監査記録を更新。main、課金、production、公開範囲の変更なし。GAME-076は完了条件未達なので本回終了時にDoing→ToDoへ戻す。次回は残りPNGの重点監査、実機レビュー結果が得られたら10軸再採点し、必要な最小限の改善を判断する。同じHuman GateのSlack依頼は重複送信しない。
