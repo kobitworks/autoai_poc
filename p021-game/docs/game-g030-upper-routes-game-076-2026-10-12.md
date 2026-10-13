@@ -677,3 +677,12 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 
 本実行は証跡read-backとこの監査文書の更新のみ。GAME-076は未完了のためToDoへ戻し、別タスクには進まない。
 
+
+## 2026-10-13 10:13 JST / AUTOAI-GAME076-20261013-1008 — phone横・tablet横補助UIの可読性修正
+
+- AutoAI runner v1.38.0、P021 project_rule v1.2.0 をFresh-read。新規明示Slack @autoaiタスクなし、日次監視は09:21実施済み。前回の実タスク P021 (09:46) に続き P005→P018/P020 を正本順に走査し、要確認・依存未解除・定期条件未達・日次完了などで別タスク着手なし。GAME-075=Done、GAME-076=ToDo、他Doingなしを確認後、今回のGAME-076のみ Doing/実行IDで排他取得、読戻し一致。
+- 前回CIの実入力4画面×2回 PASSを出発点として、Godot Main.gdの**画面描画のみ16か所**修正。初回ヘッダを小さいエンジン名から「TAP THE GLOW」の次行動ヒントへ、HUD区分表示13→15px、右欄のROUTE/進捗/コンボ見出しの可読性、phone横2行タップ手順を簡潔化して17→18px、tablet横HOW TO PLAY・マイルストーン・下部2行ガイドを16〜18pxへ改善。長文のコンボ情報は幅収まり型に変更。既存の幅適応/省略表示を維持。
+- コード差分は [commit 2ddf08953f89](https://github.com/kobitworks/autoai_poc/commit/2ddf08953f894c0e543877659c24bee65c20cf05) の **Main.gd 1ファイルのみ**（+18/-16行）。更新後develop Source blob b85aaddfdedaf14332df8c1c5b6cfed7967a3152 を独立再取得し、差分が意図した文字/配色/ラベル描画だけで、配達判定、タイマー、スコア、SOUND処理、QA成功命令やゲーム状態を書き換えていないことを確認。
+- 新CI: [Actions run38330801226](https://github.com/kobitworks/autoai_poc/actions/runs/38330801226)、head_sha=2ddf08953f894c0e543877659c24bee65c20cf05。10:13時点で contract / Godot export-web が成功、browser-qualityの4 viewport実タップ/クリックE2Eは**進行中**であり新コードのPASSは未確定。前runのPASSを転用しない。
+- P005〜P018/P020の親projects.xlsxは「最終確認日時」のみ 10:10:30 に更新済み（最終実行日時・本日回数には変更なし）。本Runnerの唯一の選定タスクはGAME-076。
+- 10軸品質は証跡限定暫定 **76/100据置（80点未達）**。新スクリーンショット独立画像確認および実機のスピーカー・イヤホン、初見ユーザー30秒、実機文字/誤タップ、FPS/発熱は未検証。main、課金、本番範囲拡大なし。実入力E2E結果と証跡を確認してからToDo復帰・親台帳同期・Slack報告する。一般公開品質とは認定しない。
