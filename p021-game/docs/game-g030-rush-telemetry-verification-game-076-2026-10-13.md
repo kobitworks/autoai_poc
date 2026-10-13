@@ -84,3 +84,14 @@
 - **CI**: 改修コミットに対して [GitHub Actions run38347625531](https://github.com/kobitworks/autoai_poc/actions/runs/38347625531) が自動起動。確認時点でcontract=success、export-web=in_progress、browser-qualityは未完了。ジョブ未完了をPASSとは記録しない。Pages [run38347625180](https://github.com/kobitworks/autoai_poc/actions/runs/38347625180) も確認時点では処理中。CI進捗は次回Fresh-readで確定させる。
 - 正規実タップ/クリックによるRUSH1→NIGHT3→ACE6、RETRY/BEST・SOUND、4 viewport実画面、初見30秒、実機スピーカー/イヤホン/FPS・発熱は**このコミット以降の独立確認なし**。直近の別コミットCI成功を今回の改修の合格証明に流用しない。
 - **品質判定**: 直近の独立暫定76/100を維持、目標80/100未達。Human Gateは未検証継続。ソースmain、本番化、契約・課金、公開範囲変更なし。GAME-076はDone条件を満たさずToDoへ戻し、次回はrun38347625531の3ジョブと新artifact結果・PNG実画像を再確認し、必要なら最小限の表示修正と10軸の再採点を行う。今回ほかのタスクは実行しない。
+
+
+## 2026-10-13 14:08:33 JST / AUTOAI-GAME076-20261013-1406 — 最新横画面改修後のCI/ZIP独立監査（今回の唯一の実タスク）
+
+- 共通Runner v1.38.0・P021 v1.2.0をFresh-read。Slack新規明示@autoai指示なし、日次監視09:21実施済み。ローテーションP005〜P020の有効プロジェクトは要確認・HOLD/Blocked・依存・日次/定期周期条件または完了済みで着手不可。GAME-075=Done / GAME-076=ToDo、他Doingなしを正本確認し、今回GAME-076のみDoingで開始。
+- **新CI確定:** 前回Main.gd表示のみ変更した [develop commit 4b130aa](https://github.com/kobitworks/autoai_poc/commit/4b130aab1fb1e80209301d9e96a025c1c33916cb) に対応する [Actions run38347625531](https://github.com/kobitworks/autoai_poc/actions/runs/38347625531) を再読込。contract job115132577549、export-web job115132621916、browser-quality job115132899899の3/3がcompleted/success。browser-quality内の4画面simulated smokeと実タップ/クリックE2Eのstepsは両方success。
+- **独立取得:** [artifact11789187985](https://github.com/kobitworks/autoai_poc/actions/runs/38347625531/artifacts/11789187985) ZIPのSHA256=`0a3a5264c141baac551e3bd7c2f477abdad15b0fb78f22c90388438921486d81`（Actionsアップロードlogのdigestと一致）、ZIP CRC異常なし。計54ファイル：4 viewport×13状態のPNG52枚＋`results.json`＋`results-checkpoint.json`。最終results.json SHA256=`71c8f5ab9e666fc86c8180dc03abdd12734035ed95f08ae1fa7887923792a0ad`。
+- **正規最終results.json:** phone縦390×844／横844×390、tablet縦768×1024／横1024×768の4/4 `PASS`。4画面すべて正規タップ/クリックでNIGHT 3配達→ACE 6配達、`qaCommand=NEVER USED`／`stateOverride=NONE`。SOUND OFF/ON・RETRY・BEST永続化→復元は4/4。ACEのscoreは縦phone1109、横phone1111、縦tablet1106、横tablet1109、energy3で上位ルート到達。checkpoint JSONは`PARTIAL_CHECKPOINT_NOT_FINAL`かつ4/4 viewport completedであり、最終合否はresults.jsonに限定。
+- **画像の独立確認:** 各viewportのintro/初回タップガイド/cargo-warning-3s/ACEの代表4枚、計**16/52 PNGを独立目視**。実画像でphone横のNEXT ACTIONと下段1行ガイドの間に致命的な重なりを認めず、tablet横の右欄で重複末尾ガイドがなくなったことを確認。代表画面でゲーム領域欠落・警告の画面外消失なし。ただし**全52枚を独立目視したわけではなく**、phone横の下段日本語補助文とtablet横の灰色副次情報の文字サイズ/コントラストには実機初見可読性の余地がある。静的PASS/ブラウザCIを実機可読性の合格扱いにしない。
+- **Gate/判定:** 独立10軸の暫定**76/100据置き**（目標80未達）。スマホ/タブレット実機スピーカー・イヤホン聴感、初見30秒の理解、実タップ誤操作、FPS/発熱はHuman Gate未検証。今回GAME-076をDoneにせずToDoへ戻す。他タスク未着手。ゲームソース・QAコード・main・有料契約・本番/公開範囲は変更しない。
+- **次回:** 文字の小さなphone横下段、tablet横副次情報の可読性を限定的に改善し、4画面実入力E2E/画像・10軸独立評価を再度実施。実機チェックはユーザーの明示操作によってのみ検証し、品質80/100を証拠なしに宣言しない。
