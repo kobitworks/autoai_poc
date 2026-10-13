@@ -346,3 +346,14 @@
 - [evidence artifact11822934067](https://github.com/kobitworks/autoai_poc/actions/runs/38413318007/artifacts/11822934067)をZIP実体取得し、SHA-256=`6d29c32147ab37cfc0b691f95c9b11321bd514e97b76ceb237e3135ba50deff3`でGitHub掲載digestに一致。ZIP全60件CRC正常、results.json/results-checkpoint.jsonの2JSONを構文解析、全58PNG画像デコード正常。内訳は基準4画面×13PNG=52枚＋小型3画面×2PNG=6枚。667×375のINTRO/PLAYING比較画像と通常phone横のcargo-warning/cue-stress画像を独立目視。スクリーンショット上で明白なカード・ボタン重なりは確認されないが、源コード計算上の8px余白をブラウザ内部の全解像度で直接測定したわけではない。物理端末の可読性や押しやすさも未検証。
 - **品質ゲート:** 独立暫定76/100（80未達）を据置き。実機スピーカー/イヤホン音、初見30秒の案内理解、小型端末の文字/誤タップ、FPS/発熱はHuman Gateとして未検証。静的コントラスト `PASS_STATIC` はこれらの合格を意味しない。既存の同理由Slack確認通知は重複送信しない。
 - **次回再開点:** 実機のHuman Gate結果を受け取り、0〜30秒操作理解、2色チップの表示/押下余地、音声、端末負荷を検証し、10軸採点と80点目標を再判定する。必要なら同一GAME-076内で最小限のUI/QA改善を実施。今回新規ゲームコード変更・mainマージ・課金・本番公開拡大はなし。完了条件未達のためDoing→ToDoへ復帰して継続し、別タスクには着手しない。
+
+
+## 2026-10-14 02:36:18 JST / AUTOAI-GAME076-20261014-0235 — 小型横画面ガイド余白のソース幾何全域検算
+
+- **実作業1件**: P021 / GAME-076（runner v1.38.0、P021 rule v1.2.0）。既存GAME-075=Done、GAME-076=ToDo→Doingで排他取得と正本読戻し一致。今回の目的は、前回までソース上の推算に留まっていた小型LandscapeのNEXT ACTIONカードと操作説明チップの隙間を、境界値を含めて全高さで独立検算すること。
+- **Fresh-read正本**: GitHub develop の Main.gd blob `0eff37f291c8ebf8b0bccc34cc8aae84a2a0a8c6`。card_y=info_top+131 CSS px、card_h=min(56, panel_h-131-clearance)。220〜239pxはclearance=44pxかつ操作チップ上端=panel_bottom-36px、240〜275pxはclearance=11pxかつ説明バンド上端=panel_bottom-48px。該当5ソース式が現行版に存在することを確認した。
+- **整数CSS px全数検算**: panel_h 220〜239px（20サイズ）ではNEXT ACTIONカード高さ45〜56px、カード下面と2色チップ上面の隙間 **最小8px・最大16px**、重なり0件／非表示カード0件。panel_h 240〜275px（36サイズ）ではカード高さ56px、説明バンドとの隙間 **最小5px・最大40px**、重なり0件／非表示カード0件。境界h=220,223,239,240,255,275を個別照合。これは静的ソース式の幾何検算であって、ブラウザ実測・実機の可読性PASSではない。
+- **回帰チェックの不足**: 現行QA `p021-game/qa/orbit-switch-courier-real-input.js` blob `1beb9c508ea1f1e5e0e0a5b623fbcd44c8984c74` はフィールド/情報パネル/Canvas/HUDの幾何を検査するが、NEXT ACTIONカードと説明チップの**実描画後の間隔を直接アサートする専用項目は未搭載**。現状の仕様上、画面内余白と読める文字サイズの保証は自動CIとは別に実機確認が必要。
+- **対応済みCI照合**: [Actions run38413318007](https://github.com/kobitworks/autoai_poc/actions/runs/38413318007) についてcontract / export-web / browser-qualityが全てcompleted/successをFresh-read。前回の4 viewport自然入力PASS/3小型画面幾何PASS/全58PNG証跡とは矛盾しないが、今回はZIP再ダウンロードも実機試験も実施していない。
+- **品質Gate**: 独立暫定76/100（一般公開目標80未達）を維持。初見利用者の30秒理解、小文字・タップ余白、実スピーカー/イヤホン、FPS/端末発熱はHuman Gate未検証。新規の無根拠な点数加算・実機PASS判定を行わない。同じ理由のSlack確認依頼は重複発行しない。
+- **変更範囲・再開点**: 今回は監査記録だけの追記で、Main.gd/QAコード、main、課金、本番化・公開範囲を変更しない。次回は実機結果が得られれば当該2ガイドの視認性・操作性・音声・性能と10軸を再採点し、不足時は承認済み範囲の最小改善を検討。未完了のためGAME-076はDoing→ToDoで維持。別タスク着手なし。
