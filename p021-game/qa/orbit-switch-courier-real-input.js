@@ -285,8 +285,11 @@ async function run(){
         evidence.routeMoves=[];
         // Orbit 0 moves forward at 1.12rad/s: select an earlier *valid* 4.50 +/- 0.19 window.
         // The former 4.35..4.57 band could observe too late for a real tablet tap.
-        // GAME-076: observe RUSH 0->1 on slow CI without touching game state or inputs.
-        // A wall-clock timeout can happen before a real angular crossing is rendered.
+        // GAME-076: attempt1 crossed 4.367->4.534 and 4.363->4.616 without
+        // hitting the narrow 4.32..4.44 observer; a third crossing at cargoLeft=0.13
+        // then lost energy. Observe 4.31..4.47 inside the actual 4.50 +/- 0.19
+        // game physics window, as NIGHT 0->1 already does. Actual mouse/touch,
+        // delivery deadline and energy assertions remain unchanged.
         await page.evaluate(() => {
           if (window.__P021_RUSH_TRACE_TIMER) clearInterval(window.__P021_RUSH_TRACE_TIMER);
           window.__P021_RUSH_TRACE=[];
@@ -302,7 +305,7 @@ async function run(){
           },75);
         });
         try {
-          evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.32,4.44,'RUSH 0->1'));
+          evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.31,4.47,'RUSH 0->1'));
         } finally {
           // Capture whether QA timed out BEFORE the valid crossing was reached.
           // The game itself, click path, deadlines and acceptance thresholds are untouched.
