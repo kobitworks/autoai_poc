@@ -8,6 +8,13 @@ const targets = [
   { name:'tablet-portrait', width:768, height:1024, input:'touch' },
   { name:'tablet-landscape', width:1024, height:768, input:'mouse' },
 ];
+// GAME-076: light read-only geometry sweep at responsive sizes between the core E2E viewports.
+// These do NOT replace the four real-input gameplay runs or certify human legibility.
+const layoutTargets = [
+  {name:'small-phone-portrait',width:320,height:568},
+  {name:'small-phone-landscape',width:667,height:375},
+  {name:'compact-tablet-landscape',width:800,height:600},
+];
 const dir = '/tmp/p021-g030-real-input';
 const url = 'http://127.0.0.1:8000/p021-game/games/orbit-switch-courier/?qa=1';
 function check(value, message) { if (!value) throw new Error(message); }
@@ -154,6 +161,7 @@ async function run(){
   fs.mkdirSync(dir,{recursive:true});
   const browser=await chromium.launch({headless:true});
   const results=[];
+  const layoutSweep=[];
   // Keep a read-only, machine-parseable checkpoint on disk. GitHub Actions may
   // cancel a long four-viewport run before the final results.json is written.
   // This does not alter game state, scoring, or any physical input.
@@ -503,14 +511,66 @@ async function run(){
         await context.close();
       }
     }
+
+
+    // GAME-076: expand the viewport matrix without tripling the time-critical
+    // NIGHT/ACE route runs. QA state is observed only; no synthetic deliveries.
+    for(const t of layoutTargets){
+      const context=await browser.newContext({
+        viewport:{width:t.width,height:t.height},deviceScaleFactor:1,
+        isMobile:t.width<=844,hasTouch:true
+      });
+      const page=await context.newPage();
+      const failures=[];
+      page.on('pageerror',e=>failures.push('pageerror '+e.message));
+      page.on('console',m=>{if(m.type()==='error')failures.push('console '+m.text());});
+      page.on('requestfailed',r=>failures.push('request '+r.url()));
+      const proof={viewport:t.name,size:t.width+'x'+t.height,
+        mode:'INTRO_GEOMETRY_ONLY',physicalLegibility:'HUMAN GATE',status:'FAIL'};
+      try{
+        await page.goto(url,{waitUntil:'domcontentloaded',timeout:120000});
+        await until(page,()=>window.__P021_ORBIT&&window.__P021_ORBIT.ready,
+          'responsive ready '+t.name,120000);
+        const d=await snapshot(page);
+        check(d.child_id==='GAME-G030' && d.state==='intro' && d.qa_mode,
+          'Responsive sweep did not load intro: '+t.name);
+        check(fits(d.field,d.viewport_w,d.viewport_h) &&
+          fits(d.info,d.viewport_w,d.viewport_h),
+          'Responsive field/info overflow: '+t.name);
+        const c=await page.locator('#canvas').boundingBox();
+        check(c && c.x>=-2 && c.y>=-2 &&
+          c.x+c.width<=t.width+2 && c.y+c.height<=t.height+2,
+          'Responsive canvas overflow: '+t.name);
+        const sound=physicalRect(d.sound_rect,c,d);
+        check(sound.width>=44 && sound.height>=44 &&
+          sound.x>=-2 && sound.y>=-2 &&
+          sound.x+sound.width<=t.width+2 && sound.y+sound.height<=t.height+2,
+          'Responsive SOUND target too small/overflows: '+t.name+' '+JSON.stringify(sound));
+        const hud=physicalRect(d.hud_rect,c,d);
+        const hub=physicalRect(d.hub_rect,c,d);
+        if(c.height>520)check(hub.y+hub.height<=hud.y-3,
+          'Responsive HUB/HUD overlap: '+t.name);
+        check(failures.length===0,'Responsive console/network errors: '+failures.join(' | '));
+        proof.soundTarget={width:sound.width,height:sound.height};
+        proof.field=d.field;
+        proof.info=d.info;
+        proof.status='PASS_GEOMETRY';
+      }catch(err){
+        proof.failure=String(err.message||err);
+        proof.browserErrors=failures;
+      }finally{
+        layoutSweep.push(proof);
+        await context.close();
+      }
+    }
   }finally{await browser.close();}
   const output={task:'GAME-076',game:'GAME-G030',visualContract,
     method:'real touch/mouse STARTER/RUSH/NIGHT/ACE natural delivery and BEST persistence; read-only QA telemetry; no QA command/state override',
     screenshotStates:['intro','playing','route-rush','route-ace','miss-feedback','result','retry','sound-off','sound-on','replay','cue-stress','cargo-warning-3s'],
     physicalOutput:'NOT VERIFIED – must check actual device audio and first-time user experience',
-    independentQualityScore:'NOT ASSESSED (manual visual/audio/human checks separate)',viewports:results};
+    independentQualityScore:'NOT ASSESSED (manual visual/audio/human checks separate)',viewports:results,layoutSweep};
   fs.writeFileSync(dir+'/results.json',JSON.stringify(output,null,2));
   console.log(JSON.stringify(output,null,2));
-  if(results.some(x=>x.status!=='PASS'))process.exitCode=1;
+  if(results.some(x=>x.status!=='PASS') || layoutSweep.some(x=>x.status!=='PASS_GEOMETRY'))process.exitCode=1;
 }
 run().catch(e=>{console.error(e);process.exitCode=1;});
