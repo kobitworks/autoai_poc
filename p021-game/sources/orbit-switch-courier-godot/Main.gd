@@ -68,6 +68,9 @@ var retry_rect := Rect2()
 # GAME-076: read-only rectangles of actually rendered action/guide surfaces for CI.
 var action_card_rect := Rect2()
 var help_guide_rect := Rect2()
+# GAME-076: read-only intro geometry for narrow-screen onboarding regression.
+var intro_last_step_rect := Rect2()
+var intro_start_rect := Rect2()
 
 var audio_player: AudioStreamPlayer
 var tone_switch: AudioStreamWAV
@@ -872,24 +875,35 @@ func _draw_intro_overlay() -> void:
 	var height := minf(field_rect.size.y - _ui_px(20.0), _ui_px(240.0))
 	var r := Rect2(field_rect.get_center() - Vector2(width, height) * 0.5, Vector2(width, height))
 	_rounded_box(r, Color("#0b1a2b"), Color("#46dce9"), 22, 2)
-	# GAME-076: On a short phone landscape, fixed step positions could touch
-	# the start button. Fit all three steps above the button without clipping.
+	# GAME-076: Fit the three novice instructions ABOVE the start button.
+	# The 320x568 portrait field provides only about 153 CSS px for this card.
+	# Previously its third line overlapped TAP TO START by about 12 CSS px.
+	# Only intro text positions/sizing change; touch, scoring and route stay intact.
 	var short_panel := height < _ui_px(230.0)
-	var title_y := _ui_px(13.0 if short_panel else 18.0)
-	var step_y := _ui_px(46.0 if short_panel else 62.0)
-	var step_gap := clampf((height - _ui_px(124.0)) * 0.5, _ui_px(23.0), _ui_px(33.0)) if short_panel else _ui_px(34.0)
-	var step_h := _ui_px(21.0 if short_panel else 29.0)
+	var tiny_panel := height < _ui_px(180.0)
+	var title_y := _ui_px(8.0 if tiny_panel else (13.0 if short_panel else 18.0))
+	var step_y := _ui_px(34.0 if tiny_panel else (46.0 if short_panel else 62.0))
+	var step_h := _ui_px(16.0 if tiny_panel else (21.0 if short_panel else 29.0))
 	var step_font := _font_size(16.0 if short_panel else 18.0)
-	_draw_center_text("ORBIT SWITCH COURIER", Rect2(r.position.x, r.position.y + title_y, width, _ui_px(30.0)), _font_size(20.0 if short_panel else 21.0), Color("#f5fbff"))
-	_draw_center_fit_text("1  START → 目標 %s" % HUB_SHORT[cargo_target], Rect2(r.position.x, r.position.y + step_y, width, step_h), step_font, Color("#ffffff"))
-	_draw_center_fit_text("2  緑の交差点でTAP → 乗換", Rect2(r.position.x, r.position.y + step_y + step_gap, width, step_h), step_font, Color("#b6fff0"))
-	_draw_center_fit_text("3  同じ印のHUBでTAP → 配達", Rect2(r.position.x, r.position.y + step_y + step_gap * 2.0, width, step_h), step_font, Color("#fff3be"))
+	if tiny_panel:
+		step_font = _font_size(14.0)
 	var button_height := _ui_px(44.0 if short_panel else 48.0)
 	var button_offset := _ui_px(53.0 if short_panel else 59.0)
 	var start_rect := Rect2(r.position.x + _ui_px(22.0), r.end.y - button_offset, width - _ui_px(44.0), button_height)
+	var step_gap := _ui_px(34.0)
+	if tiny_panel:
+		# Reserve 7 CSS px between the final line box and the start button.
+		step_gap = clampf((start_rect.position.y - r.position.y - _ui_px(7.0) - step_y - step_h) * 0.5, _ui_px(12.0), _ui_px(30.0))
+	elif short_panel:
+		step_gap = clampf((height - _ui_px(124.0)) * 0.5, _ui_px(23.0), _ui_px(33.0))
+	_draw_center_text("ORBIT SWITCH COURIER", Rect2(r.position.x, r.position.y + title_y, width, _ui_px(24.0 if tiny_panel else 30.0)), _font_size(17.0 if tiny_panel else (20.0 if short_panel else 21.0)), Color("#f5fbff"))
+	_draw_center_fit_text("1  START → 目標 %s" % HUB_SHORT[cargo_target], Rect2(r.position.x, r.position.y + step_y, width, step_h), step_font, Color("#ffffff"))
+	_draw_center_fit_text("2  緑の交差点でTAP → 乗換", Rect2(r.position.x, r.position.y + step_y + step_gap, width, step_h), step_font, Color("#b6fff0"))
+	intro_last_step_rect = Rect2(r.position.x, r.position.y + step_y + step_gap * 2.0, width, step_h)
+	intro_start_rect = start_rect
+	_draw_center_fit_text("3  同じ印のHUBでTAP → 配達", intro_last_step_rect, step_font, Color("#fff3be"))
 	_rounded_box(start_rect, Color("#14647a"), Color("#8dfbff"), 12, 2)
 	_draw_center_text("TAP TO START", start_rect, _font_size(17.0 if short_panel else 18.0), Color.WHITE)
-
 
 func _draw_result_overlay() -> void:
 	draw_rect(field_rect, Color(0.01, 0.02, 0.04, 0.78), true)
@@ -1058,6 +1072,8 @@ func _update_debug_bridge() -> void:
 		"retry_rect": _rect_payload(retry_rect),
 		"action_card_rect": _rect_payload(action_card_rect),
 		"help_guide_rect": _rect_payload(help_guide_rect),
+		"intro_last_step_rect": _rect_payload(intro_last_step_rect),
+		"intro_start_rect": _rect_payload(intro_start_rect),
 		"field": _rect_payload(field_rect),
 		"info": _rect_payload(info_rect),
 		"viewport_w": int(get_viewport_rect().size.x),
