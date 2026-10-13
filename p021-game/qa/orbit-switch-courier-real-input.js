@@ -8,8 +8,8 @@ const targets = [
   { name:'tablet-portrait', width:768, height:1024, input:'touch' },
   { name:'tablet-landscape', width:1024, height:768, input:'mouse' },
 ];
-// GAME-076: light read-only geometry sweep at responsive sizes between the core E2E viewports.
-// These do NOT replace the four real-input gameplay runs or certify human legibility.
+// GAME-076: lightweight responsive intro + natural-start PLAYING geometry sweep.
+// This is not an additional NIGHT/ACE E2E run and cannot certify human legibility.
 const layoutTargets = [
   {name:'small-phone-portrait',width:320,height:568},
   {name:'small-phone-landscape',width:667,height:375},
@@ -526,7 +526,7 @@ async function run(){
       page.on('console',m=>{if(m.type()==='error')failures.push('console '+m.text());});
       page.on('requestfailed',r=>failures.push('request '+r.url()));
       const proof={viewport:t.name,size:t.width+'x'+t.height,
-        mode:'INTRO_GEOMETRY_ONLY',physicalLegibility:'HUMAN GATE',status:'FAIL'};
+        mode:'INTRO_AND_NATURAL_START_GEOMETRY',physicalLegibility:'HUMAN GATE',status:'FAIL'};
       try{
         await page.goto(url,{waitUntil:'domcontentloaded',timeout:120000});
         await until(page,()=>window.__P021_ORBIT&&window.__P021_ORBIT.ready,
@@ -554,6 +554,41 @@ async function run(){
         proof.soundTarget={width:sound.width,height:sound.height};
         proof.field=d.field;
         proof.info=d.info;
+        // Complement the intro-only geometry check with a real touch/mouse START.
+        // This never writes Godot state and does not pretend to be a full route E2E.
+        const starter={input:t.width<=568?'touch':'mouse'};
+        const center={
+          x:c.x+(d.field[0]+d.field[2]/2)*c.width/d.viewport_w,
+          y:c.y+(d.field[1]+d.field[3]/2)*c.height/d.viewport_h
+        };
+        check(center.x>0&&center.x<t.width&&center.y>0&&center.y<t.height,
+          'Responsive START point outside viewport: '+t.name);
+        await page.screenshot({path:dir+'/'+t.name+'-layout-intro.png'});
+        await inputAt(page,starter,center);
+        await until(page,()=>window.__P021_ORBIT&&window.__P021_ORBIT.state==='playing',
+          'responsive physical START '+t.name,20000);
+        const playing=await snapshot(page);
+        check(playing.state==='playing'&&playing.orbit===1&&playing.energy===3,
+          'Responsive natural START state mismatch: '+t.name);
+        check(fits(playing.field,playing.viewport_w,playing.viewport_h)&&
+          fits(playing.info,playing.viewport_w,playing.viewport_h),
+          'Responsive PLAYING field/info overflow: '+t.name);
+        const playCanvas=await page.locator('#canvas').boundingBox();
+        check(playCanvas&&playCanvas.x>=-2&&playCanvas.y>=-2&&
+          playCanvas.x+playCanvas.width<=t.width+2&&
+          playCanvas.y+playCanvas.height<=t.height+2,
+          'Responsive PLAYING canvas overflow: '+t.name);
+        const playHud=physicalRect(playing.hud_rect,playCanvas,playing);
+        const playHub=physicalRect(playing.hub_rect,playCanvas,playing);
+        if(playCanvas.height>520)check(playHub.y+playHub.height<=playHud.y-3,
+          'Responsive PLAYING HUB/HUD overlap: '+t.name);
+        await page.screenshot({path:dir+'/'+t.name+'-layout-playing.png'});
+        check(failures.length===0,'Responsive PLAYING browser errors: '+failures.join(' | '));
+        proof.naturalStart={input:starter.input,physicalTapOrClick:true,
+          state:playing.state,orbit:playing.orbit,energy:playing.energy,
+          noQaCommand:true,noStateOverride:true};
+        proof.playingGeometry={field:playing.field,info:playing.info};
+        proof.evidenceScreenshots=[t.name+'-layout-intro.png',t.name+'-layout-playing.png'];
         proof.status='PASS_GEOMETRY';
       }catch(err){
         proof.failure=String(err.message||err);
