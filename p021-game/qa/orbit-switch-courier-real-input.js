@@ -554,6 +554,17 @@ async function run(){
           sound.x>=-2 && sound.y>=-2 &&
           sound.x+sound.width<=t.width+2 && sound.y+sound.height<=t.height+2,
           'Responsive SOUND target too small/overflows: '+t.name+' '+JSON.stringify(sound));
+        // Read-only layout contract: the onboarding caption/title must stay
+        // left of the SOUND button even on a 320px portrait phone.
+        // Header text uses _draw_fit_label, constrained to this measured lane.
+        const header=physicalRect(d.header_text_region_rect,c,d);
+        const headerSoundGap=sound.x-(header.x+header.width);
+        check(header.width>=100 && header.x>=-2 && header.y>=-2 &&
+          header.y+header.height<=t.height+2 && headerSoundGap>=8,
+          'Responsive header overlaps SOUND: '+t.name+' '+JSON.stringify({header,sound,gap:headerSoundGap}));
+        proof.headerSoundSpacing={source:'GODOT_RENDERED_RESERVED_TEXT_LANE_READ_ONLY',
+          gapCssPx:Math.round(headerSoundGap*100)/100,minimumCssPx:8,
+          headerTextLane:header,soundButton:sound};
         const hud=physicalRect(d.hud_rect,c,d);
         const hub=physicalRect(d.hub_rect,c,d);
         if(c.height>520)check(hub.y+hub.height<=hud.y-3,
