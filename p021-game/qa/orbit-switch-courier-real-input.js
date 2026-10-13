@@ -573,6 +573,28 @@ async function run(){
         proof.headerSoundSpacing={source:'GODOT_RENDERED_RESERVED_TEXT_LANE_READ_ONLY',
           gapCssPx:Math.round(headerSoundGap*100)/100,minimumCssPx:8,
           headerTextLane:header,soundButton:sound};
+        // GAME-076: catch the clipped third intro instruction on a 320px
+        // portrait phone, independent of the previously green field/HUD test.
+        // Observe Godot's actually drawn line + button rectangles, not a
+        // JS approximation. Never issue QA commands or alter game state.
+        const introStep=physicalRect(d.intro_last_step_rect,c,d);
+        const introStart=physicalRect(d.intro_start_rect,c,d);
+        const introField=physicalRect(d.field,c,d);
+        const introGap=introStart.y-(introStep.y+introStep.height);
+        check(introStep.width>0&&introStep.height>=12&&
+          introStart.width>=44&&introStart.height>=40&&introGap>=4,
+          'Responsive intro line overlaps START: '+t.name+' '+
+          JSON.stringify({introStep,introStart,introGap}));
+        for(const [name,r] of [['third instruction',introStep],['start button',introStart]]){
+          check(r.x>=introField.x-2&&r.y>=introField.y-2&&
+            r.x+r.width<=introField.x+introField.width+2&&
+            r.y+r.height<=introField.y+introField.height+2,
+            'Responsive '+name+' exceeds playfield: '+t.name+' '+
+            JSON.stringify({r,introField}));
+        }
+        proof.introStepButtonSpacing={source:'GODOT_RENDERED_RECT_TELEMETRY_READ_ONLY',
+          gapCssPx:Math.round(introGap*100)/100,minimumCssPx:4,
+          lastInstruction:introStep,startButton:introStart};
         const hud=physicalRect(d.hud_rect,c,d);
         const hub=physicalRect(d.hub_rect,c,d);
         if(c.height>520)check(hub.y+hub.height<=hud.y-3,
