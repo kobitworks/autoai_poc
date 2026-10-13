@@ -370,7 +370,7 @@
 - **次回再開点**: run38446198116の全ジョブをFresh-readし、ブラウザログ/新actionGuideSpacing・4viewportの自然入力・追加3画面の幾何・全証跡を独立検証する。failがあれば同一GAME-076の限定修正。人間実機レビューが入るまでは76/100を据置いて一般公開品質合格を宣言しない。今回のGAME-076は完了条件未達でToDo復帰予定、別タスク実施なし。
 
 
-## 2026-10-14 03 (sekund: 37) JST / AUTOAI-GAME076-20261014-0331 — 小型横画面QAサブピクセル丸め誤差を修正
+## 2026-10-14 03:41 JST / AUTOAI-GAME076-20261014-0331 — 小型横画面QAサブピクセル丸め誤差を修正
 
 - 対象1件: P021 GAME-076 / Runner v1.38.0, project_rule v1.2.0。先行有効PJは要確認・依存・周期未到達・全完了で非着手。Slack明示新規@autoai指示0件、メッセージ41件DONE、09:00前で日次監視対象外。
 - 前回CI [run 38446198116](https://github.com/kobitworks/autoai_poc/actions/runs/38446198116) はcontract=success、export-web=success、browser-quality=failure（job 115465782099）。ジョブログでは標準4 viewport の実タップ/クリック入力E2Eは4件PASS、小型3画面のうちsmall-phone-landscapeで表示高さassertionがFAIL。したがって前回CI全体はFAIL。artifact11839465477が存在するがZIP/全PNGの独立解析は今回未実施。
