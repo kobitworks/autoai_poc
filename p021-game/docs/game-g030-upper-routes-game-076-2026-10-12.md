@@ -686,3 +686,12 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - 新CI: [Actions run38330801226](https://github.com/kobitworks/autoai_poc/actions/runs/38330801226)、head_sha=2ddf08953f894c0e543877659c24bee65c20cf05。10:13時点で contract / Godot export-web が成功、browser-qualityの4 viewport実タップ/クリックE2Eは**進行中**であり新コードのPASSは未確定。前runのPASSを転用しない。
 - P005〜P018/P020の親projects.xlsxは「最終確認日時」のみ 10:10:30 に更新済み（最終実行日時・本日回数には変更なし）。本Runnerの唯一の選定タスクはGAME-076。
 - 10軸品質は証跡限定暫定 **76/100据置（80点未達）**。新スクリーンショット独立画像確認および実機のスピーカー・イヤホン、初見ユーザー30秒、実機文字/誤タップ、FPS/発熱は未検証。main、課金、本番範囲拡大なし。実入力E2E結果と証跡を確認してからToDo復帰・親台帳同期・Slack報告する。一般公開品質とは認定しない。
+
+
+### 2026-10-13 10:16 JST / AUTOAI-GAME076-20261013-1008-CI-FAIL — 新コードE2E初回不合格、同一コード再試行
+
+- [run38330801226](https://github.com/kobitworks/autoai_poc/actions/runs/38330801226) attempt1：contract success / export-web success / browser-quality FAILURE。4viewport全件PASSは成立しなかった。
+- browser-quality job115080187822 の確定ログで phone portrait、phone landscape、tablet landscape は status=PASS。**tablet portraitのみ RUSH 0->1 crossing: page.waitForFunction: Timeout 18000ms exceeded.** によりFAIL。通常入力でのタイミング待機であり、今回の表示変更が原因と確定していない。成功コマンド・ゲームstate直書きなどの回避はしない。
+- [artifact11783615026](https://github.com/kobitworks/autoai_poc/actions/runs/38330801226/artifacts/11783615026) はGitHub Actionsログで46ファイル・約3.38MB。失敗runのため52PNGの4画面完走を主張しない。zip/全画像独立目視は未実施。
+- 同一コードの [attempt2](https://github.com/kobitworks/autoai_poc/actions/runs/38330801226/attempts/2) の失敗ジョブ再実行要求がsuccess。new browser-quality job115081389637、10:16時点in_progress（contract/export-web success）。再試行の合否は未確定。
+- 品質は証跡限定暫定76/100据置（80未達）。実機スピーカー/イヤホン、初見30秒、端末可読性・誤タップ、FPS・発熱はHuman Gate未確認。GAME-076はToDoへ復帰、親projects.xlsx P021最終実行10:14:20/本日30回を同期済み。次回はattempt2結果とread-only telemetryを比較し、必要なら同GAME-076で実タップタイミングを診断する。main変更・課金・本番拡大なし。
