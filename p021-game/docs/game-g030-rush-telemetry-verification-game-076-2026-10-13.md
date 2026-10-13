@@ -305,3 +305,14 @@
 - **証跡**: [artifact11814792803](https://github.com/kobitworks/autoai_poc/actions/runs/38398934377/artifacts/11814792803) p021-game-g030-real-input-evidence、GitHub上4030066 bytes / digest sha256:4e22e9c9f00f0a140604cb5ef0fd08397df1c41252f74a67e923518bdec5a9ec。今回はartifact実ZIP/PNG自体の独立ダウンロード・画像目視は未実施のため、証跡ファイル自体の完全性を独立PASSと断定しない。
 - **品質・未検証事項**: 独立暫定品質76/100を据え置く（一般公開閾値80未達）。実機スピーカー/イヤホン、初見利用者の30秒理解・長文cue可読性、小画面実タップ誤操作、FPS/端末発熱のHuman Gateは未確認。CI成功だけで完了・公開品質認定しない。
 - **結果と次回**: GAME-076はToDoで継続。次は実機観測が得られ次第、初見ガイド/横画面の可読性の改善と物理デバイス品質判定、必要に応じ独立画像監査を行う。今回はゲームソース・main・課金・本番/公開範囲を変更せず監査ドキュメントのみ追記。他の実タスクは実施しない。
+
+
+## 2026-10-13 22:38:05 JST / AUTOAI-GAME076-20261013-2234 — 小型3画面の自然入力START・プレイ中レイアウト検証追加
+
+- **対象1件**: P021 GAME-076。runner v1.38.0 / P021 v1.2.0、Slack新規明示@autoaiなし、41件DONE、日次監視本日09:21済。P005〜P018/P020はHuman Gate、前提待ち、定期実行間隔未到達または全完了でスキップ。GAME-075=Done、GAME-076=ToDoからDoing排他取得/再読込一致。
+- **新規に埋めた検査の空白**: 従来layoutSweepの3サイズ（320x568 / 667x375 / 800x600）はINTROの矩形検査のみで、PLAYINGでのフィールド、情報欄、HUD、キャンバス逸脱を観察していなかった。NIGHT/ACEの通常4画面フルE2Eは既存テストで維持。
+- **今回のソース変更**: `p021-game/qa/orbit-switch-courier-real-input.js` のlayoutSweepで、INTRO配置/SOUND >=44px/画面逸脱を検査後、通常のPlaywrightタッチまたはマウスでフィールド中央を1回押し、Godot状態が`playing`・orbit1・energy3へ進んだことをread-onlyで確認。PLAYINGのfield/info矩形、canvas境界、表示条件を満たす場合のHUB/HUD非重複、ブラウザエラーなしを独立検査する。各サイズで`-layout-intro.png`と`-layout-playing.png`を生成し、proof.naturalStart / playingGeometry / evidenceScreenshotsを記録。成功コマンド、Game state直接書換え、スコア付与、クエスト飛ばしは**一切追加していない**。3サイズの合格はINTRO+PLAYING幾何のみで、NIGHT/ACE E2E、物理画面可読性の合格と混同しない。
+- **GitHub develop実績**: QAだけを変更してcommit [cb23bebc0afc2cf4afc4ee5d8894d93cb4b7427b](https://github.com/kobitworks/autoai_poc/commit/cb23bebc0afc2cf4afc4ee5d8894d93cb4b7427b)。ソース再取得blob SHA=`1beb9c508ea1f1e5e0e0a5b623fbcd44c8984c74`と変更箇所の存在確認に成功。Godot Main.gd、得点/配送/音声の実装、main、課金、本番・公開範囲は変更していない。
+- **新しいCI**: [GitHub Actions run 38406231386](https://github.com/kobitworks/autoai_poc/actions/runs/38406231386)、head_sha=cb23bebc0...。`2026-10-13 22:38:05`時点のジョブ: contract=completed/success, export-web=completed/success, browser-quality=in_progress/pending。途中のCIを完走/全画面PASSと誤記しない。
+- **品質判定**: 従来の独立暫定76/100を据え置く（目標80未達）。新3サイズの自然START後幾何、画像、主4画面E2Eの新run結果はCI完走まで未確定。実機スピーカー/イヤホン音量、初見30秒の理解、物理画面の小文字判読と誤タップ、FPS/発熱はHuman Gate未確認。人間操作の代行・同一理由の重複Slack警報を行わない。
+- **次回再開点**: 新runのcontract/export-web/browser-quality最終結果・layoutSweep 3/3と基準4画面4/4・ZIP画像を独立読戻し。エラー時は同1件GAME-076で最小修正後再検証。80点品質の実機証跡が揃うまではGAME-076をToDo継続し完了としない。他のタスクには着手しない。
