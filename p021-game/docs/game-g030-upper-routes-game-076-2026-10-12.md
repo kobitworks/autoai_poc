@@ -695,3 +695,24 @@ GAME-075の74/100に対し、上位2ルート実入力証跡による難度/変�
 - [artifact11783615026](https://github.com/kobitworks/autoai_poc/actions/runs/38330801226/artifacts/11783615026) はGitHub Actionsログで46ファイル・約3.38MB。失敗runのため52PNGの4画面完走を主張しない。zip/全画像独立目視は未実施。
 - 同一コードの [attempt2](https://github.com/kobitworks/autoai_poc/actions/runs/38330801226/attempts/2) の失敗ジョブ再実行要求がsuccess。new browser-quality job115081389637、10:16時点in_progress（contract/export-web success）。再試行の合否は未確定。
 - 品質は証跡限定暫定76/100据置（80未達）。実機スピーカー/イヤホン、初見30秒、端末可読性・誤タップ、FPS・発熱はHuman Gate未確認。GAME-076はToDoへ復帰、親projects.xlsx P021最終実行10:14:20/本日30回を同期済み。次回はattempt2結果とread-only telemetryを比較し、必要なら同GAME-076で実タップタイミングを診断する。main変更・課金・本番拡大なし。
+
+
+## 2026-10-13 10:40 JST / AutoAI GAME-076 実操作CI再試行・完全証跡独立監査
+
+- 今回選定した実タスクは **GAME-076の継続1件のみ**。親Runner v1.38.0 / P021 v1.2.0に従い、GAME-075=Done、GAME-076=ToDo、他Doingなしを再確認し、Doingで排他取得。P005〜P020の先行有効PJは人間確認・前提未解消・定期間隔のため実タスクを実行していない。
+- 検証対象コードはGodot UI改善 [commit 2ddf08953f894c0e543877659c24bee65c20cf05](https://github.com/kobitworks/autoai_poc/commit/2ddf08953f894c0e543877659c24bee65c20cf05)。今回の調査ではゲーム本体・QAコード、main、公開構成を変更しない。
+- [Actions run 38330801226](https://github.com/kobitworks/autoai_poc/actions/runs/38330801226) の最新attemptを再取得。**contract / export-web / browser-quality 3ジョブとも completed/success**。browser-qualityは **attempt2 job 115081389637**（失敗したattempt1から再実行したジョブ）であることを明示する。
+- **初回FAILを保存**: [artifact 11783615026](https://github.com/kobitworks/autoai_poc/actions/runs/38330801226/artifacts/11783615026) のZIPを実体取得し、results.jsonと45 PNG（46ファイル）を読戻し。phone縦/横・tablet横はPASS、**tablet縦のみRUSH 0→1 crossingでwaitForFunction 18000ms Timeout**。失敗時 deliveries=1, energy=2, cargo_left≈9.09s, orbit=0, browserErrors=[]。直前のRUSH入力タイミング時系列が欠落するため、入力観測遅延・貨物期限切れ・ゲーム側判定のどれが根因かは確定しない。JSON SHA-256: edf161bbb2d57dec2fd4c6482fac05489c4954820fb06dd04422946f1ab59c71。
+- **再試行PASSを独立検証**: [artifact 11782683141](https://github.com/kobitworks/autoai_poc/actions/runs/38330801226/artifacts/11782683141) の別ZIPを実体取得し、results.jsonと4 viewport×13状態=**52 PNG（計53ファイル）**を照合。JSON SHA-256: ddca171a61ac96d8f1db8e3cee41f90e77294c3e3cc636d7101db44c31c61e06。全画面とも通常タッチ/クリックのみでNIGHT 3件→ACE 6件、SOUND OFF/ON、RETRY、BEST永続化、初回誤タップ保護をPASS。qaCommand=NEVER USED、stateOverride=NONE。
+
+| viewport | attempt1 | attempt2 | ACE配達/score | SOUND/RETRY/BEST |
+| --- | --- | --- | --- | --- |
+| phone-portrait 390×844 | PASS | PASS | 6 / 1110 | PASS |
+| phone-landscape 844×390 | PASS | PASS | 6 / 1110 | PASS |
+| tablet-portrait 768×1024 | **FAIL（RUSH交差待機）** | PASS | 6 / 1108 | PASS |
+| tablet-landscape 1024×768 | PASS | PASS | 6 / 1110 | PASS |
+
+- 実PNGから16画面（4 viewport × intro / cargo-warning-3s / route-ace / cue-stress）を一覧化して独立目視し、phone-landscapeの導入3段階と下段の操作手順の文字拡大、tablet-landscape右欄のルート状態、赤色の残時間3秒警告を確認。余白や小さい副次文字は残り、実機可読性までは保証できない。visualContract=PASS_STATICは静的コントラストチェックに限る。
+- **P021独立暫定品質は76/100のまま据置き**（ゲーム8・操作8・難度7・UI/UX8・グラフィック7・演出6・サウンド6・変化8・リプレイ9・技術9）。4/4の成功1回だけでは初回FAILの不安定性が解消された証明にならず、80点の一般公開品質には未達。
+- **次回再開点**: (1) RUSH 0→1のread-only angle/energy/cargo_left/入力観測時刻テレメトリ取得条件を追加するか、同一commitで複数attemptを再評価し、初回失敗と成功時の時系列差から根因を確定する（成功コマンドやstate直書きは禁止）;(2) phone-landscape小型副次文字とtablet-landscape右欄の初見導線を実画像で継続改善;(3) 4 viewport実入力E2E、13状態の画像および10軸独立採点を再実施。
+- **Human Gate未検証**: 実機スピーカー/イヤホンの音質/音量、端末FPS/発熱、初見ユーザー30秒理解度・誤タップ率。これらをCI PASSで代替しない。今回main変更・課金・本番化・追加外部公開なし。**GAME-076は未完了のためToDoへ戻して継続**。
