@@ -491,3 +491,14 @@
 - 最優先の320px INTRO重なり回帰は新しい実描画で**解消**。layoutSweepの小型320x568/667x375/800x600は全てPASS_GEOMETRY、`introStepButtonSpacing.gapCssPx`は**7/17/22 CSS px**で最低4pxを全て満たす。代表3枚`small-phone-portrait-layout-intro.png`等を独立目視し、説明最終行とSTARTボタンの明白な重なりを認めない。ただし物理端末での日本語可読性・誤タップ等はHuman Gate未検証。
 - 失敗job **115563120665のみ再実行**をAPIから正常受理。同run attempt2の新browser-quality job **115568554527**を起動した。再試行の最終完走・合否は実行中につき別途Fresh-readが必要（他の2ジョブはsuccess）。ゲーム/QA本体、main、課金、本番・公開範囲は今回変更していない。
 - 品質は独立暫定**76/100**のまま（一般公開目標80点未達）。実機初見30秒、物理タッチ/日本語可読性、スピーカー/イヤホン実音、FPS/発熱は未確認のHuman Gate。既通知の同じHuman Gateを重複警報しない。完了条件未達のためGAME-076はToDo復帰予定。次回はattempt2の合否/証跡を確認し、RUSH 0→1のエネルギー減少が再現すれば入力遅延とcargoタイマー競合をread-only診断して自然入力条件は緩めず改善。復帰・進捗更新後、2件目は実行しない。
+
+
+## 2026-10-14 07:45:33 JST / AUTOAI-GAME076-20261014-RERUN-VERIFY — RUSH初回失敗の再実行結果を確定（今回の実作業1件）
+
+- スコープ: P021 / GAME-076（継続中）。コード・本番・mainを変更せず、前回未確定だったGitHub Actions再試行を独立Fresh-readし、失敗時と再試行時のjobログ・証跡を比較。Runner v1.38.0、P021ルールv1.2.0。
+- [GitHub Actions run 38474581588](https://github.com/kobitworks/autoai_poc/actions/runs/38474581588) は **2026-10-14 07:20:42 JST完了、attempt 2、結論success**。head=b816bb561ff4c00b08ba412a3555188912ee87f1。最新attemptの **contract / export-web / browser-quality = 3/3 success**（browser-quality job115568554527）。これが当該HEADのCI結果であり、過去別HEADの合格を流用していない。
+- 再試行時browser-qualityのstepを個別読戻し: Playwright導入、静的サーバー、four viewport simulated smoke、four viewport actual touch/click E2E、証跡uploadはすべてsuccess。jobログ末尾にE2E結果JSONと60ファイルの証跡upload成功を確認。GitHub APIは新artifact **11854940997**、圧縮後4,373,529 bytes、GitHub報告digest **sha256:f189bb1aa9e9933b879ece9d6ce4e8679a0afb4dc8487b2b24482fcde59a0b45**。URL: https://github.com/kobitworks/autoai_poc/actions/runs/38474581588/artifacts/11854940997
+- **重要な区別**: 上記digestとファイル数はGitHub側のAPI/jobログ確認であり、今回の実行では再試行artifact ZIPの実体ダウンロード、SHA256/CRC照合、PNG全枚デコード、独立目視までは行っていない。それらを独立PASSと断定しない。再試行jobログではNIGHT→ACE、RUSH後energy3維持、INTRO小型3画面のPASS_GEOMETRY等が報告されたが、最終画像の独立視覚検証は次回課題。
+- 初回attempt1のbrowser-quality job **115563120665 はfailure**（tablet横画面のRUSH 0→1でenergy 3→2・MISS ENERGY -1）。再試行job **115568554527ではenergy 3を維持しsuccess**。ソースHEADが同一なのに結果が分かれるため、**初回エネルギー低下の根本原因が解消されたとは判定しない**。ブラウザ時間/貨物期限/入力待ちの競合は未検証の仮説のまま。自然入力や判定閾値を緩めてPASS化してはならない。
+- 初見説明↔START重なりは前回の修正後実画面で小型3画面7/17/22 CSS pxを確認済み。今回新しい画面修正はしない。品質スコアは独立暫定 **76/100**（目標80点未満）を維持。物理端末の初見30秒・視認性/誤タップ・日本語・スピーカー/イヤホン実音・FPS/発熱は未検証のHuman Gateであり、同じ確認依頼を再送しない。
+- 完了条件未達のためGAME-076の継続記録に留め、ToDoを保持。次回は再試行artifactのZIP/PNG独立検証とRUSH 0→1の失敗再現性を切り分け、必要なら同GAME-076内で入力経路・貨物期限境界のread-only診断を改善し、80点到達可否を再評価。新規別タスクの実行なし。
