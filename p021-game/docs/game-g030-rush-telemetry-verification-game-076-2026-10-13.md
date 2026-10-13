@@ -408,3 +408,13 @@
 - **追加小型3画面**: 320x568、667x375、800x600は **3/3 PASS_GEOMETRY**（物理tap/click START→PLAYING、位置テレメトリ）。667x375のNEXT ACTIONカードと説明ガイドの`actionGuideSpacing.gapCssPx=8` は下限4 CSS pxを満たす。
 - **スクリーンショット代表目視**: 長文cueのphone横・phone縦・tablet横、small-phone横/縦PLAYING、phone横残3秒警告、phone横ACE、tablet横ACEの**8枚**を抽出・比較。抽出画像では明白なカード/ガイド重なりを認めないが、小文字の物理画面での可読性は未検証。残る50枚の全件目視は実施していない。
 - **判定**: 技術CI・証跡整合はPASS。独立暫定品質 **76/100を据置**（公開基準80未達）。実機の初見30秒・文字可読性/誤タップ・スピーカー/イヤホン音・FPS/発熱はHuman Gate未確認。今回ゲーム本体・E2Eテスト・main・課金・本番・公開範囲の変更はなし。監査文書のみdevelopへ追記。既存同一Human Gate確認のSlack通知は重複させない。完了条件未達につきタスクをDoing→ToDoへ復帰し、次回は実機回答を受けた再採点と必要な最小UX改善、未目視PNGの重点レビューを検討。2件目タスクには着手しない。
+
+## 2026-10-14 05:03 JST / AUTOAI-GAME076-20261014-0454 — 小型スマホヘッダー・SOUNDの干渉防止
+
+- **本回の実作業はP021 GAME-076のみ**。Runner v1.38.0、project_rule v1.2.0。新規明示@autoaiメッセージなし、09:00前のため日次監視は今回対象外。先行PJは既存の承認/依存/HOLD/周期条件により着手なし。
+- **発見したUIリスク**: 320px幅では左上の「GAME-G030 / TAP THE GLOW」と題名が、右の116 CSS px幅「SOUND ON/OFF」操作領域へ水平方向に入り込む可能性。初見30秒の操作説明とタップ領域の識別を阻害し得るため、今回の小さな表示改修の対象とした。改修前の実機重なりを測定済みとは主張しない。
+- **改善**: Godot Main.gdでヘッダー文字専用の左領域を確保し、SOUNDとの設計上14 CSS px相当の余白を保持。幅405 CSS px未満では「TAP THE GLOW」を優先して冗長なゲームIDを省略し、題名を20px基準として幅内に収める。文字列の実測幅が領域を超える場合は既存のellipsis描画へ移行する。ゲームの配達・操作判定・時間・得点・音声・保存・QA成功ショートカットは変更していない。
+- **コード反映と読戻し**: develop [Main.gd commit 59ee2ff](https://github.com/kobitworks/autoai_poc/commit/59ee2ff59ebfe466c63d149d63ddcd346be4bdda)、blob \`ce65b75d4c29f33abb006a3cf812815ae52d1a17\`。QA [commit cf65ba3](https://github.com/kobitworks/autoai_poc/commit/cf65ba3fcf8cb909fa01164d1b9b1a2557b52e84)、blob \`e9de0a9d92ce0c77adb88f55eb55ac8275b00003\`。両ファイルともGitHubから再取得し一致を確認。
+- **追加の回帰検証契約**: Godotのread-only \`header_text_region_rect\` を小型3 viewport (320x568, 667x375, 800x600) で物理CSS矩形へ換算し、SOUND矩形との左右余白が **8 CSS px以上**か、ヘッダー領域が画面外へ出ないかを検証する。通常の自然入力E2E・NIGHT3→ACE6・SOUND・RETRY・BEST、従来の4標準viewportと58枚画像もCIの対象として維持。
+- **新CIの確認点**: [run 38459721309](https://github.com/kobitworks/autoai_poc/actions/runs/38459721309) はhead \`cf65ba3\` で起動されたが、本記録時点ではpending。今回の新しいヘッダー検証を**成功とは未認定**。前回run38453434998のPASSを新コードに流用しない。新run完走後に小型3画面/標準4画面、実画像/JSONを独立確認する必要がある。
+- **品質判定**: GAME-G030独立暫定 **76/100を維持**、80点未達。実機の初見30秒、文字可読性/誤タップ、スピーカー/イヤホン実音、FPS/発熱は人間確認Gateで未検証。既存同一Human Gate通知は重複させない。main・課金・本番変更なし。タスクDone条件に達しないので本回終了時にDoing→ToDoへ戻す。
