@@ -557,9 +557,15 @@ func _draw() -> void:
 		field_rect = Rect2(margin, content_y, field_w, available_h)
 		info_rect = Rect2(field_rect.end.x + _ui_px(12.0), content_y, w - margin - field_rect.end.x - _ui_px(12.0), available_h)
 	else:
-		var info_h := clampf(available_h * 0.24, _ui_px(170.0), _ui_px(194.0))
-		field_rect = Rect2(margin, content_y, w - margin * 2.0, maxf(_ui_px(190.0), available_h - info_h - _ui_px(8.0)))
-		info_rect = Rect2(margin, field_rect.end.y + _ui_px(8.0), w - margin * 2.0, maxf(_ui_px(170.0), h - margin - field_rect.end.y - _ui_px(8.0)))
+		# Small portrait viewports cannot always fit the old fixed 190px field
+		# plus 170px info panel beneath the header. Share only the real space.
+		var panel_gap := _ui_px(8.0)
+		var split_h := maxf(0.0, available_h - panel_gap)
+		var info_target_h := clampf(available_h * 0.24, _ui_px(170.0), _ui_px(194.0))
+		var info_h := minf(info_target_h, split_h * 0.49)
+		var field_h := maxf(0.0, split_h - info_h)
+		field_rect = Rect2(margin, content_y, w - margin * 2.0, field_h)
+		info_rect = Rect2(margin, field_rect.end.y + panel_gap, w - margin * 2.0, info_h)
 
 	_draw_playfield()
 	_draw_info_panel()
