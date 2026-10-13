@@ -263,3 +263,14 @@
 - **コード記録:** [develop commit 0f2bdb1459b01983bf0d4e14c669bd054bf964a2](https://github.com/kobitworks/autoai_poc/commit/0f2bdb1459b01983bf0d4e14c669bd054bf964a2) / Main.gd blob `33112c56ca0dae5ea1ed92e6af2804bb6ad9fe62`。GitHub APIによる修正箇所・blobの読戻し一致。現在の証跡は表示コードと静的コントラストのみで、視認性・操作性の実機改善をPASSとは認定しない。
 - **新CI:** [Actions run38390890913](https://github.com/kobitworks/autoai_poc/actions/runs/38390890913) はこのソースcommitをheadとする。20:33 JSTの取得時点でcontract=success、export-web=in_progress、browser-quality未開始。従来のrun38384231463のPASSは旧ソース由来のため、新ソースのE2E・52PNG・BEST/SOUNDをPASSとして流用しない。
 - **品質Gate:** 独立10軸暫定76/100を据置、80未達。実機初見30秒・小文字/チップ判読・タップ誤操作・スピーカー/イヤホン聴感・FPS/発熱は未確認Human Gate。新CI最終結果と4 viewport実入力・PNG、実機フィードバック後に再採点が必要。既存Human Gateの同理由再通知なし。main・本番・課金・公開範囲の変更なし。他タスクに着手せず。
+
+
+## 2026-10-13 20:57 JST / AUTOAI-GAME076-20261013-2043 — 最新2色チップ版のCI・実入力・全画像を独立確認
+
+- **実行対象はP021 GAME-076のみ**。Runner v1.38.0／P021 v1.2.0。新規の明示的Slack @autoai指示なし、既存メッセージ41件DONE、日次監視09:21実施済。P005〜P018／P020はHuman Gate・前提未達・定期間隔未達・完了済みにつき未着手。GAME-075 Done、GAME-076 ToDo→Doingの排他取得・読戻しを確認。
+- **最新CIをFresh-read**: [run38390890913](https://github.com/kobitworks/autoai_poc/actions/runs/38390890913)（develop head [0f2bdb1459b01983bf0d4e14c669bd054bf964a2](https://github.com/kobitworks/autoai_poc/commit/0f2bdb1459b01983bf0d4e14c669bd054bf964a2)、前回の2色チップ変更）について contract／export-web／browser-qualityの3/3ジョブがcompleted/successとなったことをAPIで確認。旧ソースの成功は流用していない。
+- **ブラウザ実操作ログを独立JSONパース**: browser-quality job 115274657271の最終JSONをGitHubの生ログから抽出・構文検証。390×844/844×390/768×1024/1024×768 の4 viewportすべてstatus=PASS。NIGHT=自然な3配達、ACE=自然な6配達、実際のtouch/mouse入力、qaCommand=NEVER USED、stateOverride=NONE、START時の初見誤タップガード、SOUND OFF/ONの状態切替が4/4で確認できた。ACE点数=1108/1110/1103/1097、再読込後BESTもそれぞれ同値。アプリ内音声Player観測はあるが、物理端末から実音が出るかは未検証。
+- **新artifact現物検査**: [artifact11808763528](https://github.com/kobitworks/autoai_poc/actions/runs/38390890913/artifacts/11808763528) を前回から新規ダウンロード。ZIP実ファイル4,026,958 bytes、SHA256=`dbd353988acfdfee0d3cbee8acc0130a10d46e1c3bc2bd6f4e77ee9004a0a7aa` はGitHub公開digestと一致。ZIP54件全CRC正常、`results.json`と`results-checkpoint.json`各1、全52PNG（4 viewport各13状態）は全ファイルPNGデコード成功・画面寸法一致・空白画像なし。異なるピクセル画像50点、phone portrait/landscapeのintroとsound-onのみ各1組同一（同じ画面状態）。
+- **静止画の独立目視**: 4 viewportの13状態をコンタクトシートで一覧比較し、phone landscapeの`cargo-warning-3s.png`とtablet landscapeの`cue-stress.png`を原寸で確認。前回追加のphone横2色チップ「緑でTAP→乗換」「同じ印でTAP→配達」は画面内に両方存在し、右下でボタンと重ならない。残3秒のHURRY赤帯と秒数を画像で確認。tablet横のHOW TO PLAY／NIGHT・ACE到達ガイドも表示される。ただし暗めの文字・情報密度は実機の初見視認性テストに代わらず、物理可読性PASSとはしない。
+- **品質判定**: 4画面実操作と新しい52 PNGの証拠は確認済。ただし一般公開品質の独立暫定点数は**76/100据置（80未達）**。物理端末での初見30秒理解、指でのタップ誤操作、小文字/チップの判読、実スピーカー/イヤホン音、FPS/発熱は既存Human Gateのまま未確認。成功を捏造せず、同じ理由でSlackへ重複確認を発行しない。
+- **次回**: 実機ユーザーフィードバックがあれば文字や初見案内を絞って改善し、改修したソースのCI・52PNGと10軸を再判定。実機なしに品質80点達成を認定しない。今回はゲームソース・QA・main・本番・課金・公開範囲を変更せず監査ドキュメントのみ追記、GAME-076は未完了のためDoing→ToDoへ戻す予定。2件目着手なし。
