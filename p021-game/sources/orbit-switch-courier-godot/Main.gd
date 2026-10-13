@@ -772,7 +772,10 @@ func _draw_info_panel() -> void:
 			elif live_action.begins_with("TARGET "):
 				action_line = live_action.replace(" · WAIT FOR GLOW", " · WAIT")
 		var card_y := y - _ui_px(13.0)
-		var card_h := minf(_ui_px(56.0), info_rect.end.y - card_y - _ui_px(11.0))
+		# Reserve an 8px gap above the two 30px tutorial chips on 220-239px panels.
+		# Without this clearance, the NEXT ACTION card touches the chips at 220-223px.
+		var guide_clearance := _ui_px(44.0) if info_rect.size.y >= _ui_px(220.0) and info_rect.size.y < _ui_px(240.0) else _ui_px(11.0)
+		var card_h := minf(_ui_px(56.0), info_rect.end.y - card_y - guide_clearance)
 		if card_h >= _ui_px(43.0):
 			var action_card := Rect2(x, card_y, info_rect.size.x - pad * 2.0, card_h)
 			_rounded_box(action_card, Color("#125b4b") if action_ready else Color("#183a51"), Color("#9affdc") if action_ready else Color("#89d7fc"), 11, 3 if action_ready else 2)
