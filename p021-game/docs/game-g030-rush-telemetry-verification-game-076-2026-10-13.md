@@ -388,3 +388,12 @@
 - **小型画面実描画**: 320×568、667×375、800×600は3/3 **PASS_GEOMETRY**。667×375の `actionGuideSpacing` はread-only描画矩形から `gapCssPx=8`、既定下限4pxを満たす。ガイドの実測高さ29.999998508pxは公称30pxとのサブピクセル誤差としてCI成功を再確認。間隔4px以上とinfoパネル包含のチェックは緩和していない。
 - **PNG実体の独立目視**: 12枚（小型縦横INTRO/PLAYING、コンパクトTablet PLAYING、4標準viewportのACE/CUE代表画面など）を抽出して比較。抽出画面で明白なカード/ガイド重なりや非表示は見つからなかった。ただし小型画面の日本語説明は小さく見える箇所があり、物理画面上の可読性合格までは断定しない。残る46枚の全件目視、初見の実利用者30秒、実機スピーカー/イヤホン、誤タップ、FPS/発熱は未検証。
 - **品質・状態判定**: 10軸の独立暫定 **76/100のまま**（一般公開80未達）。CI全体の成功は技術回帰の証跡であり、人間の実機品質Gate合格ではない。今回ゲーム本体・QAコードは変更せず、developの監査記録を更新。main、課金、production、公開範囲の変更なし。GAME-076は完了条件未達なので本回終了時にDoing→ToDoへ戻す。次回は残りPNGの重点監査、実機レビュー結果が得られたら10軸再採点し、必要な最小限の改善を判断する。同じHuman GateのSlack依頼は重複送信しない。
+
+
+## 2026-10-14 04:16 JST / AUTOAI-GAME076-20261014-0413 — 長文cue優先表示のread-only E2E契約追加
+
+- **今回の唯一実タスク**: P021 GAME-076。Runner v1.38.0／project v1.2.0。新規明示@autoai指示0件、既存メッセージ41件DONE、09:00前のため日次全体監視非対象。P005〜P018/P020は要確認・HOLD・依存・定期未到達・完了のため着手なし。
+- **改善内容**: 長文QAストレス実行時に表示候補となる全文、2行の優先表示（ROUTE NIGHT→ACE と NEXT TAP NOW）のテレメトリをGodotから読み取り専用で公開。通常の物理STARTタップ後、QA `orbit-switch-courier-real-input.js` が長文・ルート優先要約・次操作文の存在を明示アサートする。従来の単なる `cue_stress` flag確認と画像取得に加え、ストレス用長文が実際に優先表示候補として選ばれていることを検証する。
+- **GitHub develop コミット**: https://github.com/kobitworks/autoai_poc/commit/96006e3726ce8edf3ddc0faf45f655ed0884d924 。readback Main.gd blob `b4c2e0b6a6596abe0ecd78bdac3a6d420003d109`、QA blob `281c1541ef7c9feb27b16292df4e449c4236c53b` と一致。コードのゲーム入力、配達判定、スコア、時間、音声、BEST保存、QA勝利操作や状態直書きには変更なし。
+- **CI**: https://github.com/kobitworks/autoai_poc/actions/runs/38453434998 は確認時 in_progress（最初のcontractジョブ実行中）。今回の新長文assertion・4viewport自然E2E・小型3画面PASSは**未確定**。前回run38448558219のsuccessを新コミットの成功として流用しない。
+- **公開品質Gate**: 独立暫定76/100を据置（目標80未達）。物理端末での初見30秒理解・文字可読性/誤タップ・スピーカー/イヤホン実音・FPS/発熱はHuman Gate未確認。検証CI完走と証跡の独立再確認が次回作業。既存同理由Slack確認依頼は重複しない。完了条件未達につき本回終了時にGAME-076をDoing→ToDoへ解放。mainマージ、課金、production、公開範囲拡大なし。別タスクに着手しない。
