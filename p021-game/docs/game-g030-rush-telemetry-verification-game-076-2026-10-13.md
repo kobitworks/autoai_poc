@@ -254,3 +254,12 @@
 - **判定**: 上記のCI・全画面画像・実入力JSONの根拠は強化されたが、画面品質を自動的に80点へ昇格させない。10軸独立暫定品質は**76/100据置（80点未達）**。とくに実スピーカー/イヤホンでの聞こえ、初見30秒理解、実機の文字判読・誤タップ・FPS/発熱は**Human Gate未確認**。既存Gateの同理由重複通知なし。
 - **次回再開**: 実機から初見理解/小文字/タップのフィードバックが得られれば、まず狭小phone landscapeの下段案内とtablet landscape右欄の文言の簡略化／優先度を限定改善し、同一ソースcommitに紐づくCI・52PNG・10軸採点を再検証。今回の独立画像監査で重大な新バグは立証できなかったためゲームコードは不用意に変更しない。
 - GitHub developの**監査文書のみ**を更新。ゲームコード、CI設定、main、本番公開範囲、有料契約は変更しない。完了条件（80点＋Human Gate根拠）未達につきGAME-076は**Doing→ToDoへ戻して継続**。2件目の実タスクには着手しない。
+
+## 2026-10-13 20:33:47 JST / AUTOAI-GAME076-20261013-2021 — 短いスマホ横画面の操作説明を2色チップへ分割
+
+- **実行対象1件:** P021 / GAME-076。Runner v1.38.0、P021 rule v1.2.0。登録Slack 23chの20:00以降に新規明示@autoai指示はなく、メッセージタスク41件Done。全体日次監視は本日09:21:17実施済み。先行P005～P018とP020は人間確認・依存・HOLD/Blocked・定期周期・完了により着手なし。P018 SEOのOBL-015はOBL-014(Search Console)完了後の順次タスクであり、先行Gate未達。
+- **排他確認:** 正本P021「タスク」行77でGAME-075 Done / GAME-076 ToDo / 他DoingなしをFresh-readし、本タスクのみDoingへ変更して読戻し一致。
+- **今回の実改善:** Godot `p021-game/sources/orbit-switch-courier-godot/Main.gd` の表示専用処理に限り、スマホ横画面・情報欄の高さ220〜239 CSS pxの最下段ガイドを、24pxの単一テキスト帯から30px高の2つの独立表示チップに変更。「緑でTAP→乗換」（緑系）、「同じ印でTAP→配達」（琥珀系）と明示し、各18 CSS pxを指定。背景と白文字の静的WCAGコントラストは各9.51:1 / 9.16:1（算式による計算）で、7:1を超える。帯は情報欄の下端から36〜6 pxに配置し、NEXT ACTIONカードとの余白を残す。ゲーム入力判定・配送・スコア・ルート進行・QA状態変更・SOUND・保存機構は改変しない。
+- **コード記録:** [develop commit 0f2bdb1459b01983bf0d4e14c669bd054bf964a2](https://github.com/kobitworks/autoai_poc/commit/0f2bdb1459b01983bf0d4e14c669bd054bf964a2) / Main.gd blob `33112c56ca0dae5ea1ed92e6af2804bb6ad9fe62`。GitHub APIによる修正箇所・blobの読戻し一致。現在の証跡は表示コードと静的コントラストのみで、視認性・操作性の実機改善をPASSとは認定しない。
+- **新CI:** [Actions run38390890913](https://github.com/kobitworks/autoai_poc/actions/runs/38390890913) はこのソースcommitをheadとする。20:33 JSTの取得時点でcontract=success、export-web=in_progress、browser-quality未開始。従来のrun38384231463のPASSは旧ソース由来のため、新ソースのE2E・52PNG・BEST/SOUNDをPASSとして流用しない。
+- **品質Gate:** 独立10軸暫定76/100を据置、80未達。実機初見30秒・小文字/チップ判読・タップ誤操作・スピーカー/イヤホン聴感・FPS/発熱は未確認Human Gate。新CI最終結果と4 viewport実入力・PNG、実機フィードバック後に再採点が必要。既存Human Gateの同理由再通知なし。main・本番・課金・公開範囲の変更なし。他タスクに着手せず。
