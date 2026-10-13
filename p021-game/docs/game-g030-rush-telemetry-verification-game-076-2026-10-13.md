@@ -326,3 +326,12 @@
 - **成果物ZIP実体の独立検証**: [artifact11819273549](https://github.com/kobitworks/autoai_poc/actions/runs/38406231386/artifacts/11819273549) を取得。実ZIPのSHA256=887f6ca2449e0d1b681e8b72acab1d3f51046a258e69e02e9151d4c6bff3aa3eでGitHub digestと一致。全60ファイルのZIP CRC正常、JSON2件が解析可能、PNG58件が全件画像デコード正常。うち小型3サイズのINTRO/PLAYING計6枚は320x568/667x375/800x600の寸法一致を確認し、6枚の比較一覧も目視。従来基準4画面の各13画像=52PNGも含む。
 - **範囲と品質**: 自動ブラウザの幾何PASSと保存証跡の整合性は実証したが、スクリーンショットだけでは実機の初見30秒理解、表示文字の可読性、誤タップ、スピーカー/イヤホン音、FPS/発熱は判定不可。小型横画面では下部アクション案内の表示余地が狭いため実機レビューの注目点とする。独立暫定品質76/100を維持し、80点以上の一般公開完了判定は保留。今回ゲームロジック/QAソース/公開用main/課金/本番範囲に変更なし。
 - **結論と再開点**: 新runのCIと58PNGを追跡・監査した。GAME-076は改善完了条件と実機Human Gate未充足のためToDoへ戻し継続。次回は実機結果の提供があれば小型画面の表示余地・文字サイズ・初見案内・音/端末性能を10軸再採点し、必要に応じ同タスク内で最小改善。既存Human Gateの同一理由通知は重複させない。別の実タスクは着手しない。
+
+## 2026-10-13 23:27 JST / AUTOAI-GAME076-20261013-2312 - short-landscape UI guide clearance
+
+- 今回の実タスクはP021 GAME-076の1件のみ。runner v1.38.0 / P021 v1.2.0、Slack新規明示@autoai 0件、登録メッセージ41件DONE、当日全体監視09:21実施済。先行P005-P018/P020は依存/要確認/周期/全Doneでスキップ。
+- Fresh-readしたMain.gdでは、情報欄高220-239 CSS pxで下部2色チップ上端がpanel height-36px、NEXT ACTION上端131px・旧最大高56pxでカード下端187px。よって220-222pxでは1-3px重なり、223pxは0px隙間。667x375小型横画面の情報欄約223pxが該当。これはソース式からの幾何推算で実画像での修正済みPASSではない。
+- 限定修正: 高さ220-239px時のカード下面にguide_clearance=44pxを指定し、チップ上端との8px以上の見込み隙間を確保。220px時カード高さ45px、223px時48px、232-239px時最大56pxと幾何上の隙間9-16px。他のサイズは従来11px余裕。配達/入力/タイマー/得点/進行/サウンド/保存は変更なし。
+- GitHub develop commit: https://github.com/kobitworks/autoai_poc/commit/c26d3aab2ee4cbbeb6cfd2afeacaf17f66f449aa ; Main.gd blob 0eff37f291c8ebf8b0bccc34cc8aae84a2a0a8c6 をreadback確認。
+- 新CI https://github.com/kobitworks/autoai_poc/actions/runs/38413318007 は当該commitで開始。23:26確認時in_progressで、新ソースに対する4画面実入力E2E、追加3画面幾何/PNG・実見えの8px余裕は未確認。旧CIの成功と混同しない。
+- 独立暫定品質は76/100据置（80未達）。実機初見30秒・視認性・誤タップ・実スピーカー/イヤホン音・FPS/発熱Human Gate未確認。重複Slack警報なし。GAME-076は未完了につきDoingからToDoへ復帰、次回は上記新CI/証跡を確認する。別タスクなし。main/課金/本番化/公開範囲変更なし。
