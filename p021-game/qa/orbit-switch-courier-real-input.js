@@ -588,7 +588,11 @@ async function run(){
           const panel=physicalRect(playing.info,playCanvas,playing);
           const card=physicalRect(playing.action_card_rect,playCanvas,playing);
           const guide=physicalRect(playing.help_guide_rect,playCanvas,playing);
-          check(card.width>0&&card.height>=43&&guide.width>0&&guide.height>=30,
+          // Godot's viewport-to-CSS conversion yields e.g. 29.9999985px for a 30px chip.
+          // Use a sub-pixel tolerance for the nominal-height check; never relax overlap clearance.
+          const nominalHeightToleranceCss=0.01;
+          check(card.width>0&&card.height+nominalHeightToleranceCss>=43&&
+            guide.width>0&&guide.height+nominalHeightToleranceCss>=30,
             'Responsive action card or help guide missing: '+t.name+' '+JSON.stringify({card,guide}));
           const gapCss=guide.y-(card.y+card.height);
           check(gapCss>=4,
