@@ -368,3 +368,13 @@
 - **新CI**: https://github.com/kobitworks/autoai_poc/actions/runs/38446198116 は03:23時点でcontract成功、export-web実行中。browser-quality最終結果、新たなactionGuideSpacing値、4viewport自然入力と小型3サイズの合否、PNG/JSON artifactの確証は**未確定**。旧run38413318007の成功を新テスト成功とは呼ばない。
 - **品質と未解除Human Gate**: 独立暫定76/100を維持（公開目標80未達）。物理端末での初見30秒の理解、文字/タップ誤操作、スピーカー/イヤホン実音、FPS/発熱は未検証。同理由のSlack確認依頼は重複送信しない。課金/本番化/公開範囲拡大は行わない。
 - **次回再開点**: run38446198116の全ジョブをFresh-readし、ブラウザログ/新actionGuideSpacing・4viewportの自然入力・追加3画面の幾何・全証跡を独立検証する。failがあれば同一GAME-076の限定修正。人間実機レビューが入るまでは76/100を据置いて一般公開品質合格を宣言しない。今回のGAME-076は完了条件未達でToDo復帰予定、別タスク実施なし。
+
+
+## 2026-10-14 03 (sekund: 37) JST / AUTOAI-GAME076-20261014-0331 — 小型横画面QAサブピクセル丸め誤差を修正
+
+- 対象1件: P021 GAME-076 / Runner v1.38.0, project_rule v1.2.0。先行有効PJは要確認・依存・周期未到達・全完了で非着手。Slack明示新規@autoai指示0件、メッセージ41件DONE、09:00前で日次監視対象外。
+- 前回CI [run 38446198116](https://github.com/kobitworks/autoai_poc/actions/runs/38446198116) はcontract=success、export-web=success、browser-quality=failure（job 115465782099）。ジョブログでは標準4 viewport の実タップ/クリック入力E2Eは4件PASS、小型3画面のうちsmall-phone-landscapeで表示高さassertionがFAIL。したがって前回CI全体はFAIL。artifact11839465477が存在するがZIP/全PNGの独立解析は今回未実施。
+- 根因: Godot→CSS矩形換算で、公称ガイド高さ30pxが29.99999850847145pxと計測され、厳密な30px以上比較がfalseとなった。カード高さ48.00000575px、カード下端319.00000459px、ガイド上端327.00000781px、実測上下間隔は約8.00000322 CSS pxで4px以上を満たす。カード/ガイドの欠落・重なりではなくQAのサブピクセル丸め誤差。
+- 修正: Playwright real-input.jsの表示高さ存在チェックのみに許容誤差0.01 CSS pxを採用。既存の上下間隔4px以上・info panel包含・自然入力E2Eのチェックを緩和しない。Godotゲーム本体、ゲーム物理・入力・配達・得点・効果音・BEST保存のコード変更はしない。
+- develop実装コミット [a895e1ab](https://github.com/kobitworks/autoai_poc/commit/a895e1abf94e45ac9ac7732f2d43622ceb1f6c6d)、APIでreadbackしblob 237b6221bb2609c4da9c9974d6daa18bf83277cb一致。mainマージ、課金、本番化、公開範囲拡大なし。
+- 結果: 新コミットでのCI最終合否は未確認。独立暫定品質76/100（80目標未達）、物理端末での初見30秒・可読性/誤タップ・実音声・FPS/発熱はHuman Gate未検証。既出同理由の確認依頼は重複送信しない。GAME-076はDoingを解放してToDoに戻す。次回は新CI3ジョブ、4標準viewport自然入力NIGHT→ACE/SOUND/RETRY/BEST、3小型画面とactionGuideSpacing.gapCssPx、JSON/PNGを独立検証し、失敗時はGAME-076を再修正。他タスクなし。
