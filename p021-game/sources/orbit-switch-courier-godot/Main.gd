@@ -519,7 +519,8 @@ func _draw() -> void:
 	var margin := _ui_px(12.0 if compact else 18.0)
 	# Reserve the second header row for GAME HUB on portrait/tablet layouts.
 	var title_h := _ui_px(56.0 if compact else 112.0)
-	_draw_label("GAME-G030  /  GODOT 4.7.2", Vector2(margin, margin + _ui_px(15.0)), _font_size(12.0), Color("#8af4ff"))
+	# GAME-076: concise first-action cue instead of a small engine/version caption.
+	_draw_label("GAME-G030  /  TAP THE GLOW", Vector2(margin, margin + _ui_px(15.0)), _font_size(14.0), Color("#a4f8ff"))
 	var heading := "ORBIT COURIER" if phys_w < 520.0 else "ORBIT SWITCH COURIER"
 	_draw_label(heading, Vector2(margin, margin + _ui_px(50.0 if compact else 58.0)), _font_size(23.0), Color("#f4fbff"))
 
@@ -544,7 +545,7 @@ func _draw() -> void:
 	for i in range(4):
 		var r := Rect2(margin + float(i) * (stat_w + gap), hud_y, stat_w, hud_h)
 		_rounded_box(r, Color("#0b1727"), Color("#335a73"), 10, 1)
-		_draw_label(str(stats[i][0]), r.position + Vector2(_ui_px(8.0), _ui_px(18.0)), _font_size(13.0), Color("#eefaff"))
+		_draw_label(str(stats[i][0]), r.position + Vector2(_ui_px(8.0), _ui_px(18.0)), _font_size(15.0), Color("#eefaff"))
 		_draw_label(str(stats[i][1]), r.position + Vector2(_ui_px(8.0), hud_h - _ui_px(8.0)), _font_size(19.0), Color("#f5fbff"))
 
 	var content_y := hud_y + hud_h + _ui_px(9.0)
@@ -689,7 +690,7 @@ func _draw_info_panel() -> void:
 	var pad := _ui_px(16.0)
 	var x := info_rect.position.x + pad
 	var y := info_rect.position.y + _ui_px(22.0)
-	_draw_fit_label("ROUTE %d · %s  /  CARGO" % [_mission_tier() + 1, _mission_name()], Vector2(x, y), _font_size(14.0), Color("#f5fdff"), info_rect.size.x - pad * 2.0)
+	_draw_fit_label("ROUTE %d · %s  /  CARGO" % [_mission_tier() + 1, _mission_name()], Vector2(x, y), _font_size(16.0), Color("#f5fdff"), info_rect.size.x - pad * 2.0)
 	y += _ui_px(24.0)
 	# GAME-076: Show the physical remaining seconds FIRST so even a clipped
 	# cargo name never hides the deadline. Highlight the final three seconds
@@ -720,13 +721,14 @@ func _draw_info_panel() -> void:
 		hearts += "◆ " if i < energy else "◇ "
 	_draw_label("ENERGY  " + hearts, Vector2(x, y), _font_size(15.0), Color("#ffc4d0"))
 	y += _ui_px(25.0)
-	_draw_label("STREAK %d  ·  COMBO x%d" % [streak, _combo_multiplier()], Vector2(x, y), _font_size(14.0), Color("#fff0bd"))
+	# Clip low-priority combo metadata rather than allow overlap with the panel edge.
+	_draw_fit_label("STREAK %d  ·  x%d COMBO" % [streak, _combo_multiplier()], Vector2(x, y), _font_size(15.0), Color("#fff0bd"), info_rect.size.x - pad * 2.0)
 	y += _ui_px(24.0)
 	if info_rect.size.y >= _ui_px(255.0):
 		var next_goal := 1 if deliveries < 1 else (3 if deliveries < 3 else (6 if deliveries < 6 else 0))
 		var next_route := "RUSH" if deliveries < 1 else ("NIGHT" if deliveries < 3 else ("ACE" if deliveries < 6 else "ACE MASTER"))
 		var progress := "NEXT %s · %d more" % [next_route, maxi(0, next_goal - deliveries)] if next_goal > 0 else "ALL ROUTES UNLOCKED"
-		_draw_fit_label(progress, Vector2(x, y), _font_size(15.0), Color("#c1ffe9"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label(progress, Vector2(x, y), _font_size(16.0), Color("#c1ffe9"), info_rect.size.x - pad * 2.0)
 		y += _ui_px(23.0)
 	# GAME-076: Give the actual next legal action a contrast-safe, unclipped home.
 	# Compact portrait layouts retain the single-line fallback rather than drawing outside the card.
@@ -756,10 +758,10 @@ func _draw_info_panel() -> void:
 	# The tablet-landscape information area is taller: put a readable step guide near
 	# the action card instead of leaving the next input unexplained in empty space.
 	if info_rect.size.y > _ui_px(470.0):
-		_draw_label("HOW TO PLAY", Vector2(x, y + _ui_px(94.0)), _font_size(16.0), Color("#8fe8fa"))
-		_draw_fit_label("1  緑に光る交差点でTAP", Vector2(x, y + _ui_px(126.0)), _font_size(16.0), Color("#f3fcff"), info_rect.size.x - pad * 2.0)
-		_draw_fit_label("2  同じ記号のHUBでTAP", Vector2(x, y + _ui_px(161.0)), _font_size(16.0), Color("#fff3be"), info_rect.size.x - pad * 2.0)
-		_draw_fit_label("3  配達を重ねACEへ", Vector2(x, y + _ui_px(196.0)), _font_size(16.0), Color("#b3ffe4"), info_rect.size.x - pad * 2.0)
+		_draw_label("HOW TO PLAY", Vector2(x, y + _ui_px(94.0)), _font_size(18.0), Color("#a4f8ff"))
+		_draw_fit_label("1  緑の交差点でTAP", Vector2(x, y + _ui_px(126.0)), _font_size(18.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label("2  同じ印のHUBでTAP", Vector2(x, y + _ui_px(161.0)), _font_size(18.0), Color("#fff3be"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label("3  配達を重ねACEへ", Vector2(x, y + _ui_px(196.0)), _font_size(18.0), Color("#b3ffe4"), info_rect.size.x - pad * 2.0)
 	# GAME-076: Phone landscape has no room for the large HOW TO PLAY guide.
 	# Keep two bright, readable steps below (not inside) the NEXT ACTION card.
 	# The <220px portrait panel uses its existing single-line fallback instead.
@@ -767,20 +769,20 @@ func _draw_info_panel() -> void:
 		# Keep both steps on a distinct high-contrast strip below NEXT ACTION.
 		var help_band := Rect2(info_rect.position.x + _ui_px(7.0), info_rect.end.y - _ui_px(48.0), info_rect.size.x - _ui_px(14.0), _ui_px(42.0))
 		_rounded_box(help_band, Color("#16364a"), Color("#5ba7c9"), 9, 1)
-		_draw_fit_label("1  光る交差点でTAP", Vector2(x, info_rect.end.y - _ui_px(32.0)), _font_size(17.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
-		_draw_fit_label("2  同じ印でTAP・配達", Vector2(x, info_rect.end.y - _ui_px(12.0)), _font_size(17.0), Color("#fff8d9"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label("1  緑の交差点でTAP", Vector2(x, info_rect.end.y - _ui_px(32.0)), _font_size(18.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label("2  同じ印のHUBでTAP", Vector2(x, info_rect.end.y - _ui_px(12.0)), _font_size(18.0), Color("#fff8d9"), info_rect.size.x - pad * 2.0)
 	# Tablet landscape: use otherwise empty lower-panel space to show which
 	# naturally-earned route tiers are unlocked. This is a display only.
 	if info_rect.size.y > _ui_px(525.0):
 		var milestones_y := info_rect.end.y - _ui_px(126.0)
-		_draw_label("ROUTE MILESTONES", Vector2(x, milestones_y - _ui_px(13.0)), _font_size(16.0), Color("#ffffff"))
+		_draw_label("ROUTE MILESTONES", Vector2(x, milestones_y - _ui_px(13.0)), _font_size(17.0), Color("#ffffff"))
 		var milestone_gap := _ui_px(6.0)
 		var milestone_width := (info_rect.size.x - pad * 2.0 - milestone_gap * 2.0) / 3.0
 		for step in range(3):
 			var unlocked := _mission_tier() >= step + 1
 			var milestone_rect := Rect2(x + float(step) * (milestone_width + milestone_gap), milestones_y, milestone_width, _ui_px(29.0))
 			_rounded_box(milestone_rect, Color("#116252") if unlocked else Color("#172e42"), Color("#89ffce") if unlocked else Color("#5186a6"), 8, 1)
-			_draw_center_fit_text(str(ROUTE_NAMES[step + 1]), milestone_rect, _font_size(15.0), Color("#ffffff"))
+			_draw_center_fit_text(str(ROUTE_NAMES[step + 1]), milestone_rect, _font_size(16.0), Color("#ffffff"))
 	# Echo successful transfers and missed timing in the otherwise empty lower
 	# tablet-landscape panel. The prompt card keeps priority during gameplay.
 	if state == "playing" and (cue_clock > 0.0 or qa_cue_stress) and info_rect.size.y > _ui_px(525.0):
@@ -789,15 +791,15 @@ func _draw_info_panel() -> void:
 		_rounded_box(feedback_rect, Color("#125f4d") if cue_good else Color("#712f4b"), Color("#94f8d9") if cue_good else Color("#ffbbd0"), 8, 1)
 		# The tablet side echo carries the short outcome/route summary only.
 		var side_cue := _cue_priority_lines()[0] if _visible_cue().contains(" / ") else _visible_cue()
-		_draw_center_fit_text(side_cue, feedback_rect, _font_size(15.0), Color("#ffffff"))
+		_draw_center_fit_text(side_cue, feedback_rect, _font_size(16.0), Color("#ffffff"))
 	# GAME-076: Give the two bottom instructions a stronger contrast-safe
 	# background and 16 CSS-pixel labels on tablet-sized information panels.
 	# Keep a 3px gap after the optional feedback cue above and a 6px bottom inset.
 	if info_rect.size.y > _ui_px(275.0):
 		var guide_band := Rect2(info_rect.position.x + _ui_px(7.0), info_rect.end.y - _ui_px(67.0), info_rect.size.x - _ui_px(14.0), _ui_px(61.0))
 		_rounded_box(guide_band, Color("#142f43"), Color("#5d9cbd"), 9, 1)
-		_draw_fit_label("交差点の緑でTAP → 乗換", Vector2(x, info_rect.end.y - _ui_px(52.0)), _font_size(16.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
-		_draw_fit_label("同じ印のHUBでTAP → 配達", Vector2(x, info_rect.end.y - _ui_px(23.0)), _font_size(16.0), Color("#fff6c9"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label("緑の交差点でTAP → 乗換", Vector2(x, info_rect.end.y - _ui_px(52.0)), _font_size(18.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
+		_draw_fit_label("同じ印のHUBでTAP → 配達", Vector2(x, info_rect.end.y - _ui_px(23.0)), _font_size(18.0), Color("#fff6c9"), info_rect.size.x - pad * 2.0)
 
 
 func _draw_intro_overlay() -> void:
