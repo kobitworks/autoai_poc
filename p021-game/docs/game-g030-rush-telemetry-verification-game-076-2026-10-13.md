@@ -62,3 +62,14 @@
 - 今回の原因切分け: QAコードは `results.json` を4画面ループ終了後に初めて作成するため、途中cancelled時に機械可読な部分結果が欠損する。対策として、[develop commit e09240a](https://github.com/kobitworks/autoai_poc/commit/e09240a80447387ae83ad8e42dbdf0bccd2e5c08)で `p021-game/qa/orbit-switch-courier-real-input.js` のみを修正。`results-checkpoint.json` に `STARTING`、各 `VIEWPORT_RUNNING`、各 `VIEWPORT_COMPLETED` を逐次記録し、件数・viewport・個別 evidence を保存する。**PARTIAL_CHECKPOINT_NOT_FINAL** と明示し最終合格の代用にしない。通常の `results.json` 生成、実入力、スコア、物理判定、ゲームロジックは不変。readback blob SHA=`bfe784efe00a8e73e84693e3285ffa6e11461d21` を照合済み。
 - **未検証:** 新しいcheckpoint実装のCI実行・完走、次回runでの部分JSON出力と4画面実入力完走、attempt2キャンセル原因、ゲーム実機スピーカー/イヤホン、初見30秒行動理解、視認性、FPS/発熱。品質独立暫定**76/100据置き**、80点・一般公開品質未認定。GAME-076は要件未達のためToDoへ復帰し次回継続する。mainへのマージ、課金、本番・公開範囲変更なし。
 - **次回:** 新checkpoint付きrunの結果をreadbackし、cancelled/timeout/並行実行の原因を特定、必要ならテスト実行時間・隔離方針を改善する。次いで4 viewport NIGHT3→ACE6の実入力、保存・音声切替、全画面の証跡と10軸独立採点を確認。Human Gateは未解決のまま人間の実機確認を待つ。
+
+
+## 2026-10-13 13:15 JST / AUTOAI-GAME076-20261013-1308 — checkpoint導入後の4画面CI・証跡独立検証
+
+- このRunnerで実タスクとして選定・着手したのはP021 GAME-076の1件のみ。共通Runner v1.38.0・P021 v1.2.0をFresh-readし、GAME-075=Done / GAME-076=ToDoを確認してDoing排他取得。日次監視09:21済、新規明示@autoai指示なし。先行PJは承認・依存・周期条件で着手せず。
+- 前回のcancelled run38335126979/attempt2とは**別**に、checkpoint修正commit \`e09240a80447387ae83ad8e42dbdf0bccd2e5c08\` のpushから自動起動した [run38343537253](https://github.com/kobitworks/autoai_poc/actions/runs/38343537253) をFresh-read。contract(job115119659742), export-web(job115119707337), browser-quality(job115119979468) は**3/3 completed/success**。ブラウザ4画面の実タップ/クリックE2Eは全件PASS。旧cancelled実行をPASSへ読み替えていない。
+- 新artifact [11788276184](https://github.com/kobitworks/autoai_poc/actions/runs/38343537253/artifacts/11788276184) をZIP実体としてダウンロード・独立検証。**SHA256=113966ff87608bbdd43ecc277229962c4cfafe145e8b3c648b695ffae421cef3**、ZIP CRC不良なし、**全54ファイル：PNG 52枚（phone縦/横、tablet縦/横各13枚）、results.json、results-checkpoint.json**。途中checkpointはstatus=PARTIAL_CHECKPOINT_NOT_FINAL、最終phase=VIEWPORT_COMPLETED、completedViewportCount=4、expectedViewportCount=4。一方results.jsonは別途存在する正規最終証跡。checkpointだけでPASSを代用しない設計が確認できた。
+- 最終JSONから実入力で**4/4 PASS**、全画面**RUSH1→NIGHT3→ACE6**到達、QA success command=NEVER USED、stateOverride=NONE。音声切替soundOff/soundOn、リトライ、BEST保存→再読込が4/4。ACE配達6件時点の得点はphone縦1109、phone横1110、tablet縦1104、tablet横1109。ENERGY=3で上位ルートへ到達し、3秒以下の貨物警告画像も4/4保存。
+- 4 viewport×4状態（intro/cue-stress/cargo-warning-3s/route-ace）の**代表16PNGを独立目視**。代表画像では致命的な画面外欠落なし、警告と上位ルート表示を確認。ただし**全52枚を目視したわけではない**。phone横の下段2ステップ補助説明、tablet横のHOW TO PLAY/ROUTE MILESTONESと右下ガイドが情報密集し、初見・実機可読性は未認定。
+- 新checkpoint実装を含めてCI上の成功と証跡欠損改善を実証。前回のcancelled事象の原因と長時間実行の偶発FAILは未確定。実機スピーカー/イヤホン聴感、初見ユーザー30秒、タッチ誤操作、端末可読性、FPS/発熱は**Human Gate未検証**であり、静的contrast PASSを実機PASSに昇格させない。
+- **10軸独立品質の暫定値は76/100を維持（目標80未達）**。GAME-076は完了条件未達のため次回継続としてToDo復帰。次回はphone横下段とtablet横右欄の視認性・情報階層を対象に最小変更し、CIの4viewport実入力/52PNG・10軸再評価、実機Human Gateを確認。今回ゲーム本体、main、有償利用、本番範囲・公開範囲の変更はなし。
