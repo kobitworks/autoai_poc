@@ -156,3 +156,12 @@
 - **未解消:** 初見30秒での操作理解・HUB形状マーカーの読取り・物理タップ、スピーカー/イヤホンでの実音、FPS/発熱、実機文字視認性はHuman Gateのまま。ゲーム開発品質10軸の独立暫定評価は**76/100据置（目標80未達）**。CIの4/4 PASSは製品公開品質の合格ではない。
 - **次の具体的アクション:** 実機Human Gateの判定資料（初見操作/可読性/音/性能）を受領したら最優先で照合。引き続きAIだけで可能な監査は、縮小で判読が難しかったphone横ガイド/タブレットの補助文字を**原寸画面で対象を限定して確認**し、改修が必要なら既存UIフローを踏まえて小規模な変更案を先に設計する。
 - **本回の変更範囲:** 既存 artifact とJSON・スクリーンショットの独立再検証、本監査Markdown追記のみ。ゲームソース・QA・CI workflow・`main`・課金・本番配信に変更なし。GAME-076は未完了としてToDo継続し、他タスクには着手しない。
+
+
+## 2026-10-13 17:07:31 JST / AUTOAI-GAME076-20261013-1705 — スマホ横のアクション文言を状態別に簡略化
+
+- **対象・排他:** 共通Runner v1.38.0/P021 rule v1.2.0をFresh-read。P005〜P020の有効な先行プロジェクトは要確認・依存未解決・定期周期未達・完了済みのため今回のAI実作業なし。GAME-075=Done、GAME-076=ToDo、他Doingなしを確認し、2026-10-13 17:05:50 JSTにGAME-076だけDoing取得・再読込一致。新規明示@autoai指示なし／日次全体監視09:21実施済。
+- **今回の改善:** `p021-game/sources/orbit-switch-courier-godot/Main.gd` の横画面情報パネル高さ220〜275 CSS px相当の「NEXT ACTION」欄だけ、原文が長く自動縮小する6種の状態別案内を簡潔化。具体例：`TAP NOW · TRANSFER`→`TAP · SWITCH`、`OTHER HUB · WAIT TO SWITCH`→`WAIT · WRONG HUB`、`TAP NOW · DELIVER [HUB]`→`TAP · HUB [HUB]`、`TARGET … · WAIT FOR GLOW`→`TARGET … · WAIT`。単に横画面の表示文字列を短くする変更で、押下許可判定は原文`live_action`の`begins_with("TAP NOW")`のまま、操作・得点・タイマー・ルート・サウンド・保存・QA状態書換えは変更しない。
+- **コミットと再読込:** [develop commit 8e0f5be](https://github.com/kobitworks/autoai_poc/commit/8e0f5be901be555ae864cfce668085e29aa91811)。変更ファイル1件・16行追加、削除なし。新ソースblob `97e2296e3ffe14dc933450f0b449ea444ccf17df`。GitHubから新本文を再取得し、コミット前に構成した全文と完全一致。旧QA成功run38356945971は**本変更前**のもの。
+- **未検証・判定:** 当該新コミットに紐づくGitHub Actionsの完了結果・実入力E2E・PNGは現時点で確認できないためPASS扱いしない。品質独立暫定**76/100据置**（80点未達）。実機での初見30秒の正しい操作、HUBマーカーと副次文字の可読性、スピーカー/イヤホン聴感、タッチ誤操作、FPS・発熱はHuman Gate未検証。GAME-076のDone判定を行わずToDoで次回継続。
+- **次回:** 本commitに対するcontract/export-web/browser-qualityの3ジョブ、実ブラウザ通常入力による4 viewport NIGHT3→ACE6・SOUND OFF/ON・RETRY・BEST保存、52 PNG、短縮案内の実画像と10軸採点を確認し、不足なら再度限定改善。mainへのmerge、本番・課金・公開範囲拡大なし。ほかのタスクは実行していない。
