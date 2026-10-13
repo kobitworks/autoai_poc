@@ -73,3 +73,14 @@
 - 4 viewport×4状態（intro/cue-stress/cargo-warning-3s/route-ace）の**代表16PNGを独立目視**。代表画像では致命的な画面外欠落なし、警告と上位ルート表示を確認。ただし**全52枚を目視したわけではない**。phone横の下段2ステップ補助説明、tablet横のHOW TO PLAY/ROUTE MILESTONESと右下ガイドが情報密集し、初見・実機可読性は未認定。
 - 新checkpoint実装を含めてCI上の成功と証跡欠損改善を実証。前回のcancelled事象の原因と長時間実行の偶発FAILは未確定。実機スピーカー/イヤホン聴感、初見ユーザー30秒、タッチ誤操作、端末可読性、FPS/発熱は**Human Gate未検証**であり、静的contrast PASSを実機PASSに昇格させない。
 - **10軸独立品質の暫定値は76/100を維持（目標80未達）**。GAME-076は完了条件未達のため次回継続としてToDo復帰。次回はphone横下段とtablet横右欄の視認性・情報階層を対象に最小変更し、CIの4viewport実入力/52PNG・10軸再評価、実機Human Gateを確認。今回ゲーム本体、main、有償利用、本番範囲・公開範囲の変更はなし。
+
+
+## 2026-10-13 13:41 JST / AUTOAI-GAME076-20261013-1334 — 横画面の重複説明・ガイド重なりを抑制（今回の1件）
+
+- 共通Runner v1.38.0、P021 rule v1.2.0をFresh-readし、日次全体監視09:21:17済、新規の明示的な @autoai 投稿なしを確認。P005〜P018/P020には今回は実行可能な通常タスクがなく、GAME-075完了・GAME-076 ToDo・他Doingなしを確認してGAME-076だけをDoingに変更した。
+- **ソース変更**: [develop commit 4b130aa](https://github.com/kobitworks/autoai_poc/commit/4b130aab1fb1e80209301d9e96a025c1c33916cb)。対象は `sources/orbit-switch-courier-godot/Main.gd` の表示レイアウト1ファイルのみ。source blob `4c19feaa70c24864dfddf1d07df1928181ba8f0c` へ更新し、developの独立readbackと文言・境界値の一致を確認。
+- Phone Landscapeの情報欄が220〜239 CSS px相当なら、下部ガイドを高さ24pxの1行表示へ切替。240〜275pxなら従来の2行を使用。275〜470pxの中間パネルでは2行表示を維持。低優先のルート進捗文字を315px未満では省略し、実操作を説明するNEXT ACTIONカードを優先する。470pxより高いTablet Landscape情報欄は中央HOW TO PLAYとROUTE MILESTONESが既に存在するため、末尾の重複した2行ガイドを描かず視線を分散させない。
+- **静的配置検査**: 描画コードの縦方向積み上げ値から、panel h=220/230/239/240/255/275/276/300/315/390/470 CSS px相当で、action card下端とhelp帯の先端の差分がそれぞれ3/13/22/5/20/40/22/46/38/113/193pxと全て正。小型Portrait h<220や大きいTablet h>470は当該help帯なし。これは座標計算による静的確認であり、実ブラウザ画像の検査ではない。
+- **CI**: 改修コミットに対して [GitHub Actions run38347625531](https://github.com/kobitworks/autoai_poc/actions/runs/38347625531) が自動起動。確認時点でcontract=success、export-web=in_progress、browser-qualityは未完了。ジョブ未完了をPASSとは記録しない。Pages [run38347625180](https://github.com/kobitworks/autoai_poc/actions/runs/38347625180) も確認時点では処理中。CI進捗は次回Fresh-readで確定させる。
+- 正規実タップ/クリックによるRUSH1→NIGHT3→ACE6、RETRY/BEST・SOUND、4 viewport実画面、初見30秒、実機スピーカー/イヤホン/FPS・発熱は**このコミット以降の独立確認なし**。直近の別コミットCI成功を今回の改修の合格証明に流用しない。
+- **品質判定**: 直近の独立暫定76/100を維持、目標80/100未達。Human Gateは未検証継続。ソースmain、本番化、契約・課金、公開範囲変更なし。GAME-076はDone条件を満たさずToDoへ戻し、次回はrun38347625531の3ジョブと新artifact結果・PNG実画像を再確認し、必要なら最小限の表示修正と10軸の再採点を行う。今回ほかのタスクは実行しない。
