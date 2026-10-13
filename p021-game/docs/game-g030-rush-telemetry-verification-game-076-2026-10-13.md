@@ -335,3 +335,14 @@
 - GitHub develop commit: https://github.com/kobitworks/autoai_poc/commit/c26d3aab2ee4cbbeb6cfd2afeacaf17f66f449aa ; Main.gd blob 0eff37f291c8ebf8b0bccc34cc8aae84a2a0a8c6 をreadback確認。
 - 新CI https://github.com/kobitworks/autoai_poc/actions/runs/38413318007 は当該commitで開始。23:26確認時in_progressで、新ソースに対する4画面実入力E2E、追加3画面幾何/PNG・実見えの8px余裕は未確認。旧CIの成功と混同しない。
 - 独立暫定品質は76/100据置（80未達）。実機初見30秒・視認性・誤タップ・実スピーカー/イヤホン音・FPS/発熱Human Gate未確認。重複Slack警報なし。GAME-076は未完了につきDoingからToDoへ復帰、次回は上記新CI/証跡を確認する。別タスクなし。main/課金/本番化/公開範囲変更なし。
+
+
+## 2026-10-13 23:55:33 JST / AUTOAI-GAME076-20261013-2349 — 最新CI完走とZIP・スクリーンショット独立監査
+
+- 今回実行した実タスクは **P021 GAME-076の1件のみ**。Runner v1.38.0 / P021 v1.2.0。Slack新規の明示@autoai指示なし、メッセージタスク41件DONE。本日09:21の全体監視済み。先行P005〜P018/P020はHuman Gate・依存未解除・定期実行間隔未到達・全完了等で新規着手せず。
+- 前回Main.gdの小型Landscape高さ220〜239px「NEXT ACTIONカードと下部2色操作チップの余白」修正が入ったdevelop commit [c26d3aab](https://github.com/kobitworks/autoai_poc/commit/c26d3aab2ee4cbbeb6cfd2afeacaf17f66f449aa)に対する[GitHub Actions run38413318007](https://github.com/kobitworks/autoai_poc/actions/runs/38413318007)が **completed/success**、attempt1、contract/export-web/browser-qualityの全3ジョブsuccess。browser-quality job115351738409の生ログJSONを復元・構文解析して再確認した。
+- 通常操作の自然入力E2Eはphone縦/phone横/tablet縦/tablet横の **4/4 PASS**。RUSH→NIGHT自然3配達→ACE自然6配達、ON/OFF、RETRYとBEST保存・リロードを確認。最終BEST=1108 / 1110 / 1104 / 1109。4画面すべて `qaCommand=NEVER USED`、`stateOverride=NONE`で成功コマンドや状態直書きなし。
+- 追加の小型サイズ320×568 / 667×375 / 800×600のlayoutSweepは、INTRO後の自然touch/mouse START→PLAYINGの **3/3 PASS_GEOMETRY**。小型3画面のフルNIGHT→ACEクリア証明とは区別する。
+- [evidence artifact11822934067](https://github.com/kobitworks/autoai_poc/actions/runs/38413318007/artifacts/11822934067)をZIP実体取得し、SHA-256=`6d29c32147ab37cfc0b691f95c9b11321bd514e97b76ceb237e3135ba50deff3`でGitHub掲載digestに一致。ZIP全60件CRC正常、results.json/results-checkpoint.jsonの2JSONを構文解析、全58PNG画像デコード正常。内訳は基準4画面×13PNG=52枚＋小型3画面×2PNG=6枚。667×375のINTRO/PLAYING比較画像と通常phone横のcargo-warning/cue-stress画像を独立目視。スクリーンショット上で明白なカード・ボタン重なりは確認されないが、源コード計算上の8px余白をブラウザ内部の全解像度で直接測定したわけではない。物理端末の可読性や押しやすさも未検証。
+- **品質ゲート:** 独立暫定76/100（80未達）を据置き。実機スピーカー/イヤホン音、初見30秒の案内理解、小型端末の文字/誤タップ、FPS/発熱はHuman Gateとして未検証。静的コントラスト `PASS_STATIC` はこれらの合格を意味しない。既存の同理由Slack確認通知は重複送信しない。
+- **次回再開点:** 実機のHuman Gate結果を受け取り、0〜30秒操作理解、2色チップの表示/押下余地、音声、端末負荷を検証し、10軸採点と80点目標を再判定する。必要なら同一GAME-076内で最小限のUI/QA改善を実施。今回新規ゲームコード変更・mainマージ・課金・本番公開拡大はなし。完了条件未達のためDoing→ToDoへ復帰して継続し、別タスクには着手しない。
