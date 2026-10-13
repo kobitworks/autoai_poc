@@ -192,3 +192,13 @@
 - **重点原寸視覚監査:** 最新のphone横cargo-warning-3s.png（844×390）とtablet横route-ace.png（1024×768）を原寸で独立目視。さらにphone横・tablet横の各9状態をコンタクトシートで縮小目視。貨物期限残3秒のHURRYと赤フレーム、配達先四角/三角/丸形状マーカー、ACE到達・配達数6、NEXT ACTION、RETRY/SOUND導線、タブレット右側HOW TO PLAY/ROUTE MILESTONESの描画を確認。重点画像では致命的な表示欠落や主要要素の相互重なりは認めない。**phone横のNEXT ACTION薄色補助文字と下端1行日本語ガイドの小ささ、tablet横の右側補助文字密度**は実機判読性の未解決リスクとして残す。全52枚を原寸1枚ずつ目視したとは主張しない。
 - **状態画像の重複指紋:** phone縦・横ではintro.pngとsound-on.pngがバイト単位で同じ画像（いずれもSOUND ON表示）で、各13状態中12画像指紋。tablet縦・横は各13画像指紋。再度SOUND ONを選ぶと初期表示に戻るシナリオとの整合はあるが、動作の合否は上記E2Eと実機で判断し、単純な画像一致を独立PASS/FAILに使わない。
 - **ゲート・継続理由:** visualContract=PASS_STATICは文字コントラストの静的検査に限定。物理端末での初見30秒での正しい操作、視認性、誤タップ、実スピーカー/イヤホン、FPS、発熱はHuman Gateで未確認。品質10軸暫定**76/100据置**（目標80未達）、一般公開品質・実機PASSを宣言しない。次回は実機フィードバックを優先し、phone横NEXT ACTION/下端1行ガイドとtablet横副次文字の可読性改善を限定的に検討する。**今回ゲームソース/QA/workflow/main/有償/本番・公開範囲変更なし**。GAME-076は未完了として今回終了時Doing→ToDoへ戻す。
+
+
+## 2026-10-13 18:27:48 JST / AUTOAI-GAME076-20261013-1826 — 横画面の日本語ガイドを短文化・文字拡大（今回唯一の実タスク）
+
+- **選定・排他:** 共通Runner v1.38.0 active / P021 project_rule v1.2.0をFresh-read。Slackの新規明示@autoai指示なし、メッセージタスク41件DONE、全体監視は本日09:21:17実施済。P005～P018とP020の正本タスクは人間確認・Blocked/HOLD・依存待ち・周期未到達・全完了で新規独立作業なし。GAME-075=Done、GAME-076=ToDo、他の実行中作業なしを確認し、GAME-076だけDoingへ変更して再読込一致。
+- **今回実施した6箇所の限定改善:** `p021-game/sources/orbit-switch-courier-godot/Main.gd` で日本語説明を短文化し、18→19 CSS px相当の標準文字を適用。(1) phone横の狭い単一帯を「緑=乗換 · 同じ印=配達」へ短縮、(2)(3) phone横の二段階ガイドを「緑でTAP → 乗換」「同じ印でTAP → 配達」へ短縮、(4)(5) tablet横の操作説明1・2も同様に短縮し19px、(6) tablet横の3行目を「配達3回→NIGHT / 6回→ACE」へ明確化し19px。狭い帯の省略・自動縮小リスクを減らすのが目的。実機で読みやすくなったかどうかは未検証。
+- **正本GitHubと読戻し:** `develop` 限定 [commit c414d1ed1e258a5eccb7ee24cb394c40daded575](https://github.com/kobitworks/autoai_poc/commit/c414d1ed1e258a5eccb7ee24cb394c40daded575)。変更ファイルはMain.gd 1件、実処理・配達判定・難度・制限時間・得点・操作入力・SOUND・BEST・QAコマンド・main・本番・有料利用・公開範囲は変更していない。更新後のGitHub developから再取得したblob `a567b23681d16b72609a03978e2d649373d753a9` は送信後の返却SHAと一致し、ガイド文言の存在を独立確認。
+- **今回の検証境界:** 前回[Actions run38367034033](https://github.com/kobitworks/autoai_poc/actions/runs/38367034033)は**改修前ソース**の合格証拠。今回のソースcommitに対するcontract / export-web / browser-quality の最終合否と、新コードの4 viewport実touch/mouse NIGHT3→ACE6、SOUND OFF/ON、RETRY/BEST・52PNGは未確認。静的文言変更から実入力E2E成功を推測せず、次回新runの結果と実画像を独立検証する。
+- **Human Gateと品質:** 暫定独立10軸品質76/100据置（目標80点未達）。実機の初見30秒での理解、実際の文字とHUB形状の可読性、誤タップ、スピーカー/イヤホン実音、FPS/発熱は未確認。完成・一般公開品質・実機PASSとは判定しない。
+- **次回再開点:** 新commitのCI最終結果と4viewport証跡、短文化したガイドのスクリーンショットを確認し、必要なら表示を限定調整。実機Human Gateのフィードバックが届いた場合はそちらを優先する。GAME-076は完了条件未達のため今回終了時にDoing→ToDoへ戻す。2件目の実作業は着手しない。
