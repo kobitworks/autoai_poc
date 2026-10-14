@@ -54,3 +54,15 @@ Runner: v1.38.0 / P021 project_rule: v1.2.0
 - 新artifact [11908064802](https://github.com/kobitworks/autoai_poc/actions/runs/38539286622/artifacts/11908064802) はGitHub metadataで4,354,766 bytes / SHA256 `e51e7b2b82ed6f16cab870a4e99f79458f0da03d9a59c9dc4eba624f1e15a096`、uploadログ60ファイルを確認。**今回のZIPバイナリSHA/CRC/58PNG独立デコード・目視は未実施でありPASS宣言しない。** 旧artifact11882130836の監査と混同しない。
 - 反復成功によってRUSH偶発失敗が完全解消したとは断定できない。品質スコアは前回の独立暫定 **76/100** のままで、80点未達。実機初見30秒、指の誤タップ、日本語小文字視認、スピーカー・イヤホン実音、FPS/発熱、画面回転は引き続きHuman Gateで未確認。同一理由のSlack再通知なし。
 - 本回はGAME-076の継続検証1件のみ。タスク完了条件未達につきToDoへ復帰、次回は実機回答/小型画面改善候補と10軸再採点を確認。**ゲーム本体・QAコード・main・本番・課金・公開範囲は変更しない。**
+
+## 7. ZIP実体の独立検証: 再実行attemptのアーカイブ直接照合（2026-10-15 01:30 JST）
+- 対象は前節6の新artifact [11908064802](https://github.com/kobitworks/autoai_poc/actions/runs/38539286622/artifacts/11908064802)。ZIP本体をコネクタから別途取得し、実体から独立SHA/CRC/PNGデコードを実施。旧artifact 11882130836の実体検証結果は流用していない。
+- ZIP実体4,354,766 bytes、SHA-256 = e51e7b2b82ed6f16cab870a4e99f79458f0da03d9a59c9dc4eba624f1e15a096。GitHubのartifact metadata digestと完全一致。
+- ZIP全60ファイルのCRC検査に異常なし。PNG58枚 + 最終results.json・部分results-checkpoint.json各1件。58PNGすべてPillow Image.verifyおよびImage.loadで独立デコード成功（標準4画面×13枚=52枚、小型3画面×2枚=6枚）。
+- 部分checkpointは status=PARTIAL_CHECKPOINT_NOT_FINAL のため合否正本とせず、最終results.jsonをパース。自然touch/mouse4画面 4/4 PASS、qaCommand=NEVER USED、stateOverride=NONE、NIGHT3配達、ACE6配達、RUSH後energy3、SOUND OFF/ON、BEST保存/再読込一致。小型3画面3/3 PASS_GEOMETRY。
+- 実RUSH自然pointerdown角度はphone縦4.418、phone横4.349、tablet縦4.464、tablet横4.358rad。4画面とも物理受理範囲4.27〜4.73rad内。QA観測用部分帯域とは区別する。
+- 代表12枚のスクリーンショットを独立縮小一覧で目視。標準4画面のイントロ/進行/ルート、3秒警告、長い説明、小型画面のイントロを含む。明白な全画面欠落・領域衝突・描画失敗は確認されない。3秒警告は枠色・表示エリアが画像に表れるが、実機での視認性・小文字可読性をPASSとは判定しない。
+- 結論: 今回新attemptのZIP実体の真正性・CRC・画像復号・最終JSON整合は独立確認。RUSH偶発失敗が消滅したと断定せず、独立暫定品質76/100（一般公開目標80未達）を維持。
+- 未検証Human Gate: 実機初見30秒での操作理解、指誤タップ、細字可読性、スピーカー/イヤホン実音、FPS/発熱、縦横回転。既存の同一確認を重複通知しない。
+- 次回: Human Gateの回答があれば反映し、未回答ならGAME-076範囲内で小型画面視認性/警告導線を改善検討し、10軸を再評価する。
+- ゲーム本体、QAコード、main、本番、課金、公開範囲は今回無変更。監査文書のみdevelopへ記録。
