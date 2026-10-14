@@ -911,10 +911,16 @@ func _draw_intro_overlay() -> void:
 		step_gap = clampf((height - _ui_px(124.0)) * 0.5, _ui_px(23.0), _ui_px(33.0))
 	_draw_center_text("ORBIT SWITCH COURIER", Rect2(r.position.x, r.position.y + title_y, width, _ui_px(24.0 if tiny_panel else 30.0)), _font_size(17.0 if tiny_panel else (20.0 if short_panel else 21.0)), Color("#f5fbff"))
 	_draw_center_fit_text("1  START → 目標 %s" % HUB_SHORT[cargo_target], Rect2(r.position.x, r.position.y + step_y, width, step_h), step_font, Color("#ffffff"))
-	_draw_center_fit_text("2  緑の交差点でTAP → 乗換", Rect2(r.position.x, r.position.y + step_y + step_gap, width, step_h), step_font, Color("#b6fff0"))
+	# GAME-076: On tiny intro cards, shorten ONLY explanatory copy so the
+	# onboarding lines retain the intended 14 CSS-pixel text size rather than
+	# shrinking toward the 12px minimum. Green crossing and matching HUB icon
+	# remain the same two physical interactions; no timing/input/state changes.
+	var crossing_step := "2  緑でTAP → 乗換" if tiny_panel else "2  緑の交差点でTAP → 乗換"
+	var delivery_step := "3  同じ印でTAP → 配達" if tiny_panel else "3  同じ印のHUBでTAP → 配達"
+	_draw_center_fit_text(crossing_step, Rect2(r.position.x, r.position.y + step_y + step_gap, width, step_h), step_font, Color("#b6fff0"))
 	intro_last_step_rect = Rect2(r.position.x, r.position.y + step_y + step_gap * 2.0, width, step_h)
 	intro_start_rect = start_rect
-	_draw_center_fit_text("3  同じ印のHUBでTAP → 配達", intro_last_step_rect, step_font, Color("#fff3be"))
+	_draw_center_fit_text(delivery_step, intro_last_step_rect, step_font, Color("#fff3be"))
 	_rounded_box(start_rect, Color("#14647a"), Color("#8dfbff"), 12, 2)
 	_draw_center_text("TAP TO START", start_rect, _font_size(17.0 if short_panel else 18.0), Color.WHITE)
 
