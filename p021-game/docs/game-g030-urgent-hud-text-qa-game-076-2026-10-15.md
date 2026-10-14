@@ -64,3 +64,16 @@ GAME-076の同一継続作業として、前回独立QAが残した「320px画�
 - 品質の独立暫定評価は**76/100**を据え置き、80点以上の完了条件未達。実機初見30秒・3秒警告瞬間認知・指誤タップ・スピーカー/イヤホン・FPS/発熱/回転のHuman Gateは未実施。過去の同一確認依頼をSlack再送しない。
 
 **再開点**: 新ソースcommit `208cd6b9` に対応するActions runの最終3jobステータス・artifact/画像を独立再確認。成功なら実機Human Gate入力待ち、失敗なら同一GAME-076内で最小修正。完成認定や点数の加点は実証後まで保留する。本回はGAME-076の1件のみ、develop限定。main・本番・有料化は行わない。
+
+
+## 2026-10-15 08:10 JST 小型intro修正後の独立CI・画像監査（AUTOAI-GAME076-20261015-0808）
+
+GAME-076の継続1件のみを実施。前回07:53時点で未確定だった Godot 320px intro可読性改修（source commit `208cd6b9e2f1078bebaf40340f6c4c42006d4ed3`、source blob `cf58755a57dd66dade94b3f69c526bf23b445bb7`）の回帰を、旧HEADの成功を代用せず確認した。
+
+- **GitHub Actions**: [run 38650530998](https://github.com/kobitworks/autoai_poc/actions/runs/38650530998) の `contract`、`export-web`、`browser-quality` は全て `completed/success`（3/3）。
+- **生成物実体**: [artifact 11934014458](https://github.com/kobitworks/autoai_poc/actions/runs/38650530998/artifacts/11934014458)、4,539,901 bytes。独立取得ZIPのSHA-256 `43d2ec76cec7748a90fdf24eb738429036fcd1c386047c3bde37b0d75683d8ca` がGitHubのdigestと完全一致。ZIP 63エントリCRC正常、PNG 61枚Pillow画像デコード/verify成功、JSON 2件パース成功。
+- **標準4 viewport**: `results.json` の phone-portrait / phone-landscape / tablet-portrait / tablet-landscape は自然tap/clickによるNIGHT 3配達→ACE 6配達、SOUND OFF/ON、BEST保存・復元が4/4 `PASS`。QAコマンド・状態直接書換えなし。端末実機での完走を意味しない。
+- **小型3 viewport**: 320×568、667×375、800×600 は `PASS_GEOMETRY` 3/3。初見タイトル→第1ステップ間の計測距離は順に6/7/14 CSS px（5.5px以上の閾値）、最終案内→STARTの間隔は7/17/22 CSS px。3画面とも自然のSTART後の残3秒で実描画選択文字列 `03s! HURRY` を切れずに選択。これは小型3画面のNIGHT/ACEフルE2Eではない。
+- **独立目視**: 新artifactの小型3画面×INTRO/残3秒警告の計6 PNGを実画素ベースで確認。320px幅の3段導入・タイトル全体・TAP TO STARTおよび緊急警告は視認でき、明白な欠落・主ボタンとの重複を検出しなかった。一方で淡色の細い補助文字と情報密度はなお実機での読み取り・即時認知リスクとして残る。画像上の存在は人間の理解・可読性の実証ではない。
+
+**判定と再開点**: 前回CI未検証の懸念は今回解消したが、独立暫定品質76/100は据え置き（80点未達）。実機での初見30秒、警告3秒以内認知、誤タップ、スピーカー/イヤホン、FPS/発熱、縦横回転は `UNTESTED`。Human Gate受入試験票への実測入力が届いたら同一GAME-076で10軸を再採点。届かない場合は初見テキストの視認性改善を現物画像根拠で継続する。重複の確認依頼Slackは送信しない。今回はゲーム本体・QAコードを変更せず、developの本監査文書のみ更新。mainマージ・本番・課金・公開範囲変更なし。完了Gate未達のためGAME-076をToDoへ戻す。
