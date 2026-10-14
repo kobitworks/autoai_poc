@@ -111,3 +111,19 @@ Runner: v1.38.0 / P021 project_rule: v1.2.0
 - [新CI run 38613617503](https://github.com/kobitworks/autoai_poc/actions/runs/38613617503)、head `e4e41f256b2d2838fbefd361bf71776c04a63d02` は本節記録時 `contract=success` / `export-web=success` / `browser-quality=in_progress`。**新E2E最終結果、3枚のPNGの存在と視認、artifact実体はまだ未確認でありPASSとは宣言しない。** 最終ブラウザ実行結果を次の監査で独立readbackする。
 - 独立暫定品質 **76/100（目標80未達）** を維持。実機初見30秒・指誤タップ・警告可読性・実音声・FPS/発熱・画面回転は未検証。既に通知したHuman Gateを重複依頼しない。main、本番、有料、公開範囲拡大なし。
 
+## 11. 新QA HEAD run 38613617503 — 3小型画面の自然警告取得がCI成功（2026-10-15 03:23 JST追補）
+
+- [Actions run 38613617503](https://github.com/kobitworks/autoai_poc/actions/runs/38613617503) は `completed/success`、HEAD `e4e41f256b2d2838fbefd361bf71776c04a63d02`。独立API readbackで `contract` / `export-web` / `browser-quality` の **3/3 job completed/success** を確認。
+- browser-quality実ジョブログを取得し、時刻prefixを除去して出力の**最終JSON全体を独立JSON.parse**。標準4画面（390×844 touch / 844×390 mouse / 768×1024 touch / 1024×768 mouse）の自然入力E2E **4/4 PASS**。全画面 `qaCommand=NEVER USED`, `stateOverride=NONE`、`visualContract=PASS_STATIC`。
+- 小型3画面の自然STARTと幾何テストも **3/3 PASS_GEOMETRY**。追加した警告撮影は全3画面 `layoutSweep[].cargoWarning.result=CAPTURED_UNREVIEWED`。自然時間が残り3秒以内になってから画像が作成された証拠は以下。各ケース energy3 / deliveries0 を維持し、内部状態・時計・配達をQA側から操作していない。
+
+| ビューポート | スクリーンショット（artifact内） | 撮影前残秒 → 撮影後残秒 | 判定 |
+| --- | --- | --- | --- |
+| 320×568 | `small-phone-portrait-cargo-warning-3s.png` | 2.921秒 → 2.821秒 | 取得済・画像内容未目視 |
+| 667×375 | `small-phone-landscape-cargo-warning-3s.png` | 2.848秒 → 2.692秒 | 取得済・画像内容未目視 |
+| 800×600 | `compact-tablet-landscape-cargo-warning-3s.png` | 2.838秒 → 2.592秒 | 取得済・画像内容未目視 |
+
+- Actionsのartifactアップロードログは、従前60→**63ファイル**を検出しアップロード完了。[artifact 11917799602](https://github.com/kobitworks/autoai_poc/actions/runs/38613617503/artifacts/11917799602) = 4,527,517 bytes、GitHub metadata・uploadログ一致のSHA256 `73540f8321d1110e868250293482f786b45a14617e6a157b5de497d8a89497bb`。**ZIPバイナリ本体の独立SHA/CRC/PNGデコード・原寸画像目視は未実施**であり、artifactが存在することだけでこれらをPASSとはしない。
+- 今回の増分は小型3画面の自然カウントダウン警告証拠**取得手段と自動記録の成立**である。緊急文言の視認・読めるサイズ・3秒以内のユーザー認知、実機での初見30秒・誤タップ・スピーカー/イヤホン実音・FPS/発熱・画面回転は未確認。独立暫定品質 **76/100** を据え置き、80点の一般公開品質は未認定。
+- 継続点: 本artifactのZIP実体・3 PNGの原寸・小型表示の情報密度を別途独立監査して、必要な文字サイズ/文言/余白改善を検討する。ユーザーの実機結果を得られればHuman Gateの10軸再評価に反映する。既通知Human Gateを重複依頼しない。2件目タスク、main、本番化、課金や公開範囲拡大はなし。
+
