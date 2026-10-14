@@ -66,3 +66,16 @@ Runner: v1.38.0 / P021 project_rule: v1.2.0
 - 未検証Human Gate: 実機初見30秒での操作理解、指誤タップ、細字可読性、スピーカー/イヤホン実音、FPS/発熱、縦横回転。既存の同一確認を重複通知しない。
 - 次回: Human Gateの回答があれば反映し、未回答ならGAME-076範囲内で小型画面視認性/警告導線を改善検討し、10軸を再評価する。
 - ゲーム本体、QAコード、main、本番、課金、公開範囲は今回無変更。監査文書のみdevelopへ記録。
+
+
+## 8. 新規CI run 38601415105 と独立ZIP・警告スクリーンショット監査（2026-10-15 02:13 JST）
+
+- 対象: [Actions run 38601415105](https://github.com/kobitworks/autoai_poc/actions/runs/38601415105)、artifact [11914660519](https://github.com/kobitworks/autoai_poc/actions/runs/38601415105/artifacts/11914660519)。ヘッドは QA修正commit \`8e4253dabbe3c7569c722ef397a4bc0eedb39a80\`（develop）。
+- GitHub APIで最新の実ジョブを再取得: contract \`115981938549\`、export-web \`115982040534\`、browser-quality \`115982702691\` が **3/3 completed/success**。前回run/attemptの結果を流用しない。
+- GitHub成果物ZIPを新たにダウンロードして実体を検証: **4,358,361 bytes**、実SHA256 \`fefd33f813b0af80d0620155dc4c2b7a10185995fdc7908e2f3adcd87d5d2119\` はGitHub artifact digestと一致。60ファイル全件ZIP CRC正常。**PNG58枚はすべて画像のverify/loadに成功**。最終\`results.json\`を読み、部分\`results-checkpoint.json\`を合否正本に使わない。
+- CI最終ログのJSONも独立パース。phone縦390×844 (touch)、phone横844×390 (mouse)、tablet縦768×1024 (touch)、tablet横1024×768 (mouse) の自然入力 **4/4 PASS**。全画面 \`qaCommand=NEVER USED\` / \`stateOverride=NONE\`。NIGHTは3配達、ACEは6配達に到達、energy=3、SOUND OFF/ON切替、BEST保存・再読込一致。最終BESTは各順に1110 / 1110 / 1108 / 1109。
+- RUSHの実\`pointerdown\`角度は各順に **4.363 / 4.400 / 4.527 / 4.414 rad**。実物理受理帯域4.27〜4.73rad内であり、QA観測帯域4.31〜4.47radは合否閾値に使用しない。反復PASSは肯定材料だが、偶発失敗の完全解消を断定しない。
+- 小型3画面（320×568 / 667×375 / 800×600）のINTROと自然START幾何は **3/3 PASS_GEOMETRY**。レイアウト衝突の静的判定と実機文字可読性は別物で、\`physicalLegibility=HUMAN GATE\`。
+- 4画面の\`*-cargo-warning-3s.png\`と小型INTRO/PLAYINGの代表画像をアーカイブ実体から抽出し、比較目視。赤の警告枠・残秒優先テキストと独立HUBマーカーを確認。目視した画像上では大きな欠落や明白な重なりは認められないが、**phone縦および小型画面では警告文/日本語が小さく、実機での可読性・3秒以内の認識可否をPASSとはできない**。\`visualWarningPass=NOT VERIFIED\` / \`physicalLegibility=HUMAN GATE\` は維持。なおスクリーンショットは端末の実音・FPS・熱・回転や初見理解を検証できない。
+- 10軸の評価条件を再確認。自動E2Eと静的/画像観察は技術品質と操作導線の肯定材料だが、**新たな人間実機根拠がないため独立暫定76/100を維持**。80点以上の一般公開品質は未認定。初見30秒、実タッチ誤操作、細字/警告可読性、スピーカー/イヤホン実音、FPS/発熱、実機縦横回転はHuman Gate未回答のまま。
+- 次回再開: Human Gate回答があれば根拠として反映。未回答なら小型画面の緊急警告の可読性を優先して、GAME-076の同一タスク内で限定改修/再検証を検討し10軸再採点。今回の実装コード/QAコード、main、本番、課金、公開範囲は変更なし。今回の作業は**新run 38601415105を独立監査し監査文書に追記**する1タスクのみ。
