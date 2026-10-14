@@ -117,3 +117,22 @@
 - GitHub Actions [run38497672814](https://github.com/kobitworks/autoai_poc/actions/runs/38497672814) のbrowser-quality **job115675057422** の再実行を要求し、GitHub API応答 `success=true` を得た。**attempt 4** の新job **115690367593** が `in_progress`、contract **115690367859** と export-web **115690368904** は `completed/success` を14:03時点に確認。**attempt 4のbrowser-quality最終合否、自然入力4画面・RUSH pointerdown・ZIP/PNG・BEST/SOUNDは、結果未確定のためPASSとは記録しない。**
 - 今後の診断仮説（未実証）: orbit0の回転約1.12rad/s、観測band上端4.47rad、ゲーム許容上端4.69radでは、観測から実際のpointerdownまで約0.20秒以上の前イベント遅延があると判定窓外に進む可能性がある。一方、`inputCallMs` は送信〜完了までの全呼出時間であり前イベント遅延そのものではないため、単純な角度加算で原因確定しない。新実pointerdownイベントの角度・時刻と観測角度・観測窓スキップ・energy/転送成否を比較して検証する。実ゲーム仕様や成功判定は変更しない。
 - 評価保留: **独立暫定76/100（一般公開目標80未達）**。実機初見30秒・iOS/Android日本語可読性/誤タップ、スピーカー/イヤホン実音、FPS/発熱はHuman Gate未確認。既通知の重複依頼は送らない。ゲーム/QAソース、main、本番、課金を変更せず、結果確定後は本節へ追記して再評価する。
+
+
+## 10. 第4回反復の最終結果と自然入力診断（2026-10-14 14:51:16 JST / AutoAI GAME-076）
+
+- 対象は **GAME-076 の継続1件のみ**。前回14:05時点で未確定だった [run 38497672814](https://github.com/kobitworks/autoai_poc/actions/runs/38497672814) の **attempt 4** を新規にFresh-read。browser-quality job `115690367593`、contract job `115690367859`、export-web job `115690368904` は全件 `completed/success`。再実行要求自体は前回の操作で、今回は行っていない。
+- browser-quality job の最終ログに含まれるJSON全体を時刻プレフィックスを除いて再パースした。自然 touch/mouse 操作（成功コマンド・状態直書きなし）で標準4 viewport **4/4 PASS**、小型3 viewport **3/3 PASS_GEOMETRY**、静的表示コントラクト **PASS_STATIC**。NIGHT 3配達→ACE 6配達、ACE時energy=3、SOUND OFF/ON、BEST再読込を試験項目として保持。各画面 `qaCommand=NEVER USED` / `stateOverride=NONE`。
+- RUSH 0→1 の実 `pointerdown` 受動計測（ゲーム判定窓の目安 4.31〜4.69 rad）：
+
+| viewport | 入力 | 実pointerdown角度rad | inputCallMs | 判定 |
+|---|---|---:|---:|---|
+| Phone縦 390×844 | touch | 4.428 | 104 | PASS |
+| Phone横 844×390 | mouse | 4.380 | 37 | PASS |
+| Tablet縦 768×1024 | touch | 4.596 | 147 | PASS |
+| Tablet横 1024×768 | mouse | 4.442 | 73 | PASS |
+
+- Tablet縦の4.596 radは判定上端4.69 radとの差が約0.094 radであり、入力イベント前の角度進行が変化した場合に判定境界を越える**可能性**を残す。ただし今回の合否はPASSで、過去の偶発失敗の原因は断定できない。Tablet横は75ms読取観測帯内サンプル0件でも、実pointerdown角度4.442 radで成功しており、受動観測サンプル数をゲーム成功判定に混同しない。
+- 今回新たに作成されたartifact: [11871805363](https://github.com/kobitworks/autoai_poc/actions/runs/38497672814/artifacts/11871805363)、`p021-game-g030-real-input-evidence`、GitHub metadata 4,376,779 bytes / `sha256:226c48fc115b4cc5e275c364fa0fe76f6bbc4b7785bad3c0b4b76fa50171f3ff`。ジョブログでは60ファイルのupload完了と同digestを確認。**今回はZIPバイナリ実体の独立SHA照合・58枚PNGの目視検証は未実施**（メタデータ一致と実体独立検証を区別）。
+- 同一ゲーム/QA元HEADの第1〜第4回反復は自然入力4/4 PASSを記録。ただし過去の別runにTablet縦RUSHの偶発失敗があり、一般利用時の無再発性・人間が初見30秒で操作できるかは**未立証**。同一条件の反復テストのみを追加して品質スコアに加点しない。
+- 継続判定: 独立暫定品質 **76/100**（目標80未達）を維持。実機の初見30秒・日本語可読性・誤タップ・スピーカー/イヤホン音・FPS/発熱はHuman Gate未確認。次の開発サイクルでは、反復テストの継続よりも、実機の初見導線／操作タイミング余裕の人間観察と、得られた結果に基づくゲーム体験の具体改善・10軸再採点を優先。機械検証のみではDoneにしない。同一内容の確認Slackを重複送信しない。ゲーム/QAソース、main、本番公開、有料利用、他タスクの実行は変更なし。
