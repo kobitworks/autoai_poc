@@ -79,3 +79,24 @@ Runner: v1.38.0 / P021 project_rule: v1.2.0
 - 4画面の\`*-cargo-warning-3s.png\`と小型INTRO/PLAYINGの代表画像をアーカイブ実体から抽出し、比較目視。赤の警告枠・残秒優先テキストと独立HUBマーカーを確認。目視した画像上では大きな欠落や明白な重なりは認められないが、**phone縦および小型画面では警告文/日本語が小さく、実機での可読性・3秒以内の認識可否をPASSとはできない**。\`visualWarningPass=NOT VERIFIED\` / \`physicalLegibility=HUMAN GATE\` は維持。なおスクリーンショットは端末の実音・FPS・熱・回転や初見理解を検証できない。
 - 10軸の評価条件を再確認。自動E2Eと静的/画像観察は技術品質と操作導線の肯定材料だが、**新たな人間実機根拠がないため独立暫定76/100を維持**。80点以上の一般公開品質は未認定。初見30秒、実タッチ誤操作、細字/警告可読性、スピーカー/イヤホン実音、FPS/発熱、実機縦横回転はHuman Gate未回答のまま。
 - 次回再開: Human Gate回答があれば根拠として反映。未回答なら小型画面の緊急警告の可読性を優先して、GAME-076の同一タスク内で限定改修/再検証を検討し10軸再採点。今回の実装コード/QAコード、main、本番、課金、公開範囲は変更なし。今回の作業は**新run 38601415105を独立監査し監査文書に追記**する1タスクのみ。
+
+## 9. 新HEAD run 38607836462 の独立ZIP/画像/自然入力監査（2026-10-15 02:56:38 JST）
+
+- 対象: [Actions run 38607836462](https://github.com/kobitworks/autoai_poc/actions/runs/38607836462) / head commit [9a84236dc537bb2722e9fcd81eda1897e6399f68](https://github.com/kobitworks/autoai_poc/commit/9a84236dc537bb2722e9fcd81eda1897e6399f68)。前回GAME-076で改修した緊急警告文字（18→21 CSS px、狭幅時の残秒のみへの縮退）とQA契約を対象とする。developのみ。
+- GitHub Actions最新jobsをFresh-read: contract job 116003186081、export-web 116003298919、browser-quality 116004067466、全3件が **completed/success**。browser-qualityの実ジョブログも取得し、実入力の最終JSONとartifactアップロード結果を照合。
+- 新規artifact [11917290658](https://github.com/kobitworks/autoai_poc/actions/runs/38607836462/artifacts/11917290658) を **ZIP実体** で直接取得。4,365,886 bytes、SHA256 `fd8f17088d0db1b4509aeb8aa030b36b3158bb577b0e6d51e58e7c4699011380` はGitHub metadata digestと完全一致。ZIP全60件CRC検査正常、PNG58件はすべてPillow verify/load成功。JSON2件のうち部分checkpointでなく **最終results.json** を合否正本として独立パースした。
+- 最終JSONの自然touch/mouse 4画面 **4/4 PASS**。各画面とも `qaCommand=NEVER USED` / `stateOverride=NONE`、NIGHT=3配達、ACE=6配達、energy=3、初心者の初回タップ保護PASS、SOUND ON/OFF、BEST保存→再読込一致。小型3画面（320×568 / 667×375 / 800×600）は自然START可・配置 **3/3 PASS_GEOMETRY**。これは小型での長時間プレイ・文字可読性を証明しない。
+
+| 実操作画面 | RUSHの自然pointerdown角(rad) | 実受理帯域との差(最小rad) | ACE到達 | RESULT BEST = 再読込BEST |
+| --- | ---: | ---: | --- | --- |
+| phone縦 390×844 / touch | 4.470 | 0.200 | 6配達 | 1108 = 1108 |
+| phone横 844×390 / mouse | 4.404 | 0.134 | 6配達 | 1110 = 1110 |
+| tablet縦 768×1024 / touch | 4.647 | 0.083 | 6配達 | 1103 = 1103 |
+| tablet横 1024×768 / mouse | 4.498 | 0.232 | 6配達 | 1108 = 1108 |
+
+- RUSH物理受理帯域は4.27〜4.73rad。各pointerdown角は範囲内、保存成否はpointerイベント値そのものではなく実際の状態遷移/配達とenergyで確認。QA観測用部分帯域4.31〜4.47radを誤って合否閾値にしない。単一新runが成功してもRUSHの偶発失敗の完全解消を断定しない。
+- ZIP内の標準4画面の `*-cargo-warning-3s.png` と小型3画面のINTRO/PLAYING、phone横のcue-stress画面を画像実体から開き、8枚コンタクトシートと原寸対象を独立目視。赤い残秒警告の枠・強調・残秒が描画され、明白なキャンバス全欠落やGAME HUB/HUDの領域衝突は確認されなかった。ただしスマホ縦の警告はゲーム領域下側の細い情報枠に密集し、実機の警告認知時間・日本語視認をPASSとみなす根拠は不足。小型3画面は **警告3秒画像を含まず**、320px等での狭幅縮退の実視認結果を直接検証できていない。結果JSONの `visualWarningPass=NOT VERIFIED` / `physicalLegibility=HUMAN GATE` は維持。
+- 10品質軸に対する増分: ゲーム性・難易度・内容量はNIGHT/ACEの自然到達で肯定的、操作感/技術品質は実入力・保存・CIで裏付け、UI/演出は警告画像で静的表示を確認。ただしグラフィック/サウンド/実機誤タップ/初見30秒/安定FPS/発熱/縦横回転に追加のユーザー・実機根拠はない。前回確定の **証跡限定暫定76/100** を維持し、理由なく加点しない（目標80点未達、一般公開品質未認定）。
+- Human Gate未回答: 初見30秒での操作理解、指の誤タップ、警告および小文字の認識、スピーカー/イヤホンの実音、FPS/発熱、縦横回転。既通知事項の重複Slack通知は行わない。
+- **次回再開点**: GAME-076同一タスクとして、320×568等の小型3画面で残り3秒の **実描画証拠を追加** し、「残秒のみ」縮退と実認知を分離して確認する。文字が小さければ情報量調整・最小表示サイズ/余白の限定改善→4標準+3小型CI回帰→10軸再採点。実機回答があれば各Gateへ反映。変更範囲はdevelopのみ、main、本番化、有償サービス、公開範囲の変更は禁止。
+- 本回は既存GAME-076の継続監査 **1件のみ**。ZIP/CI独立検証とこの正本追記を実施。ゲーム本体およびQAコードの修正、2件目のタスク、追加課金、一般公開判定は行わない。GAME-076は完了条件未達のためToDo継続。
