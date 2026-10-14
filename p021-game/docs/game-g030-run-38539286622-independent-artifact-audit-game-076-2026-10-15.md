@@ -138,3 +138,14 @@ Runner: v1.38.0 / P021 project_rule: v1.2.0
 - **静止画像に基づく限定判定**: 3小型画面の「警告が実際に描画された」は確認済み。しかし320px縦画面での文字情報密度は高く、横画面の日本語補助案内は省略表示されている箇所がある。警告の瞬間的な知覚・実際の端末での字の可読性、指誤タップ、初見30秒理解、音の聞こえ方、FPS/発熱、画面回転は**依然として未検証のHuman Gate**。ZIP内の旧`CAPTURED_UNREVIEWED`、`physicalLegibility=HUMAN GATE`は撮影時の計測値であり、事後監査で改変せず、この節に人間視認監査の結果を別記した。
 - 独立暫定品質 **76/100**（目標80未達）を維持。スクリーンショットが3枚増えたことだけで一般公開品質や実機の読みやすさを認定しない。次回は必要に応じて補助文の省略・警告の瞬間認知・情報密度を優先改善し、4標準+3小型画面の回帰と10軸再採点を行う。実機回答が得られた場合はHuman Gateへ反映。既通知の同一人間確認を重複投稿しない。
 - 今回は**GitHub監査文書のみ更新**し、ゲーム本体・QAコード・main・有償設定・本番・公開範囲は変更しない。GAME-076の完了条件未達につき次回継続（Doingを残さずToDoへ戻す）。別タスクへの着手なし。
+
+## 13. GAME-076 tiny intro copy and regression checkpoint (2026-10-15 04:02:55 JST)
+
+- Scope: P021/GAME-076 only, runner_rule.md v1.38.0, P021 project_rule.md v1.2.0. One continuing task; no other task started.
+- Observation: earlier 320px intro screenshots passed geometry checks, but the long Japanese explanations could shrink near the 12 CSS-pixel minimum in a tiny onboarding card.
+- Patch: [develop commit fd2c66f](https://github.com/kobitworks/autoai_poc/commit/fd2c66f810be90c2a01233bb0794f36136f9c62f), one file Main.gd, +8/-2 lines. Only when tiny_panel (intro height below 180 CSS px), use short guidance: "2 緑でTAP → 乗換" and "3 同じ印でTAP → 配達". Non-tiny panels retain the original full wording.
+- Source re-read verified blob d08d5f3efef32903e3647a880b08faffa185a4a2. START/touch positioning, scoring, cargo clock, routes, mission physics, audio, and input are unchanged; there is no QA state shortcut.
+- [GitHub Actions run 38619691662](https://github.com/kobitworks/autoai_poc/actions/runs/38619691662) on source commit fd2c66f: contract SUCCESS, export-web SUCCESS. At this checkpoint browser-quality four-viewport real touch/click E2E is in progress; a full success or visual-readability pass is NOT claimed.
+- QUALITY: independent provisional 76/100, public-release target 80/100 not certified. Human Gates (first 30s comprehension, phone small lettering/3s warning recognition, mistaps, real speaker/headphone sound, FPS/thermal effects, rotation) have not been answered.
+- Progress recorded in [P021 task sheet](https://docs.google.com/spreadsheets/d/1sB9zwPhsmAJhNNM1bEif9Q6HZLjT-43ekM9c6D9yrmk/edit), GAME-076 reverted Doing -> ToDo. Parent [projects.xlsx](https://docs.google.com/spreadsheets/d/1sF-VTHcuua43DimvRPjdAaRLQTNSkH0GrXuhzjLKtKM/edit) P021 same-day count 11 and latest check synced for all active projects. No main/production/paid/release authorization change.
+- Next for the SAME task: inspect CI final outcomes and new compact intro screenshots/4+3 viewport regressions; assess Japanese legibility from rendered evidence, distinguish this from human on-device confirmation, retain score 76 pending new independent evidence. If CI fails, fix only the regression.
