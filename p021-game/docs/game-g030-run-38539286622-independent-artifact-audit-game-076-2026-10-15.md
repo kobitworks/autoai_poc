@@ -100,3 +100,14 @@ Runner: v1.38.0 / P021 project_rule: v1.2.0
 - Human Gate未回答: 初見30秒での操作理解、指の誤タップ、警告および小文字の認識、スピーカー/イヤホンの実音、FPS/発熱、縦横回転。既通知事項の重複Slack通知は行わない。
 - **次回再開点**: GAME-076同一タスクとして、320×568等の小型3画面で残り3秒の **実描画証拠を追加** し、「残秒のみ」縮退と実認知を分離して確認する。文字が小さければ情報量調整・最小表示サイズ/余白の限定改善→4標準+3小型CI回帰→10軸再採点。実機回答があれば各Gateへ反映。変更範囲はdevelopのみ、main、本番化、有償サービス、公開範囲の変更は禁止。
 - 本回は既存GAME-076の継続監査 **1件のみ**。ZIP/CI独立検証とこの正本追記を実施。ゲーム本体およびQAコードの修正、2件目のタスク、追加課金、一般公開判定は行わない。GAME-076は完了条件未達のためToDo継続。
+
+## 10. GAME-076 小型3画面の「残り3秒」実描画証拠を取得するQA追加（2026-10-15 03:19 JST）
+
+- 本回Runner: v1.38.0、P021ルール v1.2.0、唯一の実タスク **GAME-076**。実行ID `AUTOAI-GAME076-20261015-0314`。前回実行P021からP005→P020を順にFresh-readし、要確認・依存未完了・人間Gate・日次周期未到達・全完了などを除外。Slack新規明示`@autoai`0件、登録41件DONE。09:00前なので日次全体進捗監視対象外。
+- QA改修: [GitHub commit e4e41f2](https://github.com/kobitworks/autoai_poc/commit/e4e41f256b2d2838fbefd361bf71776c04a63d02) / `p021-game/qa/orbit-switch-courier-real-input.js`。developブランチのコード実体を再読込して反映を確認。
+- 対象: 小型 **320×568 / 667×375 / 800×600** の3画面。既存のINTRO配置・実物理START・PLAYING配置を検証した後、**実際の貨物残時間が1.5～2.95秒**になるまで状態を読み取り監視して、`*-cargo-warning-3s.png`を3枚追加取得する。撮影前後の`cargo_left`、`energy=3`、`deliveries=0`とスクリーンショット名を最終`results.json`の`layoutSweep[].cargoWarning`へ記録し、撮影時に自然の残り3秒以内だったことを検証する。
+- 制限: QA用成功コマンド/内部状態書換え/貨物時計の巻戻し/当たり判定の変更なし。ゲーム本体・物理入力・既存4画面のNIGHT/ACEシナリオは無変更。画面画像が存在しても小文字可読性、実機警告認知、音/熱/FPSはHuman Gateのまま。
+- QAのreadback: 追加`compactWarningFile`・`proof.evidenceScreenshots.push(compactWarningFile)`をblob `e7b7d828d51da9af50006b3506862b8042177eba`で確認。
+- [新CI run 38613617503](https://github.com/kobitworks/autoai_poc/actions/runs/38613617503)、head `e4e41f256b2d2838fbefd361bf71776c04a63d02` は本節記録時 `contract=success` / `export-web=success` / `browser-quality=in_progress`。**新E2E最終結果、3枚のPNGの存在と視認、artifact実体はまだ未確認でありPASSとは宣言しない。** 最終ブラウザ実行結果を次の監査で独立readbackする。
+- 独立暫定品質 **76/100（目標80未達）** を維持。実機初見30秒・指誤タップ・警告可読性・実音声・FPS/発熱・画面回転は未検証。既に通知したHuman Gateを重複依頼しない。main、本番、有料、公開範囲拡大なし。
+
