@@ -910,7 +910,9 @@ func _draw_intro_overlay() -> void:
 	var step_h := _ui_px(16.0 if tiny_panel else (21.0 if short_panel else 29.0))
 	var step_font := _font_size(16.0 if short_panel else 18.0)
 	if tiny_panel:
-		step_font = _font_size(14.0)
+		# GAME-076: Raise the narrowest 320px onboarding guidance from 14px to
+		# 16px. Compact Japanese labels below keep the two TAP steps legible.
+		step_font = _font_size(16.0)
 	var button_height := _ui_px(44.0 if short_panel else 48.0)
 	var button_offset := _ui_px(53.0 if short_panel else 59.0)
 	var start_rect := Rect2(r.position.x + _ui_px(22.0), r.end.y - button_offset, width - _ui_px(44.0), button_height)
@@ -922,14 +924,15 @@ func _draw_intro_overlay() -> void:
 		step_gap = clampf((height - _ui_px(124.0)) * 0.5, _ui_px(23.0), _ui_px(33.0))
 	intro_title_rect = Rect2(r.position.x, r.position.y + title_y, width, _ui_px(24.0 if tiny_panel else 30.0))
 	intro_first_step_rect = Rect2(r.position.x, r.position.y + step_y, width, step_h)
-	_draw_center_text("ORBIT SWITCH COURIER", intro_title_rect, _font_size(17.0 if tiny_panel else (20.0 if short_panel else 21.0)), Color("#f5fbff"))
+	# Fit the full game title inside the narrow card instead of risking a cut-off.
+	_draw_center_fit_text("ORBIT SWITCH COURIER", intro_title_rect, _font_size(18.0 if tiny_panel else (20.0 if short_panel else 21.0)), Color("#f5fbff"))
 	_draw_center_fit_text("1  START → 目標 %s" % HUB_SHORT[cargo_target], intro_first_step_rect, step_font, Color("#ffffff"))
 	# GAME-076: On tiny intro cards, shorten ONLY explanatory copy so the
 	# onboarding lines retain the intended 14 CSS-pixel text size rather than
 	# shrinking toward the 12px minimum. Green crossing and matching HUB icon
 	# remain the same two physical interactions; no timing/input/state changes.
-	var crossing_step := "2  緑でTAP → 乗換" if tiny_panel else "2  緑の交差点でTAP → 乗換"
-	var delivery_step := "3  同じ印でTAP → 配達" if tiny_panel else "3  同じ印のHUBでTAP → 配達"
+	var crossing_step := "2  緑でTAP→乗換" if tiny_panel else "2  緑の交差点でTAP → 乗換"
+	var delivery_step := "3  同じ印でTAP→配達" if tiny_panel else "3  同じ印のHUBでTAP → 配達"
 	intro_second_step_rect = Rect2(r.position.x, r.position.y + step_y + step_gap, width, step_h)
 	_draw_center_fit_text(crossing_step, intro_second_step_rect, step_font, Color("#b6fff0"))
 	intro_last_step_rect = Rect2(r.position.x, r.position.y + step_y + step_gap * 2.0, width, step_h)
