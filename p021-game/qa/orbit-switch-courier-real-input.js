@@ -761,6 +761,35 @@ async function run(){
           noQaCommand:true,noStateOverride:true};
         proof.playingGeometry={field:playing.field,info:playing.info};
         proof.evidenceScreenshots=[t.name+'-layout-intro.png',t.name+'-layout-playing.png'];
+        // GAME-076: capture a LIVE last-3-seconds cargo warning on compact screens.
+        // START is physical; only elapsed game time triggers the screenshot.
+        // This read-only observer never changes score, timers, orbit, or physics.
+        await page.waitForFunction(() => {
+          const x=window.__P021_ORBIT;
+          return x && x.state==='playing' && x.cargo_left<=2.95 &&
+            x.cargo_left>=1.5 && x.energy===3 && x.deliveries===0;
+        },null,{timeout:20000,polling:50});
+        const compactWarningBefore=await snapshot(page);
+        const compactWarningFile=t.name+'-cargo-warning-3s.png';
+        await page.screenshot({path:dir+'/'+compactWarningFile});
+        const compactWarningAfter=await snapshot(page);
+        check(compactWarningBefore.state==='playing' &&
+          compactWarningBefore.cargo_left>0 && compactWarningBefore.cargo_left<=3 &&
+          compactWarningAfter.state==='playing' &&
+          compactWarningAfter.cargo_left>0 && compactWarningAfter.cargo_left<=3 &&
+          compactWarningAfter.energy===3 && compactWarningAfter.deliveries===0,
+          'Compact warning capture missed natural 3s window: '+t.name+' '+
+          JSON.stringify({before:compactWarningBefore.cargo_left,
+            after:compactWarningAfter.cargo_left}));
+        proof.cargoWarning={result:'CAPTURED_UNREVIEWED',
+          method:'natural clock after physical START',
+          secondsBefore:compactWarningBefore.cargo_left,
+          secondsAfter:compactWarningAfter.cargo_left,
+          energy:compactWarningAfter.energy,deliveries:compactWarningAfter.deliveries,
+          screenshot:compactWarningFile,
+          visualWarningPass:'NOT VERIFIED - inspect PNG independently',
+          physicalLegibility:'HUMAN GATE'};
+        proof.evidenceScreenshots.push(compactWarningFile);
         proof.status='PASS_GEOMETRY';
       }catch(err){
         proof.failure=String(err.message||err);
