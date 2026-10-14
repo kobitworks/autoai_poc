@@ -36,3 +36,17 @@
 - **画像の独立目視**: ZIP内の小型3画面のINTRO画像・残3秒警告画像計6枚を原寸由来データで確認。3画面すべてでガイド、START、カウントダウン警告が画像上に存在し、明らかな主ボタンの重なりや警告欠落は見られない。画面縮小時の細字・高密度表示は可読性リスクとして残る。画像上の存在確認は、初見ユーザーの3秒以内の認知を証明しない。
 
 **未解決/継続**: 品質独立暫定 `76/100`（目標80未達）を維持。実機での初見30秒、指の誤タップ、日本語・警告の瞬間認知、スピーカー/イヤホン実音、FPS/発熱、回転はHuman Gate未検証。既通知と同一内容の人間確認依頼を重複送信しない。実機結果があれば同じGAME-076で10軸再評価し、未回答なら小型案内の可読性改善候補を精査。今回ゲーム進行/音/入力コード・main・本番・有償範囲は変更しない。完了条件未達なのでタスクはToDoへ復帰させる。
+
+
+## 2026-10-15 07:34 JST 新HEAD独立監査（AUTOAI-GAME076-20261015-0734）
+
+前回07:12実行時に最終結果未確定だった新HEAD `e7b760751d6075e34dd6a5e556f9c0c08c273b49`（前回ソース変更を含む）を、本Runner v1.38.1の**GAME-076継続1件のみ**として独立再検証。今回の新たなゲーム本体・QAソース修正はない。
+
+- **CI最終結果**: [Actions run 38645842325](https://github.com/kobitworks/autoai_poc/actions/runs/38645842325) は contract / export-web / browser-quality すべて `completed/success`（3/3）。Godot Web Export成功、ブラウザ自然入力QA成功をジョブ一覧と生ログから別途確認。旧HEADの成功を代用していない。
+- **Artifact実体の独立検品**: [artifact 11932497533](https://github.com/kobitworks/autoai_poc/actions/runs/38645842325/artifacts/11932497533) のZIPを実体ダウンロード。**4,537,910 bytes、SHA-256 `716327c1915a5b98c53644776be39f5575e983f025908bfab12f02ad9bcd85c8`** はGitHub APIのdigestと一致。ZIP全63エントリCRC合格、PNG61枚のPillow decode/verifyすべて成功、results-checkpoint.json / results.json の両方を独立解析。
+- **自然入力4標準viewport**: results.json `viewports` が phone-portrait / phone-landscape / tablet-portrait / tablet-landscape すべて `PASS`（4/4）。実タップ/クリックによるNIGHT3→ACE6配達・BEST保持、状態直接上書きなし。ゲーム内容・実機動作の包括合格は意味しない。
+- **小型3画面**: `layoutSweep` の 320×568、667×375、800×600 はすべて `PASS_GEOMETRY`（3/3、フルNIGHT/ACE E2Eとは別）。自然のSTART後、残3秒時 `hudTextSelection=PASS_UNCLIPPED_ACTUAL_DRAW_TEXT`、各viewportで最終実描画文字列 `["03s! HURRY","03s! HURRY"]` が省略文字なしで一致。
+- **実画像目視**: 小型3画面×INTRO/残3秒警告の計6枚を今回のZIPから独立目視。ガイドとSTART、赤い`03s! HURRY`警告、ゲージの描画が存在し、見た目の大きな欠落・重なりは見られない。特に320px縦・800px横では説明とHUD文字が小さく、狭幅の瞬間認知リスクは残る。
+- **区別する未確認事項**: 小型3画面でのNIGHT/ACE完全到達、実機初見30秒、3秒警告に現実のテスターが即時気づくか、指誤タップ、端末スピーカー/イヤホン実音、FPS・発熱、回転は合格未認定。画像の存在確認やCIはHuman Gateの代わりにならない。
+
+**判定**: CI・artifact監査は合格。ただし独立品質暫定**76/100**（目標80未達）・Human Gate未実施のため GAME-076 は未完了、同一タスクをToDoで継続。次回は実機受入試験票 [GAME-076 Human Gate](./game-g030-human-device-acceptance-protocol-game-076-2026-10-15.md) の回答があれば10軸を再採点。なければ320px初見案内・緊急警告の可読性改善を現物画像根拠で検討する。同一依頼のSlack再通知はしない。main/本番/課金/公開範囲変更なし、2件目作業なし。
