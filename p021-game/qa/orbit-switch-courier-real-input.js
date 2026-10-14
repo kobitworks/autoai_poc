@@ -716,6 +716,31 @@ async function run(){
         proof.introStepButtonSpacing={source:'GODOT_RENDERED_RECT_TELEMETRY_READ_ONLY',
           gapCssPx:Math.round(introGap*100)/100,minimumCssPx:4,
           lastInstruction:introStep,startButton:introStart};
+
+        // GAME-076: rectangle spacing cannot prove that text is actually legible.
+        // This read-only probe comes from the same _draw_center_fit_text path
+        // used for the four intro labels, after shrink/ellipsis decisions.
+        const drawnIntro=d.intro_rendered_steps;
+        check(Array.isArray(drawnIntro) && drawnIntro.length===4,
+          'Missing actual intro glyph evidence: '+t.name+' '+JSON.stringify(drawnIntro));
+        const [titleGlyph,startGlyph,switchGlyph,deliveryGlyph]=drawnIntro;
+        check(drawnIntro.every(line=>line && typeof line.text==='string' &&
+          line.text.length>0 && Number.isFinite(Number(line.font_css_px))),
+          'Invalid intro glyph/font evidence: '+t.name+' '+JSON.stringify(drawnIntro));
+        check(!titleGlyph.ellipsized && Number(titleGlyph.font_css_px)>=12 &&
+          [startGlyph,switchGlyph,deliveryGlyph].every(line=>
+            !line.ellipsized && Number(line.font_css_px)>=14),
+          'Intro text was ellipsized or shrunk below the minimum: '+t.name+' '+
+          JSON.stringify(drawnIntro));
+        check(startGlyph.text.includes('START') &&
+          switchGlyph.text.includes('緑') && switchGlyph.text.includes('乗換') &&
+          deliveryGlyph.text.includes('配達'),
+          'Intro lost its first-action instructions: '+t.name+' '+
+          JSON.stringify(drawnIntro));
+        proof.introDrawnText={source:'GODOT_ACTUAL_FIT_RENDER_TEXT_READ_ONLY',
+          labels:drawnIntro,minStepFontCssPx:14,
+          humanInstantRecognition:'UNTESTED'};
+
         const hud=physicalRect(d.hud_rect,c,d);
         const hub=physicalRect(d.hub_rect,c,d);
         if(c.height>520)check(hub.y+hub.height<=hud.y-3,
