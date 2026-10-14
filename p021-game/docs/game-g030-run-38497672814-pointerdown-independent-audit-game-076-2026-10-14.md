@@ -136,3 +136,17 @@
 - 今回新たに作成されたartifact: [11871805363](https://github.com/kobitworks/autoai_poc/actions/runs/38497672814/artifacts/11871805363)、`p021-game-g030-real-input-evidence`、GitHub metadata 4,376,779 bytes / `sha256:226c48fc115b4cc5e275c364fa0fe76f6bbc4b7785bad3c0b4b76fa50171f3ff`。ジョブログでは60ファイルのupload完了と同digestを確認。**今回はZIPバイナリ実体の独立SHA照合・58枚PNGの目視検証は未実施**（メタデータ一致と実体独立検証を区別）。
 - 同一ゲーム/QA元HEADの第1〜第4回反復は自然入力4/4 PASSを記録。ただし過去の別runにTablet縦RUSHの偶発失敗があり、一般利用時の無再発性・人間が初見30秒で操作できるかは**未立証**。同一条件の反復テストのみを追加して品質スコアに加点しない。
 - 継続判定: 独立暫定品質 **76/100**（目標80未達）を維持。実機の初見30秒・日本語可読性・誤タップ・スピーカー/イヤホン音・FPS/発熱はHuman Gate未確認。次の開発サイクルでは、反復テストの継続よりも、実機の初見導線／操作タイミング余裕の人間観察と、得られた結果に基づくゲーム体験の具体改善・10軸再採点を優先。機械検証のみではDoneにしない。同一内容の確認Slackを重複送信しない。ゲーム/QAソース、main、本番公開、有料利用、他タスクの実行は変更なし。
+
+## 11. attempt 4 ZIP実体・最終JSON・58 PNG独立監査（2026-10-14 15:10:44 JST / AUTOAI GAME-076）
+
+今回のAutoAI Runner v1.38.0は、**P021 GAME-076の継続作業1件のみ**を対象に、前回§10で未検証だった証跡アーカイブの**バイナリ実体**を新たに取得し、前回のログやメタ情報の結果を流用せず検証した。実機Human Gateに対する新しい承認・回答は確認できず、同一確認依頼の再送をしない。
+
+- 対象: [Actions run 38497672814 attempt 4](https://github.com/kobitworks/autoai_poc/actions/runs/38497672814)、game/QA HEAD `ae448b999037c6e9e2a91d2e0584e5a99f98f4e4`。GitHubの最新attempt jobs: contract `115690367859`、export-web `115690368904`、browser-quality `115690367593` は **3/3 completed/success**。
+- [artifact 11871805363](https://github.com/kobitworks/autoai_poc/actions/runs/38497672814/artifacts/11871805363) `p021-game-g030-real-input-evidence` をダウンロードし、ZIP実体**4,376,779 bytes**を独立SHA-256計算。**`226c48fc115b4cc5e275c364fa0fe76f6bbc4b7785bad3c0b4b76fa50171f3ff`**でGitHub metadata `digest=sha256:226c48fc115b4cc5e275c364fa0fe76f6bbc4b7785bad3c0b4b76fa50171f3ff`と一致。
+- ZIP全件CRC検証 `testzip()=None`。60ファイルは**PNG 58枚 + JSON 2件**。58枚を画像デコーダで全件decode/verifyして破損なし。標準4画面は各13枚＝52枚、追加小型3画面は各2枚＝6枚。両JSONの構文パース成功。
+- 判定の正本は **`results.json`** とし、`results-checkpoint.json`（`PARTIAL_CHECKPOINT_NOT_FINAL`）は合否に採用しない。標準4 viewport: phone縦390×844/touch、phone横844×390/mouse、tablet縦768×1024/touch、tablet横1024×768/mouseは**4/4 PASS**。追加小型320×568、667×375、800×600のレイアウトは**3/3 PASS_GEOMETRY**、visualContractは`PASS_STATIC`。
+- 最終JSONで4 viewportすべて`qaCommand=NEVER USED` / `stateOverride=NONE`、自然入力でNIGHT**3配達**→ACE**6配達**、ACE到達energy=3、SOUND OFF/ON、BEST保存・読戻し・localStorage値一致。BEST値は順に**1108 / 1109 / 1104 / 1109**。
+- RUSH 0→1で受動計測した実`pointerdown`はphone縦**4.428**、phone横**4.380**、tablet縦**4.596**、tablet横**4.442 rad**。4件とも受理窓目安4.31〜4.69radの範囲内。tablet縦4.596radは上端まで約**0.094rad**しかなく、過去の偶発RUSH失敗の根因・完全解消は依然未特定。
+- 代表28 PNG（標準4画面×INTRO/PLAYING/RUSH/ACE、同4画面×初見タップ案内/長文キュー/貨物3秒警告）をコンタクトシートで**独立目視**。大型の画面欠損、主要操作領域の明白な画面外逸脱はこの証跡から認めず、初見案内・貨物残り時間の強調表示を確認。ただし縮小画像では日本語細字の実機可読性、実際の指での誤タップ、実スピーカー/イヤホン音、実機FPS/発熱は判定不能。
+
+**結論・再開点:** attempt 4のZIP実体未検証という証拠上の欠落は解消。CIと自然入力の検証は今回分でPASSだが、独立品質点は**暫定76/100のまま**（一般公開目標80点未達）。tablet縦RUSHのタイミング境界、初見30秒・可読性・誤タップ・実機音声・FPS/発熱Human Gateの解消が必要。次回は実機フィードバックと自然入力タイミング余裕の改善余地を検討し、10軸を再採点する。今回はゲーム本体・QAソース・`main`・本番・課金の変更なし。**タスクGAME-076のみ**を処理し、未完了につき`ToDo`に戻して継続する。
