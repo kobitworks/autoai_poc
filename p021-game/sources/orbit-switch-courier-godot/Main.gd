@@ -77,6 +77,9 @@ var intro_first_step_rect := Rect2()
 var intro_second_step_rect := Rect2()
 var intro_last_step_rect := Rect2()
 var intro_start_rect := Rect2()
+# GAME-076: Only observe text actually selected for the rendered urgent HUD.
+# The QA bridge reads this; it never drives game state or timing.
+var cargo_warning_rendered_text := ""
 
 var audio_player: AudioStreamPlayer
 var tone_switch: AudioStreamWAV
@@ -751,6 +754,8 @@ func _draw_info_panel() -> void:
 		cargo_countdown = "%02ds! HURRY" % int(ceil(cargo_left))
 		if ui_font.get_string_size(cargo_countdown, HORIZONTAL_ALIGNMENT_LEFT, -1, countdown_font_size).x > countdown_text_width:
 			cargo_countdown = "%02ds!" % int(ceil(cargo_left))
+	# Keep actual rendered label available for passive real-clock QA verification.
+	cargo_warning_rendered_text = cargo_countdown if cargo_urgent else ""
 	_draw_fit_label(cargo_countdown, Vector2(x, y), countdown_font_size, Color("#ffffff") if cargo_urgent else HUB_COLORS[cargo_target], countdown_text_width)
 	draw_circle(target_marker_center, target_marker_radius, Color("#102a3d"))
 	draw_arc(target_marker_center, target_marker_radius, 0.0, TAU, 24, HUB_COLORS[cargo_target], _ui_px(2.0), true)
@@ -1082,6 +1087,7 @@ func _update_debug_bridge() -> void:
 		"combo": _combo_multiplier(),
 		"time_left": time_left,
 		"cargo_left": cargo_left,
+		"cargo_warning_rendered_text": cargo_warning_rendered_text,
 		"cargo_target": cargo_target,
 		"mission_tier": _mission_tier(),
 		"mission_name": _mission_name(),
