@@ -675,21 +675,38 @@ async function run(){
         // portrait phone, independent of the previously green field/HUD test.
         // Observe Godot's actually drawn line + button rectangles, not a
         // JS approximation. Never issue QA commands or alter game state.
+        // GAME-076: verify *all* intro lines, not only the final line vs START.
+        // Geometry comes from Godot's actual draw rectangles (read-only telemetry).
+        const introTitle=physicalRect(d.intro_title_rect,c,d);
+        const introFirst=physicalRect(d.intro_first_step_rect,c,d);
+        const introSecond=physicalRect(d.intro_second_step_rect,c,d);
         const introStep=physicalRect(d.intro_last_step_rect,c,d);
         const introStart=physicalRect(d.intro_start_rect,c,d);
         const introField=physicalRect(d.field,c,d);
+        const titleFirstGap=introFirst.y-(introTitle.y+introTitle.height);
+        const firstSecondGap=introSecond.y-(introFirst.y+introFirst.height);
+        const secondThirdGap=introStep.y-(introSecond.y+introSecond.height);
         const introGap=introStart.y-(introStep.y+introStep.height);
+        check([introTitle,introFirst,introSecond,introStep].every(r=>r.width>0&&r.height>=12) &&
+          titleFirstGap>=1 && firstSecondGap>=0 && secondThirdGap>=0,
+          'Responsive intro title/instruction collision: '+t.name+' '+
+          JSON.stringify({introTitle,introFirst,introSecond,introStep,titleFirstGap,firstSecondGap,secondThirdGap}));
         check(introStep.width>0&&introStep.height>=12&&
           introStart.width>=44&&introStart.height>=40&&introGap>=4,
           'Responsive intro line overlaps START: '+t.name+' '+
           JSON.stringify({introStep,introStart,introGap}));
-        for(const [name,r] of [['third instruction',introStep],['start button',introStart]]){
+        for(const [name,r] of [['title',introTitle],['first instruction',introFirst],['second instruction',introSecond],['third instruction',introStep],['start button',introStart]]){
           check(r.x>=introField.x-2&&r.y>=introField.y-2&&
             r.x+r.width<=introField.x+introField.width+2&&
             r.y+r.height<=introField.y+introField.height+2,
             'Responsive '+name+' exceeds playfield: '+t.name+' '+
             JSON.stringify({r,introField}));
         }
+        proof.introAllStepSpacing={source:'GODOT_RENDERED_RECT_TELEMETRY_READ_ONLY',
+          titleToStep1CssPx:Math.round(titleFirstGap*100)/100,
+          step1ToStep2CssPx:Math.round(firstSecondGap*100)/100,
+          step2ToStep3CssPx:Math.round(secondThirdGap*100)/100,
+          title:introTitle,step1:introFirst,step2:introSecond,step3:introStep};
         proof.introStepButtonSpacing={source:'GODOT_RENDERED_RECT_TELEMETRY_READ_ONLY',
           gapCssPx:Math.round(introGap*100)/100,minimumCssPx:4,
           lastInstruction:introStep,startButton:introStart};
