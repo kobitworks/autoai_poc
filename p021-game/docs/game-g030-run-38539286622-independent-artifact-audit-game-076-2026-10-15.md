@@ -45,3 +45,12 @@ Runner: v1.38.0 / P021 project_rule: v1.2.0
 3. 10軸を根拠付き再採点し、80点到達および必要な受入条件確認まで `GAME-076` は `ToDo` のまま継続。2件目のタスクに進まない。
 
 この監査回ではゲーム本体/QAコードの変更なし。監査文書のみ `develop` に追加。
+
+## 6. 追加反復監査: browser-quality再実行 (2026-10-15 01時台 JST)
+- 00:50 JSTに再実行依頼した `browser-quality` の新job `115951596197` は `completed/success`。同一Actions run `38539286622` の `contract=success` (115951596616) / `export-web=success` (115951597947) も読戻し確認、3/3成功。
+- 新jobの**最終ジョブログ内JSON**を独立抽出・パース。従前attemptの成果ではなく、新jobの結果として自然touch/mouse実入力を標準4画面で4/4 PASS、コンパクト3画面を3/3 PASS_GEOMETRY、静的コントラスト契約 `PASS_STATIC` と確認。
+- `NIGHT` 到達3配達、`ACE` 到達6配達、各画面energy=3、SOUND OFF/ON切替、BESTを保存して再読込一致。4画面いずれも `qaCommand=NEVER USED`、`stateOverride=NONE`。
+- 再実行の `RUSH` 実pointerdown角度: phone縦 **4.418**、phone横 **4.349**、tablet縦 **4.464**、tablet横 **4.358** rad。ゲーム実物理受理帯域4.27〜4.73 radの内側であり、最小端余裕は順に約0.148 / 0.079 / 0.194 / 0.088 rad。QA観測用部分帯域4.31〜4.47 radとは区別する。
+- 新artifact [11908064802](https://github.com/kobitworks/autoai_poc/actions/runs/38539286622/artifacts/11908064802) はGitHub metadataで4,354,766 bytes / SHA256 `e51e7b2b82ed6f16cab870a4e99f79458f0da03d9a59c9dc4eba624f1e15a096`、uploadログ60ファイルを確認。**今回のZIPバイナリSHA/CRC/58PNG独立デコード・目視は未実施でありPASS宣言しない。** 旧artifact11882130836の監査と混同しない。
+- 反復成功によってRUSH偶発失敗が完全解消したとは断定できない。品質スコアは前回の独立暫定 **76/100** のままで、80点未達。実機初見30秒、指の誤タップ、日本語小文字視認、スピーカー・イヤホン実音、FPS/発熱、画面回転は引き続きHuman Gateで未確認。同一理由のSlack再通知なし。
+- 本回はGAME-076の継続検証1件のみ。タスク完了条件未達につきToDoへ復帰、次回は実機回答/小型画面改善候補と10軸再採点を確認。**ゲーム本体・QAコード・main・本番・課金・公開範囲は変更しない。**
