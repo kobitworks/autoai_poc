@@ -483,13 +483,14 @@ func _font_size(base: float) -> int:
 func _draw_label(text_value: String, pos: Vector2, font_size: int, color: Color) -> void:
 	draw_string(ui_font, pos, text_value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, color)
 
-func _draw_fit_label(text_value: String, pos: Vector2, font_size: int, color: Color, available_width: float) -> void:
+func _draw_fit_label(text_value: String, pos: Vector2, font_size: int, color: Color, available_width: float) -> String:
 	var clipped := text_value
 	if ui_font.get_string_size(clipped, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > available_width:
 		while clipped.length() > 1 and ui_font.get_string_size(clipped + "…", HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > available_width:
 			clipped = clipped.substr(0, clipped.length() - 1)
 		clipped += "…"
 	_draw_label(clipped, pos, font_size, color)
+	return clipped # GAME-076: expose the actual fitted/ellipsized string to passive QA.
 
 func _draw_center_text(text_value: String, rect: Rect2, font_size: int, color: Color) -> void:
 	var measured := ui_font.get_string_size(text_value, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
@@ -755,8 +756,8 @@ func _draw_info_panel() -> void:
 		if ui_font.get_string_size(cargo_countdown, HORIZONTAL_ALIGNMENT_LEFT, -1, countdown_font_size).x > countdown_text_width:
 			cargo_countdown = "%02ds!" % int(ceil(cargo_left))
 	# Keep actual rendered label available for passive real-clock QA verification.
-	cargo_warning_rendered_text = cargo_countdown if cargo_urgent else ""
-	_draw_fit_label(cargo_countdown, Vector2(x, y), countdown_font_size, Color("#ffffff") if cargo_urgent else HUB_COLORS[cargo_target], countdown_text_width)
+	var actually_drawn_countdown := _draw_fit_label(cargo_countdown, Vector2(x, y), countdown_font_size, Color("#ffffff") if cargo_urgent else HUB_COLORS[cargo_target], countdown_text_width)
+	cargo_warning_rendered_text = actually_drawn_countdown if cargo_urgent else ""
 	draw_circle(target_marker_center, target_marker_radius, Color("#102a3d"))
 	draw_arc(target_marker_center, target_marker_radius, 0.0, TAU, 24, HUB_COLORS[cargo_target], _ui_px(2.0), true)
 	_draw_hub_symbol(target_marker_center, cargo_target, HUB_COLORS[cargo_target])
