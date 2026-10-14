@@ -897,7 +897,9 @@ func _draw_intro_overlay() -> void:
 	# Only intro text positions/sizing change; touch, scoring and route stay intact.
 	var short_panel := height < _ui_px(230.0)
 	var tiny_panel := height < _ui_px(180.0)
-	var title_y := _ui_px(8.0 if tiny_panel else (13.0 if short_panel else 18.0))
+	# GAME-076: compact cards need ~6 CSS px between the title and first instruction.
+	# Move only the title, leaving all three steps, START hitbox and gameplay unchanged.
+	var title_y := _ui_px(4.0 if tiny_panel else (9.0 if short_panel else 18.0))
 	var step_y := _ui_px(34.0 if tiny_panel else (46.0 if short_panel else 62.0))
 	var step_h := _ui_px(16.0 if tiny_panel else (21.0 if short_panel else 29.0))
 	var step_font := _font_size(16.0 if short_panel else 18.0)
