@@ -109,6 +109,48 @@ function verifyGuideContrast() {
     realDevice:'NOT_VERIFIED'};
 }
 
+// GAME-076: turn passive 75ms RUSH snapshots into a comparable diagnostic.
+// A sample can miss a short legal tap window; absence of a sample is NOT proof
+// of an illegal tap. All inputs, game physics and scoring remain unchanged.
+function summarizeRushTrace(trace, inputTimings) {
+  const samples=trace && Array.isArray(trace.samples) ? trace.samples : [];
+  const rush=samples.filter(x => x && x.state==='playing' &&
+    x.orbit===0 && x.deliveries===1 &&
+    Number.isFinite(x.angle) && Number.isFinite(x.wallMs));
+  const lo=4.31, hi=4.47; // observation band inside game crossing physics
+  let validSamples=0, bandVisits=0, skippedBandSamples=0, maxGapMs=0;
+  let previous=null, previousInside=false;
+  for (const x of rush) {
+    const inside=x.angle>=lo && x.angle<=hi;
+    if (inside) validSamples++;
+    if (inside && !previousInside) bandVisits++;
+    if (previous) {
+      maxGapMs=Math.max(maxGapMs,x.wallMs-previous.wallMs);
+      // Forward-angle leap across the FULL observation band: QA sampling gap
+      // rather than proof the physical game crossing was not reachable.
+      if (previous.angle<lo && x.angle>hi && x.angle-previous.angle<1.4)
+        skippedBandSamples++;
+    }
+    previous=x; previousInside=inside;
+  }
+  const click=(inputTimings||[]).find(t => t.label==='RUSH 0->1');
+  const nearest=click && rush.length ? rush.reduce((best,x) =>
+    Math.abs(x.wallMs-click.observedWallMs) <
+      Math.abs(best.wallMs-click.observedWallMs) ? x : best) : null;
+  return {kind:'READ_ONLY_DIAGNOSTIC_NOT_PASS_CRITERION',
+    observationBandRad:[lo,hi],samplePeriodMs:trace?.samplePeriodMs||75,
+    totalTraceSamples:samples.length,rushOrbit0Samples:rush.length,
+    observationBandSamples:validSamples,observationBandVisits:bandVisits,
+    forwardBandSkipsWithoutSample:skippedBandSamples,
+    maxRushSampleGapMs:maxGapMs,
+    clickTiming:click?{observedWallMs:click.observedWallMs,
+      inputFinishedWallMs:click.inputFinishedWallMs,
+      inputCallMs:click.inputCallMs}:null,
+    nearestReadOnlySampleToClick:nearest?{angle:nearest.angle,
+      cargoLeft:nearest.cargoLeft,wallOffsetMs:nearest.wallMs-click.observedWallMs}:null,
+    interpretation:'Sample proximity is approximate; use genuine switch+energy assertions for PASS'};
+}
+
 async function snapshot(page) { return page.evaluate(() => window.__P021_ORBIT || null); }
 async function until(page, predicate, stage, waitMs=16000, arg=null) {
   // GAME-076: poll wider physics-valid real-input windows on wall time rather than animation
@@ -317,6 +359,7 @@ async function run(){
           } catch (traceErr) {
             evidence.rushTelemetryError=String(traceErr.message);
           }
+          evidence.rushDiagnostic=summarizeRushTrace(evidence.rushTelemetry,t.inputTimings);
         }
         evidence.routeMoves.push(await physicalDeliver(page,t,1,3.46,3.76,2,'RUSH HUB1'));
         evidence.routeMoves.push(await physicalSwitch(page,t,1,2,2.41,2.66,'RUSH 1->2'));
