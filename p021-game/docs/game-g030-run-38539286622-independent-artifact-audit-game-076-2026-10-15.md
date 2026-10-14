@@ -160,3 +160,13 @@ Runner: v1.38.0 / P021 project_rule: v1.2.0
 - 残り3秒貨物警告の小型3画像も実画像として確認。赤枠の「03s! HURRY」・赤ゲージは描画され、重大なクリッピング/主要HUD衝突は見えない。自然時間で撮影された残秒証拠は **320x568: 2.858→2.621秒**、**667x375: 2.889→2.612秒**、**800x600: 2.865→2.471秒**。`cargoWarning.visualWarningPass=NOT VERIFIED` と `physicalLegibility=HUMAN GATE` は収録時の未検証表示のまま保持し、事後画像観察を混同しない。
 - 評価: 小型ガイド短縮のUI幾何・描画と7画面のCI回帰に新たな肯定材料が得られた。一方、独立暫定**76/100（80点目標未達）**を根拠なく加点しない。初見30秒の実ユーザー理解、端末実タップの誤操作、警告3秒以内の認知、実機スピーカー/イヤホン音、FPS/発熱、画面回転は未確認のHuman Gateとして残す。前回と同じ確認事項をSlackへ重複依頼しない。
 - 今回の更新は独立監査結果を既存の同一GAME-076監査文書に追記したもの。ゲームコード・QAコード・main・本番環境・有償利用・公開範囲を変更しない。GAME-076は完了条件未達のため **ToDoで次回継続**。次回はHuman Gate結果が得られれば反映し、未回答なら小型の文字/警告の視認性と10軸品質基準を重点的に改善・再評価する。別タスクに進まない。
+
+
+## 15. GAME-076 / 新HEAD run 38631506771 の完走確認と小型イントロ余白検証（2026-10-15 05:38:20 JST）
+
+- 今回のAutoAI Runner実作業は **P021 GAME-076 1件のみ**。共通Runner v1.38.0、P021 project_rule v1.2.0、Slack新規明示@autoai指示0件、メッセージタスク既存41件DONE。09:00 JST前の全体監視は非対象。前回実作業P021の次P005〜P018/P020の15有効PJを、現行ルールとタスク正本で照合。Human Gate/要確認・依存/HOLD・全Done・日次周期未到達等により他PJは非選定。
+- 前回のソース/QA修正後の [GitHub Actions run 38631506771](https://github.com/kobitworks/autoai_poc/actions/runs/38631506771) を今回新たに確認した。GitHub Actions API上で **contract（job 116084030973）、export-web（job 116084134252）、browser-quality（job 116084922545）の3件すべて completed/success**。browser-qualityの生ログから、標準4 viewportの実touch/mouse E2Eは **4/4 PASS**（qaCommand=NEVER USED、stateOverride=NONE）、小型3 viewportの自然START後幾何検証は **3/3 PASS_GEOMETRY**。後者はNIGHT/ACE全周回を意味するフルE2Eではない。
+- **タイトル→第1ガイド行の実描画間隔** は、新HEADのbrowser-qualityログで **320×568: 6 CSS px、667×375: 7 CSS px、800×600: 14 CSS px**。新たに設定された最低閾値 **5.5 CSS px** を全3画面で満たした。第3ガイド行→START間隔は **7/17/22 CSS px**。前回の最小2/3 CSS pxから小型2画面の改善が計測上確認できる。これは描画矩形・幾何学的間隔の自動計測であり、実機での日本語文字の瞬時理解や視認性を保証しない。
+- 新runの証跡 [artifact 11926198187](https://github.com/kobitworks/autoai_poc/actions/runs/38631506771/artifacts/11926198187) はGitHub API・upload生ログで **4,525,395 bytes**、upload SHA-256 **f2b694f12066436182e7ec53adb4bdcd4b038e5a98e81b4e37e108acc4f23e88** が一致し、アップロード成功を確認。**ZIPバイナリ本体の独立SHA/CRC、PNG全数デコード・原寸画像の独立目視は本回未実施**。旧runの画像監査を新runへ流用せず、新HEADについて画像内容の目視合格を宣言しない。
+- ソース更新を伴わない新CIの証拠確認が今回の増分成果。**独立暫定品質76/100（80目標未達）を据え置く**。実機初見30秒・タッチ誤操作・小型文字/残3秒警告の瞬時認知・実スピーカー/イヤホン音・FPS/発熱・画面回転はHuman Gate未検証。既通知の同一ユーザー確認は重複送信しない。
+- GAME-076の完了条件未達。次回は新runのZIP/PNG実体の独立監査、実機結果が得られれば同一タスクで10軸品質を再評価する。別タスク、main、本番、課金、公開範囲拡大はなし。今回終了時にDoingを残さずToDoへ戻す。
