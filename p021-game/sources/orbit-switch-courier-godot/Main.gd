@@ -6,8 +6,11 @@ const CHILD_ID := "GAME-G030"
 const PLAY_TIME := 90.0
 const CARGO_TIME := 16.0
 const SAVE_PATH := "user://orbit-switch-best.txt"
-const SWITCH_WINDOW := 0.19
-# GAME-076: Larger touch window improves delivery at lower frame rates on tablet displays.
+const SWITCH_WINDOW := 0.23
+# GAME-076: Consistent +/-0.23 rad real-input tolerance for switch and HUB taps.
+# Nearest switch/HUB separation is 0.52 rad; 0.23+0.23 < 0.52 avoids overlap.
+# At orbit 0's 1.12 rad/s, crossing input window grows from ~339ms to ~411ms.
+# This is a gameplay accessibility change, not a QA shortcut or state override.
 const HUB_WINDOW := 0.23
 
 const ORBIT_SPEEDS := [1.12, -0.94, 0.79]
