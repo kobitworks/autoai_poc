@@ -64,3 +64,19 @@
 - attempt 2のGitHub公開artifact metadata: ID `11866865251`、名前 `p021-game-g030-real-input-evidence`、digest `sha256:c026b935cae19a3b8dd8119babb8cc9e51efa487378474c98b7d95c86c1135e7`。本補遺はジョブログ内のJSONを読み戻した監査であり、**attempt 2のZIP本体SHA256照合・PNG独立目視は今回未実施**。attempt 1のZIP検証結果を今回分に流用しない。
 - 品質は**独立暫定76/100のまま**、目標80未達。実機Human Gate（初見30秒、縦横の文字可読性、誤タップ、スピーカー/イヤホン音、FPS・発熱）も未確認。前回通知済みの同一確認依頼は重複送信しない。
 - 次回は同HEADの自然入力反復とRUSHの偶発失敗監視、必要に応じてartifact ZIP/画面証跡の独立監査、実機確認後の10軸再採点。タスクは未完了としてToDo継続。mainマージ、本番変更、有償利用、二件目の実行はなし。
+
+## 6. attempt 2 artifact ZIP 実体の独立検証（2026-10-14 12:16 JST / GAME-076継続）
+
+前回セクション5で未検証とした attempt 2 の成果物本体をGitHub Actionsから**今回新たにダウンロード**し、ZIP実体・JSON・PNGを独立に検査した。ゲームコード/QAスクリプトや合否基準は変更していない。
+
+- 対象: [run 38497672814 attempt 2](https://github.com/kobitworks/autoai_poc/actions/runs/38497672814)、head `ae448b999037c6e9e2a91d2e0584e5a99f98f4e4`、artifact **11866865251** `p021-game-g030-real-input-evidence`。
+- 実取得ZIPサイズ **4,371,347 bytes**、ローカルSHA-256 **`c026b935cae19a3b8dd8119babb8cc9e51efa487378474c98b7d95c86c1135e7`**。GitHub artifact metadata の `digest` と完全一致。
+- アーカイブ全件整合性 `zipfile.testzip() = None` / `unzip -t` 全件OK。計 **60ファイル = PNG 58枚 + JSON 2件**。PNG 58枚はPillowで**全件デコードおよびverify成功**。
+- 標準4 viewport は各13枚（**52枚**、phone portrait 390×844 / landscape 844×390、tablet portrait 768×1024 / landscape 1024×768）。追加小型3画面は各2枚（**6枚**、320×568 / 667×375 / 800×600）。期待する画像種別・枚数との一致を確認。
+- `results.json` を読込んだ最終結果: 標準4画面の自然なtouch/mouse実入力E2E **4/4 PASS**、小型レイアウト **3/3 PASS_GEOMETRY**、visualContract **PASS_STATIC**。自然入力でNIGHT 3配達→ACE 6配達を各画面で確認。4画面すべて `qaCommand=NEVER USED` / `stateOverride=NONE`。ACE到達時energy=3、BESTの結果・復元・localStorage一致はそれぞれ 1108 / 1111 / 1102 / 1108。
+- RUSH 0→1の受動 `pointerdown` 角度はphone縦 **4.468**、phone横 **4.387**、tablet縦 **4.555**、tablet横 **4.510 rad**、4件とも実イベント計測で判定窓4.31〜4.69rad内。各E2EはPASS、過去の偶発失敗根因は依然未特定。
+- `results-checkpoint.json` は `PARTIAL_CHECKPOINT_NOT_FINAL` を明記しており、**最終品質判定には使わず**、`results.json` の最終出力を正本として照合した。
+- PNGの独立目視: 各標準画面のINTRO/PLAYING/RUSH/ACE（計16枚）と、初回タップガイド/長文キュー/残り3秒警告（計12枚）の合計**代表28枚**を一覧で確認。初回ガイドの緑色表示、貨物期限3秒未満での強調表示・`HURRY` の画面上の存在を確認。全体的な表示崩れ・主要UIの画面外逸脱はこれらの縮小画像では明白でない。ただし細かな日本語の可読性・実タッチの誤操作・実音・実端末FPS/発熱については**画像だけではPASS扱いしない**。
+- この回で証拠ZIP未検証という不足は解消。一方、**品質暫定76/100（目標80未達）**、tablet縦RUSH偶発失敗の再現性・根因、実機Human Gateは未解決。次回は複数回自然入力反復で再現性を評価し、実機の30秒導入・音声・可読性・誤タップ・FPS/発熱の結果が得られれば10軸再採点する。
+- 監査対象は既存 **GAME-076の継続1件のみ**。main変更・本番公開・有料利用・他タスクの実行はない。未完了のためGAME-076はToDo継続。
+
