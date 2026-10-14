@@ -335,6 +335,23 @@ async function run(){
         await page.evaluate(() => {
           if (window.__P021_RUSH_TRACE_TIMER) clearInterval(window.__P021_RUSH_TRACE_TIMER);
           window.__P021_RUSH_TRACE=[];
+          // GAME-076 attempt2: capture the ACTUAL browser pointerdown angle.
+          // Passive capture only: never preventDefault, stop propagation, synthesize
+          // success, override orbit/energy, or change the physics acceptance window.
+          if (window.__P021_RUSH_POINTER_CAPTURE)
+            document.removeEventListener('pointerdown',window.__P021_RUSH_POINTER_CAPTURE,true);
+          window.__P021_RUSH_POINTERS=[];
+          window.__P021_RUSH_POINTER_CAPTURE=(event) => {
+            const x=window.__P021_ORBIT, a=window.__P021_RUSH_POINTERS;
+            if (!x || !Array.isArray(a)) return;
+            a.push({event:event.type,pointerType:event.pointerType||'unknown',
+              wallMs:Date.now(),monoMs:Math.round(performance.now()),
+              state:x.state,orbit:x.orbit,angle:Math.round(x.angle*1000)/1000,
+              cargoLeft:Math.round(x.cargo_left*100)/100,energy:x.energy,
+              deliveries:x.deliveries});
+            if(a.length>12)a.shift();
+          };
+          document.addEventListener('pointerdown',window.__P021_RUSH_POINTER_CAPTURE,true);
           window.__P021_RUSH_TRACE_TIMER=setInterval(() => {
             const x=window.__P021_ORBIT, a=window.__P021_RUSH_TRACE;
             if (!x || !Array.isArray(a)) return;
@@ -359,7 +376,23 @@ async function run(){
           } catch (traceErr) {
             evidence.rushTelemetryError=String(traceErr.message);
           }
+          // Pointerdown capture is read-only and does not count as a passing
+          // transfer; every viewport must still satisfy real orbit + energy checks.
+          try {
+            evidence.rushPointerCapture=await page.evaluate(() => {
+              if(window.__P021_RUSH_POINTER_CAPTURE) {
+                document.removeEventListener('pointerdown',window.__P021_RUSH_POINTER_CAPTURE,true);
+                window.__P021_RUSH_POINTER_CAPTURE=null;
+              }
+              return {kind:'PASSIVE_POINTER_EVENT_NOT_PASS_CRITERION',
+                events:window.__P021_RUSH_POINTERS||[]};
+            });
+          } catch (pointerErr) {
+            evidence.rushPointerCaptureError=String(pointerErr.message);
+          }
           evidence.rushDiagnostic=summarizeRushTrace(evidence.rushTelemetry,t.inputTimings);
+          evidence.rushDiagnostic.actualPointerdown=evidence.rushPointerCapture||
+            {kind:'UNAVAILABLE'};
         }
         evidence.routeMoves.push(await physicalDeliver(page,t,1,3.46,3.76,2,'RUSH HUB1'));
         evidence.routeMoves.push(await physicalSwitch(page,t,1,2,2.41,2.66,'RUSH 1->2'));
