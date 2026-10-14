@@ -170,3 +170,14 @@ Runner: v1.38.0 / P021 project_rule: v1.2.0
 - 新runの証跡 [artifact 11926198187](https://github.com/kobitworks/autoai_poc/actions/runs/38631506771/artifacts/11926198187) はGitHub API・upload生ログで **4,525,395 bytes**、upload SHA-256 **f2b694f12066436182e7ec53adb4bdcd4b038e5a98e81b4e37e108acc4f23e88** が一致し、アップロード成功を確認。**ZIPバイナリ本体の独立SHA/CRC、PNG全数デコード・原寸画像の独立目視は本回未実施**。旧runの画像監査を新runへ流用せず、新HEADについて画像内容の目視合格を宣言しない。
 - ソース更新を伴わない新CIの証拠確認が今回の増分成果。**独立暫定品質76/100（80目標未達）を据え置く**。実機初見30秒・タッチ誤操作・小型文字/残3秒警告の瞬時認知・実スピーカー/イヤホン音・FPS/発熱・画面回転はHuman Gate未検証。既通知の同一ユーザー確認は重複送信しない。
 - GAME-076の完了条件未達。次回は新runのZIP/PNG実体の独立監査、実機結果が得られれば同一タスクで10軸品質を再評価する。別タスク、main、本番、課金、公開範囲拡大はなし。今回終了時にDoingを残さずToDoへ戻す。
+
+
+## 16. GAME-076 / 新HEAD run 38631506771 のZIP実体・61PNG独立監査（2026-10-15 06:04:09 JST）
+
+- 実行ID `AUTOAI-GAME076-20261015-0601`。Runner v1.38.0 / P021 project_rule v1.2.0。23対象Slackで前回報告後の新規明示 `@autoai` 指示0件、メッセージタスク台帳41件全DONE、09:00前の全体monitoring対象外。直近実作業P021の次にP005〜P018/P020の15有効PJをproject_rule/タスク正本でFresh-readし、新規実行可能1件なし。GAME-076のみ `ToDo→Doing` 排他取得・readback確認。
+- [GitHub Actions run 38631506771](https://github.com/kobitworks/autoai_poc/actions/runs/38631506771) の `contract`、`export-web`、`browser-quality` 3 jobs がすべて `completed/success` とGitHub APIで再確認。
+- [artifact 11926198187](https://github.com/kobitworks/autoai_poc/actions/runs/38631506771/artifacts/11926198187) のZIP**実体**を今回独立ダウンロード。実サイズ **4,525,395 bytes**、実 SHA-256 **f2b694f12066436182e7ec53adb4bdcd4b038e5a98e81b4e37e108acc4f23e88** はGitHub artifact metadataの `sha256:` digestと完全一致。ZIP `testzip()` エラーなし（**計63ファイル**：PNG **61**、JSON **2**）。PNG 61枚について独立のPillow `verify()` + `load()` が全成功（デコード失敗0）。中途記録`results-checkpoint.json`ではなく最終`results.json`をパースした。
+- 最終JSONは標準4 viewport `390×844 touch`、`844×390 mouse`、`768×1024 touch`、`1024×768 mouse` の自然入力E2E **4/4 PASS**、全件 `qaCommand=NEVER USED` / `stateOverride=NONE`。各画面でNIGHT 3配送・ACE 6配送に到達、BEST保存と読戻しも一致。小型`320×568`、`667×375`、`800×600`の自然START後幾何チェックは **3/3 PASS_GEOMETRY**。**小型3画面のフルNIGHT/ACE E2EまでPASSしたとは解釈しない**。
+- 小型3画面のINTRO画像3枚と自然経過の残り3秒貨物警告画像3枚を**ZIPの今回分から原寸で個別目視**（合計6枚）。3枚のINTROにタイトル・案内3行・STARTボタンが描画され、主要要素が消失したりSTARTが案内に重なる重大な欠落は確認されない。読取専用矩形テレメトリでタイトル→案内1の隙間 `6/7/14 CSS px`（>=5.5）、案内3→START `7/17/22 CSS px`（>=4）。残3秒の画像では`03s! HURRY` の赤帯/ゲージが3枚すべてに描画され、主要HUDの致命的重なりは観察されない。ただし、補助ラベルの末尾が狭幅で省略表示されており、短い制限時間の中で実ユーザーに理解可能かは未検証。
+- `results.json`内`cargoWarning.visualWarningPass=NOT VERIFIED`は自動収録時の未目視状態の記録であり、今回の**独立した画像での表示確認**と区別する。各画像は表示の存在証明で、**実機の3秒以内の瞬時認知・初見30秒理解・誤タップ頻度・スピーカー/イヤホン実音・FPS/発熱・端末回転のHuman Gateを合格にしない**。人間Gateの追加回答は得られていない。既通知内容のSlack重複催促は行わない。
+- 現段階での独立暫定品質 **76/100**（80目標未達）を据え置き、GAME-076の完了とは判定しない。実機回答があれば同一タスクで10軸再採点、未回答ならガイド省略部と横狭幅の可読性改善を検討する。今回ゲーム本体/QAコード、main/本番、有料機能、公開範囲の変更なし。別タスクに着手しない。終了時のGAME-076は `Doing→ToDo` へ復帰させ、実行メモと親projects.xlsxに同期する。
