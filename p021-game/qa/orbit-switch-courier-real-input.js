@@ -74,7 +74,11 @@ function verifyGuideContrast() {
   // count first to survive clipping and emphasize genuine <=3s urgency.
   const cargoPanel=source.slice(source.indexOf('func _draw_info_panel()'),
     source.indexOf('func _draw_intro_overlay()'));
-  check(cargoPanel.includes('int(ceil(cargo_left))') &&
+  check(source.includes('func _draw_fit_label(text_value: String, pos: Vector2, font_size: int, color: Color, available_width: float) -> String:') &&
+    source.includes('return clipped # GAME-076: expose the actual fitted/ellipsized string to passive QA.') &&
+    cargoPanel.includes('var actually_drawn_countdown := _draw_fit_label(cargo_countdown') &&
+    cargoPanel.includes('cargo_warning_rendered_text = actually_drawn_countdown if cargo_urgent else ""') &&
+    cargoPanel.includes('int(ceil(cargo_left))') &&
     cargoPanel.includes('"%02ds LEFT  ·  %s"') &&
     cargoPanel.includes('_draw_fit_label(cargo_countdown') &&
     cargoPanel.includes('cargo_left <= 3.0') &&
@@ -792,7 +796,7 @@ async function run(){
         // the timer was <=3s. This is passive telemetry, not a QA state write.
         await page.waitForFunction(() => {
           const x=window.__P021_ORBIT;
-          return x && /^0[123]s(?: LEFT!  HURRY|! HURRY|!)/.test(
+          return x && /^0[123]s(?: LEFT!  HURRY  ·  [^…]+|! HURRY|!)$/.test(
             x.cargo_warning_rendered_text || '') && x.cargo_left>1.5;
         },null,{timeout:1250,polling:25});
         const compactWarningBefore=await snapshot(page);
@@ -810,11 +814,12 @@ async function run(){
         const selectedWarningTexts=[compactWarningBefore.cargo_warning_rendered_text,
           compactWarningAfter.cargo_warning_rendered_text];
         check(selectedWarningTexts.every(s=>typeof s==='string' &&
-          /^0[123]s(?: LEFT!  HURRY|! HURRY|!)/.test(s)),
+          /^0[123]s(?: LEFT!  HURRY  ·  [^…]+|! HURRY|!)$/.test(s)),
           'Compact warning HUD label not selected on actual draw: '+t.name+' '+
           JSON.stringify(selectedWarningTexts));
         proof.cargoWarning={result:'CAPTURED_UNREVIEWED',
-          hudTextSelection:'PASS_RENDERED_LABEL_SELECTED',
+          hudTextSelection:'PASS_UNCLIPPED_ACTUAL_DRAW_TEXT',
+          methodDetail:'Godot _draw_fit_label returns the actually rendered string; no ellipsis allowed',
           renderedTexts:selectedWarningTexts,
           method:'natural clock after physical START',
           secondsBefore:compactWarningBefore.cargo_left,
