@@ -110,3 +110,10 @@
 画像28枚（4画面×INTRO/PLAYING/RUSH/ACE=16枚、4画面×初回タップ案内/長文cue/残り3秒警告=12枚）を縮小コンタクトシートで独立目視。明白な主要領域逸脱・初見導線消失は見られず、案内と警告表示を確認。ただし縮小画像から実機日本語可読性・誤タップ・スピーカー/イヤホン実音・FPS/発熱をPASSとは判定しない。
 
 **結論:** GAME-076 は目標80/100を満たさず、独立暫定品質**76/100**のまま継続。実機の初見30秒・縦横画面読みやすさ・誤タップ・音・FPS/発熱はHuman Gate未確認。既通知の同一Human Gateを重複依頼せず、GAME-076は今回の実行後 `Doing→ToDo` に戻す。次回は実機結果の有無を先に確認し、なければtablet portraitの自然入力/RUSHを異なる環境・反復条件でさらに観測して原因を絞る。ゲーム本体/QAコード、main、本番公開、課金、二件目の実行はいずれも変更なし。
+
+## 9. 同一HEAD 自然入力第4反復開始（2026-10-14 14:03 JST / AUTOAI-GAME076-20261014-1402）
+
+- 本回の実タスクは **GAME-076 の1件のみ**。13:38までの同一HEAD `ae448b999037c6e9e2a91d2e0584e5a99f98f4e4` の3回連続4 viewport自然入力E2E PASS・小型3画面幾何PASS、ただし2026-10-14 10:45以前のtablet portrait RUSH偶発失敗は根因未確定である点を先にFresh-readした。
+- GitHub Actions [run38497672814](https://github.com/kobitworks/autoai_poc/actions/runs/38497672814) のbrowser-quality **job115675057422** の再実行を要求し、GitHub API応答 `success=true` を得た。**attempt 4** の新job **115690367593** が `in_progress`、contract **115690367859** と export-web **115690368904** は `completed/success` を14:03時点に確認。**attempt 4のbrowser-quality最終合否、自然入力4画面・RUSH pointerdown・ZIP/PNG・BEST/SOUNDは、結果未確定のためPASSとは記録しない。**
+- 今後の診断仮説（未実証）: orbit0の回転約1.12rad/s、観測band上端4.47rad、ゲーム許容上端4.69radでは、観測から実際のpointerdownまで約0.20秒以上の前イベント遅延があると判定窓外に進む可能性がある。一方、`inputCallMs` は送信〜完了までの全呼出時間であり前イベント遅延そのものではないため、単純な角度加算で原因確定しない。新実pointerdownイベントの角度・時刻と観測角度・観測窓スキップ・energy/転送成否を比較して検証する。実ゲーム仕様や成功判定は変更しない。
+- 評価保留: **独立暫定76/100（一般公開目標80未達）**。実機初見30秒・iOS/Android日本語可読性/誤タップ、スピーカー/イヤホン実音、FPS/発熱はHuman Gate未確認。既通知の重複依頼は送らない。ゲーム/QAソース、main、本番、課金を変更せず、結果確定後は本節へ追記して再評価する。
