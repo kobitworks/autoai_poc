@@ -80,6 +80,9 @@ var intro_start_rect := Rect2()
 # GAME-076: Only observe text actually selected for the rendered urgent HUD.
 # The QA bridge reads this; it never drives game state or timing.
 var cargo_warning_rendered_text := ""
+# GAME-076: Passive evidence from the actual intro font-fit draw path.
+var intro_fit_capture := false
+var intro_rendered_steps: Array[Dictionary] = []
 
 var audio_player: AudioStreamPlayer
 var tone_switch: AudioStreamWAV
@@ -513,6 +516,14 @@ func _draw_center_fit_text(text_value: String, rect: Rect2, preferred_size: int,
 			shown = shown.substr(0, shown.length() - 1)
 		shown += "…"
 	_draw_center_text(shown, rect, fit_size, color)
+	if intro_fit_capture:
+		# Record the final selected glyph string and visible CSS font size.
+		# QA reads these values only; this path never changes the player state.
+		intro_rendered_steps.append({
+			"text": shown,
+			"font_css_px": float(fit_size) / maxf(0.1, ui_scale),
+			"ellipsized": shown != text_value
+		})
 
 
 func _draw_button(rect: Rect2, label: String, accent: bool = false) -> void:
@@ -924,11 +935,14 @@ func _draw_intro_overlay() -> void:
 		step_gap = clampf((height - _ui_px(124.0)) * 0.5, _ui_px(23.0), _ui_px(33.0))
 	intro_title_rect = Rect2(r.position.x, r.position.y + title_y, width, _ui_px(24.0 if tiny_panel else 30.0))
 	intro_first_step_rect = Rect2(r.position.x, r.position.y + step_y, width, step_h)
+	# Capture only the four intro labels; normal HUD draw remains uninstrumented.
+	intro_rendered_steps.clear()
+	intro_fit_capture = true
 	# Fit the full game title inside the narrow card instead of risking a cut-off.
 	_draw_center_fit_text("ORBIT SWITCH COURIER", intro_title_rect, _font_size(18.0 if tiny_panel else (20.0 if short_panel else 21.0)), Color("#f5fbff"))
 	_draw_center_fit_text("1  START → 目標 %s" % HUB_SHORT[cargo_target], intro_first_step_rect, step_font, Color("#ffffff"))
 	# GAME-076: On tiny intro cards, shorten ONLY explanatory copy so the
-	# onboarding lines retain the intended 14 CSS-pixel text size rather than
+	# onboarding lines retain the intended 16 CSS-pixel text size rather than
 	# shrinking toward the 12px minimum. Green crossing and matching HUB icon
 	# remain the same two physical interactions; no timing/input/state changes.
 	var crossing_step := "2  緑でTAP→乗換" if tiny_panel else "2  緑の交差点でTAP → 乗換"
@@ -940,6 +954,7 @@ func _draw_intro_overlay() -> void:
 	_draw_center_fit_text(delivery_step, intro_last_step_rect, step_font, Color("#fff3be"))
 	_rounded_box(start_rect, Color("#14647a"), Color("#8dfbff"), 12, 2)
 	_draw_center_text("TAP TO START", start_rect, _font_size(17.0 if short_panel else 18.0), Color.WHITE)
+	intro_fit_capture = false
 
 func _draw_result_overlay() -> void:
 	draw_rect(field_rect, Color(0.01, 0.02, 0.04, 0.78), true)
@@ -1114,6 +1129,7 @@ func _update_debug_bridge() -> void:
 		"intro_second_step_rect": _rect_payload(intro_second_step_rect),
 		"intro_last_step_rect": _rect_payload(intro_last_step_rect),
 		"intro_start_rect": _rect_payload(intro_start_rect),
+		"intro_rendered_steps": intro_rendered_steps,
 		"field": _rect_payload(field_rect),
 		"info": _rect_payload(info_rect),
 		"viewport_w": int(get_viewport_rect().size.x),
