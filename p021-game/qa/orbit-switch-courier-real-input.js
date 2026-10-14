@@ -117,7 +117,18 @@ function summarizeRushTrace(trace, inputTimings) {
   const rush=samples.filter(x => x && x.state==='playing' &&
     x.orbit===0 && x.deliveries===1 &&
     Number.isFinite(x.angle) && Number.isFinite(x.wallMs));
-  const lo=4.31, hi=4.47; // observation band inside game crossing physics
+  // QA-only trigger/sampling subset, NOT the game-physics acceptance window.
+  const lo=4.31, hi=4.47;
+  const physicsSource=fs.readFileSync('p021-game/sources/orbit-switch-courier-godot/Main.gd','utf8');
+  const switchWidth=physicsSource.match(/^const SWITCH_WINDOW\s*:=\s*(\d+(?:\.\d+)?)/m);
+  check(switchWidth,'GAME-076: unable to read the actual SWITCH_WINDOW from Godot source');
+  const physicsHalfWidth=Number(switchWidth[1]);
+  const physicsAcceptanceBandRad=[
+    Number((4.50-physicsHalfWidth).toFixed(3)),
+    Number((4.50+physicsHalfWidth).toFixed(3))
+  ];
+  check(lo>=physicsAcceptanceBandRad[0] && hi<=physicsAcceptanceBandRad[1],
+    'GAME-076: QA RUSH observation band escaped the genuine switch acceptance window');
   let validSamples=0, bandVisits=0, skippedBandSamples=0, maxGapMs=0;
   let previous=null, previousInside=false;
   for (const x of rush) {
@@ -138,7 +149,10 @@ function summarizeRushTrace(trace, inputTimings) {
     Math.abs(x.wallMs-click.observedWallMs) <
       Math.abs(best.wallMs-click.observedWallMs) ? x : best) : null;
   return {kind:'READ_ONLY_DIAGNOSTIC_NOT_PASS_CRITERION',
-    observationBandRad:[lo,hi],samplePeriodMs:trace?.samplePeriodMs||75,
+    observationBandRad:[lo,hi],
+    physicsAcceptanceBandRad,
+    observationBandMeaning:'QA_ONLY_TRIGGER_AND_SAMPLING_SUBSET_NOT_PASS_CRITERION',
+    samplePeriodMs:trace?.samplePeriodMs||75,
     totalTraceSamples:samples.length,rushOrbit0Samples:rush.length,
     observationBandSamples:validSamples,observationBandVisits:bandVisits,
     forwardBandSkipsWithoutSample:skippedBandSamples,
@@ -293,7 +307,7 @@ async function run(){
         d=await snapshot(page);
         check(d.orbit===1 && d.cargo_target===0 && d.energy===3 && d.mission_tier===0 && d.cargo_limit===16,'Unexpected initial route, cargo or double start input');
         await page.screenshot({path:dir+'/'+t.name+'-playing.png'});
-        // Orbit 1 angular velocity is negative. Observe within the actual 4.50 +/- 0.19 crossing physics window.
+        // Orbit 1 angular velocity is negative. Trigger at 4.38..4.68 inside the actual 4.50 +/- 0.23 physics window.
         await until(page,()=>{const x=window.__P021_ORBIT;return x&&x.state==='playing'&&
           x.orbit===1&&x.angle>=4.38&&x.angle<=4.68;},'approach natural switch');
         evidence.switchTrigger='4.38..4.68 rad, real-time observation within actual crossing window';
@@ -325,11 +339,11 @@ async function run(){
         // Physical input paths: 0 -> 1 -> HUB1; 1 -> 2 -> HUB2 (NIGHT at 3);
         // 2 -> 1 -> 0 -> HUB0; 0 -> 1 -> HUB1; 1 -> 2 -> HUB2 (ACE at 6).
         evidence.routeMoves=[];
-        // Orbit 0 moves forward at 1.12rad/s: select an earlier *valid* 4.50 +/- 0.19 window.
+        // Orbit 0 moves forward at 1.12rad/s. Trigger within a narrow QA subset of the actual 4.50 +/- 0.23 game window.
         // The former 4.35..4.57 band could observe too late for a real tablet tap.
         // GAME-076: attempt1 crossed 4.367->4.534 and 4.363->4.616 without
         // hitting the narrow 4.32..4.44 observer; a third crossing at cargoLeft=0.13
-        // then lost energy. Observe 4.31..4.47 inside the actual 4.50 +/- 0.19
+        // then lost energy. Observe 4.31..4.47, a QA trigger subset inside the actual 4.50 +/- 0.23
         // game physics window, as NIGHT 0->1 already does. Actual mouse/touch,
         // delivery deadline and energy assertions remain unchanged.
         await page.evaluate(() => {
@@ -430,7 +444,7 @@ async function run(){
         evidence.routeMoves.push(await physicalDeliver(page,t,0,1.31,1.60,4,'NIGHT HUB0'));
         // GAME-076: Tablet-portrait CI run 38311488593 missed the 4.467/4.370 rad
         // orbit-0 crossings with a narrow 4.32..4.44 observer. Observe 4.31..4.47
-        // within the real 4.50 +/- 0.19 rad switch window (no success bypass).
+        // within the real 4.50 +/- 0.23 rad switch window (no success bypass).
         // Input remains a physical touch/mouse event; score and energy are asserted.
         evidence.routeMoves.push(await physicalSwitch(page,t,0,1,4.31,4.47,'NIGHT 0->1'));
         evidence.routeMoves.push(await physicalDeliver(page,t,1,3.46,3.76,5,'NIGHT HUB1'));
