@@ -82,14 +82,15 @@ function verifyGuideContrast() {
     cargoPanel.includes('Color("#ff9dab")') &&
     cargoPanel.includes('"%02ds LEFT!  HURRY  ·  %s"') &&
     // On narrow viewports HURRY must not be silently truncated after the hub.
-    cargoPanel.includes('ui_font.get_string_size(cargo_countdown, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(18.0)).x > countdown_text_width') &&
+    cargoPanel.includes('var countdown_font_size := _font_size(21.0) if cargo_urgent else _font_size(17.0)') &&
+    cargoPanel.includes('ui_font.get_string_size(cargo_countdown, HORIZONTAL_ALIGNMENT_LEFT, -1, countdown_font_size).x > countdown_text_width') &&
     cargoPanel.includes('"%02ds! HURRY"') &&
     cargoPanel.includes('"%02ds!"') &&
     cargoPanel.includes('info_rect.size.x < _ui_px(400.0)') &&
     cargoPanel.includes('cargo_target_label = HUB_SHORT[cargo_target]') &&
     cargoPanel.includes('var warning_chip := Rect2(') &&
     cargoPanel.includes('_rounded_box(warning_chip, Color("#8b2030"), Color("#fff0aa"), 7, 2)') &&
-    cargoPanel.includes('_font_size(18.0) if cargo_urgent') &&
+    cargoPanel.includes('_draw_fit_label(cargo_countdown, Vector2(x, y), countdown_font_size,') &&
     cargoPanel.includes('cargo_left / _cargo_limit()'),
     'Visible cargo countdown / <=3s warning contract missing');
   // GAME-076: first mistimed novice tap is a one-time hint, never a QA cheat.

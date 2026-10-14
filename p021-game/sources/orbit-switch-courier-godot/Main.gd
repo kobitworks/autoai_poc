@@ -738,14 +738,17 @@ func _draw_info_panel() -> void:
 	var target_marker_radius := _ui_px(12.0)
 	var target_marker_center := Vector2(info_rect.end.x - pad - target_marker_radius, y - _ui_px(8.0))
 	var countdown_text_width := maxf(_ui_px(70.0), info_rect.size.x - pad * 2.0 - _ui_px(33.0))
+	# Increase the urgent countdown to 21 CSS px. If the destination text cannot
+	# fit, retain the urgency word or seconds only; the HUB marker stays visible.
+	var countdown_font_size := _font_size(21.0) if cargo_urgent else _font_size(17.0)
 	# GAME-076: The long last-three-seconds warning can ellipsize "HURRY" on
 	# narrow screens. Prioritize the time and urgency, keeping the HUB marker
 	# as the always-visible destination cue instead of truncating the warning.
-	if cargo_urgent and ui_font.get_string_size(cargo_countdown, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(18.0)).x > countdown_text_width:
+	if cargo_urgent and ui_font.get_string_size(cargo_countdown, HORIZONTAL_ALIGNMENT_LEFT, -1, countdown_font_size).x > countdown_text_width:
 		cargo_countdown = "%02ds! HURRY" % int(ceil(cargo_left))
-		if ui_font.get_string_size(cargo_countdown, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(18.0)).x > countdown_text_width:
+		if ui_font.get_string_size(cargo_countdown, HORIZONTAL_ALIGNMENT_LEFT, -1, countdown_font_size).x > countdown_text_width:
 			cargo_countdown = "%02ds!" % int(ceil(cargo_left))
-	_draw_fit_label(cargo_countdown, Vector2(x, y), _font_size(18.0) if cargo_urgent else _font_size(17.0), Color("#ffffff") if cargo_urgent else HUB_COLORS[cargo_target], countdown_text_width)
+	_draw_fit_label(cargo_countdown, Vector2(x, y), countdown_font_size, Color("#ffffff") if cargo_urgent else HUB_COLORS[cargo_target], countdown_text_width)
 	draw_circle(target_marker_center, target_marker_radius, Color("#102a3d"))
 	draw_arc(target_marker_center, target_marker_radius, 0.0, TAU, 24, HUB_COLORS[cargo_target], _ui_px(2.0), true)
 	_draw_hub_symbol(target_marker_center, cargo_target, HUB_COLORS[cargo_target])
