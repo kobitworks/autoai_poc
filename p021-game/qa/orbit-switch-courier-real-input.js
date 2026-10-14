@@ -688,7 +688,8 @@ async function run(){
         const secondThirdGap=introStep.y-(introSecond.y+introSecond.height);
         const introGap=introStart.y-(introStep.y+introStep.height);
         check([introTitle,introFirst,introSecond,introStep].every(r=>r.width>0&&r.height>=12) &&
-          titleFirstGap>=1 && firstSecondGap>=0 && secondThirdGap>=0,
+          // New compact title offset should provide ~6 CSS px, with float tolerance.
+          titleFirstGap>=5.5 && firstSecondGap>=0 && secondThirdGap>=0,
           'Responsive intro title/instruction collision: '+t.name+' '+
           JSON.stringify({introTitle,introFirst,introSecond,introStep,titleFirstGap,firstSecondGap,secondThirdGap}));
         check(introStep.width>0&&introStep.height>=12&&
@@ -704,6 +705,7 @@ async function run(){
         }
         proof.introAllStepSpacing={source:'GODOT_RENDERED_RECT_TELEMETRY_READ_ONLY',
           titleToStep1CssPx:Math.round(titleFirstGap*100)/100,
+          minimumTitleToStep1CssPx:5.5,
           step1ToStep2CssPx:Math.round(firstSecondGap*100)/100,
           step2ToStep3CssPx:Math.round(secondThirdGap*100)/100,
           title:introTitle,step1:introFirst,step2:introSecond,step3:introStep};
