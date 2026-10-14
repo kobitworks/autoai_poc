@@ -788,6 +788,13 @@ async function run(){
           return x && x.state==='playing' && x.cargo_left<=2.95 &&
             x.cargo_left>=1.5 && x.energy===3 && x.deliveries===0;
         },null,{timeout:20000,polling:50});
+        // Assert the real HUD draw path chose an urgent label, not merely that
+        // the timer was <=3s. This is passive telemetry, not a QA state write.
+        await page.waitForFunction(() => {
+          const x=window.__P021_ORBIT;
+          return x && /^0[123]s(?: LEFT!  HURRY|! HURRY|!)/.test(
+            x.cargo_warning_rendered_text || '') && x.cargo_left>1.5;
+        },null,{timeout:1250,polling:25});
         const compactWarningBefore=await snapshot(page);
         const compactWarningFile=t.name+'-cargo-warning-3s.png';
         await page.screenshot({path:dir+'/'+compactWarningFile});
@@ -800,7 +807,15 @@ async function run(){
           'Compact warning capture missed natural 3s window: '+t.name+' '+
           JSON.stringify({before:compactWarningBefore.cargo_left,
             after:compactWarningAfter.cargo_left}));
+        const selectedWarningTexts=[compactWarningBefore.cargo_warning_rendered_text,
+          compactWarningAfter.cargo_warning_rendered_text];
+        check(selectedWarningTexts.every(s=>typeof s==='string' &&
+          /^0[123]s(?: LEFT!  HURRY|! HURRY|!)/.test(s)),
+          'Compact warning HUD label not selected on actual draw: '+t.name+' '+
+          JSON.stringify(selectedWarningTexts));
         proof.cargoWarning={result:'CAPTURED_UNREVIEWED',
+          hudTextSelection:'PASS_RENDERED_LABEL_SELECTED',
+          renderedTexts:selectedWarningTexts,
           method:'natural clock after physical START',
           secondsBefore:compactWarningBefore.cargo_left,
           secondsAfter:compactWarningAfter.cargo_left,
