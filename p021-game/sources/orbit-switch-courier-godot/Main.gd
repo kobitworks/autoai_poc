@@ -72,6 +72,9 @@ var retry_rect := Rect2()
 var action_card_rect := Rect2()
 var help_guide_rect := Rect2()
 # GAME-076: read-only intro geometry for narrow-screen onboarding regression.
+var intro_title_rect := Rect2()
+var intro_first_step_rect := Rect2()
+var intro_second_step_rect := Rect2()
 var intro_last_step_rect := Rect2()
 var intro_start_rect := Rect2()
 
@@ -909,15 +912,18 @@ func _draw_intro_overlay() -> void:
 		step_gap = clampf((start_rect.position.y - r.position.y - _ui_px(7.0) - step_y - step_h) * 0.5, _ui_px(12.0), _ui_px(30.0))
 	elif short_panel:
 		step_gap = clampf((height - _ui_px(124.0)) * 0.5, _ui_px(23.0), _ui_px(33.0))
-	_draw_center_text("ORBIT SWITCH COURIER", Rect2(r.position.x, r.position.y + title_y, width, _ui_px(24.0 if tiny_panel else 30.0)), _font_size(17.0 if tiny_panel else (20.0 if short_panel else 21.0)), Color("#f5fbff"))
-	_draw_center_fit_text("1  START → 目標 %s" % HUB_SHORT[cargo_target], Rect2(r.position.x, r.position.y + step_y, width, step_h), step_font, Color("#ffffff"))
+	intro_title_rect = Rect2(r.position.x, r.position.y + title_y, width, _ui_px(24.0 if tiny_panel else 30.0))
+	intro_first_step_rect = Rect2(r.position.x, r.position.y + step_y, width, step_h)
+	_draw_center_text("ORBIT SWITCH COURIER", intro_title_rect, _font_size(17.0 if tiny_panel else (20.0 if short_panel else 21.0)), Color("#f5fbff"))
+	_draw_center_fit_text("1  START → 目標 %s" % HUB_SHORT[cargo_target], intro_first_step_rect, step_font, Color("#ffffff"))
 	# GAME-076: On tiny intro cards, shorten ONLY explanatory copy so the
 	# onboarding lines retain the intended 14 CSS-pixel text size rather than
 	# shrinking toward the 12px minimum. Green crossing and matching HUB icon
 	# remain the same two physical interactions; no timing/input/state changes.
 	var crossing_step := "2  緑でTAP → 乗換" if tiny_panel else "2  緑の交差点でTAP → 乗換"
 	var delivery_step := "3  同じ印でTAP → 配達" if tiny_panel else "3  同じ印のHUBでTAP → 配達"
-	_draw_center_fit_text(crossing_step, Rect2(r.position.x, r.position.y + step_y + step_gap, width, step_h), step_font, Color("#b6fff0"))
+	intro_second_step_rect = Rect2(r.position.x, r.position.y + step_y + step_gap, width, step_h)
+	_draw_center_fit_text(crossing_step, intro_second_step_rect, step_font, Color("#b6fff0"))
 	intro_last_step_rect = Rect2(r.position.x, r.position.y + step_y + step_gap * 2.0, width, step_h)
 	intro_start_rect = start_rect
 	_draw_center_fit_text(delivery_step, intro_last_step_rect, step_font, Color("#fff3be"))
@@ -1091,6 +1097,9 @@ func _update_debug_bridge() -> void:
 		"retry_rect": _rect_payload(retry_rect),
 		"action_card_rect": _rect_payload(action_card_rect),
 		"help_guide_rect": _rect_payload(help_guide_rect),
+		"intro_title_rect": _rect_payload(intro_title_rect),
+		"intro_first_step_rect": _rect_payload(intro_first_step_rect),
+		"intro_second_step_rect": _rect_payload(intro_second_step_rect),
 		"intro_last_step_rect": _rect_payload(intro_last_step_rect),
 		"intro_start_rect": _rect_payload(intro_start_rect),
 		"field": _rect_payload(field_rect),
