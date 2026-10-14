@@ -87,3 +87,26 @@
 - 実験条件の継続: QA成功コマンド・状態直書きの禁止、touch/mouse通常入力、NIGHT3→ACE6、BEST保存再読込、音ON/OFF、RUSHの実pointerdownイベント角度を結果と照合する。新job完走後には \`results.json\` の最終JSONと実ZIPを再確認する。
 - 独立暫定品質 **76/100（目標80点未達）**、実機Human Gate（初見30秒、iOS/Androidの可読性と誤タップ、スピーカー／イヤホン音、FPS・発熱）は未確認。今回はゲーム本体・QAスクリプト・main・本番・課金・承認待ち事項を変更していない。同一理由のHuman Gate依頼は重複送信しない。
 - 今回未完了のためタスクGAME-076をToDoへ戻し、次回は job115675057422 の終了結果から再開する。2件目には着手しない。
+
+## 8. attempt 3 の独立 ZIP・自然入力・画面監査（2026-10-14 13:35 JST / AutoAI GAME-076）
+
+今回の1実行では、前回13:08時点で未確定だった同一HEADのGitHub Actions run [38497672814](https://github.com/kobitworks/autoai_poc/actions/runs/38497672814) attempt 3（新job `115675057422`）の結果を**新たに確認・検証**した。再実行要求は前回の処理で行われており、今回は新たな再実行やゲーム/QAソース変更を行っていない。
+
+- GitHub Actionsの当該attempt: contract `115675057423` / export-web `115675058687` / browser-quality `115675057422` はすべて `completed/success`。過去attemptの結果を今回の結果に流用していない。
+- 当該attemptのartifact **11869452028**（`p021-game-g030-real-input-evidence`）のZIP本体を新たに取得。実体 **4,377,772 bytes**、SHA-256 **`5384ea6579f4e501c0f6b97dfa3509333a75191defb42416af6556f9109af183`**。GitHub metadata の digest と完全一致。
+- ZIPのCRCは全件正常。**60ファイル=58PNG+2JSON**、全58枚PNGの画像デコード/verify完了。各標準画面13枚×4＋小型画面2枚×3で構成。
+- 合否の正本は `results.json` を使用。`results-checkpoint.json` は `PARTIAL_CHECKPOINT_NOT_FINAL` のため合否に使用しない。visual contract `PASS_STATIC`、自然touch/mouse START→RUSH→NIGHT(3配達)→ACE(6配達)の4 viewport **4/4 PASS**、小型3画面 **3/3 PASS_GEOMETRY**。各画面 `qaCommand=NEVER USED`、`stateOverride=NONE`、ACE到達時energy=3、SOUND ON/OFF操作確認、BEST保存/再読込/localStorage一致をJSONで確認。
+- 主な自然入力／RUSH 0→1の実`pointerdown`受動観測（rad、投入時間ms、BEST）:
+
+| viewport | 入力 | pointerdown rad | inputCall ms | BEST/復元 | 判定 |
+|---|---|---:|---:|---:|---|
+| phone portrait 390×844 | touch | 4.491 | 106 | 1108/1108 | PASS |
+| phone landscape 844×390 | mouse | 4.404 | 40 | 1110/1110 | PASS |
+| tablet portrait 768×1024 | touch | 4.599 | 212 | 1103/1103 | PASS |
+| tablet landscape 1024×768 | mouse | 4.539 | 72 | 1108/1108 | PASS |
+
+4件とも有効物理判定域の目安4.31–4.69rad内。tablet portraitの今回値4.599radは前回attempt2の4.555radより後寄りだが許容域内でPASS。自然入力3回連続成功は肯定的だが、過去tablet portrait RUSH失敗の根因の解消・無再発を**断定しない**。同端末の212msも失敗の必要十分条件とは結論しない。
+
+画像28枚（4画面×INTRO/PLAYING/RUSH/ACE=16枚、4画面×初回タップ案内/長文cue/残り3秒警告=12枚）を縮小コンタクトシートで独立目視。明白な主要領域逸脱・初見導線消失は見られず、案内と警告表示を確認。ただし縮小画像から実機日本語可読性・誤タップ・スピーカー/イヤホン実音・FPS/発熱をPASSとは判定しない。
+
+**結論:** GAME-076 は目標80/100を満たさず、独立暫定品質**76/100**のまま継続。実機の初見30秒・縦横画面読みやすさ・誤タップ・音・FPS/発熱はHuman Gate未確認。既通知の同一Human Gateを重複依頼せず、GAME-076は今回の実行後 `Doing→ToDo` に戻す。次回は実機結果の有無を先に確認し、なければtablet portraitの自然入力/RUSHを異なる環境・反復条件でさらに観測して原因を絞る。ゲーム本体/QAコード、main、本番公開、課金、二件目の実行はいずれも変更なし。
