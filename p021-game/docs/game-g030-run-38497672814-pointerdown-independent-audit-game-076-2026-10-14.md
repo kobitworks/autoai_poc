@@ -44,3 +44,23 @@
 - 実機Human Gate：初見30秒の正しい操作、iOS/Androidの縦横、文字可読性、誤タップ、スピーカー/イヤホン実音、FPS・発熱を未検証として維持。重複するSlack確認依頼は送信しない。
 - 次回は同HEADで自然入力を複数回反復し、特にtablet-portraitの`pointerdown`角度とRUSH合否を比較。フレーク再発時は受動診断で原因切り分け。実機結果を得た後に10軸品質を独立再採点し、80点未満なら改善を継続。
 - 本回はGAME-076以外のタスクを開始しない。GAME-076は未完了につき実行メモを更新して`ToDo`へ復帰する。
+
+
+## 5. 同一HEADでの再実行 attempt 2（2026-10-14 11:45–11:50 JST）
+
+- 対象: [Actions run 38497672814 attempt 2](https://github.com/kobitworks/autoai_poc/actions/runs/38497672814)、同一ゲーム/QA HEAD `ae448b999037c6e9e2a91d2e0584e5a99f98f4e4`。今回実行したのは既存browser-qualityジョブの再実行のみで、ゲーム本体とQAコードは変更していない。
+- job 115652948555（browser-quality）= completed/success。contract / export-web / browser-quality は3/3 success。
+- ジョブログから機械可読な最終 `results.json` を抽出・パースし、自然なタップ/クリックによる標準4画面実入力E2Eは **4/4 PASS**、小型レイアウト3/3 PASS_GEOMETRY、静的表示コントラクトPASS_STATICと確認。NIGHT 3配達、ACE 6配達、RUSHのenergy=3維持とACE貨物期限10秒を確認。
+- 実 `pointerdown` イベント（passive listener、状態変更なし）のRUSH 0→1角度は以下。ゲーム側の判定窓の目安4.31–4.69 rad内に全件収まる。
+
+| 画面 | 入力 | 今回pointerdown角度(rad) | 入力呼出ms | 判定 |
+|---|---|---:|---:|---|
+| phone-portrait 390×844 | touch | 4.468 | 103 | PASS |
+| phone-landscape 844×390 | mouse | 4.387 | 36 | PASS |
+| tablet-portrait 768×1024 | touch | 4.555 | 216 | PASS |
+| tablet-landscape 1024×768 | mouse | 4.510 | 70 | PASS |
+
+- 直前attempt 1の同列角度4.479 / 4.329 / 4.550 / 4.537 radと比較して両回4/4 PASS。ただし過去run 38490620078 attempt 2のtablet-portrait失敗原因は未特定であり、**2回の成功で偶発失敗の根絶を断定しない**。今回tablet-portraitの入力呼出216msでも成功したため、遅延時間の長さだけが根因とは判断しない。
+- attempt 2のGitHub公開artifact metadata: ID `11866865251`、名前 `p021-game-g030-real-input-evidence`、digest `sha256:c026b935cae19a3b8dd8119babb8cc9e51efa487378474c98b7d95c86c1135e7`。本補遺はジョブログ内のJSONを読み戻した監査であり、**attempt 2のZIP本体SHA256照合・PNG独立目視は今回未実施**。attempt 1のZIP検証結果を今回分に流用しない。
+- 品質は**独立暫定76/100のまま**、目標80未達。実機Human Gate（初見30秒、縦横の文字可読性、誤タップ、スピーカー/イヤホン音、FPS・発熱）も未確認。前回通知済みの同一確認依頼は重複送信しない。
+- 次回は同HEADの自然入力反復とRUSHの偶発失敗監視、必要に応じてartifact ZIP/画面証跡の独立監査、実機確認後の10軸再採点。タスクは未完了としてToDo継続。mainマージ、本番変更、有償利用、二件目の実行はなし。
