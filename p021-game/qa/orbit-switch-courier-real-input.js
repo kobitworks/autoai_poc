@@ -81,6 +81,10 @@ function verifyGuideContrast() {
     cargoPanel.includes('Color("#ff5877") if cargo_urgent') &&
     cargoPanel.includes('Color("#ff9dab")') &&
     cargoPanel.includes('"%02ds LEFT!  HURRY  ·  %s"') &&
+    // On narrow viewports HURRY must not be silently truncated after the hub.
+    cargoPanel.includes('ui_font.get_string_size(cargo_countdown, HORIZONTAL_ALIGNMENT_LEFT, -1, _font_size(18.0)).x > countdown_text_width') &&
+    cargoPanel.includes('"%02ds! HURRY"') &&
+    cargoPanel.includes('"%02ds!"') &&
     cargoPanel.includes('info_rect.size.x < _ui_px(400.0)') &&
     cargoPanel.includes('cargo_target_label = HUB_SHORT[cargo_target]') &&
     cargoPanel.includes('var warning_chip := Rect2(') &&
