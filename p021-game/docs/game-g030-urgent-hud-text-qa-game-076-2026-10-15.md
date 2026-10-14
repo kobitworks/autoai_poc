@@ -93,3 +93,17 @@ GAME-076の継続1件のみを実施。前回07:53時点で未確定だった Go
 - **CI**: 最終QAソースHEADに対するGitHub Actions [run 38654144991](https://github.com/kobitworks/autoai_poc/actions/runs/38654144991) を確認。08:27 JST時点でpendingであり、結果は未合格・未確定。前回成功のrun38650530998を新HEADのPASS証拠に代用しない。
 - **品質境界**: 独立暫定76/100（80未達）。CIが緑でも、実機初見30秒の理解、警告認知、指の誤タップ、イヤホン/本体の音、FPS/発熱、縦横回転をPASS扱いにしない。既通知と同じHuman Gate再送なし。
 - **制限**: developのみを更新。mainへのmerge、外部本番化、課金、公開範囲拡大、別プロジェクト実作業は行わない。CI最終結果と実機テストを同じGAME-076の次回継続点とする。
+
+## 2026-10-15 08:47:52 JST 最新HEADのCI/ZIP実体独立検品（AUTOAI-GAME076-20261015-0845）
+
+本回はP021/GAME-076の既存タスク1件のみ。前回08:28時点で未確定だった同一QA HEADに対するGitHub Actions run [38654144991](https://github.com/kobitworks/autoai_poc/actions/runs/38654144991) を、旧runのPASSを流用せず新規検証した。
+
+- **CI HEAD**: `66cb2259e419df886974a0dca8b50f97d70f5667`（develop）。contract、export-web、browser-qualityの3ジョブはすべてcompleted/success。browser-qualityの生ログにエラーは検出されない。
+- **artifact実体**: [11935834979](https://github.com/kobitworks/autoai_poc/actions/runs/38654144991/artifacts/11935834979) のZIPを取得し、バイト数 **4,537,204**、実測SHA-256 **`14a684fec681fc05baac28ba55468518d1811f773b5771f710ca9bec7f275152`** がGitHub APIのdigest・ジョブログのアップロードdigestと一致。全63エントリCRC正常、PNG 61枚Pillow verify合格、results.json / results-checkpoint.jsonの2件JSON構文正常。
+- **自然入力4標準画面**: results.jsonのphone-portrait (390x844)、phone-landscape (844x390)、tablet-portrait (768x1024)、tablet-landscape (1024x768) が4/4 `PASS`。自然touch/mouseによるNIGHT3配達→ACE6配達、BEST保持、音声トグルのテスト結果をJSONから照合。QAコマンドとstate overrideは未使用。シミュレーション結果と実機評価は区別する。
+- **3小型画面**: 320x568 / 667x375 / 800x600で3/3 `PASS_GEOMETRY`（小型のNIGHT/ACE完走保証ではない）。各introタイトル＋手順3行は `ellipsized=false`、手順文字の最小サイズは順に16.15 / 16.00 / 17.77 CSS pxで14px基準以上。緑で乗換→同じ印で配達の文言が実描画文字列に存在。残り3秒警告の描画選択は3/3 `PASS_UNCLIPPED_ACTUAL_DRAW_TEXT`、実文字列 `03s! HURRY` が省略なく一致。
+- **PNG独立目視**: 小型3画面×初見intro/残3秒警告=6PNGをZIPから抽出し縮小一覧で確認。タイトル・3手順・START・赤色残3秒警告は描画され、明白な部品消失や主要STARTの重なりは観察されない。一方、濃い背景で淡色の細字や情報密度は残り、初見認知・誤タップは実機試験での評価が必要。
+- **未検証Human Gate**: 物理スマホ・タブレットでの初見30秒理解、警告の瞬間認知、指操作での誤タップ、本体/イヤホンでの音質、FPS/発熱、縦横回転は未実施。**独立暫定76/100、目標80未達**を維持し一般公開品質とは認定しない。
+- **次回再開点**: GAME-076実機試験プロトコルへの結果があれば10軸採点と改善に反映。結果がなければ320px intro・警告の細字/コントラスト改善余地を、今回のPNGと実描画テレメトリを根拠に限定検証する。既に通知済みの同一Human GateのSlack催促は繰り返さない。
+
+ゲーム機能、タイマー、スコア、課金、main、本番公開範囲は変更なし。条件未達のためタスクはToDo継続。
