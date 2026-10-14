@@ -80,3 +80,10 @@
 - この回で証拠ZIP未検証という不足は解消。一方、**品質暫定76/100（目標80未達）**、tablet縦RUSH偶発失敗の再現性・根因、実機Human Gateは未解決。次回は複数回自然入力反復で再現性を評価し、実機の30秒導入・音声・可読性・誤タップ・FPS/発熱の結果が得られれば10軸再採点する。
 - 監査対象は既存 **GAME-076の継続1件のみ**。main変更・本番公開・有料利用・他タスクの実行はない。未完了のためGAME-076はToDo継続。
 
+## 7. 同一HEADの実入力反復・第3回（2026-10-14 13:06 JST / AutoAI GAME-076）
+
+- 本回は GAME-076 1件のみを選定。前回記録で未検証とした **RUSH偶発失敗の再現性** を調べるため、既存run [38497672814](https://github.com/kobitworks/autoai_poc/actions/runs/38497672814) の browser-quality job 115652948555 を GitHub Actions API で再実行要求し、success=true の応答を受領した。
+- 再実行から新しい browser-quality job **115675057422** を確認。記録時 status=in_progress / conclusion未定。再実行対象は同一元ゲーム/QA HEAD \`ae448b999037c6e9e2a91d2e0584e5a99f98f4e4\`。contract job 115675057423 と export-web job 115675058687 は completed/success。**browser-quality の最終合否、自然入力4 viewportのPASS/FAIL、tablet縦のRUSH再発有無、artifact ZIP/PNGはまだ未検証**。旧attempt 1/2の4/4 PASSを今回の合格とは扱わない。
+- 実験条件の継続: QA成功コマンド・状態直書きの禁止、touch/mouse通常入力、NIGHT3→ACE6、BEST保存再読込、音ON/OFF、RUSHの実pointerdownイベント角度を結果と照合する。新job完走後には \`results.json\` の最終JSONと実ZIPを再確認する。
+- 独立暫定品質 **76/100（目標80点未達）**、実機Human Gate（初見30秒、iOS/Androidの可読性と誤タップ、スピーカー／イヤホン音、FPS・発熱）は未確認。今回はゲーム本体・QAスクリプト・main・本番・課金・承認待ち事項を変更していない。同一理由のHuman Gate依頼は重複送信しない。
+- 今回未完了のためタスクGAME-076をToDoへ戻し、次回は job115675057422 の終了結果から再開する。2件目には着手しない。
