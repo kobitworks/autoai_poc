@@ -19,11 +19,33 @@ const GATES = [
 const STATES = new Set(["PASS", "FAIL", "UNTESTED"]);
 const nonblank = (v, n = 1) => typeof v === "string" && v.trim().length >= n;
 const number = v => Number.isFinite(v) && v >= 0;
-const jst = v => typeof v === "string" && /^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d JST$/.test(v);
+function jst(v) {
+  if (typeof v !== "string") return false;
+  const m = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2}) JST$/.exec(v);
+  if (!m) return false;
+  const [year, month, day, hour, minute, second] = m.slice(1).map(Number);
+  const t = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+  return t.getUTCFullYear() === year && t.getUTCMonth() + 1 === month
+    && t.getUTCDate() === day && t.getUTCHours() === hour
+    && t.getUTCMinutes() === minute && t.getUTCSeconds() === second;
+}
+
+// v1.1 requires measurable human observations; defaults never assert a PASS.
+const MEASUREMENT_DEFAULTS = {
+  first30s: { firstActionSeconds: null, firstCorrectActionObserved: null, goalUnderstoodUnprompted: null },
+  misTaps: { count: null },
+  nightAce: { nightDeliveries: null, aceDeliveries: null, naturalInput: null, stateInjected: null },
+  warningRecognition: { recognitionSeconds: null },
+  resultRetryBest: { bestPersisted: null },
+  speaker: { soundOnAudible: null, soundOffSilent: null, soundOnRestored: null },
+  headphone: { soundOnAudible: null, soundOffSilent: null, soundOnRestored: null },
+  fpsHeat: { playMinutes: null, responsivenessAssessment: "", heatAssessment: "" },
+  physicalRotation: { orientations: [] }
+};
 
 function blank() {
   return {
-    schemaVersion: "1.0",
+    schemaVersion: "1.1",
     build: {
       url: "https://kobitworks.github.io/autoai_poc/p021-game/games/orbit-switch-courier/",
       sourceCommit: "",
@@ -35,7 +57,8 @@ function blank() {
     },
     device: { model: "", os: "", browser: "", testerAlias: "", testedAtJst: "" },
     observations: Object.fromEntries(GATES.map(([key]) => [key, {
-      status: "UNTESTED", observedAtJst: "", evidence: "", notes: "", observedBy: ""
+      status: "UNTESTED", observedAtJst: "", evidence: "", notes: "", observedBy: "",
+      ...MEASUREMENT_DEFAULTS[key]
     }]))
   };
 }
@@ -45,7 +68,7 @@ function inspect(doc) {
   if (!doc || typeof doc !== "object" || Array.isArray(doc)) {
     return { verdict: "INVALID_RECORD", errors: ["Root JSON object is required"], eligibleForScoring: false };
   }
-  if (doc.schemaVersion !== "1.0") errors.push("schemaVersion must be 1.0");
+  if (doc.schemaVersion !== "1.1") errors.push("schemaVersion must be 1.1; generate a new --template");
   const b = doc.build || {}, d = doc.device || {}, o = doc.observations || {};
   for (const key of ["url", "sourceCommit", "actionsRunId", "liveByteGate", "verifiedAtJst", "verificationEvidence"]) {
     if (typeof b[key] !== "string") errors.push("build." + key + " must be a string");
@@ -53,12 +76,14 @@ function inspect(doc) {
   if (!nonblank(b.url, 12) || !/^https:\/\//.test(b.url || "")) errors.push("build.url must be HTTPS");
   if (b.sourceCommit && !/^[0-9a-f]{40}$/.test(b.sourceCommit)) errors.push("build.sourceCommit must be a full SHA-1");
   if (!["PASS_LIVE_BYTES", "UNVERIFIED", "FAIL_MISMATCH"].includes(b.liveByteGate)) errors.push("build.liveByteGate is invalid");
+  if (b.verifiedAtJst && !jst(b.verifiedAtJst)) errors.push("build.verifiedAtJst must be a real JST timestamp");
   if (b.testedBuildMatchesVerifiedBuild !== null && typeof b.testedBuildMatchesVerifiedBuild !== "boolean") {
     errors.push("build.testedBuildMatchesVerifiedBuild must be true, false, or null");
   }
   for (const key of ["model", "os", "browser", "testerAlias", "testedAtJst"]) {
     if (typeof d[key] !== "string") errors.push("device." + key + " must be a string");
   }
+  if (d.testedAtJst && !jst(d.testedAtJst)) errors.push("device.testedAtJst must be a real JST timestamp");
   const deviceReady = ["model", "os", "browser", "testerAlias"].every(k => nonblank(d[k])) && jst(d.testedAtJst);
   const buildReady = b.liveByteGate === "PASS_LIVE_BYTES"
     && b.testedBuildMatchesVerifiedBuild === true
@@ -81,18 +106,25 @@ function inspect(doc) {
     }
     if (g.status === "FAIL") failures.push(key);
     if (g.status !== "PASS") continue;
-    if (key === "first30s" && (!number(g.firstActionSeconds) || g.firstActionSeconds > 30))
-      errors.push("first30s PASS requires firstActionSeconds within 0..30");
+    if (key === "first30s" && (!number(g.firstActionSeconds) || g.firstActionSeconds > 30
+      || g.firstCorrectActionObserved !== true || g.goalUnderstoodUnprompted !== true))
+      errors.push("first30s PASS requires <=30 seconds, correct first action, and unprompted goal understanding");
     if (key === "misTaps" && (!Number.isInteger(g.count) || g.count < 0))
       errors.push("misTaps PASS requires observed nonnegative integer count");
-    if (key === "nightAce" && (!Number.isInteger(g.nightDeliveries) || g.nightDeliveries < 3 || !Number.isInteger(g.aceDeliveries) || g.aceDeliveries < 6))
-      errors.push("nightAce PASS requires natural NIGHT>=3 and ACE>=6 delivery counts");
+    if (key === "nightAce" && (!Number.isInteger(g.nightDeliveries) || g.nightDeliveries < 3
+      || !Number.isInteger(g.aceDeliveries) || g.aceDeliveries < 6
+      || g.naturalInput !== true || g.stateInjected !== false))
+      errors.push("nightAce PASS requires NIGHT>=3, ACE>=6, naturalInput=true, stateInjected=false");
     if (key === "warningRecognition" && (!number(g.recognitionSeconds) || g.recognitionSeconds > 3))
       errors.push("warningRecognition PASS requires recognitionSeconds within 0..3");
     if (key === "resultRetryBest" && g.bestPersisted !== true)
       errors.push("resultRetryBest PASS requires bestPersisted=true");
-    if (key === "fpsHeat" && (!number(g.playMinutes) || g.playMinutes < 3))
-      errors.push("fpsHeat PASS requires playMinutes>=3");
+    if ((key === "speaker" || key === "headphone")
+      && (g.soundOnAudible !== true || g.soundOffSilent !== true || g.soundOnRestored !== true))
+      errors.push(key + " PASS requires audible ON, silent OFF, and audible ON again on the actual output route");
+    if (key === "fpsHeat" && (!number(g.playMinutes) || g.playMinutes < 3
+      || !nonblank(g.responsivenessAssessment, 12) || !nonblank(g.heatAssessment, 12)))
+      errors.push("fpsHeat PASS requires >=3 minutes and separate responsiveness/heat observations (12+ chars each)");
     if (key === "physicalRotation" && (!Array.isArray(g.orientations) || !["portrait", "landscape"].every(x => g.orientations.includes(x))))
       errors.push("physicalRotation PASS requires portrait and landscape evidence");
   }
