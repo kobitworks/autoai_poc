@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GAME-076 実機受入観測フォーム</title>
+<style>
+:root{font-family:system-ui,"Yu Gothic",sans-serif;color:#25313d;background:#f5f7f9}
+*{box-sizing:border-box}body{margin:0}main{max-width:900px;margin:auto;padding:20px 16px 60px}
+h1{font-size:1.5rem}h2{font-size:1.15rem;margin-top:0}
+section{padding:18px;margin:15px 0;background:#fff;border:1px solid #d1dae5;border-radius:9px}
+fieldset{border:1px solid #d1dae5;border-radius:8px;margin:15px 0;padding:12px}
+legend{font-weight:700}p{line-height:1.6}.warning{background:#fff7e9;border-left:4px solid #9c6316;padding:12px}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+label{display:block;font-size:.93rem;font-weight:600}
+input,select,textarea{margin-top:5px;padding:8px;width:100%;min-height:44px;border:1px solid #a0afbe;border-radius:5px;font:inherit}
+textarea{min-height:85px}input[type=checkbox]{width:auto;min-height:0}
+button{font:inherit;border:0;border-radius:6px;background:#175380;color:white;padding:12px 17px;margin:5px 7px 5px 0;cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #e6ac47}
+.hint{color:#516475;font-size:.89rem}
+</style></head><body><main>
+<h1>GAME-076 実機受入・観測記録</h1>
+<p>Orbit Switch Courier / schemaVersion 1.1。
+<a href="https://kobitworks.github.io/autoai_poc/p021-game/games/orbit-switch-courier/" target="_blank" rel="noopener noreferrer">試験対象ゲームを別タブで開く</a></p>
+<p class="warning"><strong>人が物理端末で実際に確認したことだけ記録してください。</strong>
+初期状態は全件UNTESTEDです。このHTMLは端末内のみで動き、情報を送信せず、実機操作や採点を代行しません。
+氏名・住所・座標・認証情報等は入力しないでください。</p>
+<section><h2>1. 試験対象ビルド</h2><div id="build" class="fields"></div>
+<p class="hint">配信バイト同一性が試験時のビルドで実証できていなければUNVERIFIEDを維持してください。過去の成功結果を別ビルドへ転用しないでください。</p></section>
+<section><h2>2. 実端末</h2><div id="device" class="fields"></div>
+<p class="hint">日時は YYYY-MM-DD HH:MM:SS JST 形式で実際の観測時刻を記録。例: 2026-10-15 18:30:00 JST。</p></section>
+<section><h2>3. 人が実測した項目</h2><p id="progress" role="status"></p><div id="observations"></div></section>
+<button type="button" id="download">ローカルJSONを保存</button>
+<button type="button" id="uploadButton">既存JSONを読み込む</button>
+<input id="upload" type="file" accept=".json,application/json" hidden>
+<p id="message" role="status" aria-live="polite"></p>
+<p class="warning"><strong>JSONの保存は合格判定ではありません。</strong> 必ず既存の
+<strong>p021-game/qa/orbit-switch-courier-human-evidence.js</strong>
+で構造判定し、人間の観測根拠を照合したうえで独立10軸採点を行ってください。</p>
+</main><script>
+"use strict";
+(function(){
+const gates=[
+ ["first30s","初見30秒の正しい操作・目的理解",[["firstActionSeconds","正しい操作までの秒数","number"],["firstCorrectActionObserved","最初の操作は正しかった","bool"],["goalUnderstoodUnprompted","誘導なしで目的を理解","bool"]]],
+ ["misTaps","指による誤タップ",[["count","誤タップの実測回数","int"]]],
+ ["nightAce","自然入力によるNIGHT 3件 / ACE 6件",[["nightDeliveries","NIGHT配達数","int"],["aceDeliveries","ACE配達数","int"],["naturalInput","自然入力による操作","bool"],["stateInjected","状態を注入した（通常いいえ）","bool"]]],
+ ["warningRecognition","残り3秒警告の即時認知",[["recognitionSeconds","警告を認識するまでの秒数","number"]]],
+ ["resultRetryBest","RESULT・RETRY・BEST保持",[["bestPersisted","再読込後のBEST保持を確認","bool"]]],
+ ["speaker","本体スピーカーのON/OFF/ON",[["soundOnAudible","ONで聞こえる","bool"],["soundOffSilent","OFFで無音","bool"],["soundOnRestored","再ONで復帰","bool"]]],
+ ["headphone","イヤホンのON/OFF/ON",[["soundOnAudible","ONで聞こえる","bool"],["soundOffSilent","OFFで無音","bool"],["soundOnRestored","再ONで復帰","bool"]]],
+ ["fpsHeat","3分以上の応答性・発熱",[["playMinutes","連続プレイ分数","number"],["responsivenessAssessment","応答性の具体的観測（12文字以上）","long"],["heatAssessment","温度・手触りの具体的観測（12文字以上）","long"]]],
+ ["physicalRotation","実端末の縦横回転",[["orientations","実際に確認した方向","rotations"]]]
+];
+const base=[
+ ["url","ゲームURL","text"],["sourceCommit","ソースの40文字commit SHA","text"],
+ ["actionsRunId","Actions run ID","text"],["liveByteGate","配信バイト検証結果","gate"],
+ ["testedBuildMatchesVerifiedBuild","試験ビルドと照合ビルドが一致","bool"],
+ ["verifiedAtJst","同一性確認日時（JST）","text"],["verificationEvidence","同一性の具体的根拠","long"]
+];
+const device=[
+ ["model","実機モデル","text"],["os","OS・バージョン","text"],["browser","ブラウザ・バージョン","text"],
+ ["testerAlias","匿名テスター名","text"],["testedAtJst","実機試験日時（JST）","text"]
+];
+const gateStatus=[["UNTESTED","未実施（UNTESTED）"],["PASS","PASS（観測済み）"],["FAIL","FAIL（実機で問題を観測）"]];
+const selects={
+ bool:[["","未確認"],["true","はい"],["false","いいえ"]],
+ gate:[["UNVERIFIED","UNVERIFIED（未照合）"],["PASS_LIVE_BYTES","PASS_LIVE_BYTES（一致検証済）"],["FAIL_MISMATCH","FAIL_MISMATCH（不一致）"]],
+ status:gateStatus,
+ observer:[["","未確認"],["human","実機で観測した本人（human）"]]
+};
+function element(tag,parent,text){
+ const x=document.createElement(tag);if(text!==undefined)x.textContent=text;if(parent)parent.appendChild(x);return x;
+}
+function addField(parent,scope,field){
+ const [key,label,type]=field,wrapper=element("label",parent,label);
+ let input;
+ if(type==="rotations"){
+  const box=element("div",wrapper);
+  for(const value of ["portrait","landscape"]){
+   const line=element("label",box),cb=element("input",line);
+   cb.type="checkbox";cb.value=value;cb.dataset.scope=scope;cb.dataset.field=key;
+   element("span",line,value==="portrait"?"縦画面":"横画面");
+  }
+  return;
+ }
+ input=selects[type]?element("select",wrapper):element(type==="long"?"textarea":"input",wrapper);
+ if(selects[type]){
+  for(const [value,title] of selects[type]){
+   const opt=element("option",input,title);opt.value=value;
+  }
+ }else if(input.tagName==="INPUT"){
+  input.type=type==="number"||type==="int"?"number":"text";
+  if(input.type==="number"){input.min="0";input.step=type==="int"?"1":"any";}
+ }
+ input.dataset.scope=scope;input.dataset.field=key;input.dataset.type=type;
+}
+function setup(){
+ for(const f of base)addField(document.getElementById("build"),"build",f);
+ for(const f of device)addField(document.getElementById("device"),"device",f);
+ for(const g of gates){
+  const set=element("fieldset",document.getElementById("observations"));
+  element("legend",set,g[1]);const fields=element("div",set);fields.className="fields";
+  const f=[["status","観測状態","status"],["observedAtJst","観測日時（JST）","text"],
+   ["observedBy","実機観測した人","observer"],["evidence","具体的な観測根拠（12文字以上）","long"],
+   ["notes","補足メモ","long"],...g[2]];
+  for(const item of f)addField(fields,g[0],item);
+ }
+ find("build","url")[0].value="https://kobitworks.github.io/autoai_poc/p021-game/games/orbit-switch-courier/";
+ document.querySelectorAll("input,textarea,select").forEach(x=>x.addEventListener("change",refresh));
+ document.getElementById("download").addEventListener("click",save);
+ document.getElementById("uploadButton").addEventListener("click",()=>document.getElementById("upload").click());
+ document.getElementById("upload").addEventListener("change",load);
+ refresh();
+}
+function find(scope,field){
+ return [...document.querySelectorAll("[data-scope]")].filter(x=>x.dataset.scope===scope&&x.dataset.field===field);
+}
+function val(input){
+ if(input.dataset.type==="bool")return input.value===""?null:input.value==="true";
+ if(["int","number"].includes(input.dataset.type))return input.value===""?null:Number(input.value);
+ return input.value;
+}
+function collect(){
+ const out={schemaVersion:"1.1",build:{},device:{},observations:{}};
+ for(const f of base)out.build[f[0]]=val(find("build",f[0])[0]);
+ for(const f of device)out.device[f[0]]=val(find("device",f[0])[0]);
+ for(const g of gates){
+  const o={};
+  const fs=[["status"],["observedAtJst"],["observedBy"],["evidence"],["notes"],...g[2]];
+  for(const f of fs){
+   if(f[0]==="orientations")o.orientations=find(g[0],"orientations").filter(x=>x.checked).map(x=>x.value);
+   else o[f[0]]=val(find(g[0],f[0])[0]);
+  }
+  out.observations[g[0]]=o;
+ }
+ return out;
+}
+function assign(data){
+ if(!data||data.schemaVersion!=="1.1"||!data.build||!data.device||!data.observations)
+  throw new Error("schemaVersion 1.1 の記録以外は読み込めません。");
+ const rows=[["build",base,data.build],["device",device,data.device]];
+ for(const [scope,fs,values] of rows)for(const f of fs){
+  const x=find(scope,f[0])[0],v=values[f[0]];
+  x.value=v==null?"":String(v);
+ }
+ for(const g of gates){
+  const o=data.observations[g[0]]||{};
+  for(const key of ["status","observedAtJst","observedBy","evidence","notes",...g[2].map(x=>x[0])]){
+   const nodes=find(g[0],key),v=o[key];
+   if(key==="orientations")nodes.forEach(x=>x.checked=Array.isArray(v)&&v.includes(x.value));
+   else nodes[0].value=v==null?"":String(v);
+  }
+ }
+ refresh();
+}
+function refresh(){
+ const count=gates.filter(g=>find(g[0],"status")[0].value!=="UNTESTED").length;
+ document.getElementById("progress").textContent="観測済み "+count+"/9 項目。未観測 "+(9-count)+" 項目。記録内容・ビルドGateの最終判断は既存Node検証器で実施。";
+}
+function save(){
+ const json=JSON.stringify(collect(),null,2)+"\n", blob=new Blob([json],{type:"application/json;charset=utf-8"});
+ const url=URL.createObjectURL(blob),a=element("a",document.body);
+ a.href=url;a.download="GAME-076-human-evidence.json";a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+ document.getElementById("message").textContent="JSONを保存しました。保存自体は品質合格を意味しません。";
+}
+async function load(e){
+ const file=e.target.files&&e.target.files[0];if(!file)return;
+ try{assign(JSON.parse(await file.text()));document.getElementById("message").textContent="JSONを読み込みました。実際の観測根拠を照合してください。";}
+ catch(err){document.getElementById("message").textContent="読み込み失敗: "+err.message;}
+ e.target.value="";
+}
+setup();
+})();
+</script></body></html>
