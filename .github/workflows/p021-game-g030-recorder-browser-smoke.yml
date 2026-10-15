@@ -1,0 +1,34 @@
+name: P021 GAME-G030 Offline Recorder Browser Smoke
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'p021-game/qa/orbit-switch-courier-human-evidence-recorder.html'
+      - 'p021-game/qa/orbit-switch-courier-recorder-browser-smoke.js'
+      - 'p021-game/qa/orbit-switch-courier-human-evidence.js'
+      - '.github/workflows/p021-game-g030-recorder-browser-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  recorder-browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: develop
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated Chromium browser test dependency
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Syntax check recorder browser smoke script
+        run: node --check p021-game/qa/orbit-switch-courier-recorder-browser-smoke.js
+      - name: Run synthetic offline recorder browser QA in two viewport sizes
+        run: node p021-game/qa/orbit-switch-courier-recorder-browser-smoke.js
