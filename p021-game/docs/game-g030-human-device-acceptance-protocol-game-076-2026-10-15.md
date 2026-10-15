@@ -1,17 +1,17 @@
-# GAME-076 / GAME-G030 実機初見・可読性・音・性能の受入試験票 v1.1
+# GAME-076 / GAME-G030 実機初見・可読性・音・性能の受入試験票 v1.2
 作成: 2026-10-15 JST / AutoAI P021（GAME-076継続）
 対象: Orbit Switch Courier (Godot Web)。親タスク: GAME-076。
 成果物区分: **試験手順と記録テンプレート**。実機テストの実施結果・承認ではない。
 
-## 1. 基準ビルドと検証済み事項（2026-10-15 11:07 JST更新）
+## 1. 基準ビルドと検証済み事項（2026-10-15 13:24 JSTの独立監査結果へ同期）
 - 正本コード: [autoai_poc/develop/p021-game](https://github.com/kobitworks/autoai_poc/tree/develop/p021-game)
 - ゲーム本体: [Main.gd](https://github.com/kobitworks/autoai_poc/blob/develop/p021-game/sources/orbit-switch-courier-godot/Main.gd)
-- **受入試験の最新検証基準（旧run 38619691662から更新）**: [Godot Actions run 38664938941](https://github.com/kobitworks/autoai_poc/actions/runs/38664938941)、自然入力QA HEAD `28cb40cf32c2330e7a6d0320efb8b7574671e436`。
-- **2026-10-15 11:07 JSTの独立再照合**: 上記runの `contract` / `export-web` / `browser-quality` 3ジョブすべて `completed/success`。GitHub APIのartifact [11941230080](https://github.com/kobitworks/autoai_poc/actions/runs/38664938941/artifacts/11941230080) は4,532,492 bytes / `sha256:80d650794ada5174524274f21bcdc686e38431b2be6f370cbc38ea6f52c0fc16` / `expired=false`。
-- 最新 `develop` で読み戻したGit blobはGodot `Main.gd`=`e3e8dfc4780b37929353f336e78bf7545b84d0ee`、実入力QA=`138fa2b621843f1aaec2dba798c415c72553636c`。同runに紐づくソース・QA実体の参照値として記録する。
-- 過去の[GAME-076 独立監査](./game-g030-urgent-hud-text-qa-game-076-2026-10-15.md)では、当該artifactのZIP63エントリCRC/PNG61枚/JSON2件検品、標準4 viewport自然入力4/4 PASS、小型3 viewport幾何3/3 PASS、警告outline alpha6点の範囲内変動が確認済み。**今回の更新作業でZIPの再ダウンロード・物理端末での試遊を実施したわけではない**。
-- 同監査にはWeb Export commit `32b5160b99c6c3a2df0408e478a843fc346d89fb` とPages run `38665213538` が記録されている。公開URLで実機試験を行う際は、配信中のビルドとこの基準が一致することを別途確認する。**CI成功と公開URLのビルド同一性は同義ではない**。
-- 独立暫定品質評価は**76/100**（一般公開品質目標80/100未達）。本試験票更新だけでは点数を加算しない。実機初見30秒・指誤タップ・実際の警告認知・音質・FPS/発熱・縦横回転は引き続き**UNTESTED**。
+- **実機受入の最新CI基準**: [Godot Actions run 38679988812](https://github.com/kobitworks/autoai_poc/actions/runs/38679988812)、自然入力QA HEAD `cde75bd6e845d781e45f908ab623fba860cb36b5`（develop push）。旧run `38664938941` は履歴であり、最新版の合格証明には使わない。
+- **GitHub API再照合（2026-10-15）**: このrunの `contract` / `export-web` / `browser-quality` は**すべて completed/success**。artifact [11948265436](https://github.com/kobitworks/autoai_poc/actions/runs/38679988812/artifacts/11948265436) は **4,938,123 bytes**、`sha256:d618473ece3c645f8783c0b7e635a7f3abff1493aa84742a75b8a5ea5eec97f6`、`expired=false`、対象HEAD一致。
+- 今回のGitHub読戻しblob: Godot `Main.gd` = `10cb198d9b3fcd442f5c0257d29dc845246f48e3`、自然入力QA = `ecf3dbe1c13baf4177e92983e265040d877b2e06`。この組のソース・QAをテスト基準とし、後発の変更には別の合格証跡を要求する。
+- [GAME-076独立監査](./game-g030-urgent-hud-text-qa-game-076-2026-10-15.md) による同一runの証跡: ZIP71件CRC正常、PNG69枚・JSON2件検査、標準4 viewportの自然入力**4/4 PASS**、小型3 viewportは**3/3 PASS_GEOMETRY**、320×568のPLAYING操作案内実描画値は `TAP · SWITCH` で省略なし。擬似viewport回転は縦→横／横→縦**2/2 PASS_ORIENTATION**。**小型3画面のフルルートE2Eや実端末での物理回転PASSを意味しない**。本試験票更新ではZIPを再ダウンロードしていない。
+- 最新のWeb Export成果物と**実際にアクセスする公開URL**のビルド同一性は、URL側のbuild識別子を取得するまで**UNVERIFIED**。最新CI成功を、そのまま公開URL／本番の証明や実機試験PASSには転用しない。
+- 独立暫定品質は**76/100**（一般公開品質目標80/100未達）。初見30秒・指誤タップ・3秒警告の即時認知・スピーカー/イヤホン実音・FPS/発熱・物理画面回転は**UNTESTED**。結果を人間が記録するまで各項目をPASSにしない。
 
 ### 1.1 実機テスト開始前のビルド同一性Gate
 1. 対象URLまたは配布Web Exportの出所、取得日時、コミット（取得可能な場合）とActions run番号を記録する。
@@ -51,6 +51,11 @@
 観察点：START高さのCI既知値44/44/48 CSS px（小型3画面）、説明最終行との間隔7/17/22 CSS px。寸法合格を**指での誤タップゼロの実証に置き換えない**。
 向き変更でUIが再配置されるか：______ / 二重押下・押下不能・文字/ボタン衝突：______ / 結果：☐PASS ☐FAIL ☐UNTESTED
 
+### 4.1 最新QAで新たに検証済み／実機で確認すべき点
+- **320×568 Portrait、PLAYING下段案内**: QAでは実描画 `TAP · SWITCH`、省略なし。実機では指で操作しながら文字が自然に読めるか、視線移動や端末の文字拡大設定で欠けないかを別途記録する。読みやすさは自動テストの非省略判定だけでは確定しない。
+- **縦→横→縦、横→縦→横**: ブラウザ疑似viewport切替と戻し、自然タッチでのSTART、PLAYING再配置は2/2自動合格。実機ではOSの実画面回転時にタッチ座標・情報パネル・START/SOUNDと下段案内が正しく再配置されるかを観察する。物理回転の合否は未検証。
+- **ビルド記録**: 可能なら最新CI HEAD `cde75bd6` とartifact `11948265436` に対応する配布物で検証。公開URLだけの場合はbuild同一性が確認できるまで参考結果として記録する。
+
 ## 5. 本物のプレイ進行：難度と貨物警告
 QAコマンド、直接状態書換え、成功値の注入は一切禁止。実際のtap/clickで進行する。
 1. START → 緑交差点で乗換 → 同じマークのHUBへ配達。成功・失敗の視覚的違いを観察。
@@ -77,6 +82,7 @@ CIの警告PNG描画確認は済みだが、実機3秒以内認知は現時点**
 
 ## 8. 完了Gate（GAME-076へ結果を戻す条件）
 - CI 4標準viewport自然入力E2E（NIGHT/ACE、BEST、ON/OFF）と小型3画面レイアウトに重大な回帰がない。
+- 320×568 Portrait PLAYING案内の実描画非省略、疑似縦横切替2系列のCI証跡と、実機の表示・指操作・物理回転の観測を**別欄で**記録する。
 - 実機の初見30秒、タップ誤操作、警告の瞬間認知、音声（スピーカー/イヤホン）、FPS/発熱、縦横回転の**結果が記録され**、未実施は未実施と明記される。
 - 10軸×10点を独立再採点し、加点は測定証拠に結びつける。**80/100未満なら未完了**として改善継続。
 - Human Gate結果の入力前に、自動化テスト成功のみで実機項目をPASSへ昇格させない。
