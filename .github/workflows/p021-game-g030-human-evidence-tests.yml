@@ -1,0 +1,31 @@
+name: P021 GAME-G030 Human Evidence Contract
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - 'p021-game/qa/orbit-switch-courier-human-evidence.js'
+      - 'p021-game/qa/orbit-switch-courier-human-evidence.test.js'
+      - '.github/workflows/p021-game-g030-human-evidence-tests.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evidence-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check evidence checker syntax
+        run: node --check p021-game/qa/orbit-switch-courier-human-evidence.js
+      - name: Check synthetic evidence test syntax
+        run: node --check p021-game/qa/orbit-switch-courier-human-evidence.test.js
+      - name: Run strict human-evidence contract tests
+        run: node --test p021-game/qa/orbit-switch-courier-human-evidence.test.js
+      - name: Confirm that the blank template stays UNTESTED
+        run: node p021-game/qa/orbit-switch-courier-human-evidence.js --template | grep -q '"UNTESTED"'
