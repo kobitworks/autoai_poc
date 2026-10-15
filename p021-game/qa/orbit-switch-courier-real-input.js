@@ -910,9 +910,12 @@ async function run(){
           if(stage.name!=='initial')await page.setViewportSize(stage.size);
           await until(page,(expected)=>{
             const d=window.__P021_ORBIT;
-            return d&&d.state==='intro'&&d.ready&&
-              Math.abs(d.viewport_w-expected.width)<=2&&
-              Math.abs(d.viewport_h-expected.height)<=2&&
+            // Godot stretch/aspect=expand reports a *logical* viewport,
+            // not CSS viewport pixels. Compare aspect ratio and actual canvas
+            // bounds below, never assume viewport_w===Playwright width.
+            return d&&d.state==='intro'&&d.ready&&d.viewport_h>0&&
+              Math.abs(d.viewport_w/d.viewport_h-
+                expected.width/expected.height)<0.025&&
               Array.isArray(d.intro_rendered_steps)&&d.intro_rendered_steps.length===4;
           },'rotation reflow '+t.name+' '+stage.name,16000,stage.size);
           const d=await snapshot(page);
@@ -940,6 +943,7 @@ async function run(){
             sound.y+sound.height<=stage.size.height+2,
             'Rotation SOUND hitbox invalid '+t.name+' '+stage.name);
           proof.steps.push({stage:stage.name,viewport:stage.size,
+            logicalViewport:{width:d.viewport_w,height:d.viewport_h},
             state:d.state,startCssPx:{width:Math.round(start.width),height:Math.round(start.height)},
             guideToStartGapCssPx:Math.round(gap*100)/100,
             introFontsCssPx:lines.map(line=>Math.round(line.font_css_px*100)/100),
@@ -955,9 +959,9 @@ async function run(){
         await page.setViewportSize(t.rotated);
         await until(page,(expected)=>{
           const d=window.__P021_ORBIT;
-          return d&&d.state==='playing'&&
-            Math.abs(d.viewport_w-expected.width)<=2&&
-            Math.abs(d.viewport_h-expected.height)<=2;
+          return d&&d.state==='playing'&&d.viewport_h>0&&
+            Math.abs(d.viewport_w/d.viewport_h-
+              expected.width/expected.height)<0.025;
         },'rotation active play reflow '+t.name,12000,t.rotated);
         const playing=await snapshot(page),pc=await page.locator('#canvas').boundingBox();
         check(playing.energy===3&&playing.deliveries===0&&
