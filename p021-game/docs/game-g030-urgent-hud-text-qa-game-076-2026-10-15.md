@@ -168,3 +168,13 @@ P021 / GAME-076 の同一継続タスク1件。前回10:20:22 JSTは新HEADのCI
 - **継続・安全境界:** 独立暫定品質76/100（一般公開完了目標80点未達）。実機初見30秒、警告瞬間認知、誤タップ、本体/イヤホン音、FPS/発熱、**物理端末回転**のHuman GateはUNTESTEDのまま。画面比率QAが合格しても実機の代替としない。既存依頼の重複Slack催促は行わない。main・本番・課金・外部公開範囲は変更しない。GAME-076は完了条件未達につきToDo継続。
 
 次回はrun 38673212538の全ジョブ、生成ZIP/JSONの`orientationSweep`双方向（必要ならPNG）を検品し、失敗なら同じGAME-076で原因を追究する。実機試験結果が入るまで品質80点認定しない。
+
+## 2026-10-15 12:19 JST — GAME-076 / Runner v1.38.2 CI・回転相当QA実体独立監査
+
+- 実行ID: `AUTOAI-GAME076-20261015-1217`（今回の実タスクはGAME-076のみ）
+- 対象: 修正HEAD `c007bbc53f1fcff111b9852e43a6da6d5fa4deff`、Actions [run 38673212538](https://github.com/kobitworks/autoai_poc/actions/runs/38673212538)。GitHub Jobsの`contract` / `export-web` / `browser-quality`はすべて `completed/success`（3/3）。
+- 原本artifact: [11945287717](https://github.com/kobitworks/autoai_poc/actions/runs/38673212538/artifacts/11945287717)、GitHub API size=4,955,551 bytes / digest `sha256:77b032912a5af946e07bd99e723c9330f0f963036eb0fd440a080e6930e8e8b5`。ZIP実体を新規取得してローカル再ハッシュし一致、計71エントリのCRC異常なし、PNG69枚すべて画像デコード検証PASS、results.jsonとresults-checkpoint.json両方解析PASS。
+- `results.json` は標準4viewportの自然touch/mouse QAを4/4 `PASS`、小型3viewportは3/3 `PASS_GEOMETRY`（全ルート完走ではない）。`orientationSweep` は `portrait-to-landscape` / `landscape-to-portrait` の両系列が4段階（initial/rotated/restored/playing-after-resize）を通過し、2/2 `PASS_ORIENTATION`。`touchscreen.tap START`、`stateInjection:false`、再配置後`playing`をJSONから確認。
+- 独立ピクセル比較で両系列の initial/restored INTRO PNG がそれぞれ全画素一致。回転相当の全8PNG、および小型INTRO/3秒警告PNG4枚を独立目視し、STARTと主要情報・警告表示を確認。320px PortraitのPLAYING表示下部では英語ガイド末尾の省略が画像で見られ、実機の瞬時可読性は未判定（改善余地）。
+- **検証境界**: これはPlaywrightのviewportリサイズであり物理端末の回転テストではない。実機の初見30秒/警告瞬間認知/指誤タップ/スピーカー・イヤホン音/FPS・発熱/端末回転は引き続き `UNTESTED`。一般公開品質独立暫定76/100を80点へ引き上げず、Human Gate結果取得後に10軸再採点。既通知の同一Human Gate確認は重複送信しない。
+- 今回は既存develop QAの合格証跡の実体検証・監査記録のみ。ゲーム本体・スコア・音・main・本番・課金・外部公開範囲は変更せず。GAME-076は完了条件未達につき`ToDo`継続。
