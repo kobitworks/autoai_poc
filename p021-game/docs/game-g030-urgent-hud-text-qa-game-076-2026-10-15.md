@@ -141,3 +141,17 @@ P021 / GAME-076 の同一継続タスク1件。前回10:20:22 JSTは新HEADのCI
 - **PNG独立目視:** 3小型viewport×intro・残3秒警告の6PNGを実物抽出して比較。開始カード・主ボタン・警告チップの描画を確認、主要部品消失・明白なボタン重複は見当たらない。320px幅で文字が小さく細い点は実機認知リスク。JSONのvisualWarningPass=NOT VERIFIEDを実機PASSと解釈しない。
 - **Human Gate:** 物理スマホ・タブレットでの初見30秒理解、3秒警告の瞬間認知、指の誤タップ、スピーカー/イヤホン音、FPS・発熱・画面回転は**未検証**。品質独立暫定 **76/100**（80点目標未達）、CIだけを理由に一般公開品質とは認定しない。
 - **次回再開点:** GAME-076は完了条件未達のためToDo継続。実機結果が得られれば10軸再採点、なければ小画面の視認性改善を検討。既通知Human Gate同文面催促は重複送信しない。本回の変更はdevelop上の本監査文書のみで、ゲームコード、main、課金、本番・公開範囲変更はない。
+
+
+## 2026-10-15 11:22 JST 回転相当リサイズと実タップの回帰QA（AUTOAI-GAME076-20261015-1120）
+
+本回はP021／GAME-076の継続1件のみを実施。直近7 viewportの静的レイアウト試験は成功していたが、同一ゲームセッションで端末の縦横相当の画面サイズが変わったときに、Godot Canvasと初見ガイド・操作領域が再配置される保証は未検証だった。この隙間を埋める **Playwrightの疑似viewportリサイズ検査**をQAに追加した。物理スマホの方向センサー／本体性能／初見人間評価の代用にはしない。
+
+- GitHubソース: `p021-game/qa/orbit-switch-courier-real-input.js`、`develop` [commit 8ff3e9f9](https://github.com/kobitworks/autoai_poc/commit/8ff3e9f9b9595670fb6c8d17deea9fe11d558fe2)。書戻しGit blob `af1ba629f8e91fac3c7af918b6e66ef9537e1080`。ゲーム本体のMain.gd・制限時間・入力・スコア・音声は変更していない。
+- パターン1: 320×568 → 667×375 → 320×568（初見画面）。パターン2: 667×375 → 320×568 → 667×375（初見画面）。各ステージでGodot Web Canvas/field/infoが表示域に収まること、初見タイトル＋手順3行の省略・極端な縮小がないこと、START最小44×40 CSS px、STARTと説明行の間隔4px以上、SOUND最小44×44 CSS pxをread-onlyブリッジとDOM座標から照合する。
+- いずれも復帰後のSTARTを **Playwrightの実タッチ入力**で押し、`playing`へ自然遷移したことを確認してから再度viewportリサイズ。最初のエネルギー3・配達0・field/infoの画面外はみ出しなしを検査する。得点/残秒/プレイヤー座標は注入しない。
+- 遷移前・切替後・復帰後のINTROと切替後のPLAYINGをパターン別にPNG記録。既存4標準viewportのNIGHT/ACE・3小型viewportの静的レイアウトQAは引き続き実行し、追加の`orientationSweep`を`results.json`へ出力する。追加テストの合否はジョブ終了まで **未確定**。
+- 新QA HEAD Actions: [run 38670605430](https://github.com/kobitworks/autoai_poc/actions/runs/38670605430)。2026-10-15 11:24 JST時点で`contract`と`export-web`は成功、`browser-quality`は実行中。全ジョブ成功の判定やPNG/JSON実体検品はまだ行っていない。新HEADの完了証拠に旧run成功を流用しない。
+- 独立暫定品質 **76/100** を据置き。80点の一般公開完了ライン未達。実機の初見30秒、指誤タップ、警告3秒以内認知、音、FPS/発熱、端末回転Human Gateはすべて **UNTESTED**。既存の実機受入試験票v1.1を使用し、同一内容の確認依頼Slackを重複送信しない。main・本番・課金・公開範囲変更なし。
+
+次回継続点: 新runの`browser-quality`最終結果とartifact内`orientationSweep`の2系統結果を照合し、失敗なら同一GAME-076内で修正。合格でも実機Human Gateと80点再採点完了までGAME-076はToDo継続。
