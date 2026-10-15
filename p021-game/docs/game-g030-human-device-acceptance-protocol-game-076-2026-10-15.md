@@ -1,4 +1,4 @@
-# GAME-076 / GAME-G030 実機初見・可読性・音・性能の受入試験票 v1.4
+# GAME-076 / GAME-G030 実機初見・可読性・音・性能の受入試験票 v1.5
 作成: 2026-10-15 JST / AutoAI P021（GAME-076継続）
 対象: Orbit Switch Courier (Godot Web)。親タスク: GAME-076。
 成果物区分: **試験手順と記録テンプレート**。実機テストの実施結果・承認ではない。
@@ -130,3 +130,20 @@ independent conclusion / unresolved items:
 - 追加時の**合成データのロジック単体テスト**: 空雛形→HOLD_DEVICE_DETAILS、9項目が模擬的に揃う→READY_FOR_INDEPENDENT_SCORING、speaker未実施→HOLD_UNTESTED、PASSに証拠なし→INVALID_RECORD。**これは模擬入力であり実機試験結果ではない**。
 
 **現状:** 物理実機での実測入力は未受領、GAME-076のHuman Gateは**UNTESTED**、品質暫定**76/100**のまま。実機結果が届くまでは本ツールの形式検査成功を根拠にGAME-076をDoneにしない。
+
+
+### 9.1 構造判定強化 v1.5（2026-10-15 18時台）
+
+**改善の範囲:** 実端末での測定値を捏造しないため、Human Gate記録の「PASS」と「計測根拠」に欠落があれば自動的に`INVALID_RECORD`へ戻す。物理実機テストや独立10軸採点そのものは自動化していない。
+
+- JSON `schemaVersion` は **1.1**。旧1.0の入力を黙ってPASSとみなさず、上記`--template`で新規のv1.1雛形を生成する。元の実機観測記録がある場合は人間が根拠を再照合したうえで移し、埋められない値は`UNTESTED`とする。
+- 初見30秒PASS: `firstActionSeconds <= 30` に加え、`firstCorrectActionObserved=true`、`goalUnderstoodUnprompted=true` を要求。開発者が教えた成功操作を自然な初見成功と混同しない。
+- NIGHT/ACE PASS: `nightDeliveries >= 3`・`aceDeliveries >= 6` に加え、`naturalInput=true`・`stateInjected=false` を要求。CIの状態直書き、模擬配達数だけではPASSを認めない。
+- 実スピーカー・イヤホンそれぞれのPASS: `soundOnAudible=true`、`soundOffSilent=true`、`soundOnRestored=true` を要求。単に「音が鳴った」だけではON/OFF復帰試験をPASSにしない。
+- 3分以上の発熱・性能PASS: `playMinutes>=3` と、`responsivenessAssessment`（応答性の具体的観察）・`heatAssessment`（温度や手触りの具体的観察）を別記（各12文字以上）。FPSの実測数値がない場合、架空のFPS値を要求・記録しない。
+- JST日時は実在する暦日時のみ許容。2月30日や25時等の無効日時は`INVALID_RECORD`とし、正確な観察日時が不明なら無理にPASSへ昇格しない。証拠本文は人間による実測と確認が必要で、検証器は真偽まで保証しない。
+- v1.1の雛形は数値`null`、真偽値`null`、説明欄空文字を初期値とし、デフォルト値でPASSになる抜け道を設けない。変更は`p021-game/qa/orbit-switch-courier-human-evidence.js`と同ディレクトリの`*.test.js`に限定。
+- GitHub developのread-only専用CI [Human Evidence Contract run 38710858843](https://github.com/kobitworks/autoai_poc/actions/runs/38710858843) でNode 22による構文検査、合成12テスト、空の雛形がUNTESTEDであることの検証に **completed/success**。CIは実機での録音・視線・タップ・FPS・発熱の実測を一切行わない。後続変更でも同じ検査を自動実行する。
+- ソース変更: [検証器](../qa/orbit-switch-courier-human-evidence.js) commit `814cd94f8847db514b4d9a663015e0703e66fcde`、[合成12テスト](../qa/orbit-switch-courier-human-evidence.test.js) commit `3ba763749ad765b74df9b738aa44efa89948bec6`、[read-only CI](../../../.github/workflows/p021-game-g030-human-evidence-tests.yml) commit `baacc39f2b5a4155b0f5c259cd04065c044c0bb8`。
+
+**今回の最終判定:** テストコードの契約チェックは合格。実機観察データは未提出のためHuman Gateの各項目は引き続き **UNTESTED**。独立暫定スコア **76/100**、一般公開基準80点未達を維持し、GAME-076は**ToDo継続**。ゲーム本体・従来のブラウザQA・main・本番環境・課金・公開範囲は変更していない。既通知と同じ実機テスト依頼を再送しない。
