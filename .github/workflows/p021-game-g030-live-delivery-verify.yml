@@ -1,0 +1,53 @@
+name: P021 GAME-G030 Live Delivery Byte Audit
+
+on:
+  push:
+    branches: [develop]
+    paths:
+      - '.github/workflows/p021-game-g030-live-delivery-verify.yml'
+      - 'p021-game/qa/orbit-switch-courier-live-build.js'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p021-game-g030-live-delivery-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  live-byte-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout develop without publish permissions
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+          persist-credentials: false
+      - name: Set up Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate verifier syntax
+        run: node --check p021-game/qa/orbit-switch-courier-live-build.js
+      - name: Compare GitHub Pages live files with checked-out develop
+        shell: bash
+        run: |
+          mkdir -p "$RUNNER_TEMP/p021-game-g030-live-audit"
+          set +e
+          node p021-game/qa/orbit-switch-courier-live-build.js > "$RUNNER_TEMP/p021-game-g030-live-audit/live-build-result.json"
+          verifier_exit=$?
+          set -e
+          cat "$RUNNER_TEMP/p021-game-g030-live-audit/live-build-result.json"
+          echo "GAME-G030 live byte verification exit: ${verifier_exit}" >> "$GITHUB_STEP_SUMMARY"
+          echo "0=PASS_LIVE_BYTES; 1=FAIL_MISMATCH/local error; 2=UNVERIFIED_FETCH." >> "$GITHUB_STEP_SUMMARY"
+          exit "$verifier_exit"
+      - name: Save live verification evidence even on mismatch or network failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p021-game-g030-live-build-byte-audit
+          path: ${{ runner.temp }}/p021-game-g030-live-audit/live-build-result.json
+          retention-days: 7
+          if-no-files-found: warn
