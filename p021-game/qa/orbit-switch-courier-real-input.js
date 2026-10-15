@@ -95,7 +95,10 @@ function verifyGuideContrast() {
     cargoPanel.includes('var warning_chip := Rect2(') &&
     // GAME-076: the slow visual urgency pulse must remain render-only.
     cargoPanel.includes('var warning_pulse := 0.5 + 0.5 * sin(elapsed * 3.5)') &&
-    cargoPanel.includes('draw_rect(warning_chip.grow(_ui_px(2.0)), Color(1.0, 0.87, 0.55, 0.45 + 0.4 * warning_pulse), false, _ui_px(2.0))') &&
+    cargoPanel.includes('cargo_warning_pulse_opacity = -1.0') &&
+    cargoPanel.includes('cargo_warning_pulse_opacity = 0.45 + 0.4 * warning_pulse') &&
+    cargoPanel.includes('draw_rect(warning_chip.grow(_ui_px(2.0)), Color(1.0, 0.87, 0.55, cargo_warning_pulse_opacity), false, _ui_px(2.0))') &&
+    source.includes('"cargo_warning_pulse_opacity": cargo_warning_pulse_opacity') &&
     cargoPanel.includes('_rounded_box(warning_chip, Color("#8b2030"), Color("#fff0aa"), 7, 2)') &&
     cargoPanel.includes('_draw_fit_label(cargo_countdown, Vector2(x, y), countdown_font_size,') &&
     cargoPanel.includes('cargo_left / _cargo_limit()'),
@@ -845,10 +848,19 @@ async function run(){
           /^0[123]s(?: LEFT!  HURRY  ·  [^…]+|! HURRY|!)$/.test(s)),
           'Compact warning HUD label not selected on actual draw: '+t.name+' '+
           JSON.stringify(selectedWarningTexts));
+        // Passive real-clock proof: source opacity drives the actual outline draw.
+        // 0.45..0.85 is a bound, not proof that a human noticed the animation.
+        const outlineOpacitySamples=[
+          Number(compactWarningBefore.cargo_warning_pulse_opacity),
+          Number(compactWarningAfter.cargo_warning_pulse_opacity)];
+        check(outlineOpacitySamples.every(v=>Number.isFinite(v) && v>=0.449 && v<=0.851),
+          'Compact urgent outline opacity missing/out of bounds: '+t.name+' '+JSON.stringify(outlineOpacitySamples));
         proof.cargoWarning={result:'CAPTURED_UNREVIEWED',
           hudTextSelection:'PASS_UNCLIPPED_ACTUAL_DRAW_TEXT',
           methodDetail:'Godot _draw_fit_label returns the actually rendered string; no ellipsis allowed',
           renderedTexts:selectedWarningTexts,
+          outlineOpacitySamples,
+          outlineOpacityResult:'PASS_PASSIVE_ALPHA_BOUNDED',
           method:'natural clock after physical START',
           secondsBefore:compactWarningBefore.cargo_left,
           secondsAfter:compactWarningAfter.cargo_left,
