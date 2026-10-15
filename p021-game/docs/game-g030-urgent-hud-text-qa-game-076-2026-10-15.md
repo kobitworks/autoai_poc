@@ -225,3 +225,14 @@ main・有料契約・本番公開範囲は変更しない。新HEAD CIの結果
 - **使い方:** Pages外部HTTP到達可能なNode 22環境で、developをcheckoutして `node p021-game/qa/orbit-switch-courier-live-build.js` を実行する。任意のBase URLは第1引数で指定でき、テスト用HTTPはlocalhost/127.0.0.1だけ許可。正常5/5 byte完全一致= `PASS_LIVE_BYTES` / exit 0、不一致=`FAIL_MISMATCH` / exit 1、HTTP/DNS/timeoutの取得不能=`UNVERIFIED_FETCH` / exit 2、ローカル前提エラー=`ERROR_LOCAL_OR_ARGUMENTS` / exit 1。公開URLのbuild.jsonだけ一致しても、4つの主要配信ファイル不一致ならPASSにしない。
 - **実施テスト:** `node --check` PASS。ローカルfixture＋モックHTTP fetchで一致5/5、故意のWASM不一致、DNS相当のfetch失敗の3ケースを検証し、結果/exitがそれぞれPASS_LIVE_BYTES(0) / FAIL_MISMATCH(1) / UNVERIFIED_FETCH(2)と一致。実際のPages公開URLの取得・ハッシュ照合はこの環境のDNS制限により未実施・UNVERIFIEDであり、上記は検査器そのもののローカル試験に限る。
 - **残りのGate:** 独立暫定品質76/100（一般公開品質80未達）。物理端末の初見30秒、残3秒警告即時認知、誤タップ、本体/イヤホン音、FPS/発熱、実回転はいずれもUNTESTED。実機報告を推測で埋めず、同一依頼は重複送信しない。公開URLの検査器をHTTP到達可能な場所で一度実行し、結果JSONを添えて配信同一性Gateを更新する。今回の変更はdevelop QA検査器と監査Docのみであり、ゲーム本体・既存CI・main・課金・本番・公開範囲の変更なし。GAME-076はToDo継続。
+
+
+## 2026-10-15 16:11:51 JST — GAME-076 / GitHub Pages実配信5ファイル完全一致を確認（AUTOAI-GAME076-20261015-161000）
+
+本回のAutoAI実作業はP021/GAME-076のみ。前回15:42:38 JST終了・GAME-076=ToDo・他Doingなし、新規明示@autoai指示なし、当日日次監視09:25済み、先行P005〜P018/P020に今すぐ実行可能タスクなしをFresh-readして、16:10:00 JSTにDoing排他取得。
+
+- **配信検証の実装**: GitHub develop の `.github/workflows/p021-game-g030-live-delivery-verify.yml` を新規追加（commit `fff9722a6ccfcafd1b88c4ef7355345443fc8bb9`）。最小権限 `contents: read`、Node 22、追加済みの読み取り専用検証器を使用し、公開Pagesから5ファイルをHTTP取得・同じdevelop checkoutとバイト単位/ SHA-256比較。GitHub Contents書込・main変更・課金設定/Secretsはなし。コードblobは `1a6a4c76dad62d1ed769d3c774d776d2c1900f52`、全文読戻し一致。
+- **本番配信相当のHTTP証跡**: [Actions run 38697001992](https://github.com/kobitworks/autoai_poc/actions/runs/38697001992) / job 116295822548 は最終 completed/success。実公開URL `https://kobitworks.github.io/autoai_poc/p021-game/games/orbit-switch-courier/` へのHTTP GETとSHA-256/byte比較が `PASS_LIVE_BYTES`・exit 0。5/5件一致: `build.json` 387B、`index.html` 5,625B、`index.js` 279,815B、`index.pck` 6,958,476B、`index.wasm` 39,514,754B。結果checkedAt=2026-10-15T07:10:55.298Z=16:10:55 JST。
+- **原本証跡**: [artifact 11955280783](https://github.com/kobitworks/autoai_poc/actions/runs/38697001992/artifacts/11955280783) `p021-game-g030-live-build-byte-audit` 821B ZIP、SHA256 `77ba0a8fbad42cdaca28869a2d8d6f202d8ccf79aec2e2342bb9a6646d71ab92`、有効期限2026-10-22 JST頃（保持7日）。同梱JSONは各5ファイルのlocal/live SHA256、サイズ、一致真偽、build provenanceを記録。
+- **build provenance**: source_commit=`847838737ec419b4fc1948ef4e256c155e87d393`、workflow_run_id=`38687898088`、attempt=1、quality_target=80。Pages成功を同一性PASSの代用にはせず、今回は実際のHTTP配信ファイル5件を直接比較したため、旧UNVERIFIED配信同一性Gateを**PASS_LIVE_BYTES**に更新する。
+- **残課題と境界**: PC/スマホ相当ブラウザでの自動入力CI合格と、物理端末のHuman Gateは別。独立暫定品質 **76/100**、一般公開目標80点未達。実機初見30秒、残3秒警告認知、指誤タップ、スピーカー/イヤホン音、FPS・発熱、物理回転は **UNTESTED**。既存確認依頼は再送しない。完了条件未達のためGAME-076=ToDoへ復帰、別タスク着手なし。
