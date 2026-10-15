@@ -750,6 +750,10 @@ func _draw_info_panel() -> void:
 		cargo_countdown = "%02ds LEFT!  HURRY  ·  %s" % [int(ceil(cargo_left)), cargo_target_label]
 		var warning_chip := Rect2(x - _ui_px(6.0), y - _ui_px(18.0), info_rect.size.x - pad * 2.0 + _ui_px(12.0), _ui_px(26.0))
 		_rounded_box(warning_chip, Color("#8b2030"), Color("#fff0aa"), 7, 2)
+		# GAME-076: Slow, non-flashing luminance pulse draws attention to a real
+		# <=3-second deadline. Visual feedback only; no timer/input/score changes.
+		var warning_pulse := 0.5 + 0.5 * sin(elapsed * 3.5)
+		draw_rect(warning_chip.grow(_ui_px(2.0)), Color(1.0, 0.87, 0.55, 0.45 + 0.4 * warning_pulse), false, _ui_px(2.0))
 	# GAME-076: Pair the target name with the same square/triangle/circle
 	# used on its destination HUB. The icon keeps the target recognizable when
 	# a narrow panel shortens the label; no route, input or timer logic changes.
