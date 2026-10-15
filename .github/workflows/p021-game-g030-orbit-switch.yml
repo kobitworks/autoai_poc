@@ -86,6 +86,8 @@ jobs:
           godot --headless --export-release "Web" ../../games/orbit-switch-courier/index.html
           cp README.md ../../games/orbit-switch-courier/README.md
           cp fonts/OFL.txt ../../games/orbit-switch-courier/NotoSansJP-OFL.txt
+          # GitHub Actions container checkout has a different owner; allow this workspace before resolving provenance.
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           BUILD_SOURCE_COMMIT="$(git rev-parse HEAD)"
           cat > ../../games/orbit-switch-courier/build.json <<JSON
           {
