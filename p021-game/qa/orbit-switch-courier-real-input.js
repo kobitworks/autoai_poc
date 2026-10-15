@@ -772,6 +772,17 @@ async function run(){
         const playing=await snapshot(page);
         check(playing.state==='playing'&&playing.orbit===1&&playing.energy===3,
           'Responsive natural START state mismatch: '+t.name);
+        // GAME-076: the compact portrait NEXT ACTION is drawn below the HUD.
+        // Assert actual rendered copy, not merely rectangle geometry; never set game state.
+        if(t.name==='small-phone-portrait'){
+          const fallback=!(Array.isArray(playing.action_card_rect)&&playing.action_card_rect[2]>0);
+          const rendered=playing.compact_action_rendered_text||'';
+          check(!fallback||(rendered.length>=7&&!rendered.includes('…')&&
+            /^(TAP|TARGET|WAIT|READY)\b/.test(rendered)),
+            'Small portrait PLAYING guidance missing/ellipsized: '+JSON.stringify({fallback,rendered}));
+          proof.compactPortraitAction={source:'ACTUAL_GODOT_RENDERED_TEXT_READ_ONLY',
+            fallback,rendered,notEllipsized:!rendered.includes('…')};
+        }
         check(fits(playing.field,playing.viewport_w,playing.viewport_h)&&
           fits(playing.info,playing.viewport_w,playing.viewport_h),
           'Responsive PLAYING field/info overflow: '+t.name);
