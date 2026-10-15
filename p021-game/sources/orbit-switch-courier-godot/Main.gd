@@ -80,6 +80,8 @@ var intro_start_rect := Rect2()
 # GAME-076: Only observe text actually selected for the rendered urgent HUD.
 # The QA bridge reads this; it never drives game state or timing.
 var cargo_warning_rendered_text := ""
+# GAME-076: Read-only telemetry of the rendered urgent outline opacity; -1 outside the urgent state.
+var cargo_warning_pulse_opacity := -1.0
 # GAME-076: Passive evidence from the actual intro font-fit draw path.
 var intro_fit_capture := false
 var intro_rendered_steps: Array[Dictionary] = []
@@ -737,6 +739,7 @@ func _draw_info_panel() -> void:
 	# GAME-076: Show the physical remaining seconds FIRST so even a clipped
 	# cargo name never hides the deadline. Highlight the final three seconds
 	# without obscuring the normal TAP NOW action or altering game timing.
+	cargo_warning_pulse_opacity = -1.0
 	var cargo_urgent := state == "playing" and cargo_left <= 3.0
 	# Keep the destination readable in narrower landscape info columns.
 	# HUB_SHORT preserves the target symbol when the full color/shape label would clip.
@@ -753,7 +756,8 @@ func _draw_info_panel() -> void:
 		# GAME-076: Slow, non-flashing luminance pulse draws attention to a real
 		# <=3-second deadline. Visual feedback only; no timer/input/score changes.
 		var warning_pulse := 0.5 + 0.5 * sin(elapsed * 3.5)
-		draw_rect(warning_chip.grow(_ui_px(2.0)), Color(1.0, 0.87, 0.55, 0.45 + 0.4 * warning_pulse), false, _ui_px(2.0))
+		cargo_warning_pulse_opacity = 0.45 + 0.4 * warning_pulse
+		draw_rect(warning_chip.grow(_ui_px(2.0)), Color(1.0, 0.87, 0.55, cargo_warning_pulse_opacity), false, _ui_px(2.0))
 	# GAME-076: Pair the target name with the same square/triangle/circle
 	# used on its destination HUB. The icon keeps the target recognizable when
 	# a narrow panel shortens the label; no route, input or timer logic changes.
@@ -1111,6 +1115,7 @@ func _update_debug_bridge() -> void:
 		"time_left": time_left,
 		"cargo_left": cargo_left,
 		"cargo_warning_rendered_text": cargo_warning_rendered_text,
+		"cargo_warning_pulse_opacity": cargo_warning_pulse_opacity,
 		"cargo_target": cargo_target,
 		"mission_tier": _mission_tier(),
 		"mission_name": _mission_name(),
