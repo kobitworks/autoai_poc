@@ -178,3 +178,17 @@ P021 / GAME-076 の同一継続タスク1件。前回10:20:22 JSTは新HEADのCI
 - 独立ピクセル比較で両系列の initial/restored INTRO PNG がそれぞれ全画素一致。回転相当の全8PNG、および小型INTRO/3秒警告PNG4枚を独立目視し、STARTと主要情報・警告表示を確認。320px PortraitのPLAYING表示下部では英語ガイド末尾の省略が画像で見られ、実機の瞬時可読性は未判定（改善余地）。
 - **検証境界**: これはPlaywrightのviewportリサイズであり物理端末の回転テストではない。実機の初見30秒/警告瞬間認知/指誤タップ/スピーカー・イヤホン音/FPS・発熱/端末回転は引き続き `UNTESTED`。一般公開品質独立暫定76/100を80点へ引き上げず、Human Gate結果取得後に10軸再採点。既通知の同一Human Gate確認は重複送信しない。
 - 今回は既存develop QAの合格証跡の実体検証・監査記録のみ。ゲーム本体・スコア・音・main・本番・課金・外部公開範囲は変更せず。GAME-076は完了条件未達につき`ToDo`継続。
+
+
+## 2026-10-15 13:10 JST — GAME-076 320px縦画面NEXT ACTION実描画短縮と自動監査（AUTOAI-GAME076-20261015-130832）
+
+今回のAutoAI実作業は既存 GAME-076 の1件のみ。共通Runner v1.38.2、P021 project_rule v1.2.0に従い、前回12:20終了・タスクToDo・他Doingなし・先行プロジェクト非該当・新規明示@autoai指示0件・本日監視実施済を確認して着手した。
+
+- 発見箇所: 2026-10-15 12:19の回転相当QAの320px Portrait PLAYINGスクリーンショットで、情報パネル下段の操作案内に末尾省略が見られた。小型portrait（高さ220px未満）の行テキストは、従来220〜275px向けにのみ適用していた省スペース変換を通らないことが原因候補。
+- 表示改善: `p021-game/sources/orbit-switch-courier-godot/Main.gd`。実際の合法操作判定 `_near_action_prompt`、時間、スコア、配達、物理、音声は不変。220px未満を含め275px以下の情報パネルで `TARGET · WAIT`、`TAP · SWITCH` 等へ短縮し、従来の `_draw_fit_label` の描画結果を読み取り専用変数に保持。
+- GitHub develop: source commit `96c0e0fd13e2806e8c2f7547cddbe3331ab14cb5`, blob `10cb198d9b3fcd442f5c0257d29dc845246f48e3`; QA commit `cde75bd6e845d781e45f908ab623fba860cb36b5`, blob `ecf3dbe1c13baf4177e92983e265040d877b2e06`。両ファイルをAPIから再読込し、blob/全文一致。
+- QA: `p021-game/qa/orbit-switch-courier-real-input.js` の320×568実START後、実描画テキストが空でないこと、`…` 省略記号がないこと、`TAP/TARGET/WAIT/READY` の合法操作説明で始まることをread-onlyで検証。結果JSONへ `compactPortraitAction` として保存。ゲーム状態への注入は禁止したまま。
+- 新HEAD Actions: [run 38679988812](https://github.com/kobitworks/autoai_poc/actions/runs/38679988812)。13:10頃の確認でcontract=success、export-web=in_progress、browser-quality/artifactは未確定。**新HEADの全ジョブ・実ブラウザ描画はまだPASS認定しない**。最終結果と新ZIP/JSON・PNGは再照合が必要。
+- Human Gate: 初見30秒認識、指誤タップ、瞬間警告、スピーカー/イヤホン音、FPS・発熱、実機回転はUNTESTED。品質独立暫定 **76/100**、80点未達。既通知と同じ実機確認催促は再送しない。
+
+main・有料契約・本番公開範囲は変更しない。新HEAD CIの結果に応じて本タスク内で改善または継続判定する。
