@@ -155,3 +155,16 @@ P021 / GAME-076 の同一継続タスク1件。前回10:20:22 JSTは新HEADのCI
 - 独立暫定品質 **76/100** を据置き。80点の一般公開完了ライン未達。実機の初見30秒、指誤タップ、警告3秒以内認知、音、FPS/発熱、端末回転Human Gateはすべて **UNTESTED**。既存の実機受入試験票v1.1を使用し、同一内容の確認依頼Slackを重複送信しない。main・本番・課金・公開範囲変更なし。
 
 次回継続点: 新runの`browser-quality`最終結果とartifact内`orientationSweep`の2系統結果を照合し、失敗なら同一GAME-076内で修正。合格でも実機Human Gateと80点再採点完了までGAME-076はToDo継続。
+
+
+## 2026-10-15 11:52 JST 回転QA初回失敗の原因究明と最小修正（AUTOAI-GAME076-20261015-1149）
+
+今回の実作業は同一 GAME-076 の1件のみ。前回追加のviewport縦横相当テストについて、最新GitHub Actionsの終了結果を読み戻したところ、[run 38670605430](https://github.com/kobitworks/autoai_poc/actions/runs/38670605430) / HEAD `8ff3e9f9b9595670fb6c8d17deea9fe11d558fe2` は `contract=success / export-web=success / browser-quality=failure` だった。browser-qualityのログでは `orientationSweep` の2系列ともinitial段階で `page.waitForFunction: Timeout 16000ms exceeded`、steps空のFAIL。旧成功CIを最新HEADのPASSとは扱わない。
+
+- **不具合原因:** QAが`window.__P021_ORBIT.viewport_w/viewport_h`（Godotの`get_viewport_rect().size`から取得する**論理viewport**）と、Playwright `setViewportSize` の**CSS pixel**を誤って同一視し、絶対値差2px以下を要求していた。Godot正本`project.godot`は`window/stretch/mode="canvas_items"`、`window/stretch/aspect="expand"`、初期論理解像度390×844であり、縦横比や拡縮に応じて論理寸法はCSS実寸と一致しない。これが両系列initialの共通Timeoutの直接原因と判断した。
+- **修正:** `p021-game/qa/orbit-switch-courier-real-input.js` においてINTROとPLAYINGの待機判定を、`logical viewport width/height` とCSS `width/height` の**縦横比差0.025未満**へ変更。実DOM `#canvas` のCSS座標範囲、field/infoの論理画面内fit、手順4行の描画文字/最小サイズ、STARTの実タッチと状態遷移などの既存検査は維持。各段階の証跡へ`logicalViewport`実測値を追加し、寸法差の原因を追跡可能にした。ゲーム本体・入力/タイマ/物理/スコア/音は不変。
+- **GitHub develop:** [commit c007bbc53f1fcff111b9852e43a6da6d5fa4deff](https://github.com/kobitworks/autoai_poc/commit/c007bbc53f1fcff111b9852e43a6da6d5fa4deff)、変更ファイルGit blob `deb218b4374f83bef5e47517ad43bd4366ea49bc`。GitHubから全文readbackし、2か所の縦横比判定と`logicalViewport`証跡・blob一致を確認。
+- **修正後CI:** [run 38673212538](https://github.com/kobitworks/autoai_poc/actions/runs/38673212538) が新HEAD `c007bbc53f1fcff111b9852e43a6da6d5fa4deff` で起動。11:52 JST時点でcontract=success、export-web=in_progress、browser-quality/実体artifactは**未判定**。上記失敗の解消がCIで実測されるまでは修正成功と断定しない。
+- **継続・安全境界:** 独立暫定品質76/100（一般公開完了目標80点未達）。実機初見30秒、警告瞬間認知、誤タップ、本体/イヤホン音、FPS/発熱、**物理端末回転**のHuman GateはUNTESTEDのまま。画面比率QAが合格しても実機の代替としない。既存依頼の重複Slack催促は行わない。main・本番・課金・外部公開範囲は変更しない。GAME-076は完了条件未達につきToDo継続。
+
+次回はrun 38673212538の全ジョブ、生成ZIP/JSONの`orientationSweep`双方向（必要ならPNG）を検品し、失敗なら同じGAME-076で原因を追究する。実機試験結果が入るまで品質80点認定しない。
