@@ -241,6 +241,7 @@ async function run(){
   const browser=await chromium.launch({headless:true});
   const results=[];
   const layoutSweep=[];
+  const orientationSweep=[];
   // Keep a read-only, machine-parseable checkpoint on disk. GitHub Actions may
   // cancel a long four-viewport run before the final results.json is written.
   // This does not alter game state, scoring, or any physical input.
@@ -878,14 +879,111 @@ async function run(){
         await context.close();
       }
     }
+
+    // GAME-076: simulated viewport rotation/resize regression for browser layout.
+    // This is NOT a device orientation sensor test or a physical Human Gate.
+    // Resize the real Godot Web canvas without injecting state or altering physics.
+    for(const t of [
+      {name:'portrait-to-landscape',initial:{width:320,height:568},
+        rotated:{width:667,height:375}},
+      {name:'landscape-to-portrait',initial:{width:667,height:375},
+        rotated:{width:320,height:568}}
+    ]){
+      const context=await browser.newContext({
+        viewport:t.initial,deviceScaleFactor:1,isMobile:true,hasTouch:true
+      });
+      const page=await context.newPage(), errors=[];
+      page.on('pageerror',e=>errors.push('pageerror '+e.message));
+      page.on('console',m=>{if(m.type()==='error')errors.push('console '+m.text());});
+      page.on('requestfailed',r=>errors.push('request '+r.url()));
+      const proof={viewportSequence:t.name,method:'PLAYWRIGHT_VIEWPORT_RESIZE_NOT_DEVICE_ROTATION',
+        steps:[],physicalLegibility:'HUMAN GATE',status:'FAIL'};
+      try{
+        await page.goto(url,{waitUntil:'domcontentloaded',timeout:120000});
+        await until(page,()=>window.__P021_ORBIT&&window.__P021_ORBIT.ready,
+          'rotation initial ready '+t.name,120000);
+        for(const stage of [
+          {name:'initial',size:t.initial},
+          {name:'rotated',size:t.rotated},
+          {name:'restored',size:t.initial}
+        ]){
+          if(stage.name!=='initial')await page.setViewportSize(stage.size);
+          await until(page,(expected)=>{
+            const d=window.__P021_ORBIT;
+            return d&&d.state==='intro'&&d.ready&&
+              Math.abs(d.viewport_w-expected.width)<=2&&
+              Math.abs(d.viewport_h-expected.height)<=2&&
+              Array.isArray(d.intro_rendered_steps)&&d.intro_rendered_steps.length===4;
+          },'rotation reflow '+t.name+' '+stage.name,16000,stage.size);
+          const d=await snapshot(page);
+          const c=await page.locator('#canvas').boundingBox();
+          check(c&&c.x>=-2&&c.y>=-2&&
+            c.x+c.width<=stage.size.width+2&&
+            c.y+c.height<=stage.size.height+2,
+            'Rotation canvas overflows '+t.name+' '+stage.name);
+          check(fits(d.field,d.viewport_w,d.viewport_h)&&
+            fits(d.info,d.viewport_w,d.viewport_h),
+            'Rotation field/info overflows '+t.name+' '+stage.name);
+          const lines=d.intro_rendered_steps;
+          check(lines.length===4&&lines.every((line,i)=>line&&
+            line.text&&line.ellipsized===false&&Number(line.font_css_px)>=(i===0?12:14)),
+            'Rotation clipped/shrunk intro '+t.name+' '+stage.name+' '+JSON.stringify(lines));
+          const last=physicalRect(d.intro_last_step_rect,c,d);
+          const start=physicalRect(d.intro_start_rect,c,d);
+          const gap=start.y-(last.y+last.height);
+          check(start.width>=44&&start.height>=40&&gap>=4,
+            'Rotation START overlap/hitbox '+t.name+' '+stage.name+' gap='+gap);
+          const sound=physicalRect(d.sound_rect,c,d);
+          check(sound.width>=44&&sound.height>=44&&
+            sound.x>=-2&&sound.y>=-2&&
+            sound.x+sound.width<=stage.size.width+2&&
+            sound.y+sound.height<=stage.size.height+2,
+            'Rotation SOUND hitbox invalid '+t.name+' '+stage.name);
+          proof.steps.push({stage:stage.name,viewport:stage.size,
+            state:d.state,startCssPx:{width:Math.round(start.width),height:Math.round(start.height)},
+            guideToStartGapCssPx:Math.round(gap*100)/100,
+            introFontsCssPx:lines.map(line=>Math.round(line.font_css_px*100)/100),
+            ellipsized:lines.some(line=>line.ellipsized)});
+          await page.screenshot({path:dir+'/'+t.name+'-'+stage.name+'-intro.png'});
+        }
+        // A genuine touchscreen tap on the restored START button after two resizes.
+        const before=await snapshot(page),c=await page.locator('#canvas').boundingBox();
+        const start=physicalRect(before.intro_start_rect,c,before);
+        await page.touchscreen.tap(start.x+start.width/2,start.y+start.height/2);
+        await until(page,()=>window.__P021_ORBIT&&window.__P021_ORBIT.state==='playing',
+          'rotation genuine START '+t.name,12000);
+        await page.setViewportSize(t.rotated);
+        await until(page,(expected)=>{
+          const d=window.__P021_ORBIT;
+          return d&&d.state==='playing'&&
+            Math.abs(d.viewport_w-expected.width)<=2&&
+            Math.abs(d.viewport_h-expected.height)<=2;
+        },'rotation active play reflow '+t.name,12000,t.rotated);
+        const playing=await snapshot(page),pc=await page.locator('#canvas').boundingBox();
+        check(playing.energy===3&&playing.deliveries===0&&
+          fits(playing.field,playing.viewport_w,playing.viewport_h)&&
+          fits(playing.info,playing.viewport_w,playing.viewport_h)&&
+          pc&&pc.x+pc.width<=t.rotated.width+2&&pc.y+pc.height<=t.rotated.height+2,
+          'Rotation disturbed initial active play '+t.name);
+        await page.screenshot({path:dir+'/'+t.name+'-rotated-playing.png'});
+        check(errors.length===0,'Rotation browser errors '+t.name+': '+errors.join(' | '));
+        proof.steps.push({stage:'playing-after-resize',viewport:t.rotated,
+          state:playing.state,energy:playing.energy,deliveries:playing.deliveries,
+          actualInput:'touchscreen.tap START',stateInjection:false});
+        proof.status='PASS_ORIENTATION';
+      }catch(err){proof.failure=String(err.message||err);proof.browserErrors=errors;}
+      finally{orientationSweep.push(proof);await context.close();}
+    }
   }finally{await browser.close();}
   const output={task:'GAME-076',game:'GAME-G030',visualContract,
     method:'real touch/mouse STARTER/RUSH/NIGHT/ACE natural delivery and BEST persistence; read-only QA telemetry; no QA command/state override',
     screenshotStates:['intro','playing','route-rush','route-ace','miss-feedback','result','retry','sound-off','sound-on','replay','cue-stress','cargo-warning-3s'],
     physicalOutput:'NOT VERIFIED – must check actual device audio and first-time user experience',
-    independentQualityScore:'NOT ASSESSED (manual visual/audio/human checks separate)',viewports:results,layoutSweep};
+    orientationNote:'Viewport resize simulation only; physical rotation remains UNTESTED',
+    independentQualityScore:'NOT ASSESSED (manual visual/audio/human checks separate)',viewports:results,layoutSweep,orientationSweep};
   fs.writeFileSync(dir+'/results.json',JSON.stringify(output,null,2));
   console.log(JSON.stringify(output,null,2));
-  if(results.some(x=>x.status!=='PASS') || layoutSweep.some(x=>x.status!=='PASS_GEOMETRY'))process.exitCode=1;
+  if(results.some(x=>x.status!=='PASS') || layoutSweep.some(x=>x.status!=='PASS_GEOMETRY') ||
+    orientationSweep.some(x=>x.status!=='PASS_ORIENTATION'))process.exitCode=1;
 }
 run().catch(e=>{console.error(e);process.exitCode=1;});
