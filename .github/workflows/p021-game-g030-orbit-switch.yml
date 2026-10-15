@@ -86,14 +86,18 @@ jobs:
           godot --headless --export-release "Web" ../../games/orbit-switch-courier/index.html
           cp README.md ../../games/orbit-switch-courier/README.md
           cp fonts/OFL.txt ../../games/orbit-switch-courier/NotoSansJP-OFL.txt
-          cat > ../../games/orbit-switch-courier/build.json <<'JSON'
+          BUILD_SOURCE_COMMIT="$(git rev-parse HEAD)"
+          cat > ../../games/orbit-switch-courier/build.json <<JSON
           {
             "game": "GAME-G030",
             "task": "GAME-069",
             "engine": "Godot 4.7.2",
             "renderer": "Compatibility",
             "thread_support": false,
-            "quality_target": 84,
+            "quality_target": 80,
+            "source_commit": "${BUILD_SOURCE_COMMIT}",
+            "workflow_run_id": "${GITHUB_RUN_ID}",
+            "workflow_run_attempt": "${GITHUB_RUN_ATTEMPT}",
             "storage": "browser localStorage",
             "viewports": ["390x844", "844x390", "768x1024", "1024x768"]
           }
