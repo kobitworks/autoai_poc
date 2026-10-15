@@ -1,4 +1,4 @@
-# GAME-076 / GAME-G030 実機初見・可読性・音・性能の受入試験票 v1.3
+# GAME-076 / GAME-G030 実機初見・可読性・音・性能の受入試験票 v1.4
 作成: 2026-10-15 JST / AutoAI P021（GAME-076継続）
 対象: Orbit Switch Courier (Godot Web)。親タスク: GAME-076。
 成果物区分: **試験手順と記録テンプレート**。実機テストの実施結果・承認ではない。
@@ -108,3 +108,25 @@ FPS/responsiveness / heat / rotation:
 repro steps and screenshots (if any):
 independent conclusion / unresolved items:
 ```
+
+
+## 9. 実機記録JSONの機械的欠落チェック（2026-10-15 追補）
+
+**このチェックは実機テストの代行ではなく、人間が収集した観察記録の必須項目チェックのみ。** 実端末を自動操作せず、記録の真偽も認証せず、76/100を80/100へ自動加点しない。本人が実測していない項目はUNTESTEDのままにする。
+
+- 開発ブランチ追加検証器: [orbit-switch-courier-human-evidence.js](../qa/orbit-switch-courier-human-evidence.js)。Node 22標準ライブラリのみ、読取専用、外部ネット接続なし、対象JSONやGitHub/Sheetsへの書込なし。
+- 雛形出力:
+
+      node p021-game/qa/orbit-switch-courier-human-evidence.js --template > human-evidence.local.json
+
+- **実機試験後にのみ**匿名化した観測記録をJSONへ追記して、以下で検査する。生の個人名・写真・認証情報はJSONやGitHubへ登録しない。
+
+      node p021-game/qa/orbit-switch-courier-human-evidence.js human-evidence.local.json
+
+- 対象9項目: 初見30秒／誤タップ／NIGHT・ACE自然入力到達／3秒警告認知／RESULT・RETRY・BEST／実スピーカー音／イヤホン実音／3分以上の性能・発熱／物理画面回転。各記録はPASS/FAIL/UNTESTED、観測時刻(JST)、テスター観測の明示、具体的証拠の説明を求める。PASSには手順に応じ操作時秒数、配達数、警告認知秒数、BEST保持、プレイ時間、縦横向き等の追加測定値が必須。
+- ビルド同一性: sourceCommit、actionsRunId、liveByteGate、testedBuildMatchesVerifiedBuild、実測時刻と検証根拠で識別。2026-10-15 16:10:55 JSTの過去の5/5 byte一致を、**後日の別ビルドや再配信へのPASSとして流用しない**。試験対象ビルドとの一致が未確認ならHOLD_BUILD_VERIFICATION。
+- 判定はHOLD_DEVICE_DETAILS / HOLD_BUILD_VERIFICATION / HOLD_UNTESTED / REQUIRES_FIX / INVALID_RECORD / READY_FOR_INDEPENDENT_SCORINGを区別。前5状態は品質合格ではない。READY_FOR_INDEPENDENT_SCORINGも人間の証跡確認と10軸独立再採点が必要で、完成判定ではない。
+- CLI終了コード: 0=構造上の採点準備可、2=入力形式不正、3=未検証・失敗・ビルドGateで採点準備不可。--templateのみ0で雛形を出力。
+- 追加時の**合成データのロジック単体テスト**: 空雛形→HOLD_DEVICE_DETAILS、9項目が模擬的に揃う→READY_FOR_INDEPENDENT_SCORING、speaker未実施→HOLD_UNTESTED、PASSに証拠なし→INVALID_RECORD。**これは模擬入力であり実機試験結果ではない**。
+
+**現状:** 物理実機での実測入力は未受領、GAME-076のHuman Gateは**UNTESTED**、品質暫定**76/100**のまま。実機結果が届くまでは本ツールの形式検査成功を根拠にGAME-076をDoneにしない。
