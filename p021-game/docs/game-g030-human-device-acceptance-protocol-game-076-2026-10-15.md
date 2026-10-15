@@ -1,18 +1,28 @@
-# GAME-076 / GAME-G030 実機初見・可読性・音・性能の受入試験票 v1
+# GAME-076 / GAME-G030 実機初見・可読性・音・性能の受入試験票 v1.1
 作成: 2026-10-15 JST / AutoAI P021（GAME-076継続）
 対象: Orbit Switch Courier (Godot Web)。親タスク: GAME-076。
 成果物区分: **試験手順と記録テンプレート**。実機テストの実施結果・承認ではない。
 
-## 1. 基準ビルドと検証済み事項
+## 1. 基準ビルドと検証済み事項（2026-10-15 11:07 JST更新）
 - 正本コード: [autoai_poc/develop/p021-game](https://github.com/kobitworks/autoai_poc/tree/develop/p021-game)
 - ゲーム本体: [Main.gd](https://github.com/kobitworks/autoai_poc/blob/develop/p021-game/sources/orbit-switch-courier-godot/Main.gd)
-- 静的・ブラウザCI基準: [run 38619691662](https://github.com/kobitworks/autoai_poc/actions/runs/38619691662), 対象source commit `fd2c66f810be90c2a01233bb0794f36136f9c62f`。2026-10-15 04時台のAPI再確認で contract/export-web/browser-quality 3/3 completed/success。
-- [独立監査（2026-10-15）](https://github.com/kobitworks/autoai_poc/blob/develop/p021-game/docs/game-g030-run-38539286622-independent-artifact-audit-game-076-2026-10-15.md)には標準4 viewport自然入力4/4 PASS、小型3 viewport実START後幾何3/3 PASS_GEOMETRY、画像の確認結果を保存済み。
-- ゲームの独立暫定品質評価: **76/100**（一般公開品質目標80/100未達）。この試験票の作成だけで点数は加点しない。
-- 過去CIのPASSは**実機での初心者の理解・タップ誤操作・音質・警告の瞬間認知・FPS/熱**の合格を意味しない。
+- **受入試験の最新検証基準（旧run 38619691662から更新）**: [Godot Actions run 38664938941](https://github.com/kobitworks/autoai_poc/actions/runs/38664938941)、自然入力QA HEAD `28cb40cf32c2330e7a6d0320efb8b7574671e436`。
+- **2026-10-15 11:07 JSTの独立再照合**: 上記runの `contract` / `export-web` / `browser-quality` 3ジョブすべて `completed/success`。GitHub APIのartifact [11941230080](https://github.com/kobitworks/autoai_poc/actions/runs/38664938941/artifacts/11941230080) は4,532,492 bytes / `sha256:80d650794ada5174524274f21bcdc686e38431b2be6f370cbc38ea6f52c0fc16` / `expired=false`。
+- 最新 `develop` で読み戻したGit blobはGodot `Main.gd`=`e3e8dfc4780b37929353f336e78bf7545b84d0ee`、実入力QA=`138fa2b621843f1aaec2dba798c415c72553636c`。同runに紐づくソース・QA実体の参照値として記録する。
+- 過去の[GAME-076 独立監査](./game-g030-urgent-hud-text-qa-game-076-2026-10-15.md)では、当該artifactのZIP63エントリCRC/PNG61枚/JSON2件検品、標準4 viewport自然入力4/4 PASS、小型3 viewport幾何3/3 PASS、警告outline alpha6点の範囲内変動が確認済み。**今回の更新作業でZIPの再ダウンロード・物理端末での試遊を実施したわけではない**。
+- 同監査にはWeb Export commit `32b5160b99c6c3a2df0408e478a843fc346d89fb` とPages run `38665213538` が記録されている。公開URLで実機試験を行う際は、配信中のビルドとこの基準が一致することを別途確認する。**CI成功と公開URLのビルド同一性は同義ではない**。
+- 独立暫定品質評価は**76/100**（一般公開品質目標80/100未達）。本試験票更新だけでは点数を加算しない。実機初見30秒・指誤タップ・実際の警告認知・音質・FPS/発熱・縦横回転は引き続き**UNTESTED**。
+
+### 1.1 実機テスト開始前のビルド同一性Gate
+1. 対象URLまたは配布Web Exportの出所、取得日時、コミット（取得可能な場合）とActions run番号を記録する。
+2. 公開URLからコミットを特定できない場合は「ビルド同一性未確認」と記録する。現行HEADでのHuman Gate合格として扱わず、参考試遊結果としてのみ保存する。
+3. CIの結果は実機での文字認知・操作・音声・性能のPASSへ転用しない。ビルドが一致しても、セクション3〜6の各項目を実際の人間・実端末で観察する。
+4. 後続のコード/QA変更で別runが合格した場合は、そのrunのHEAD、artifact、差分を照合してから本基準を更新する。古いrunのPASSを流用しない。
 
 ## 2. テスト対象と記録欄
-対象のWeb Exportバージョン（commit/Actions run）: ______
+対象Web ExportのURL・配信経路/取得日時: ______
+基準とのビルド同一性: ☐確認済 ☐不一致 ☐未確認（根拠: ______）
+検証対象のソース/QA commit・Actions run・artifact識別子: ______
 実機種別/OS・ブラウザversion・画面の向き: ______
 テスト日時(JST): ______　　テスター（仮名可）: ______
 音声経路: ☐本体スピーカー ☐イヤホン ☐無音　　画面倍率/文字サイズ設定: ______
