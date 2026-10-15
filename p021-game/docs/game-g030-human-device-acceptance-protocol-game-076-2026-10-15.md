@@ -1,4 +1,4 @@
-# GAME-076 / GAME-G030 実機初見・可読性・音・性能の受入試験票 v1.6
+# GAME-076 / GAME-G030 実機初見・可読性・音・性能の受入試験票 v1.7
 作成: 2026-10-15 JST / AutoAI P021（GAME-076継続）
 対象: Orbit Switch Courier (Godot Web)。親タスク: GAME-076。
 成果物区分: **試験手順と記録テンプレート**。実機テストの実施結果・承認ではない。
@@ -156,3 +156,12 @@ independent conclusion / unresolved items:
 - **静的契約チェック（GitHub readback）**: Gate名9/9、観測フィールド22/22、buildフィールド7/7、deviceフィールド5/5 が既存検証器と対応。HTML内に自動送信fetch/XMLHttpRequest/sendBeaconや外部script読み込みは見つからない。**実機ブラウザでのフォーム操作E2Eは未実施**であり、UI挙動は実端末試験時に別途確認する。
 - 入力後のJSONは必ず `node p021-game/qa/orbit-switch-courier-human-evidence.js GAME-076-human-evidence.json` で構造検証する。**READY_FOR_INDEPENDENT_SCORINGは採点準備可に過ぎない**。合格・一般公開品質80点到達を意味せず、人間が観測根拠・配信ビルド同一性を確認してから10軸独立採点する。
 - 変更範囲は今回追加のHTMLと本受入試験票のみ。ゲームソース/自然入力QA/既存検証器/main/本番/公開範囲/課金に変更なし。GAME-076はHuman Gate **UNTESTED**・独立暫定品質 **76/100** を維持する。
+
+
+### 9.3 オフラインフォームの自動ブラウザE2E確認 v1.7（2026-10-15）
+- **対象は実機観測フォーム自身のソフトウェア挙動のみ**。実端末上のゲーム操作・初見30秒理解・配達到達・音質・FPS・発熱・物理画面回転は引き続き一切未試験。
+- [オフラインフォームのPlaywrightテスト](../qa/orbit-switch-courier-recorder-browser-smoke.js) を追加（GitHub develop commit `a418dd156a1e7d0ae81260b41bdeb57cfdda9629`）。端末へ保存した単一HTMLを模したローカル `file://` でChromium起動し、ブラウザをオフライン設定する。人工入力のみ扱う。
+- **CI合格**: [GitHub Actions run 38716753187](https://github.com/kobitworks/autoai_poc/actions/runs/38716753187) / job `116361197825` は `completed/success`。2画面 `390×844`（スマホ相当タッチ）・`844×390`（横画面）の双方で、フォーム初期9/9 Gate=`UNTESTED`、build=`UNVERIFIED`、進捗0/9、空JSONが`HOLD_DEVICE_DETAILS`で採点不可であることを確認。
+- 自動ブラウザで人工入力（明示的FAIL・小数・整数・false・画面方向）→JSONローカル保存→リロード→JSON再読込の値一致と、schemaVersionが旧1.0のJSON拒否を確認。水平あふれ・ボタン高さ・JavaScriptエラー・外部へのHTTP送信がないことも確認した。
+- 専用[read-only CI定義](../../../.github/workflows/p021-game-g030-recorder-browser-smoke.yml) を追加（GitHub develop commit `0952558dd07d3fac227ac003a72d0d146804330e`）。`contents: read`、外部API送信・ゲームbuild変更・自動公開なし。後続変更時にも同テストを実行する。
+- **判定の境界**: 合成ブラウザテスト2画面PASS ≠ 実機Human Gate PASS。実測入力は届いていないのでHuman Gate全9項目は`UNTESTED`、独立暫定スコア **76/100**（一般公開基準80未達）を維持。既存Node検証器→人による実測証跡照合→独立10軸再採点が完了するまでGAME-076は`ToDo`継続。実機確認依頼は重複送信しない。
