@@ -192,3 +192,14 @@ P021 / GAME-076 の同一継続タスク1件。前回10:20:22 JSTは新HEADのCI
 - Human Gate: 初見30秒認識、指誤タップ、瞬間警告、スピーカー/イヤホン音、FPS・発熱、実機回転はUNTESTED。品質独立暫定 **76/100**、80点未達。既通知と同じ実機確認催促は再送しない。
 
 main・有料契約・本番公開範囲は変更しない。新HEAD CIの結果に応じて本タスク内で改善または継続判定する。
+
+## 2026-10-15 13:23 JST — GAME-076 / 新HEAD CI・ZIP/JSON/PNG独立監査（AUTOAI-GAME076-20261015-132245）
+
+本回の実作業対象はP021の既存GAME-076のみ。Runner v1.38.2・P021 project_rule v1.2.0に従い、直前13:11:15 JSTの実行終了とToDo排他解放、先行有効PJにAI実行可能タスクなし、Slack新規明示指示なし、当日日次監視済を確認して着手。
+
+- **新HEAD CI:** [GitHub Actions run 38679988812](https://github.com/kobitworks/autoai_poc/actions/runs/38679988812) は、develop commit `cde75bd6e845d781e45f908ab623fba860cb36b5` を対象に `contract`・`export-web`・`browser-quality` の3ジョブすべて **completed/success**。13:11の実行時点では未確定だった新HEADに限定した結果であり、旧runのPASSは転用していない。
+- **原本ZIP独立検品:** [artifact 11948265436](https://github.com/kobitworks/autoai_poc/actions/runs/38679988812/artifacts/11948265436) のZIP実体を取得し、**4,938,123 bytes**、ローカルSHA-256 **d618473ece3c645f8783c0b7e635a7f3abff1493aa84742a75b8a5ea5eec97f6** がGitHub artifact APIのsize/digestおよびbrowser-qualityアップロードジョブログのdigestと一致。ZIP計**71エントリ**のCRC正常、**PNG69枚**すべてPillow verify合格、`results.json`/ `results-checkpoint.json` の**2件**JSON正常パース。
+- **自然入力・UI証跡:** 390×844 / 844×390 / 768×1024 / 1024×768の4標準viewportは **4/4 PASS**、SOUND ON/OFFはすべてtrue。320×568 / 667×375 / 800×600の小型3viewportは **3/3 PASS_GEOMETRY**（小型3画面の全配送ルート完走を意味しない）。新しい320×568 Portraitの `compactPortraitAction` は `source=ACTUAL_GODOT_RENDERED_TEXT_READ_ONLY`, `rendered="TAP · SWITCH"`, `notEllipsized=true`, `fallback=true` をJSONから確認。320pxの初見カード手順3行は16.15 CSS px相当かつ非省略。
+- **縦横相当・警告:** `orientationSweep` の縦→横、横→縦は**2/2 PASS_ORIENTATION**、双方実タッチSTART→PLAYING、`stateInjection=false`。これはPlaywright viewportリサイズであり物理端末回転のPASSではない。小型3画面の自然時刻残3秒警告は `03s! HURRY` 非省略、alpha2点の範囲・変化を記録。小型Portrait/landscapeのINTRO・PLAYING・残3秒警告および回転相当PLAYINGの計8PNGを新ZIPから独立目視し、主要UI消失や明白な末尾切れ・重なりは認めず。ただし物理端末での瞬間認知までは保証しない。
+- **完了判定:** 独立暫定品質 **76/100**（原則80点目標未達）を維持。物理端末の初見30秒理解、3秒警告即時認知、誤タップ、スピーカー・イヤホン実音、FPS・発熱、実機回転はすべて**UNTESTED / Human Gate**。実機受入結果に基づく10軸再採点を次回継続。既通知と同じ実機確認依頼をSlackへ重複送信しない。GAME-076は完了条件未達のため**ToDo継続**。
+- **変更範囲:** 今回は上記develop監査文書だけを更新。ゲームコード・QAコード・main・有料利用・本番・外部公開範囲には変更しない。別タスクへの着手なし。
