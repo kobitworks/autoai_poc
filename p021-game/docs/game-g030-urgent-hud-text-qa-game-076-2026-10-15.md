@@ -203,3 +203,16 @@ main・有料契約・本番公開範囲は変更しない。新HEAD CIの結果
 - **縦横相当・警告:** `orientationSweep` の縦→横、横→縦は**2/2 PASS_ORIENTATION**、双方実タッチSTART→PLAYING、`stateInjection=false`。これはPlaywright viewportリサイズであり物理端末回転のPASSではない。小型3画面の自然時刻残3秒警告は `03s! HURRY` 非省略、alpha2点の範囲・変化を記録。小型Portrait/landscapeのINTRO・PLAYING・残3秒警告および回転相当PLAYINGの計8PNGを新ZIPから独立目視し、主要UI消失や明白な末尾切れ・重なりは認めず。ただし物理端末での瞬間認知までは保証しない。
 - **完了判定:** 独立暫定品質 **76/100**（原則80点目標未達）を維持。物理端末の初見30秒理解、3秒警告即時認知、誤タップ、スピーカー・イヤホン実音、FPS・発熱、実機回転はすべて**UNTESTED / Human Gate**。実機受入結果に基づく10軸再採点を次回継続。既通知と同じ実機確認依頼をSlackへ重複送信しない。GAME-076は完了条件未達のため**ToDo継続**。
 - **変更範囲:** 今回は上記develop監査文書だけを更新。ゲームコード・QAコード・main・有料利用・本番・外部公開範囲には変更しない。別タスクへの着手なし。
+
+
+## 2026-10-15 15:09 JST — GAME-076 / 新CI・Pages・証跡独立再監査（AUTOAI-GAME076-20261015-1506）
+
+前回14:41:34 JSTのToDo復帰と同時Doingなし、依存GAME-075=Done、Slack新規明示`@autoai`指示0件、日次全体監視09:25済みをFresh-readして今回の実行をGAME-076のみに限定した。Runner v1.38.2、P021 project_rule v1.2.0を適用。
+
+- **新HEAD CIの最終合否**: [run 38687898088](https://github.com/kobitworks/autoai_poc/actions/runs/38687898088) はソースHEAD `847838737ec419b4fc1948ef4e256c155e87d393` で `contract`・`export-web`・`browser-quality` が **3/3 completed/success**。前回の `in_progress` は解消。旧CIのPASSを新HEADの根拠に転用していない。
+- **Pagesワークフロー**: [run 38688038527](https://github.com/kobitworks/autoai_poc/actions/runs/38688038527) は `build`、`report-build-status`、`deploy` の **3/3 completed/success**。ただし、公開URLの `build.json` 自体はこの実行環境から直接HTTP取得できず、**公開配信物とソースの厳密同一性はUNVERIFIED** のまま。Pagesジョブの成功をURL配信内容の直接検品と混同しない。
+- **build provenance**: GitHub `develop` [build.json](https://github.com/kobitworks/autoai_poc/blob/develop/p021-game/games/orbit-switch-courier/build.json) を直接取得。blob `38d59aae6fe3c99ee94fc386eaa4e0c8fc0a34d4`、`source_commit=847838737ec419b4fc1948ef4e256c155e87d393`、`workflow_run_id=38687898088`、`workflow_run_attempt=1`、`quality_target=80` の内容を確認。生成物とCIソースの追跡性は成立。
+- **artifact原本ZIP独立検品**: [artifact 11951510171](https://github.com/kobitworks/autoai_poc/actions/runs/38687898088/artifacts/11951510171) をGitHub経由で実体取得。サイズ **4,937,219 bytes**、独立SHA-256 **`7ca17390fb783333d863c0d21472516aaddfd069008763f6e27e1504eb2775ee`** はGitHub artifact APIのsize/digestと完全一致。ZIP **71エントリのCRC異常0**、PNG **69/69枚Pillow verify PASS**、`results.json`・`results-checkpoint.json` **2/2件JSONパースPASS**。
+- **自然操作と小型UI**: `results.json`から標準4 viewport（390x844 / 844x390 / 768x1024 / 1024x768）**4/4 PASS**、QAコマンド使用なし・状態上書きなしを確認。小型320x568 / 667x375 / 800x600は **3/3 PASS_GEOMETRY**（フルルート走破PASSではない）。Playwright viewportサイズ変更による縦→横・横→縦は **2/2 PASS_ORIENTATION**（物理端末回転テストではない）。INTRO、PLAYING、ACE、RESULT、残3秒警告を含む代表PNG12枚を独立目視し、明白な全面欠落・主操作領域の消失は確認されなかった。文字の瞬間可読性は別途人間検証が必要。
+- **品質ゲート**: 上記JSONは`independentQualityScore=NOT ASSESSED`と記録。物理端末での初見30秒理解、残3秒警告瞬間認知、誤タップ、スピーカー/イヤホン実音、FPS・発熱、端末実回転は**Human Gate UNTESTED**。よって以前の独立暫定 **76/100（一般公開目標80未満）**を据置き、**GAME-076はDoneにせずToDoへ戻して継続**。重複Human Gate催促は送らない。
+- **変更範囲**: 実作業は今回のCI・artifact・Pages監査とこのdevelop監査文書への追記のみ。ゲーム本体・QA・main・本番・課金・公開範囲への変更なし。同一Runner起動で別タスクは処理しない。
