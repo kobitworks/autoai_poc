@@ -71,6 +71,8 @@ var retry_rect := Rect2()
 # GAME-076: read-only rectangles of actually rendered action/guide surfaces for CI.
 var action_card_rect := Rect2()
 var help_guide_rect := Rect2()
+# GAME-076: passive evidence for compact portrait NEXT ACTION text after clipping.
+var compact_action_rendered_text := ""
 # GAME-076: read-only intro geometry for narrow-screen onboarding regression.
 var intro_title_rect := Rect2()
 var intro_first_step_rect := Rect2()
@@ -730,6 +732,7 @@ func _near_action_prompt() -> String:
 func _draw_info_panel() -> void:
 	action_card_rect = Rect2()
 	help_guide_rect = Rect2()
+	compact_action_rendered_text = ""
 	_rounded_box(info_rect, Color("#0a1625"), Color("#2f5b72"), 16, 1)
 	var pad := _ui_px(16.0)
 	var x := info_rect.position.x + pad
@@ -814,7 +817,9 @@ func _draw_info_panel() -> void:
 		# GAME-076: short landscape panels use concise, unambiguous live-action
 		# copy to avoid automatic font shrinking under NEXT ACTION. The legal
 		# tap window is still computed by _near_action_prompt (unchanged).
-		if state == "playing" and info_rect.size.y >= _ui_px(220.0) and info_rect.size.y <= _ui_px(275.0):
+		# Shorten the legal action in small portrait too; previously only landscape
+		# was compact, so the <220px portrait fallback ellipsized the key instruction.
+		if state == "playing" and info_rect.size.y <= _ui_px(275.0):
 			if live_action == "OTHER HUB · WAIT TO SWITCH":
 				action_line = "WAIT · WRONG HUB"
 			elif live_action == "TAP NOW · TRANSFER":
@@ -845,7 +850,7 @@ func _draw_info_panel() -> void:
 			_draw_label("TAP NOW" if action_ready else "NEXT ACTION", action_card.position + Vector2(_ui_px(14.0 if action_ready else 10.0), _ui_px(16.0)), _font_size(16.0), Color("#ffffff"))
 			_draw_center_fit_text(action_line, Rect2(action_card.position.x + _ui_px(5.0), action_card.position.y + _ui_px(18.0), action_card.size.x - _ui_px(10.0), card_h - _ui_px(20.0)), _font_size(18.0 if action_ready else 17.0), Color("#ffffff"))
 		else:
-			_draw_fit_label(action_line, Vector2(x, y), _font_size(16.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
+			compact_action_rendered_text = _draw_fit_label(action_line, Vector2(x, y), _font_size(16.0), Color("#ffffff"), info_rect.size.x - pad * 2.0)
 	# The tablet-landscape information area is taller: put a readable step guide near
 	# the action card instead of leaving the next input unexplained in empty space.
 	if info_rect.size.y > _ui_px(470.0):
@@ -1132,6 +1137,7 @@ func _update_debug_bridge() -> void:
 		"hud_rect": _rect_payload(hud_rect),
 		"retry_rect": _rect_payload(retry_rect),
 		"action_card_rect": _rect_payload(action_card_rect),
+		"compact_action_rendered_text": compact_action_rendered_text,
 		"help_guide_rect": _rect_payload(help_guide_rect),
 		"intro_title_rect": _rect_payload(intro_title_rect),
 		"intro_first_step_rect": _rect_payload(intro_first_step_rect),
