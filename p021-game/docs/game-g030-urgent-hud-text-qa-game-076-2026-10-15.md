@@ -128,3 +128,16 @@ P021 / GAME-076 の同一継続タスク1件。前回09:52の警告輪郭パル�
 - **検証の厳密な境界:** ソース／QAの読戻し一致と静的・構文確認は済み。しかし新QA HEAD `28cb40cf...` に対応するGodot Web Export／GitHub Actions contract・export-web・browser-quality各ジョブのrun ID/最終結果、生成artifactのZIP・PNG・JSONの実体はこの実行で取得できなかったため **UNVERIFIED** とする。GitHub連携のcommit関連workflow検索はPR-triggerのみを対象としており、新規push runの一覧確認手段にならなかった。前回run `38654144991` の成功は旧HEADの証跡であり、今回のPASSに転用しない。
 - **追加テレメトリの意味:** alphaの数値範囲は描画へ渡されたパラメータが規定内であることだけを検証する。実際のピクセル上での明度変化、モーション認知、警告を3秒以内に読み取れるか、小型画面の文字・タップ・音は証明しない。新HEADの4標準viewport＋3小型画面QA、ZIP/画像の現物監査と実機Human Gateを次回継続する。
 - **評価・状態:** 独立暫定品質 **76/100**（80点目標未達）。実機の初見30秒、警告瞬間認知、誤タップ、スピーカー/イヤホン音、FPS/発熱・画面回転は **UNTESTED**。これらを擬似PASSしない。既に告知済みの実機確認を同文面で再催促しない。今回作業はGAME-076だけ。GitHub developのみ変更し、main・本番・課金・公開範囲は変更しない。完了条件未達のためToDoへ戻して再開点を保持する。
+
+## 2026-10-15 10:39 JST 最新alpha QA独立検品（AUTOAI-GAME076-20261015-103644）
+
+P021 / GAME-076 の同一継続タスク1件。前回10:20:22 JSTは新HEADのCI未検証だったため、本回は新QA HEADのGitHub Actions、ZIP、PNG/JSONを独立照合した。
+
+- **対象CI:** Godot Actions [run 38664938941](https://github.com/kobitworks/autoai_poc/actions/runs/38664938941)、develop push HEAD 28cb40cf32c2330e7a6d0320efb8b7574671e436。contract / export-web / browser-quality の3ジョブはすべて **completed/success**。旧実行のPASSを転用していない。Actions botがWeb Exportをcommit 32b5160b99c6c3a2df0408e478a843fc346d89fbに反映し、Pages run 38665213538 も3/3 success（PoC既承認範囲内）。
+- **ZIP実体:** [artifact 11941230080](https://github.com/kobitworks/autoai_poc/actions/runs/38664938941/artifacts/11941230080) のZIPを取得。サイズ **4,532,492 bytes**、実測SHA256 **80d650794ada5174524274f21bcdc686e38431b2be6f370cbc38ea6f52c0fc16** はGitHub API digestとアップロードジョブログに一致。ZIP63エントリCRC PASS、PNG61枚Pillow verify PASS、results.jsonとresults-checkpoint.jsonの2件はJSON解析PASS。
+- **4標準viewport実入力QA:** phone-portrait / phone-landscape / tablet-portrait / tablet-landscape が **4/4 PASS**。自然入力ログのNIGHT=3配達、ACE=6配達、RESULT/Best復元・音声トグルを確認。物理端末でのPASSではない。
+- **3小型viewport:** 320×568 / 667×375 / 800×600 は **3/3 PASS_GEOMETRY**。introの実描画手順の最小フォントが16.15 / 16.00 / 17.77 CSS px、省略はすべてfalse、警告文字「03s! HURRY」はすべてPASS_UNCLIPPED_ACTUAL_DRAW_TEXT。
+- **警告alpha2標本:** 320×568=[0.478527,0.574247]、667×375=[0.471680,0.589547]、800×600=[0.671696,0.835792]。6値が理論範囲0.45～0.85内で標本間に変化あり。3/3 PASS_PASSIVE_ALPHA_BOUNDED。ただし2点だけでは実動画の認知性・周期を完全証明できない。
+- **PNG独立目視:** 3小型viewport×intro・残3秒警告の6PNGを実物抽出して比較。開始カード・主ボタン・警告チップの描画を確認、主要部品消失・明白なボタン重複は見当たらない。320px幅で文字が小さく細い点は実機認知リスク。JSONのvisualWarningPass=NOT VERIFIEDを実機PASSと解釈しない。
+- **Human Gate:** 物理スマホ・タブレットでの初見30秒理解、3秒警告の瞬間認知、指の誤タップ、スピーカー/イヤホン音、FPS・発熱・画面回転は**未検証**。品質独立暫定 **76/100**（80点目標未達）、CIだけを理由に一般公開品質とは認定しない。
+- **次回再開点:** GAME-076は完了条件未達のためToDo継続。実機結果が得られれば10軸再採点、なければ小画面の視認性改善を検討。既通知Human Gate同文面催促は重複送信しない。本回の変更はdevelop上の本監査文書のみで、ゲームコード、main、課金、本番・公開範囲変更はない。
