@@ -1,4 +1,4 @@
-# GAME-076 / GAME-G030 実機初見・可読性・音・性能の受入試験票 v1.5
+# GAME-076 / GAME-G030 実機初見・可読性・音・性能の受入試験票 v1.6
 作成: 2026-10-15 JST / AutoAI P021（GAME-076継続）
 対象: Orbit Switch Courier (Godot Web)。親タスク: GAME-076。
 成果物区分: **試験手順と記録テンプレート**。実機テストの実施結果・承認ではない。
@@ -147,3 +147,12 @@ independent conclusion / unresolved items:
 - ソース変更: [検証器](../qa/orbit-switch-courier-human-evidence.js) commit `814cd94f8847db514b4d9a663015e0703e66fcde`、[合成12テスト](../qa/orbit-switch-courier-human-evidence.test.js) commit `3ba763749ad765b74df9b738aa44efa89948bec6`、[read-only CI](../../../.github/workflows/p021-game-g030-human-evidence-tests.yml) commit `baacc39f2b5a4155b0f5c259cd04065c044c0bb8`。
 
 **今回の最終判定:** テストコードの契約チェックは合格。実機観察データは未提出のためHuman Gateの各項目は引き続き **UNTESTED**。独立暫定スコア **76/100**、一般公開基準80点未達を維持し、GAME-076は**ToDo継続**。ゲーム本体・従来のブラウザQA・main・本番環境・課金・公開範囲は変更していない。既通知と同じ実機テスト依頼を再送しない。
+
+
+### 9.2 実機観測の入力負荷を減らすオフラインフォーム（2026-10-15 / GAME-076継続）
+- [GAME-076 実機受入観測フォーム](../qa/orbit-switch-courier-human-evidence-recorder.html) を GitHub **develop** に追加。HTMLファイルを端末へ保存しブラウザで開いて使用する（ユーザーが実機で観測する際の補助のみ）。フォーム上の [ゲームを開く] は明示操作による別タブ表示であり、フォーム自身に送信処理はない。
+- 既存の Node 検証器 [orbit-switch-courier-human-evidence.js](../qa/orbit-switch-courier-human-evidence.js) の `schemaVersion=1.1` に合わせ、ビルド出所7項目、端末情報5項目、実機観測9 Gate、観測日時・観測者・根拠・各Gateの追加実測項目を入力してJSONを**ローカル保存**できる。JSONのローカル再読込にも対応する。
+- 初期値は全 Gate **UNTESTED**、ビルドGateは **UNVERIFIED**、数値・真偽値は未入力。実測値の捏造・自動PASS化はしない。観測本人だけがPASS/FAILと根拠を入力し、未検証項目はUNTESTEDにする。個人名・住所・GPS・秘密情報を入力しない。
+- **静的契約チェック（GitHub readback）**: Gate名9/9、観測フィールド22/22、buildフィールド7/7、deviceフィールド5/5 が既存検証器と対応。HTML内に自動送信fetch/XMLHttpRequest/sendBeaconや外部script読み込みは見つからない。**実機ブラウザでのフォーム操作E2Eは未実施**であり、UI挙動は実端末試験時に別途確認する。
+- 入力後のJSONは必ず `node p021-game/qa/orbit-switch-courier-human-evidence.js GAME-076-human-evidence.json` で構造検証する。**READY_FOR_INDEPENDENT_SCORINGは採点準備可に過ぎない**。合格・一般公開品質80点到達を意味せず、人間が観測根拠・配信ビルド同一性を確認してから10軸独立採点する。
+- 変更範囲は今回追加のHTMLと本受入試験票のみ。ゲームソース/自然入力QA/既存検証器/main/本番/公開範囲/課金に変更なし。GAME-076はHuman Gate **UNTESTED**・独立暫定品質 **76/100** を維持する。
