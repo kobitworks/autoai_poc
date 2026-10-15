@@ -4,7 +4,10 @@
   "engine": "Godot 4.7.2",
   "renderer": "Compatibility",
   "thread_support": false,
-  "quality_target": 84,
+  "quality_target": 80,
+  "source_commit": "847838737ec419b4fc1948ef4e256c155e87d393",
+  "workflow_run_id": "38687898088",
+  "workflow_run_attempt": "1",
   "storage": "browser localStorage",
   "viewports": ["390x844", "844x390", "768x1024", "1024x768"]
 }
