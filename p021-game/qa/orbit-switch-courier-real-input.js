@@ -93,6 +93,9 @@ function verifyGuideContrast() {
     cargoPanel.includes('info_rect.size.x < _ui_px(400.0)') &&
     cargoPanel.includes('cargo_target_label = HUB_SHORT[cargo_target]') &&
     cargoPanel.includes('var warning_chip := Rect2(') &&
+    // GAME-076: the slow visual urgency pulse must remain render-only.
+    cargoPanel.includes('var warning_pulse := 0.5 + 0.5 * sin(elapsed * 3.5)') &&
+    cargoPanel.includes('draw_rect(warning_chip.grow(_ui_px(2.0)), Color(1.0, 0.87, 0.55, 0.45 + 0.4 * warning_pulse), false, _ui_px(2.0))') &&
     cargoPanel.includes('_rounded_box(warning_chip, Color("#8b2030"), Color("#fff0aa"), 7, 2)') &&
     cargoPanel.includes('_draw_fit_label(cargo_countdown, Vector2(x, y), countdown_font_size,') &&
     cargoPanel.includes('cargo_left / _cargo_limit()'),
