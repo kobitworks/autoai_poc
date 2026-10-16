@@ -3,6 +3,9 @@ name: P021 GAME-G010 Othello Legacy Static QA
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   superseded:
     runs-on: ubuntu-latest
