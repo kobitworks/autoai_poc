@@ -1,13 +1,9 @@
 name: P008 provision free Cloudflare preview
 # AutoAI retry marker: WEB-003 after Billing Read grant on 2026-10-04
 
+# Creates Cloudflare resources: run only after an explicit operator decision.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - develop
-    paths:
-      - ".github/workflows/p008-cloudflare-provision-preview.yml"
 
 permissions:
   contents: read
@@ -21,7 +17,7 @@ jobs:
       CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Validate required secrets
         shell: bash
