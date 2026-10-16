@@ -1,19 +1,8 @@
 name: P008 Cloudflare free-only preflight
 
+# Requires Cloudflare secrets; never run on unreviewed pull requests or pushes.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - develop
-    paths:
-      - ".github/workflows/p008-cloudflare-preflight.yml"
-  pull_request:
-    branches:
-      - develop
-    paths:
-      - ".github/workflows/p008-cloudflare-preflight.yml"
-      - ".github/workflows/p008-cloudflare-provision-preview.yml"
-      - "web-template/scripts/provision_p008_cloudflare.py"
 
 permissions:
   contents: read
