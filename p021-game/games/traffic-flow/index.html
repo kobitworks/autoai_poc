@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>渋滞のふしぎ</title>
+<style>
+:root{color-scheme:dark;--bg:#0c1422;--panel:#162236;--line:#293951;--muted:#9bacc4;--text:#f4f7fb;--mint:#67e3c0;--orange:#ffb454;--red:#ff7079}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 50% -20%,#253b58 0,#0c1422 58%);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:900px;margin:auto;padding:20px 16px 28px}
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+h1{font-size:clamp(23px,5vw,34px);letter-spacing:.02em;margin:0 0 4px}
+.lead{color:#b9c7da;font-size:14px;line-height:1.55;margin:0}
+.tag{white-space:nowrap;border:1px solid #38506c;background:#182941;border-radius:999px;padding:7px 10px;font-size:12px;color:#b9d5ee}
+.card{border:1px solid var(--line);border-radius:18px;background:linear-gradient(145deg,#17253a,#111c2d);box-shadow:0 12px 35px #050b1470}
+.scene{padding:10px 10px 8px;position:relative;overflow:hidden}
+canvas{display:block;width:100%;height:auto;aspect-ratio:1.7;min-height:180px}
+.legend{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;color:#bdcadd;font-size:12px;padding:3px 0 5px}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--mint);margin-right:5px}
+.dot.warn{background:var(--orange)}.dot.stop{background:var(--red)}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:12px 0}
+.metric{background:#111c2b;border:1px solid #26374e;border-radius:14px;padding:10px 12px;min-width:0}
+.metric span{display:block;color:var(--muted);font-size:11px}
+.metric strong{display:block;margin-top:3px;font-size:clamp(18px,4vw,25px);line-height:1.2}
+.metric small{font-size:12px;color:#b5c4d8;font-weight:500}
+.controls{padding:15px}
+.controls h2{font-size:16px;margin:0 0 12px}
+.control{margin:11px 0 15px}
+.labelrow{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px}
+.labelrow output{color:var(--mint);font-weight:700}
+input[type=range]{width:100%;accent-color:var(--mint);margin:10px 0 0;height:24px}
+.buttons{display:flex;gap:9px;flex-wrap:wrap}
+button{font:inherit;font-weight:700;color:var(--text);border:1px solid #3b506b;background:#22344d;border-radius:12px;padding:11px 14px;cursor:pointer;touch-action:manipulation;transition:transform .12s,filter .12s}
+button:active{transform:scale(.97)}
+button.primary{color:#10221f;background:var(--mint);border-color:var(--mint);flex:1}
+button.brake{color:#28180a;background:var(--orange);border-color:var(--orange);flex:1}
+button.reset{padding-inline:16px}
+.tip{font-size:12px;line-height:1.65;color:#aebdd0;margin:11px 2px 0}
+.lesson{margin-top:12px;padding:13px 15px;border-left:3px solid var(--mint)}
+.lesson b{color:#dffaf3}
+.lesson p{font-size:13px;line-height:1.65;color:#c1cddd;margin:4px 0 0}
+.status{min-height:21px;color:#ffd18e;font-size:13px;margin-top:9px}
+@media(min-width:700px){main{padding-top:28px}.layout{display:grid;grid-template-columns:1.35fr .85fr;gap:13px;align-items:start}.metrics{margin-top:0}.controls{grid-column:2;grid-row:1 / span 2}.scene{grid-column:1;grid-row:1}.lesson{grid-column:1}}
+@media(max-width:380px){main{padding:14px 11px}.tag{font-size:10px;padding:6px 8px}.metrics{gap:6px}.metric{padding:8px}.metric span{font-size:10px}.buttons button{padding:10px 11px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+<div><h1>渋滞のふしぎ</h1><p class="lead">車が多いだけ？ 小さなブレーキが渋滞に変わる瞬間を試そう。</p></div>
+<div class="tag">交通シミュレーション</div>
+</header>
+
+<div class="layout">
+<section class="card scene" aria-label="道路上の車の動き">
+<canvas id="road" aria-label="道路を走る車のシミュレーション"></canvas>
+<div class="legend"><span><i class="dot"></i>スムーズ</span><span><i class="dot warn"></i>減速中</span><span><i class="dot stop"></i>停止・渋滞</span></div>
+</section>
+
+<section class="controls card">
+<h2>交通の条件を変えてみよう</h2>
+<div class="control">
+<div class="labelrow"><label for="cars">道路を走る車</label><output id="carsOut">10台</output></div>
+<input id="cars" type="range" min="5" max="18" value="10">
+</div>
+<div class="control">
+<div class="labelrow"><label for="gap">車間時間</label><output id="gapOut">1.2秒</output></div>
+<input id="gap" type="range" min="5" max="22" value="12">
+</div>
+<div class="buttons">
+<button id="brake" class="brake">🚗 1台に急ブレーキ</button>
+<button id="reset" class="reset">最初から</button>
+</div>
+<p class="tip">まず車を増やしてみよう。次に、急ブレーキを押して、後ろの車の動きを観察してね。</p>
+<div id="status" class="status" aria-live="polite"></div>
+</section>
+
+<section class="metrics" aria-label="交通状況">
+<div class="metric"><span>平均速度</span><strong><b id="speed">—</b> <small>km/h</small></strong></div>
+<div class="metric"><span>道路の流れ</span><strong id="flow">順調</strong></div>
+<div class="metric"><span>止まった車</span><strong><b id="stopped">0</b> <small>台</small></strong></div>
+</section>
+
+<section class="card lesson">
+<b>渋滞が生まれるしくみ</b>
+<p id="lessonText">車が少なく、車間に余裕があると流れはスムーズ。急ブレーキを押すと、後続車が次々とブレーキを踏む様子が見られます。</p>
+</section>
+</div>
+</main>
+<script>
+(()=>{
+const canvas=document.getElementById('road'),ctx=canvas.getContext('2d');
+const carsInput=document.getElementById('cars'),gapInput=document.getElementById('gap');
+const carsOut=document.getElementById('carsOut'),gapOut=document.getElementById('gapOut');
+const speedEl=document.getElementById('speed'),flowEl=document.getElementById('flow'),stoppedEl=document.getElementById('stopped');
+const statusEl=document.getElementById('status'),lessonEl=document.getElementById('lessonText');
+let cars=[],last=0,brakeTimer=0,brakeCar=-1,roadLength=480,avg=0;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function setup(){
+ const n=+carsInput.value;
+ cars=Array.from({length:n},(_,i)=>({p:roadLength*i/n,v:14,color:i===0?'#67e3c0':['#6fc8ff','#a8a2ff','#8be0ab','#ffd06d'][i%4]}));
+ avg=14;brakeTimer=0;brakeCar=-1;statusEl.textContent='';
+ updateLabels();
+}
+function updateLabels(){carsOut.value=carsInput.value+'台';gapOut.value=(+gapInput.value/10).toFixed(1)+'秒'}
+function resize(){
+ const dpr=Math.min(devicePixelRatio||1,2),r=canvas.getBoundingClientRect();
+ canvas.width=Math.round(r.width*dpr);canvas.height=Math.round(r.height*dpr);
+ ctx.setTransform(dpr,0,0,dpr,0,0);
+}
+function triggerBrake(){
+ if(brakeTimer>0)return;
+ brakeCar=Math.floor(cars.length*.34);
+ brakeTimer=2.2;
+ cars[brakeCar].v=1.4;
+ statusEl.textContent='急ブレーキ！ 後続車へ減速が伝わるか見てみよう。';
+}
+function simulate(dt){
+ const n=cars.length,T=+gapInput.value/10,v0=22.2,a=2.0,b=3.1,s0=5.5;
+ if(brakeTimer>0){brakeTimer-=dt;if(brakeTimer<=0){brakeTimer=0;brakeCar=-1}}
+ const next=[];
+ for(let i=0;i<n;i++){
+  const c=cars[i],leader=cars[(i+1)%n];
+  let gap=leader.p-c.p;if(gap<=0)gap+=roadLength;
+  gap=Math.max(.1,gap-5.5);
+  const dv=c.v-leader.v;
+  const desired=s0+c.v*T+(c.v*dv)/(2*Math.sqrt(a*b));
+  let acc=a*(1-Math.pow(c.v/v0,4)-Math.pow(Math.max(0,desired)/gap,2));
+  if(brakeTimer>0&&i===brakeCar)acc=-8;
+  acc=clamp(acc,-8,a);
+  let v=clamp(c.v+acc*dt,0,v0);
+  if(v<.7)v=0;
+  next.push(v);
+ }
+ for(let i=0;i<n;i++){cars[i].v=next[i];cars[i].p=(cars[i].p+cars[i].v*dt)%roadLength}
+ const mean=cars.reduce((s,c)=>s+c.v,0)/n;
+ avg=avg*.9+mean*.1;
+ const stopped=cars.filter(c=>c.v<1.5).length;
+ speedEl.textContent=Math.round(avg*3.6);
+ stoppedEl.textContent=stopped;
+ if(stopped>=2||avg<5){flowEl.textContent='渋滞中';flowEl.style.color='var(--red)';lessonEl.textContent='車が詰まると、前の車が動き出すまで後ろの車も進めません。急な減速が連鎖すると、車がいない場所まで渋滞の波が広がります。車の台数を減らすか、車間時間を長くすると流れが戻りやすくなります。'}
+ else if(avg<13){flowEl.textContent='ゆっくり';flowEl.style.color='var(--orange)';lessonEl.textContent='前の車との間隔が短いと、少しの減速にも強くブレーキを踏むことになります。反応する時間と車間距離に余裕を持つと、減速の連鎖を抑えられます。'}
+ else {flowEl.textContent='順調';flowEl.style.color='var(--mint)';lessonEl.textContent='車が少なく、車間に余裕があると流れはスムーズ。急ブレーキを押すと、後続車が次々とブレーキを踏む様子が見られます。'}
+}
+function draw(){
+ const w=canvas.clientWidth,h=canvas.clientHeight;
+ ctx.clearRect(0,0,w,h);
+ const cx=w/2,cy=h/2,rx=w*.39,ry=h*.34;
+ ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);
+ ctx.strokeStyle='#08101b';ctx.lineWidth=Math.min(45,h*.24);ctx.stroke();
+ ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);
+ ctx.strokeStyle='#3b4858';ctx.lineWidth=Math.min(38,h*.21);ctx.stroke();
+ ctx.setLineDash([10,10]);ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,0,Math.PI*2);
+ ctx.strokeStyle='#a8b4c2';ctx.globalAlpha=.48;ctx.lineWidth=1.5;ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1;
+ ctx.fillStyle='#b3c2d2';ctx.textAlign='center';ctx.font='600 12px system-ui';
+ ctx.fillText('車が進む方向  →',cx,cy+4);
+ for(let i=0;i<cars.length;i++){
+  const c=cars[i],theta=(c.p/roadLength)*Math.PI*2-Math.PI/2;
+  const x=cx+rx*Math.cos(theta),y=cy+ry*Math.sin(theta);
+  const tx=-rx*Math.sin(theta),ty=ry*Math.cos(theta),rot=Math.atan2(ty,tx);
+  const stopped=c.v<1.5,slow=c.v<7;
+  ctx.save();ctx.translate(x,y);ctx.rotate(rot);
+  ctx.fillStyle='#03070d88';ctx.beginPath();ctx.roundRect(-12,-6,27,15,5);ctx.fill();
+  ctx.fillStyle=stopped?'#ff7079':slow?'#ffb454':c.color;
+  ctx.beginPath();ctx.roundRect(-13,-7,26,14,4);ctx.fill();
+  ctx.fillStyle='#d9f4ff';ctx.beginPath();ctx.roundRect(1,-5,7,10,2);ctx.fill();
+  if(stopped){ctx.fillStyle='#fff1f2';ctx.fillRect(-13,-5,2,3);ctx.fillRect(-13,2,2,3)}
+  ctx.restore();
+ }
+}
+function frame(t){
+ if(!last)last=t;
+ const dt=Math.min((t-last)/1000,.04);last=t;
+ simulate(dt);draw();requestAnimationFrame(frame);
+}
+carsInput.addEventListener('input',()=>{updateLabels();setup()});
+gapInput.addEventListener('input',updateLabels);
+document.getElementById('brake').addEventListener('click',triggerBrake);
+document.getElementById('reset').addEventListener('click',setup);
+window.addEventListener('resize',resize);
+setup();resize();requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
