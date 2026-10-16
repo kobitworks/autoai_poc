@@ -3,6 +3,9 @@ name: P021 GAME-G014 Switch Shortest Legacy Static QA
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   archived:
     runs-on: ubuntu-latest
