@@ -1,12 +1,8 @@
 name: P005 provision production D1
 
+# Provisioning a production database must require an explicit operator action.
 on:
-  push:
-    branches:
-      - develop
-    paths:
-      - ".github/workflows/p005-provision-d1.yml"
-      - "monolink/scripts/provision_p005_d1.py"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -24,7 +20,7 @@ jobs:
       CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Validate required secrets
         shell: bash
